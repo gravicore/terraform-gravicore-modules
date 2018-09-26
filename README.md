@@ -1,4 +1,4 @@
-[![Gravicore.io](https://docs.google.com/uc?id=1w7JERRtb2FlhqTE5KERM1Yu3bImmfypP | height=69)](https://gravicore.io)
+<a href="http://gravicore.io"><img src="https://docs.google.com/uc?id=1w7JERRtb2FlhqTE5KERM1Yu3bImmfypP" alt="Gravicore" width="400"></a>
 
 # terraform-modules
 
