@@ -2,11 +2,17 @@
 
 # terraform-modules ![Build Status](https://img.shields.io/badge/build-undefined-lightgrey.svg) [![Latest Release](https://img.shields.io/github/release/gravicore/terraform-modules.svg)](https://github.com/gravicore/terraform-modules/releases/latest)
 
-Project containing Gravicore's Terraform modules
+This is a collection of reusable Terraform modules for Gravicore's cloud automation platform.
+
+## Contributing
+
+### Bug Reports & Feature Requests
+
+Please use the [issue tracker](https://github.com/gravicore/terraform-gravicore-modules/issues) to report any bugs or file feature requests.
 
 ## Copyright
 
-Copyright © [Gravicore, LLC](http://gravicore.io)
+Copyright © 2018 [Gravicore, LLC](http://gravicore.io)
 
 ## License
 
