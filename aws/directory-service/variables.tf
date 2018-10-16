@@ -48,3 +48,14 @@ variable "short_name" {
   default     = ""
   description = "The short name of the directory, such as CORP."
 }
+
+variable "namespace" {}
+variable "environment" {}
+variable "stage" {}
+variable "master_account_id" {}
+variable "account_id" {}
+variable "repository" {}
+
+variable "aws_region" {
+  default = "us-east-1"
+}
