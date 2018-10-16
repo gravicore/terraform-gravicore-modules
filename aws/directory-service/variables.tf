@@ -1,17 +1,7 @@
-variable "vpc_id" {
-  type        = "string"
-  description = "The fully qualified name for the directory, such as corp.example.com"
-}
-
 variable "subnet_ids" {
   type        = "list"
   default     = []
   description = "The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs)"
-}
-
-variable "name" {
-  type        = "string"
-  description = "The fully qualified name for the directory, such as corp.example.com"
 }
 
 variable "password" {
