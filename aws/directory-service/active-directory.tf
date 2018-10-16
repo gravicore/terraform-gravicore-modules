@@ -1,5 +1,5 @@
 resource "aws_directory_service_directory" "default" {
-  name       = "${var.dns_zone_name}.${var.parent_domain_name}"
+  name       = "${replace("${var.dns_zone_name}-${var.stage}.${var.parent_domain_name}", "-prd", "")}"
   password   = "${var.password}"
   edition    = "${var.edition}"
   type       = "${var.type}"
