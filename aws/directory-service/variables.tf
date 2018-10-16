@@ -21,6 +21,12 @@ variable "type" {
   description = "The directory type (SimpleAD, ADConnector or MicrosoftAD are accepted values)"
 }
 
+variable "dns_zone_name" {
+  type        = "string"
+  default     = "ds"
+  description = "Name of the DNS zone managed by the directory service"
+}
+
 variable "enable_sso" {
   type        = "string"
   default     = "false"
@@ -37,6 +43,12 @@ variable "short_name" {
   type        = "string"
   default     = ""
   description = "The short name of the directory, such as CORP."
+}
+
+variable "netbios_node_type" {
+  type        = "string"
+  default     = "2"
+  description = "The NetBIOS node type (1, 2, 4, or 8). AWS recommends to specify 2 since broadcast and multicast are not supported in their network."
 }
 
 variable "namespace" {}

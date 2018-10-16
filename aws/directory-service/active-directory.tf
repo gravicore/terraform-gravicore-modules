@@ -1,5 +1,5 @@
 resource "aws_directory_service_directory" "default" {
-  name       = "${var.environment}.${var.parent_domain_name}"
+  name       = "${var.zone_name}.${var.parent_domain_name}"
   password   = "${var.password}"
   edition    = "${var.edition}"
   type       = "${var.type}"
@@ -20,8 +20,8 @@ resource "aws_vpc_dhcp_options" "default" {
   domain_name_servers  = ["${aws_directory_service_directory.default.dns_ip_addresses}"]
   ntp_servers          = ["${aws_directory_service_directory.default.dns_ip_addresses}"]
   netbios_name_servers = ["${aws_directory_service_directory.default.dns_ip_addresses}"]
-
-  tags = "${local.default_tags}"
+  netbios_node_type    = "${var.netbios_node_type}"
+  tags                 = "${local.default_tags}"
 }
 
 resource "aws_vpc_dhcp_options_association" "default" {
