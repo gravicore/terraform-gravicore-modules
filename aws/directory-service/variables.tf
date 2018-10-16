@@ -55,7 +55,13 @@ variable "stage" {}
 variable "master_account_id" {}
 variable "account_id" {}
 variable "repository" {}
+variable "directory_services_short_name" {}
+variable "parent_domain_name" {}
 
 variable "aws_region" {
   default = "us-east-1"
+}
+
+variable "tags" {
+  default = {}
 }
