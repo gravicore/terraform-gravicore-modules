@@ -1,6 +1,6 @@
 <a href="http://gravicore.io"><img src="https://docs.google.com/uc?id=1w7JERRtb2FlhqTE5KERM1Yu3bImmfypP" alt="Gravicore" width="400"></a>
 
-# terraform-modules ![Build Status](https://img.shields.io/badge/build-undefined-lightgrey.svg) [![Latest Release](https://img.shields.io/github/release/gravicore/terraform-modules.svg)](https://github.com/gravicore/terraform-modules/releases/latest)
+# terraform-gravicore-modules ![Build Status](https://img.shields.io/badge/build-undefined-lightgrey.svg) [![Latest Release](https://img.shields.io/github/release/gravicore/terraform-modules.svg)](https://github.com/gravicore/terraform-modules/releases/latest)
 
 This is a collection of reusable Terraform modules for Gravicore's cloud automation platform.
 
