@@ -16,9 +16,9 @@ provider "aws" {
 
 module "vpc" {
   source = "github.com/terraform-aws-modules/terraform-aws-vpc?ref=v1.46.0"
-  name   = "${module.module_label.id}-vpc"
+  name   = "${module.module_label.id}"
 
-  tags = "${merge(local.default_tags,
+  tags = "${merge(local.tags,
     map("TerraformModule", "github.com/terraform-aws-modules/terraform-aws-vpc"),
     map("TerraformModuleVersion", "v1.46.0"))}"
 
@@ -28,18 +28,4 @@ module "vpc" {
   public_subnets     = ["${var.cidr_network}.128.0/20", "${var.cidr_network}.144.0/20"]
   enable_nat_gateway = true
   single_nat_gateway = false
-}
-
-module "module_label" {
-  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=0.5.3"
-  namespace   = "${var.namespace}"
-  environment = "${var.environment}"
-  stage       = "${var.stage}"
-
-  tags = "${merge(var.tags, map(
-    "TerraformModule", "github.com/gravicore/terraform-gravicore-modules",
-    "MasterAccountID", "${var.master_account_id}",
-    "AccountID", "${var.account_id}",
-    "Repository", "${var.repository}"
-  ))}"
 }
