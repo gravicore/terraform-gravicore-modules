@@ -1,5 +1,5 @@
 locals {
-  name_prefix = "${join("-", var.namespace, var.environment, var.stage)}-vpc"
+  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage))}-vpc"
 
   business_tags = {
     Namespace   = "${var.namespace}"
