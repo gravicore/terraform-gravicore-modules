@@ -14,13 +14,16 @@ provider "aws" {
   }
 }
 
+locals {
+  module_vpc_tags = "${merge(local.tags, map(
+    "TerraformModule", "github.com/terraform-aws-modules/terraform-aws-vpc",
+    "TerraformModuleVersion", "v1.46.0"))}"
+}
+
 module "vpc" {
   source = "github.com/terraform-aws-modules/terraform-aws-vpc?ref=v1.46.0"
-  name   = "${module.common_label.id}-vpc"
-
-  tags = "${merge(local.default_tags,
-    map("TerraformModule", "github.com/terraform-aws-modules/terraform-aws-vpc"),
-    map("TerraformModuleVersion", "v1.46.0"))}"
+  name   = "${local.name_prefix}"
+  tags   = "${local.module_vpc_tags}"
 
   azs                = ["${var.aws_region}a", "${var.aws_region}b"]
   cidr               = "${var.cidr_network}.0.0/16"

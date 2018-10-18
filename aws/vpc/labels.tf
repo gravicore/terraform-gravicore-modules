@@ -1,26 +1,24 @@
-module "common_label" {
-  source      = "git::https://github.com/cloudposse/terraform-null-label.git?ref=0.5.3"
-  namespace   = "${var.namespace}"
-  environment = "${var.environment}"
-  stage       = "${var.stage}"
-}
-
 locals {
-  technical_tags = {
-    AccountID  = "${var.account_id}"
-    Repository = "${var.repository}"
+  name_prefix = "${join("-", var.namespace, var.environment, var.stage)}-vpc"
+
+  business_tags = {
+    Namespace   = "${var.namespace}"
+    Environment = "${var.environment}"
   }
 
-  business_tags = {}
+  technical_tags = {
+    Stage           = "${var.stage}"
+    Repository      = "${var.repository}"
+    MasterAccountID = "${var.master_account_id}"
+    AccountID       = "${var.account_id}"
+    TerraformModule = "github.com/gravicore/terraform-gravicore-modules/aws/vpc"
+  }
 
   automation_tags = {}
 
   security_tags = {}
 
-  default_tags = "${merge(
-    map("Namespace", module.common_label.tags["Namespace"]),
-    map("Environment", module.common_label.tags["Environment"]),
-    map("Stage", module.common_label.tags["Stage"]),
+  tags = "${merge(
     local.technical_tags,
     local.business_tags,
     local.automation_tags,
