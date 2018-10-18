@@ -6,9 +6,9 @@ module "common_label" {
 }
 
 module "module_label" {
-  source  = "git::https://github.com/cloudposse/terraform-null-label.git?ref=0.5.3"
-  context = "${module.common_label.context}"
-  name    = "vpc"
+  source     = "git::https://github.com/cloudposse/terraform-null-label.git?ref=0.5.3"
+  context    = "${module.common_label.context}"
+  attributes = ["vpc"]
 }
 
 locals {
