@@ -4,6 +4,14 @@
 
 This is a collection of reusable Terraform modules for Gravicore's cloud automation platform.
 
+## Modules
+
+### AWS
+
+| Path           | Description                                                                                                |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| [VPC](aws/vpc) | A standard, secure VPC with public subnets (2), private subnets (2), NAT Gateways and an Internet Gateway. |
+
 ## Contributing
 
 ### Bug Reports & Feature Requests
