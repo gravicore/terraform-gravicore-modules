@@ -16,7 +16,7 @@ provider "aws" {
 
 module "vpc" {
   source = "github.com/terraform-aws-modules/terraform-aws-vpc?ref=v1.46.0"
-  name   = "${module.module_label.id}"
+  name   = "${module.common_label.id}-vpc"
 
   tags = "${merge(local.tags,
     map("TerraformModule", "github.com/terraform-aws-modules/terraform-aws-vpc"),
