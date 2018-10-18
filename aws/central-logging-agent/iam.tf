@@ -29,7 +29,7 @@ data "aws_iam_policy_document" "log" {
 
 resource "aws_iam_role_policy" "log" {
   count  = "${var.enabled == "true" ? 1 : 0}"
-  name   = "${module.vpc_label.id}"
+  name   = "${local.name_prefix}"
   role   = "${aws_iam_role.log.id}"
   policy = "${data.aws_iam_policy_document.log.json}"
 }

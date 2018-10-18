@@ -1,19 +1,14 @@
-output "log_group_arn" {
-  value       = "${aws_cloudwatch_log_group.default.arn}"
+output "flow_log_group_arn" {
+  value       = "${module.flow_log_destination.flow_log_group_arn}"
   description = "ARN of the log group"
 }
 
-output "vpc_flow_id" {
-  value       = "${aws_flow_log.vpc.id}"
-  description = "Flow Log IDs of VPCs"
+output "flow_log_group_name" {
+  value       = "${module.flow_log_destination.log_group_name}"
+  description = "ARN of the log group"
 }
 
-output "subnet_flow_ids" {
-  value       = "${aws_flow_log.subnets.*.id}"
-  description = "Flow Log IDs of subnets"
-}
-
-output "eni_flow_ids" {
-  value       = "${aws_flow_log.eni.*.id}"
-  description = "Flow Log IDs of ENIs"
+output "log_group_iam_role_arn" {
+  value       = "${aws_iam_role.log.arn}"
+  description = "ARN of the log group"
 }

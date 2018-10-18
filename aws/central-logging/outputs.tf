@@ -3,7 +3,7 @@ output "log_bucket_name" {
   description = "Name of the logging bucket"
 }
 
-output "logging-lambda" {
+output "central_logging_lambda" {
   value       = "${aws_cloudformation_stack.aws_central_logging_lambda.outputs["Function"]}"
   description = "ARN of the central logging lambda"
 }

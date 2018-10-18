@@ -56,6 +56,10 @@ variable "account_id" {
   default     = ""
 }
 
+variable "log_type" {
+  description = "Type of log. IE flow_log"
+}
+
 variable "ProcessingLambdaARN" {
   description = "ARN of master accounts processing Lambda"
 }
