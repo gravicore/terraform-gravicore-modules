@@ -1,5 +1,12 @@
 output "subnet_ids" {
-  value = "${concat(module.vpc.private_subnets, module.vpc.public_subnets)}"
+  value = "${concat(
+    module.vpc.private_subnets, 
+    module.vpc.public_subnets, 
+    module.vpc.database_subnets, 
+    module.vpc.redshift_subnets,
+    module.vpc.elasticache_subnets,
+    module.vpc.intra_subnets
+  )}"
 }
 
 // VPC module outputs
