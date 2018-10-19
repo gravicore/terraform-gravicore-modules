@@ -10,7 +10,7 @@ module "vpc_label" {
 }
 
 module "flow_log_destination" {
-  sources        = "${path.module}/central-logging-agent-destination/"
+  source         = "${path.module}/central-logging-agent-destination"
   enabled        = "${var.enabled}"
   log_type       = "flow-logs"
   filter_pattern = "[version, account, eni, source, destination, srcport, destport, protocol, packets, bytes, windowstart, windowend, action, flowlogstatus]"
