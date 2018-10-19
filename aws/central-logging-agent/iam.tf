@@ -36,6 +36,6 @@ resource "aws_iam_role_policy" "log" {
 
 resource "aws_iam_role" "log" {
   count              = "${var.enabled == "true" ? 1 : 0}"
-  name               = "${module.vpc_label.id}"
+  name               = "${local.name_prefix}"
   assume_role_policy = "${data.aws_iam_policy_document.log_assume.json}"
 }
