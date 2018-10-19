@@ -1,7 +1,7 @@
 module "log_storage" {
   source    = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=0.2.2"
   name      = "${var.name}"
-  namespace = "${var.namespace}"
+  namespace = "${var.namespace}-${var.environment}"
   stage     = "${var.stage}"
 }
 

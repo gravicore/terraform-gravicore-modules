@@ -12,3 +12,8 @@ variable "stage" {
   description = "Stage (e.g. `prod`, `dev`, `staging`)"
   type        = "string"
 }
+
+variable "environment" {
+  description = "Environment (e.g. `master`)"
+  type        = "string"
+}
