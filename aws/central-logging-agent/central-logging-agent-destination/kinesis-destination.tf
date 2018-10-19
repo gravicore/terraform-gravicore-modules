@@ -1,7 +1,7 @@
 resource "aws_cloudformation_stack" "aws_central_logging_destination" {
   count        = "${var.enabled == "true" ? 1 : 0}"
   provider     = "aws.master"
-  name         = "${local.name_prefix}-${var.account_id}"
+  name         = "log-destination-${var.account_id}-${var.log_type}"
   capabilities = ["CAPABILITY_IAM"]
 
   parameters {

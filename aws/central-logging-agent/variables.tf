@@ -1,8 +1,3 @@
-variable "name" {
-  default     = ""
-  description = "Name  (e.g. `bastion` or `db`)"
-}
-
 variable "namespace" {
   description = "Namespace (e.g. `cp` or `cloudposse`)"
   type        = "string"
@@ -13,17 +8,16 @@ variable "stage" {
   type        = "string"
 }
 
-variable "delimiter" {
+variable "environment" {
+  description = "Environment (e.g. `master`)"
   type        = "string"
-  default     = "-"
-  description = "Delimiter to be used between `name`, `namespace`, `stage`, etc."
 }
 
-variable "attributes" {
-  type        = "list"
-  default     = []
-  description = "Additional attributes (e.g. `policy` or `role`)"
+variable "repository" {
+  type = "string"
 }
+
+variable "master_account_id" {}
 
 variable "tags" {
   type        = "map"
@@ -36,16 +30,6 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "retention_in_days" {
-  description = "Number of days you want to retain log events in the log group"
-  default     = "30"
-}
-
-variable "filter_pattern" {
-  description = "Valid CloudWatch Logs filter pattern for subscribing to a filtered stream of log events"
-  default     = "[version, account, eni, source, destination, srcport, destport, protocol, packets, bytes, windowstart, windowend, action, flowlogstatus]"
-}
-
 variable "enabled" {
   default     = "true"
   description = "Set to false to prevent the module from creating anything"
@@ -55,66 +39,3 @@ variable "account_id" {
   description = "Account number of the current account"
   default     = ""
 }
-
-variable "ProcessingLambdaARN" {
-  description = "ARN of master accounts processing Lambda"
-}
-
-variable "LogBucketName" {
-  description = "Bucket name of master accounts S3 logging bucket"
-}
-
-# variable "destination_arn" {
-#   description = ""
-#   default     = ""
-# }
-
-
-# variable "root_account" {
-#   description = "Account number of the parent account"
-#   default     = ""
-# }
-
-
-# variable "s3_log_Location" {
-#   type        = "string"
-#   description = "S3 location for the logs streamed to this destination; example marketing/prod/999999999999/flow-logs/"
-# }
-
-
-# variable "logging-lambda" {
-#   description = ""
-#   default     = ""
-# }
-
-
-# variable "log_bucket_name" {
-#   description = ""
-#   default     = ""
-# }
-
-
-# variable "vpc_id" {
-#   description = "ID of VPC"
-# }
-
-
-# variable "traffic_type" {
-#   description = "Type of traffic to capture. Valid values: ACCEPT,REJECT, ALL"
-#   default     = "ALL"
-# }
-
-
-# variable "subnet_ids" {
-#   description = "IDs of subnets"
-#   type        = "list"
-#   default     = []
-# }
-
-
-# variable "eni_ids" {
-#   description = "IDs of ENIs"
-#   type        = "list"
-#   default     = []
-# }
-

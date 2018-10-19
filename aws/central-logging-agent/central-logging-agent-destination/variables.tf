@@ -1,8 +1,3 @@
-variable "name" {
-  default     = ""
-  description = "Name  (e.g. `bastion` or `db`)"
-}
-
 variable "namespace" {
   description = "Namespace (e.g. `cp` or `cloudposse`)"
   type        = "string"
@@ -13,17 +8,16 @@ variable "stage" {
   type        = "string"
 }
 
-variable "delimiter" {
+variable "environment" {
+  description = "Environment (e.g. `master`)"
   type        = "string"
-  default     = "-"
-  description = "Delimiter to be used between `name`, `namespace`, `stage`, etc."
 }
 
-variable "attributes" {
-  type        = "list"
-  default     = []
-  description = "Additional attributes (e.g. `policy` or `role`)"
+variable "repository" {
+  type = "string"
 }
+
+variable "master_account_id" {}
 
 variable "tags" {
   type        = "map"
@@ -58,12 +52,4 @@ variable "account_id" {
 
 variable "log_type" {
   description = "Type of log. IE flow_log"
-}
-
-variable "ProcessingLambdaARN" {
-  description = "ARN of master accounts processing Lambda"
-}
-
-variable "LogBucketName" {
-  description = "Bucket name of master accounts S3 logging bucket"
 }
