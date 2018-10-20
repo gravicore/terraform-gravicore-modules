@@ -1,9 +1,9 @@
 resource "aws_directory_service_directory" "default" {
-  name       = "${replace("${var.dns_zone_name}-${var.stage}.${var.parent_domain_name}", "-prd", "")}"
+  name       = "${replace("${var.stage}-${var.dns_zone_name}.${var.parent_domain_name}", "prd-", "")}"
   password   = "${var.password}"
   edition    = "${var.edition}"
   type       = "${var.type}"
-  alias      = "${module.common_label.id}"
+  alias      = "${replace("${var.stage}-${var.directory_services_short_name}", "prd-", "")}"
   enable_sso = "${var.enable_sso}"
   short_name = "${var.directory_services_short_name}"
 
