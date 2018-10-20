@@ -3,7 +3,7 @@ resource "aws_directory_service_directory" "default" {
   password   = "${var.password}"
   edition    = "${var.edition}"
   type       = "${var.type}"
-  alias      = "${replace("${var.stage}-${var.directory_services_short_name}", "prd-", "")}"
+  alias      = "${replace("${var.namespace}-ds-${var.stage}", "-prd", "")}"
   enable_sso = "${var.enable_sso}"
   short_name = "${var.directory_services_short_name}"
 
