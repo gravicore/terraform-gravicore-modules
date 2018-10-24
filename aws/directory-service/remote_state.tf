@@ -5,7 +5,7 @@ data "terraform_remote_state" "acct" {
     region         = "${var.aws_region}"
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
-    key            = "${var.stage}/${var.environment}/acct/terraform.tfstate"
+    key            = "${var.environment}/${var.stage}/acct/terraform.tfstate"
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
   }
@@ -18,7 +18,7 @@ data "terraform_remote_state" "vpc" {
     region         = "${var.aws_region}"
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
-    key            = "${var.stage}/${var.environment}/vpc/terraform.tfstate"
+    key            = "${var.environment}/${var.stage}/vpc/terraform.tfstate"
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
   }
