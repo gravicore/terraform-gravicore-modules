@@ -1,3 +1,24 @@
+variable "namespace" {}
+variable "environment" {}
+variable "stage" {}
+variable "master_account_id" {}
+variable "account_id" {}
+
+variable "repository" {
+  default = "github.com/gravicore/terraform-gravicore-modules/aws/directory-service"
+}
+
+variable "aws_region" {
+  default = "us-east-1"
+}
+
+variable "tags" {
+  default = {}
+}
+
+variable "directory_services_short_name" {}
+variable "parent_domain_name" {}
+
 variable "subnet_ids" {
   type        = "list"
   default     = []
@@ -41,7 +62,7 @@ variable "alias" {
 
 variable "short_name" {
   type        = "string"
-  default     = ""
+  default     = "CORP"
   description = "The short name of the directory, such as CORP."
 }
 
@@ -49,21 +70,4 @@ variable "netbios_node_type" {
   type        = "string"
   default     = "2"
   description = "The NetBIOS node type (1, 2, 4, or 8). AWS recommends to specify 2 since broadcast and multicast are not supported in their network."
-}
-
-variable "namespace" {}
-variable "environment" {}
-variable "stage" {}
-variable "master_account_id" {}
-variable "account_id" {}
-variable "repository" {}
-variable "directory_services_short_name" {}
-variable "parent_domain_name" {}
-
-variable "aws_region" {
-  default = "us-east-1"
-}
-
-variable "tags" {
-  default = {}
 }
