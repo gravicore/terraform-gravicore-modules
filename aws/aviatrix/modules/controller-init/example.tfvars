@@ -12,7 +12,7 @@ account_id = "987654321"
 
 # Optional variables
 
-repository = "github.com/gravicore/terraform-gravicore-modules/aws/aviatrix"
+repository = "github.com/gravicore/terraform-gravicore-modules"
 
 aws_region = "us-east-1"
 
