@@ -39,7 +39,7 @@ variable "Trace" {
 
 variable "child_account" {
   type        = "map"
-  default     = {}
+  default     = []
   description = "Child accounts to create destination points for"
 }
 

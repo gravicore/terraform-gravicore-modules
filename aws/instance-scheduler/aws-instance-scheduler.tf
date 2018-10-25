@@ -1,5 +1,5 @@
 locals {
-  aws_instance_scheduler_cross_account_roles = "${join(",",(formatlist("arn:aws:iam::%s:role/aws-instance-scheduler-re-EC2SchedulerCrossAccount", keys(var.child_account))))}"
+  aws_instance_scheduler_cross_account_roles = "${join(",",(formatlist("arn:aws:iam::%s:role/aws-instance-scheduler-re-EC2SchedulerCrossAccount", var.child_account)))}"
 }
 
 resource "aws_cloudformation_stack" "aws_instance_scheduler" {
