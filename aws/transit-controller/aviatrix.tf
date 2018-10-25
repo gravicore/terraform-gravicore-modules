@@ -20,7 +20,8 @@ locals {
 
 module "aviatrix_iam_roles" {
   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-iam-roles"
-  tags   = "${local.module_aviatrix_iam_roles_tags}"
+
+  # tags   = "${local.module_aviatrix_iam_roles_tags}"
 
   master-account-id = "${var.master_account_id}"
 }
@@ -33,7 +34,8 @@ locals {
 
 module "aviatrix_controller" {
   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-build"
-  tags   = "${local.module_aviatrix_controller_tags}"
+
+  # tags   = "${local.module_aviatrix_controller_tags}"
 
   vpc     = "${data.terraform_remote_state.vpc.vpc_id}"
   subnet  = "${data.terraform_remote_state.vpc.public_subnets[0]}"
