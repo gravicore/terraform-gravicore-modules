@@ -5,7 +5,7 @@ module "ssh_key_pair" {
   name      = "${var.environment}-${local.name}"
   tags      = "${local.tags}"
 
-  ssh_public_key_path   = "~/.ssh"
+  ssh_public_key_path   = "${pathexpand(~/.ssh/var.namespace)}"
   generate_ssh_key      = "true"
   private_key_extension = ".pem"
   public_key_extension  = ".pub"
