@@ -5,7 +5,7 @@ module "ssh_key_pair" {
   name      = "${local.name}"
   tags      = "${local.tags}"
 
-  ssh_public_key_path   = "/${replace(local.name_prefix, "-", "/")}"
+  ssh_public_key_path   = "/"
   generate_ssh_key      = "true"
   private_key_extension = ".pem"
   public_key_extension  = ".pub"
