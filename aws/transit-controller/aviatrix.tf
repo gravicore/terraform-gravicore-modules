@@ -1,8 +1,8 @@
 module "ssh_key_pair" {
   source    = "git::https://github.com/cloudposse/terraform-aws-key-pair.git?ref=0.2.5"
-  namespace = "${var.namespace}-${var.environment}"
+  namespace = "${var.namespace}"
   stage     = "${var.stage}"
-  name      = "${local.name}"
+  name      = "${var.environment}-${local.name}"
   tags      = "${local.tags}"
 
   ssh_public_key_path   = "/"
