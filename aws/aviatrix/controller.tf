@@ -15,11 +15,11 @@ module "ssh_key_pair" {
 locals {
   module_aviatrix_iam_roles_tags = "${merge(local.tags, map(
     "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-iam-roles",
-    "TerraformModuleVersion", "008ca86"))}"
+    "TerraformModuleVersion", "master"))}"
 }
 
 module "aviatrix_iam_roles" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-iam-roles"
+  source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles?ref=master"
 
   # tags   = "${local.module_aviatrix_iam_roles_tags}"
 
@@ -29,7 +29,7 @@ module "aviatrix_iam_roles" {
 locals {
   module_aviatrix_controller_tags = "${merge(local.tags, map(
     "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-build",
-    "TerraformModuleVersion", "0354b5e"))}"
+    "TerraformModuleVersion", "master"))}"
 }
 
 module "aviatrix_controller" {
@@ -41,6 +41,21 @@ module "aviatrix_controller" {
   subnet  = "${data.terraform_remote_state.vpc.public_subnets[0]}"
   keypair = "${module.ssh_key_pair.key_name}"
   ec2role = "${module.aviatrix_iam_roles.aviatrix-role-ec2-name}"
+}
+
+locals {
+  module_aviatrix_controller_init_tags = "${merge(local.tags, map(
+    "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-initialize",
+    "TerraformModuleVersion", "master"))}"
+}
+
+module "aviatrix_controller_init" {
+  source                = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
+  admin_email           = "${var.aviatrix_controller_init_admin_email}"
+  admin_password        = "${var.aviatrix_controller_init_admin_password}"
+  private_ip            = "${module.aviatrix_controller.controller-private-ip}"
+  public_ip             = "${module.aviatrix_controller.controller-public-ip}"
+  aviatrix_account_name = "${var.namespace}-master-prd"
 }
 
 # specify aviatrix as the provider with these parameters:

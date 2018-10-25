@@ -1,6 +1,21 @@
+terraform {
+  required_version = "~> 0.11.8"
+
+  # The configuration for this backend will be filled in by Terragrunt
+  backend "s3" {}
+}
+
+provider "aws" {
+  version = "~> 1.35"
+  region  = "${var.aws_region}"
+
+  assume_role {
+    role_arn = "arn:aws:iam::${var.account_id}:role/grv_deploy_svc"
+  }
+}
+
 locals {
-  name        = "${var.name == "" ? "transit" : var.name}"
-  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, local.name))}"
+  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
 
   business_tags = {
     Namespace   = "${var.namespace}"
@@ -12,7 +27,7 @@ locals {
     Repository      = "${var.repository}"
     MasterAccountID = "${var.master_account_id}"
     AccountID       = "${var.account_id}"
-    TerraformModule = "github.com/gravicore/terraform-gravicore-modules/aws/transit"
+    TerraformModule = "${var.terraform_module}"
   }
 
   automation_tags = {}
