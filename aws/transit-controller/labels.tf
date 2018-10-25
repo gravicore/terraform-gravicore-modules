@@ -1,6 +1,6 @@
 locals {
   name        = "${var.name == "" ? "transit" : var.name}"
-  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage))}-${local.name}"
+  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, local.name))}"
 
   business_tags = {
     Namespace   = "${var.namespace}"
