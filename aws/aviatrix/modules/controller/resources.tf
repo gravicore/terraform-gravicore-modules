@@ -19,7 +19,7 @@ module "ssh_key_pair" {
 # }
 
 module "aviatrix_iam_roles" {
-  source = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles"
+  source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles?ref=master"
 
   # tags   = "${local.module_aviatrix_iam_roles_tags}"
 
