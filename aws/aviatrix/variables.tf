@@ -45,14 +45,6 @@ variable terraform_module {
 # Module Custom Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "aviatrix_controller_username" {
-  default = "admin"
-}
-
-variable "aviatrix_controller_password" {
-  default = "ControllerPSWD#"
-}
-
 variable "aviatrix_controller_cloud_type" {
   default = 1
 }
@@ -60,3 +52,7 @@ variable "aviatrix_controller_cloud_type" {
 variable "aviatrix_gateway_size" {
   default = "t2.micro"
 }
+
+variable "aviatrix_controller_admin_email" {}
+
+variable "aviatrix_controller_admin_password" {}

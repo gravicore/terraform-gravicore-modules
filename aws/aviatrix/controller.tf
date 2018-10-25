@@ -50,11 +50,12 @@ locals {
 }
 
 module "aviatrix_controller_init" {
-  source                = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
-  admin_email           = "${var.aviatrix_controller_init_admin_email}"
-  admin_password        = "${var.aviatrix_controller_init_admin_password}"
-  private_ip            = "${module.aviatrix_controller.controller-private-ip}"
-  public_ip             = "${module.aviatrix_controller.controller-public-ip}"
+  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
+
+  admin_email           = "${var.aviatrix_controller_admin_email}"
+  admin_password        = "${var.aviatrix_controller_admin_password}"
+  private_ip            = "${module.aviatrix_controller.private_ip}"
+  public_ip             = "${module.aviatrix_controller.public_ip}"
   aviatrix_account_name = "${var.namespace}-master-prd"
 }
 
