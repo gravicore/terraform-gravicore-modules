@@ -15,7 +15,7 @@ module "aviatrix_controller_init" {
   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
 
   admin_email           = "${var.aviatrix_controller_admin_email}"
-  admin_password        = "${local.aviatrix_controller_admin_password}"
+  admin_password        = "${var.aviatrix_controller_admin_password}"
   private_ip            = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
   public_ip             = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
   aviatrix_account_name = "${var.namespace}-master-prd"
