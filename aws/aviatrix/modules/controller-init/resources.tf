@@ -1,14 +1,21 @@
+resource "random_string" "password" {
+  length  = 16
+  special = true
+}
+
 locals {
+  aviatrix_controller_admin_password = "${var.aviatrix_controller_admin_password == "" ? sha256(bcrypt(random_string.password.result)) : var.aviatrix_controller_admin_password}"
+
   module_aviatrix_controller_init_tags = "${merge(local.tags, map(
     "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-initialize",
     "TerraformModuleVersion", "master"))}"
 }
 
 module "aviatrix_controller_init" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
+  source = "git::https://github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize?ref=master"
 
   admin_email           = "${var.aviatrix_controller_admin_email}"
-  admin_password        = "${var.aviatrix_controller_admin_password}"
+  admin_password        = "${local.aviatrix_controller_admin_password}"
   private_ip            = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
   public_ip             = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
   aviatrix_account_name = "${var.namespace}-master-prd"

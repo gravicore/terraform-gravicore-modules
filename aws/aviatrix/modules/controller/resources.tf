@@ -33,7 +33,7 @@ module "aviatrix_iam_roles" {
 # }
 
 module "aviatrix_controller" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-build"
+  source = "git::https://github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-build?ref=master"
 
   # tags   = "${local.module_aviatrix_controller_tags}"
 

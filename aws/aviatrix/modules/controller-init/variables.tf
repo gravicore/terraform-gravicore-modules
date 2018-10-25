@@ -55,4 +55,6 @@ variable "aviatrix_gateway_size" {
 
 variable "aviatrix_controller_admin_email" {}
 
-variable "aviatrix_controller_admin_password" {}
+variable "aviatrix_controller_admin_password" {
+  default = ""
+}
