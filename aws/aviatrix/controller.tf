@@ -49,6 +49,17 @@ locals {
     "TerraformModuleVersion", "master"))}"
 }
 
+# specify aviatrix as the provider with these parameters:
+# controller_ip - public IP address of the controller
+# username - login user name, default is admin
+# password - password
+
+provider "aviatrix" {
+  controller_ip = "${module.aviatrix_controller.public_ip}"
+  username      = "${var.aviatrix_controller_admin_email}"
+  password      = "${var.aviatrix_controller_admin_password}"
+}
+
 module "aviatrix_controller_init" {
   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
 
@@ -58,19 +69,6 @@ module "aviatrix_controller_init" {
   public_ip             = "${module.aviatrix_controller.public_ip}"
   aviatrix_account_name = "${var.namespace}-master-prd"
 }
-
-# specify aviatrix as the provider with these parameters:
-# controller_ip - public IP address of the controller
-# username - login user name, default is admin
-# password - password
-
-
-# provider "aviatrix" {
-#   controller_ip = "35.5.26.157"
-#   username      = "${var.aviatrix_controller_username}"
-#   password      = "${var.aviatrix_controller_password}"
-# }
-
 
 # Launch a gateway with these parameters:
 # cloud_type - Enter 1 for AWS. Only AWS is currently supported.
