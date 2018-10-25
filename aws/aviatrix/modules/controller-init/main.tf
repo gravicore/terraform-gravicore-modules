@@ -10,11 +10,11 @@ terraform {
 # username - login user name, default is admin
 # password - password
 
-# provider "aviatrix" {
-#   controller_ip = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
-#   username      = "${var.aviatrix_controller_admin_email}"
-#   password      = "${var.aviatrix_controller_admin_password}"
-# }
+provider "aviatrix" {
+  controller_ip = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
+  username      = "admin"
+  password      = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
+}
 
 locals {
   name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
