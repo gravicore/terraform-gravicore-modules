@@ -6,5 +6,5 @@ variable "aws_region" {
 variable "PrimarySchedulerAccount" {
   type        = "string"
   default     = ""
-  description = "Account number of Insttance Scheduler account"
+  description = "Account number of Instance Scheduler account"
 }
