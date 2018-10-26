@@ -1,6 +1,6 @@
 resource "aviatrix_account" "current" {
   account_name       = "${local.account_name}"
-  cloud_type         = "${var.cloud_type}"
+  cloud_type         = "${var.aviatrix_controller_cloud_type}"
   aws_account_number = "${var.account_id}"
   aws_iam            = "true"
   aws_role_app       = "arn:aws:iam::${var.account_id}:role/aviatrix-role-app"
