@@ -12,19 +12,11 @@ module "ssh_key_pair" {
   chmod_command         = "chmod 600 %v"
 }
 
-# locals {
-#   module_aviatrix_controller_tags = "${merge(local.tags, map(
-#     "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-build",
-#     "TerraformModuleVersion", "master"))}"
-# }
-
 module "aviatrix_controller" {
   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-build"
-
-  # tags   = "${local.module_aviatrix_controller_tags}"
 
   vpc     = "${data.terraform_remote_state.vpc.vpc_id}"
   subnet  = "${data.terraform_remote_state.vpc.public_subnets[0]}"
   keypair = "${module.ssh_key_pair.key_name}"
-  ec2role = "${module.aviatrix_iam_roles.aviatrix-role-ec2-name}"
+  ec2role = "${data.terraform_remote_state.master_account.aviatrix_role_ec2_name}"
 }
