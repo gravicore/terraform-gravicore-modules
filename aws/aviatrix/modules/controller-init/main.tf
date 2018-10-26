@@ -11,9 +11,9 @@ terraform {
 # password - password
 
 provider "aviatrix" {
-  controller_ip = "34.202.104.5"
+  controller_ip = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
   username      = "admin"
-  password      = "10.192.131.48"
+  password      = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
 }
 
 locals {
