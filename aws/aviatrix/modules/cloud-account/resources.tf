@@ -5,6 +5,8 @@ module "aviatrix_controller_iam_roles" {
 }
 
 resource "aviatrix_account" "current" {
+  depends_on = ["module.aviatrix_controller_iam_roles"]
+
   account_name       = "${local.account_name}"
   cloud_type         = "${var.aviatrix_controller_cloud_type}"
   aws_account_number = "${var.account_id}"
