@@ -11,17 +11,17 @@ locals {
     "TerraformModuleVersion", "master"))}"
 }
 
-# module "aviatrix_controller_init" {
-#   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
+module "aviatrix_controller_init" {
+  # source = "git::https://github.com/mike-r-mclaughlin/terraform-modules.git//aviatrix-controller-initialize?ref=0cd96b8"
+  # source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=master"
+  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
 
-
-#   admin_email           = "${var.aviatrix_controller_admin_email}"
-#   admin_password        = "${local.aviatrix_controller_admin_password}"
-#   private_ip            = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
-#   public_ip             = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
-#   aviatrix_account_name = "${var.namespace}-master-prd"
-# }
-
+  admin_email           = "${var.aviatrix_controller_admin_email}"
+  admin_password        = "${local.aviatrix_controller_admin_password}"
+  private_ip            = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
+  public_ip             = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
+  aviatrix_account_name = "${var.namespace}-master-prd"
+}
 
 # Launch a gateway with these parameters:
 # cloud_type - Enter 1 for AWS. Only AWS is currently supported.

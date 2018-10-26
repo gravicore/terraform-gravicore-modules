@@ -13,7 +13,7 @@ module "ssh_key_pair" {
 }
 
 module "aviatrix_controller" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-build"
+  source = "git::https://github.com/mike-r-mclaughlin/terraform-modules.git//aviatrix-controller-build?ref=0cd96b8"
 
   vpc     = "${data.terraform_remote_state.vpc.vpc_id}"
   subnet  = "${data.terraform_remote_state.vpc.public_subnets[0]}"
