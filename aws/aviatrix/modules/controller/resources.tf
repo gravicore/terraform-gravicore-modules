@@ -13,10 +13,10 @@ module "ssh_key_pair" {
 }
 
 module "aviatrix_controller" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-build"
+  source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-build?ref=0cd96b872b9bcc53df3d77fcf59f544c3e4eaf1d"
 
   vpc     = "${data.terraform_remote_state.vpc.vpc_id}"
   subnet  = "${data.terraform_remote_state.vpc.public_subnets[0]}"
   keypair = "${module.ssh_key_pair.key_name}"
-  ec2role = "aviatrix-role-ec2_profile"
+  ec2role = "${data.terraform_remote_state.master_account.aviatrix_role_ec2_name}"
 }
