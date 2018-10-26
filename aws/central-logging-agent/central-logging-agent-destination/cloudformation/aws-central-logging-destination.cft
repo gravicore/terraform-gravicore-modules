@@ -1,0 +1,429 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Create log destination and required resources",
+    "Parameters": {
+        "LogBucketName": {
+            "Type": "String",
+            "Default": "central-log-do-not-delete",
+            "Description": "Destination logging bucket"
+        },
+        "LogS3Location": {
+            "Type": "String",
+            "Default": "<BU>/<ENV>/<SOURCE_ACCOUNT>/<LOG_TYPE>/",
+            "Description": "S3 location for the logs streamed to this destination; example marketing/prod/999999999999/flow-logs/"
+        },
+        "ProcessingLambdaARN": {
+            "Type": "String",
+            "Default": "",
+            "Description": "CloudWatch logs data processing function"
+        },
+        "SourceAccount": {
+            "Type": "String",
+            "Default": "",
+            "Description": "Source application account number"
+        }
+    },
+    "Resources": {
+        "MyStream": {
+            "Type": "AWS::Kinesis::Stream",
+            "Properties": {
+                "Name": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "-Stream"
+                        ]
+                    ]
+                },
+                "RetentionPeriodHours": 48,
+                "ShardCount": 1,
+                "Tags": [
+                    {
+                        "Key": "Solution",
+                        "Value": "CentralLogging"
+                    }
+                ]
+            }
+        },
+        "LogRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    {
+                                        "Fn::Join": [
+                                            "",
+                                            [
+                                                "logs.",
+                                                {
+                                                    "Ref": "AWS::Region"
+                                                },
+                                                ".amazonaws.com"
+                                            ]
+                                        ]
+                                    }
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/service-role/"
+            }
+        },
+        "LogRolePolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "-LogPolicy"
+                        ]
+                    ]
+                },
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "kinesis:PutRecord"
+                            ],
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "MyStream",
+                                        "Arn"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "iam:PassRole"
+                            ],
+                            "Resource": [
+                                {
+                                    "Fn::GetAtt": [
+                                        "LogRole",
+                                        "Arn"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "LogRole"
+                    }
+                ]
+            }
+        },
+        "LogDestination": {
+            "Type": "AWS::Logs::Destination",
+            "DependsOn": [
+                "MyStream",
+                "LogRole",
+                "LogRolePolicy"
+            ],
+            "Properties": {
+                "DestinationName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "-Destination"
+                        ]
+                    ]
+                },
+                "RoleArn": {
+                    "Fn::GetAtt": [
+                        "LogRole",
+                        "Arn"
+                    ]
+                },
+                "TargetArn": {
+                    "Fn::GetAtt": [
+                        "MyStream",
+                        "Arn"
+                    ]
+                },
+                "DestinationPolicy": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "{\"Version\" : \"2012-10-17\",\"Statement\" : [{\"Effect\" : \"Allow\",",
+                            " \"Principal\" : {\"AWS\" : \"",
+                            {
+                                "Ref": "SourceAccount"
+                            },
+                            "\"},",
+                            "\"Action\" : \"logs:PutSubscriptionFilter\",",
+                            " \"Resource\" : \"",
+                            {
+                                "Fn::Join": [
+                                    "",
+                                    [
+                                        "arn:aws:logs:",
+                                        {
+                                            "Ref": "AWS::Region"
+                                        },
+                                        ":",
+                                        {
+                                            "Ref": "AWS::AccountId"
+                                        },
+                                        ":destination:",
+                                        {
+                                            "Ref": "AWS::StackName"
+                                        },
+                                        "-Destination"
+                                    ]
+                                ]
+                            },
+                            "\"}]}"
+                        ]
+                    ]
+                }
+            }
+        },
+        "S3deliveryStream": {
+            "DependsOn": [
+                "S3deliveryRole",
+                "S3deliveryPolicy"
+            ],
+            "Type": "AWS::KinesisFirehose::DeliveryStream",
+            "Properties": {
+                "DeliveryStreamName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "-DeliveryStream"
+                        ]
+                    ]
+                },
+                "DeliveryStreamType": "KinesisStreamAsSource",
+                "KinesisStreamSourceConfiguration": {
+                    "KinesisStreamARN": {
+                        "Fn::GetAtt": [
+                            "MyStream",
+                            "Arn"
+                        ]
+                    },
+                    "RoleARN": {
+                        "Fn::GetAtt": [
+                            "S3deliveryRole",
+                            "Arn"
+                        ]
+                    }
+                },
+                "ExtendedS3DestinationConfiguration": {
+                    "BucketARN": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "arn:aws:s3:::",
+                                {
+                                    "Ref": "LogBucketName"
+                                }
+                            ]
+                        ]
+                    },
+                    "BufferingHints": {
+                        "IntervalInSeconds": "60",
+                        "SizeInMBs": "50"
+                    },
+                    "CompressionFormat": "UNCOMPRESSED",
+                    "Prefix": {
+                        "Ref": "LogS3Location"
+                    },
+                    "RoleARN": {
+                        "Fn::GetAtt": [
+                            "S3deliveryRole",
+                            "Arn"
+                        ]
+                    },
+                    "ProcessingConfiguration": {
+                        "Enabled": "true",
+                        "Processors": [
+                            {
+                                "Parameters": [
+                                    {
+                                        "ParameterName": "LambdaArn",
+                                        "ParameterValue": {
+                                            "Ref": "ProcessingLambdaARN"
+                                        }
+                                    }
+                                ],
+                                "Type": "Lambda"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "S3deliveryRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Sid": "",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "firehose.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole",
+                            "Condition": {
+                                "StringEquals": {
+                                    "sts:ExternalId": {
+                                        "Ref": "AWS::AccountId"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "S3deliveryPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "-FirehosePolicy"
+                        ]
+                    ]
+                },
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "s3:AbortMultipartUpload",
+                                "s3:GetBucketLocation",
+                                "s3:GetObject",
+                                "s3:ListBucket",
+                                "s3:ListBucketMultipartUploads",
+                                "s3:PutObject"
+                            ],
+                            "Resource": [
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::Join": [
+                                                    "",
+                                                    [
+                                                        "arn:aws:s3:::",
+                                                        {
+                                                            "Ref": "LogBucketName"
+                                                        }
+                                                    ]
+                                                ]
+                                            }
+                                        ]
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            {
+                                                "Fn::Join": [
+                                                    "",
+                                                    [
+                                                        "arn:aws:s3:::",
+                                                        {
+                                                            "Ref": "LogBucketName"
+                                                        }
+                                                    ]
+                                                ]
+                                            },
+                                            "*"
+                                        ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "Effect": "Allow",
+                            "Action": [
+                                "lambda:InvokeFunction",
+                                "lambda:GetFunctionConfiguration",
+                                "logs:PutLogEvents",
+                                "kinesis:DescribeStream",
+                                "kinesis:GetShardIterator",
+                                "kinesis:GetRecords",
+                                "kms:Decrypt"
+                            ],
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "S3deliveryRole"
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "Destination": {
+            "Description": "Destination",
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        "arn:aws:logs:",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        ":",
+                        {
+                            "Ref": "AWS::AccountId"
+                        },
+                        ":destination:",
+                        {
+                            "Ref": "AWS::StackName"
+                        },
+                        "-Destination"
+                    ]
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Sub": "${AWS::StackName}-Destination"
+                }
+            }
+        }
+    }
+}
