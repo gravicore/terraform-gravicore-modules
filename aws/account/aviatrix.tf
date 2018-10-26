@@ -1,5 +1,5 @@
 module "aviatrix_controller_iam_roles" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-iam-roles"
+  source = "git://https://github.com/gravicore/terraform-modules.git//aviatrix-controller-iam-roles?ref=issue/MC-29"
 
   master-account-id = "${var.master_account_id}"
 }
