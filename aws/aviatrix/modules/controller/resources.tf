@@ -18,5 +18,5 @@ module "aviatrix_controller" {
   vpc     = "${data.terraform_remote_state.vpc.vpc_id}"
   subnet  = "${data.terraform_remote_state.vpc.public_subnets[0]}"
   keypair = "${module.ssh_key_pair.key_name}"
-  ec2role = "aviatrix-role-ec2_profile"
+  ec2role = "aviatrix-role-ec2"
 }
