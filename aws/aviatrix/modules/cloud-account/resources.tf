@@ -1,10 +1,16 @@
+module "aviatrix_controller_iam_roles" {
+  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-iam-roles"
+
+  master-account-id = "${var.master_account_id}"
+}
+
 resource "aviatrix_account" "current" {
   account_name       = "${local.account_name}"
   cloud_type         = "${var.aviatrix_controller_cloud_type}"
   aws_account_number = "${var.account_id}"
   aws_iam            = "true"
-  aws_role_app       = "arn:aws:iam::${var.account_id}:role/aviatrix-role-app"
-  aws_role_ec2       = "arn:aws:iam::${var.account_id}:role/aviatrix-role-ec2"
+  aws_role_app       = "${module.aviatrix_controller_iam_roles.aviatrix-role-app-name}"
+  aws_role_ec2       = "${module.aviatrix_controller_iam_roles.aviatrix-role-ec2-name}"
 }
 
 # Launch a gateway with these parameters:

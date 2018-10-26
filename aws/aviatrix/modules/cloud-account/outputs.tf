@@ -1,9 +1,3 @@
-module "aviatrix_controller_iam_roles" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-iam-roles"
-
-  master-account-id = "${var.master_account_id}"
-}
-
 output "aviatrix_role_ec2_name" {
   description = "The ARN of the newly created IAM role aviatrix-role-ec2"
   value       = "${module.aviatrix_controller_iam_roles.aviatrix-role-ec2-name}"

@@ -13,20 +13,6 @@ module "ssh_key_pair" {
 }
 
 # locals {
-#   module_aviatrix_iam_roles_tags = "${merge(local.tags, map(
-#     "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-iam-roles",
-#     "TerraformModuleVersion", "master"))}"
-# }
-
-module "aviatrix_iam_roles" {
-  source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles?ref=master"
-
-  # tags   = "${local.module_aviatrix_iam_roles_tags}"
-
-  master-account-id = "${var.master_account_id}"
-}
-
-# locals {
 #   module_aviatrix_controller_tags = "${merge(local.tags, map(
 #     "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-build",
 #     "TerraformModuleVersion", "master"))}"

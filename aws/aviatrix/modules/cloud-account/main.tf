@@ -5,6 +5,15 @@ terraform {
   backend "s3" {}
 }
 
+provider "aws" {
+  version = "~> 1.35"
+  region  = "${var.aws_region}"
+
+  assume_role {
+    role_arn = "arn:aws:iam::${var.account_id}:role/grv_deploy_svc"
+  }
+}
+
 provider "aviatrix" {
   controller_ip = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
   username      = "admin"
