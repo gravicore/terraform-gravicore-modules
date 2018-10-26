@@ -94,3 +94,8 @@ variable "SendAnonymousData" {
   default     = "Yes"
   description = "Send Anonymous Metrics Data."
 }
+
+variable "is_master" {
+  description = "Passes through if account is master. 1 or 0"
+  default     = "0"
+}

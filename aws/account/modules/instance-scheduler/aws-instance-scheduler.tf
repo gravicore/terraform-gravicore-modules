@@ -3,6 +3,7 @@ locals {
 }
 
 resource "aws_cloudformation_stack" "aws_instance_scheduler" {
+  count        = "${var.is_master}"
   name         = "aws-instance-scheduler"
   capabilities = ["CAPABILITY_IAM"]
 
@@ -32,6 +33,7 @@ resource "aws_cloudformation_stack" "aws_instance_scheduler" {
 }
 
 resource "aws_cloudformation_stack" "aws_instance_scheduler_schedules" {
+  count        = "${var.is_master}"
   depends_on   = ["aws_cloudformation_stack.aws_instance_scheduler"]
   name         = "aws-instance-scheduler-schedules"
   capabilities = ["CAPABILITY_IAM"]

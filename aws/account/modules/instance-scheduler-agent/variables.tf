@@ -10,6 +10,6 @@ variable "PrimarySchedulerAccount" {
 }
 
 variable "is_child" {
-  description = "Passes through if account is chid. 1 or 0"
+  description = "Passes through if account is child. 1 or 0"
   default     = "0"
 }
