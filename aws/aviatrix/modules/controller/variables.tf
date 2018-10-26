@@ -3,8 +3,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "tags" {
-  description = "https://aws.amazon.com/answers/account-management/aws-tagging-strategies/"
-  default     = {}
+  default = {}
 }
 
 variable "namespace" {
@@ -31,7 +30,7 @@ variable "account_id" {}
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "name" {
-  default = "acct"
+  default = "avtrx"
 }
 
 variable "aws_region" {
@@ -39,18 +38,10 @@ variable "aws_region" {
 }
 
 variable terraform_module {
-  default = "github.com/gravicore/terraform-gravicore-modules/aws/account"
+  default = "github.com/gravicore/terraform-gravicore-modules/aws/aviatrix"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Custom Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable allow_gravicore_access {
-  description = "Flag to establish SAML connectivity for Gravicore managed services"
-  default     = false
-}
-
-variable "iam_account_alias" {
-  description = "The account alias to create."
-}
