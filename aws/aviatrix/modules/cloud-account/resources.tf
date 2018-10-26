@@ -3,8 +3,8 @@ resource "aviatrix_account" "current" {
   cloud_type         = "${var.aviatrix_controller_cloud_type}"
   aws_account_number = "${var.account_id}"
   aws_iam            = "true"
-  aws_role_ec2       = "${data.terraform_remote_state.account.aviatrix_role_ec2_name}"
-  aws_role_app       = "${data.terraform_remote_state.account.aviatrix_role_app_name}"
+  aws_role_ec2       = "arn:aws:iam::${var.account_id}:role/${data.terraform_remote_state.account.aviatrix_role_ec2_name}"
+  aws_role_app       = "arn:aws:iam::${var.account_id}:role/${data.terraform_remote_state.account.aviatrix_role_app_name}"
 }
 
 # Launch a gateway with these parameters:
