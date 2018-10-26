@@ -14,19 +14,11 @@ locals {
 module "aviatrix_controller_init" {
   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
 
-<<<<<<< HEAD
-  admin_email           = "devsecops@gravicore.io"
-  admin_password        = "@transitHUB_1@"
-  private_ip            = "10.192.131.48"
-  public_ip             = "34.202.104.5"
-  aviatrix_account_name = "msn-master-prd"
-=======
   admin_email           = "${var.aviatrix_controller_admin_email}"
   admin_password        = "${local.aviatrix_controller_admin_password}"
   private_ip            = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
   public_ip             = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
   aviatrix_account_name = "${var.namespace}-master-prd"
->>>>>>> parent of 1ce764a... #9 Disable password generator
 }
 
 # Launch a gateway with these parameters:
