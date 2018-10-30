@@ -1,5 +1,20 @@
+terraform {
+  required_version = "~> 0.11.8"
+
+  backend "s3" {}
+}
+
+provider "aws" {
+  version = "~> 1.35"
+  region  = "${var.aws_region}"
+
+  assume_role {
+    role_arn = "arn:aws:iam::${var.account_id}:role/grv_deploy_svc"
+  }
+}
+
 locals {
-  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage))}-vpc"
+  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
 
   business_tags = {
     Namespace   = "${var.namespace}"
@@ -11,7 +26,7 @@ locals {
     Repository      = "${var.repository}"
     MasterAccountID = "${var.master_account_id}"
     AccountID       = "${var.account_id}"
-    TerraformModule = "github.com/gravicore/terraform-gravicore-modules/aws/vpc"
+    TerraformModule = "${var.terraform_module}"
   }
 
   automation_tags = {}

@@ -12,8 +12,6 @@ locals {
 }
 
 module "aviatrix_controller_init" {
-  # source = "git::https://github.com/mike-r-mclaughlin/terraform-modules.git//aviatrix-controller-initialize?ref=0cd96b8"
-  # source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=master"
   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
 
   admin_email           = "${var.aviatrix_controller_admin_email}"
