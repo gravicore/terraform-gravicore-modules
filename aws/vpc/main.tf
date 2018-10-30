@@ -15,20 +15,30 @@ provider "aws" {
 }
 
 locals {
-  module_vpc_tags = "${merge(local.tags, map(
-    "TerraformModule", "github.com/terraform-aws-modules/terraform-aws-vpc",
-    "TerraformModuleVersion", "v1.46.0"))}"
-}
+  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
 
-module "vpc" {
-  source = "github.com/terraform-aws-modules/terraform-aws-vpc?ref=v1.46.0"
-  name   = "${local.name_prefix}"
-  tags   = "${local.module_vpc_tags}"
+  business_tags = {
+    Namespace   = "${var.namespace}"
+    Environment = "${var.environment}"
+  }
 
-  azs                = ["${var.aws_region}a", "${var.aws_region}b"]
-  cidr               = "${var.cidr_network}.0.0/16"
-  private_subnets    = ["${var.cidr_network}.0.0/19", "${var.cidr_network}.32.0/19"]
-  public_subnets     = ["${var.cidr_network}.128.0/20", "${var.cidr_network}.144.0/20"]
-  enable_nat_gateway = true
-  single_nat_gateway = false
+  technical_tags = {
+    Stage           = "${var.stage}"
+    Repository      = "${var.repository}"
+    MasterAccountID = "${var.master_account_id}"
+    AccountID       = "${var.account_id}"
+    TerraformModule = "${var.terraform_module}"
+  }
+
+  automation_tags = {}
+
+  security_tags = {}
+
+  tags = "${merge(
+    local.technical_tags,
+    local.business_tags,
+    local.automation_tags,
+    local.security_tags,
+    var.tags
+  )}"
 }

@@ -10,6 +10,8 @@ master_account_id = "123456789"
 
 account_id = "987654321"
 
+name = "vpc"
+
 cidr_network = "10.0"
 
 # Optional variables
