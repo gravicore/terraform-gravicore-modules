@@ -1,19 +1,52 @@
-variable "namespace" {}
-variable "environment" {}
-variable "stage" {}
+# ----------------------------------------------------------------------------------------------------------------------
+# Platform Standard Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
+variable "tags" {
+  default = {}
+}
+
+variable "namespace" {
+  default = "grv"
+}
+
+variable "environment" {
+  default = "master"
+}
+
+variable "stage" {
+  default = "dev"
+}
+
+variable "repository" {
+  default = ""
+}
+
 variable "master_account_id" {}
 variable "account_id" {}
 
-variable "repository" {
-  default = "github.com/gravicore/terraform-gravicore-modules/aws/directory-service"
+# ----------------------------------------------------------------------------------------------------------------------
+# Module Standard Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
+variable "name" {
+  default = "avtrx"
 }
 
 variable "aws_region" {
   default = "us-east-1"
 }
 
-variable "tags" {
-  default = {}
+variable terraform_module {
+  default = "github.com/gravicore/terraform-gravicore-modules/aws/directory-service"
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Module Custom Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
+variable "vpc_name" {
+  default = "shared-vpc"
 }
 
 variable "directory_services_short_name" {}
