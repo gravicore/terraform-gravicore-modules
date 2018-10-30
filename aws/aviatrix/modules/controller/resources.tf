@@ -14,7 +14,7 @@ module "ssh_key_pair" {
 
 locals {
   module_vgw_tags = "${merge(local.tags, map(
-    "Name", "${join("-", list(var.namespace, var.environment, var.stage, var.name, var.transit_vpc_name, "vgw"))}"
+    "Name", "${join("-", list(var.namespace, var.environment, var.stage, "transit-vgw"))}"
   ))}"
 }
 
