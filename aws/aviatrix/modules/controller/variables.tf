@@ -46,5 +46,5 @@ variable terraform_module {
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "transit_vpc_name" {
-  default = "transit-vpc"
+  default = "shared-vpc"
 }
