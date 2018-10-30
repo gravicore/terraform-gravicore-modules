@@ -1,0 +1,69 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Schedules",
+  "Parameters": {
+    "ServiceTokenID": {
+      "Type": "String",
+      "MinLength": 20,
+      "MaxLength": 2048,
+      "Description": "ARN of stack to use for associating periods and schedules with instance scheduler main stack."
+    }
+  },
+  "Resources": {
+    "WorkingHours": {
+      "Type": "Custom::ServiceInstanceSchedule",
+      "Properties": {
+        "ServiceToken": {
+          "Ref": "ServiceTokenID"
+        },
+        "Description": "",
+        "Enforced": "True",
+        "Timezone": "America/Denver",
+        "Periods": [
+          {
+            "Description": "Opening hours on weekdays",
+            "BeginTime": "06:00",
+            "EndTime": "18:00",
+            "WeekDays": "Mon-Fri"
+          }
+        ]
+      }
+    },
+    "WorkingHoursUnenforced": {
+      "Type": "Custom::ServiceInstanceSchedule",
+      "Properties": {
+        "ServiceToken": {
+          "Ref": "ServiceTokenID"
+        },
+        "Description": "",
+        "Enforced": "False",
+        "Timezone": "America/Denver",
+        "Periods": [
+          {
+            "Description": "Opening hours on weekdays",
+            "BeginTime": "06:00",
+            "EndTime": "18:00",
+            "WeekDays": "Mon-Fri"
+          }
+        ]
+      }
+    },
+    "AlwaysOffUnenforced": {
+      "Type": "Custom::ServiceInstanceSchedule",
+      "Properties": {
+        "ServiceToken": {
+          "Ref": "ServiceTokenID"
+        },
+        "Description": "",
+        "Enforced": "False",
+        "Timezone": "America/Denver",
+        "Periods": [
+          {
+            "Description": "AlwaysOffUnenforced",
+            "EndTime": "03:00"
+          }
+        ]
+      }
+    }
+  }
+}

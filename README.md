@@ -1,6 +1,6 @@
 <a href="http://gravicore.io"><img src="https://docs.google.com/uc?id=1w7JERRtb2FlhqTE5KERM1Yu3bImmfypP" alt="Gravicore" width="400"></a>
 
-# terraform-gravicore-modules ![Build Status](https://img.shields.io/badge/build-undefined-lightgrey.svg) [![Latest Release](https://img.shields.io/github/release/gravicore/terraform-modules.svg)](https://github.com/gravicore/terraform-modules/releases/latest)
+# terraform-gravicore-modules ![Build Status](https://img.shields.io/badge/build-undefined-lightgrey.svg) [![Latest Release](https://img.shields.io/github/release/gravicore/terraform-gravicore-modules.svg)](https://github.com/gravicore/terraform-gravicore-modules/releases/latest)
 
 This is a collection of reusable Terraform modules for Gravicore's cloud automation platform.
 
@@ -8,10 +8,11 @@ This is a collection of reusable Terraform modules for Gravicore's cloud automat
 
 ### AWS
 
-| Module                 | Description                                                                                                |
-| :--------------------- | :--------------------------------------------------------------------------------------------------------- |
-| [VPC](aws/vpc)         | A standard, secure VPC with public subnets (2), private subnets (2), NAT Gateways and an Internet Gateway. |
-| [Account](aws/account) | A collection of modules for bootstrapping an AWS Organization and associate children accounts.             |
+| Module                   | Description                                                                                                |
+| :----------------------- | :--------------------------------------------------------------------------------------------------------- |
+| [Account](aws/account)   | A collection of modules for bootstrapping an AWS Organization and associate children accounts.             |
+| [VPC](aws/vpc)           | A standard, secure VPC with public subnets (2), private subnets (2), NAT Gateways and an Internet Gateway. |
+| [Aviatrix](aws/aviatrix) | A collection of modules for deploying Aviatrix's global transit hub solution.                              |
 
 ## Contributing
 
