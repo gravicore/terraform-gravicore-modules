@@ -19,8 +19,6 @@ locals {
 }
 
 resource "aws_vpn_gateway" "vgw" {
-  vpc_id = "${aws_vpc.main.id}"
-
   tags = "${local.module_vgw_tags}"
 }
 
