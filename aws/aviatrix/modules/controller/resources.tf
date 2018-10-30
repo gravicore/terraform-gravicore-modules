@@ -12,6 +12,18 @@ module "ssh_key_pair" {
   chmod_command         = "chmod 600 %v"
 }
 
+locals {
+  module_vgw_tags = "${merge(local.tags, map(
+    "Name", "${join("-", list(var.namespace, var.environment, var.stage, var.name, var.transit_vpc_name, "vgw"))}"
+  ))}"
+}
+
+resource "aws_vpn_gateway" "vgw" {
+  vpc_id = "${aws_vpc.main.id}"
+
+  tags = "${local.module_vgw_tags}"
+}
+
 module "aviatrix_controller" {
   source = "git::https://github.com/mike-r-mclaughlin/terraform-modules.git//aviatrix-controller-build?ref=0cd96b8"
 
