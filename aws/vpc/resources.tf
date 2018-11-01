@@ -55,7 +55,7 @@ locals {
 module "test_ssh_sg" {
   source      = "terraform-aws-modules/security-group/aws//modules/ssh"
   version     = "2.9.0"
-  create      = "${var.create_test_instance}"
+  create      = "${var.create_test_instance == "true" ? true : false}"
   name        = "${local.name_prefix}-test"
   description = "Security group for testing ssh within VPC"
   tags        = "${local.module_test_ssh_sg_tags}"
@@ -68,7 +68,7 @@ module "test_ssh_sg" {
 module "test_ssh_ec2_instance" {
   source = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.7.5"
 
-  instance_enabled = "${var.create_test_instance == true ? "true" : "false"}"
+  instance_enabled = "${var.create_test_instance}"
   namespace        = "${var.namespace}"
   stage            = "${var.stage}"
   name             = "${var.name}-test"
