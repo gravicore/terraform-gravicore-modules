@@ -48,3 +48,15 @@ variable terraform_module {
 variable "cidr_network" {
   default = "10.0"
 }
+
+variable "create_test_instance" {
+  default = false
+}
+
+variable "test_instance_type" {
+  default = "t2.nano"
+}
+
+variable "test_ingress_cidr_blocks" {
+  default = ["10.0.0.0/8"]
+}
