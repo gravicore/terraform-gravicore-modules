@@ -72,9 +72,9 @@ module "test_ssh_ec2_instance" {
   stage            = "${var.stage}"
   name             = "${var.name}-test"
 
-  ssh_key_pair    = "${module.ssh_key_pair_private.ssh_key_pair}"
+  ssh_key_pair    = "${module.ssh_key_pair_private.key_name}"
   instance_type   = "${var.test_instance_type}"
   vpc_id          = "${module.vpc.vpc_id}"
   security_groups = ["${module.test_ssh_sg.this_security_group_id}"]
-  subnet          = "${module.vpc.module.vpc.private_subnets[0]}"
+  subnet          = "${module.vpc.private_subnets[0]}"
 }
