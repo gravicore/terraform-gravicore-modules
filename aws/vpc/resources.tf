@@ -48,8 +48,8 @@ module "ssh_key_pair_private" {
 
 locals {
   module_test_ssh_sg_tags = "${merge(local.tags, map(
-    "TerraformModule", "https://registry.terraform.io/modules/terraform-aws-modules/security-group/aws/2.9.0",
-    "TerraformModuleVersion", "v1.46.0"))}"
+    "TerraformModule", "registry.terraform.io/modules/terraform-aws-modules/security-group/aws",
+    "TerraformModuleVersion", "2.9.0"))}"
 }
 
 module "test_ssh_sg" {
@@ -65,13 +65,19 @@ module "test_ssh_sg" {
 }
 
 # Test EC2 instance
-module "test_ssh_ec2_instance" {
-  source = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.7.5"
+locals {
+  module_test_ssh_ec2_instance_tags = "${merge(local.tags, map(
+    "TerraformModule", "github.com/cloudposse/terraform-aws-ec2-instance",
+    "TerraformModuleVersion", "0.7.5"))}"
+}
 
+module "test_ssh_ec2_instance" {
+  source           = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.7.5"
   instance_enabled = "${var.create_test_instance}"
   namespace        = "${var.namespace}"
   stage            = "${var.stage}"
   name             = "${var.name}-test"
+  tags             = "${local.module_test_ssh_ec2_instance_tags}"
 
   ssh_key_pair    = "${module.ssh_key_pair_private.key_name}"
   instance_type   = "${var.test_instance_type}"
