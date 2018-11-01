@@ -66,11 +66,12 @@ module "test_ssh_sg" {
 
 # Test EC2 instance
 module "test_ssh_ec2_instance" {
-  source           = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.7.5"
-  instance_enabled = "${var.create_test_instance}"
-  namespace        = "${var.namespace}"
-  stage            = "${var.stage}"
-  name             = "${var.name}-test"
+  source = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.7.5"
+
+  # instance_enabled = "${var.create_test_instance}"
+  namespace = "${var.namespace}"
+  stage     = "${var.stage}"
+  name      = "${var.name}-test"
 
   ssh_key_pair    = "${module.ssh_key_pair_private.key_name}"
   instance_type   = "${var.test_instance_type}"
