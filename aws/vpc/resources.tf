@@ -80,9 +80,10 @@ module "test_ssh_ec2_instance" {
   name             = "${var.name}-test"
   tags             = "${local.module_test_ssh_ec2_instance_tags}"
 
-  ssh_key_pair    = "${module.ssh_key_pair_private.key_name}"
-  instance_type   = "${var.test_instance_type}"
-  vpc_id          = "${module.vpc.vpc_id}"
-  security_groups = ["${module.test_ssh_sg.this_security_group_id}"]
-  subnet          = "${module.vpc.private_subnets[0]}"
+  ssh_key_pair                = "${module.ssh_key_pair_private.key_name}"
+  instance_type               = "${var.test_instance_type}"
+  vpc_id                      = "${module.vpc.vpc_id}"
+  security_groups             = ["${module.test_ssh_sg.this_security_group_id}"]
+  subnet                      = "${module.vpc.private_subnets[0]}"
+  associate_public_ip_address = "false"
 }
