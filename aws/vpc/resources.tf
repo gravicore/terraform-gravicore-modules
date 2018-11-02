@@ -75,9 +75,9 @@ locals {
 module "test_ssh_ec2_instance" {
   source           = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.7.5"
   instance_enabled = "${var.create_test_instance}"
-  namespace        = "${var.namespace}"
-  stage            = "${var.stage}"
-  name             = "${var.name}-test"
+  namespace        = ""
+  stage            = ""
+  name             = "${local.name_prefix}-test"
   tags             = "${local.module_test_ssh_ec2_instance_tags}"
 
   ssh_key_pair                = "${module.ssh_key_pair_private.key_name}"
@@ -85,5 +85,6 @@ module "test_ssh_ec2_instance" {
   vpc_id                      = "${module.vpc.vpc_id}"
   security_groups             = ["${module.test_ssh_sg.this_security_group_id}"]
   subnet                      = "${module.vpc.private_subnets[0]}"
+  assign_eip_address          = "false"
   associate_public_ip_address = "false"
 }
