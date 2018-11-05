@@ -77,7 +77,7 @@ module "db_instance" {
 
   snapshot_identifier = "${var.snapshot_identifier}"
 
-  vpc_security_group_ids = ["${aws_security_group.this.id}"]
+  vpc_security_group_ids = ["${aws_security_group.this.name}"]
   db_subnet_group_name   = "${local.db_subnet_group_name}"
   parameter_group_name   = "${local.parameter_group_name}"
   option_group_name      = "${local.option_group_name}"
