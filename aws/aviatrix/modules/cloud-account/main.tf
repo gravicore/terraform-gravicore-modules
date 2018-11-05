@@ -14,8 +14,15 @@ provider "aws" {
   }
 }
 
+provider "aviatrix" {
+  controller_ip = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
+  username      = "admin"
+  password      = "${var.aviatrix_controller_admin_password}"
+}
+
 locals {
-  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
+  account_name = "${join("-", list(var.namespace, var.environment, var.stage))}"
+  name_prefix  = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
 
   business_tags = {
     Namespace   = "${var.namespace}"

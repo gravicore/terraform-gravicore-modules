@@ -1,7 +1,6 @@
 terraform {
   required_version = "~> 0.11.8"
 
-  # The configuration for this backend will be filled in by Terragrunt
   backend "s3" {}
 }
 

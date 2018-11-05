@@ -5,13 +5,15 @@ terraform {
   backend "s3" {}
 }
 
-provider "aws" {
-  version = "~> 1.35"
-  region  = "${var.aws_region}"
+# specify aviatrix as the provider with these parameters:
+# controller_ip - public IP address of the controller
+# username - login user name, default is admin
+# password - password
 
-  assume_role {
-    role_arn = "arn:aws:iam::${var.account_id}:role/grv_deploy_svc"
-  }
+provider "aviatrix" {
+  controller_ip = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
+  username      = "admin"
+  password      = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
 }
 
 locals {

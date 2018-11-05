@@ -6,7 +6,7 @@ module "gravicore_access" {
   source = "./modules/gravicore-access"
 
   allow_gravicore_access    = "${var.allow_gravicore_access}"
-  trusted_entity_account_id = "${var.trusted_entity_account_id}"
+  trusted_entity_account_id = "${var.account_id}"
 }
 
 module "iam" {
@@ -14,5 +14,10 @@ module "iam" {
   tags   = "${var.tags}"
 
   allow_gravicore_access    = "${var.allow_gravicore_access}"
-  trusted_entity_account_id = "${var.trusted_entity_account_id}"
+  trusted_entity_account_id = "${var.account_id}"
+}
+
+locals {
+  is_master = "${var.master_account_id == var.account_id ? 1 : 0 }"
+  is_child  = "${var.master_account_id != var.account_id ? 1 : 0 }"
 }
