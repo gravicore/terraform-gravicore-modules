@@ -50,7 +50,7 @@ data "aws_iam_policy_document" "lambda-assume-role-policy" {
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${var.PrimarySchedulerAccount}:root"]
+      identifiers = ["arn:aws:iam::${var.master_account_id}:root"]
     }
   }
 }
