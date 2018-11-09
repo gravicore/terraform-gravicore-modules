@@ -4,7 +4,7 @@ locals {
 
 resource "aws_route53_zone" "vpc" {
   provider = "aws.master"
-  name     = "${local.dns_zone_name}.${data.terraform_remote_state.master_prd_account.parent_domain_name}"
+  name     = "${local.dns_zone_name}.${data.terraform_remote_state.master_account.parent_domain_name}"
   comment  = "Private DNS zone for ${local.dns_zone_name} VPC"
 
   vpc {
