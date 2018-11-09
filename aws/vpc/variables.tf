@@ -60,3 +60,7 @@ variable "test_instance_type" {
 variable "test_ingress_cidr_blocks" {
   default = ["10.0.0.0/8"]
 }
+
+locals {
+  dns_zone_name = "${replace("${var.environment}.${var.stage}", ".prd", "")}"
+}
