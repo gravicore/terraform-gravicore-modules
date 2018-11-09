@@ -62,5 +62,6 @@ variable "test_ingress_cidr_blocks" {
 }
 
 locals {
-  dns_zone_name = "${replace("${var.environment}.${var.stage}", ".prd", "")}"
+  is_master_account = "${var.master_account_id == var.account_id ? true : false}"
+  dns_zone_name     = "${replace("${var.environment}.${var.stage}", ".prd", "")}"
 }
