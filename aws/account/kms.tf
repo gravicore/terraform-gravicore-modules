@@ -6,7 +6,8 @@ module "kms_key" {
   description             = "KMS key for rds"
   deletion_window_in_days = 10
   enable_key_rotation     = "true"
-  alias                   = "${replace(local.account_name, "-", "/")}/rds"
+  alias                   = "alias/${replace(local.account_name, "-", "/")}/rds"
+  tags                    = "${local.tags}"
 }
 
 output "key_arn" {
