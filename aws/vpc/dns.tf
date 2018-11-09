@@ -1,7 +1,3 @@
-locals {
-  dns_zone_name = "${replace("${var.environment}.${var.stage}", ".prd", "")}"
-}
-
 resource "aws_route53_zone" "vpc" {
   provider = "aws.master"
   name     = "${local.dns_zone_name}.${data.terraform_remote_state.master_account.parent_domain_name}"
