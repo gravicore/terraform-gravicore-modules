@@ -1,3 +1,34 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# Platform Standard Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
+variable "tags" {
+  default = {}
+}
+
+variable "namespace" {
+  default = "grv"
+}
+
+variable "environment" {
+  default = "master"
+}
+
+variable "stage" {
+  default = "dev"
+}
+
+variable "repository" {
+  default = ""
+}
+
+variable "master_account_id" {}
+variable "account_id" {}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Module Custom Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
 variable "identifier" {
   description = "The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier"
   default     = []
@@ -259,6 +290,6 @@ variable "ingress_sg_cidr" {
   default     = []
 }
 
-variable "sg_vpc" {
+variable "vpc_id" {
   description = "VPC to create the security group in."
 }

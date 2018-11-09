@@ -88,3 +88,13 @@ output "this_db_option_group_arn" {
   description = "The ARN of the db option group"
   value       = "${module.db_option_group.this_db_option_group_arn}"
 }
+
+output "this_db_rds_ds_access_id" {
+  description = "The ARN of the db option group"
+  value       = "${aws_iam_role.rds_ds_access.id}"
+}
+
+output "this_db_security_group_name" {
+  description = "The ARN of the db option group"
+  value       = "${aws_security_group.this.name}"
+}

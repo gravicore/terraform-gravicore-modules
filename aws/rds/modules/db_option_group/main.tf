@@ -8,7 +8,7 @@ resource "aws_db_option_group" "this" {
 
   option = ["${var.options}"]
 
-  tags = "${merge(var.tags, map("Name", format("%s", var.identifier)))}"
+  tags = "var.tags"
 
   lifecycle {
     create_before_destroy = true

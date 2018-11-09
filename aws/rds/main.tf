@@ -8,46 +8,45 @@ locals {
   option_group_name             = "${coalesce(var.option_group_name, module.db_option_group.this_db_option_group_id)}"
   enable_create_db_option_group = "${var.option_group_name == "" && var.engine != "postgres" ? var.create_db_option_group : 0}"
 
-  enable_domain_iam_role = "${var.domain == "" ? aws_iam_role.rds_ds_access.id : ""}"
+  enable_domain_iam_role = "${var.domain == "" ? "" : aws_iam_role.rds_ds_access.id}"
+
+  create_security_group = "${var.vpc_id == "" ? 0 : 1}"
 }
 
 module "db_subnet_group" {
   source = "./modules/db_subnet_group"
 
   create      = "${local.enable_create_db_subnet_group}"
-  identifier  = "rds-private-subs"
-  name_prefix = "rds-private-subs-"
+  name_prefix = "${local.name_prefix}"
   subnet_ids  = ["${var.subnet_ids}"]
 
-  tags = "${var.tags}"
+  tags = "${local.tags}"
 }
 
 module "db_parameter_group" {
   source = "./modules/db_parameter_group"
 
   create      = "${local.enable_create_db_parameter_group}"
-  identifier  = "rds-default"
-  name_prefix = "rds-default-"
+  name_prefix = "${local.name_prefix}-${var.family}"
   family      = "${var.family}"
 
   parameters = ["${var.parameters}"]
 
-  tags = "${var.tags}"
+  tags = "${local.tags}"
 }
 
 module "db_option_group" {
   source = "./modules/db_option_group"
 
   create                   = "${local.enable_create_db_option_group}"
-  identifier               = "rds-aws-private-subs"
-  name_prefix              = "rds-aws-private-subs-"
-  option_group_description = "Option group for RDS to allow backup and restore"
+  name_prefix              = "${local.name_prefix}-${var.family}"
+  option_group_description = "${var.option_group_description}"
   engine_name              = "${var.engine}"
   major_engine_version     = "${var.major_engine_version}"
 
   options = ["${var.options}"]
 
-  tags = "${var.tags}"
+  tags = "${local.tags}"
 }
 
 module "db_instance" {
@@ -71,7 +70,7 @@ module "db_instance" {
   iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
 
   domain               = "${var.domain}"
-  domain_iam_role_name = "${aws_iam_role.rds_ds_access.id}"
+  domain_iam_role_name = "${local.enable_domain_iam_role}"
 
   replicate_source_db = "${var.replicate_source_db}"
 
@@ -106,5 +105,5 @@ module "db_instance" {
   timezone           = "${var.timezone}"
   character_set_name = "${var.character_set_name}"
 
-  tags = "${var.tags}"
+  tags = "${local.tags}"
 }

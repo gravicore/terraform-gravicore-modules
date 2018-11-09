@@ -7,10 +7,6 @@ variable "name_prefix" {
   description = "Creates a unique name beginning with the specified prefix"
 }
 
-variable "identifier" {
-  description = "The identifier of the resource"
-}
-
 variable "subnet_ids" {
   type        = "list"
   description = "A list of VPC subnet IDs"

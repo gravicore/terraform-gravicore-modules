@@ -1,7 +1,8 @@
 resource "aws_security_group" "this" {
-  name        = "rds-sec-group"
+  count       = "${local.creat_security_group}"
+  name        = "rds-security-group"
   description = "Allow internal and VPN traffic"
-  vpc_id      = "${var.sg_vpc}"
+  vpc_id      = "${var.vpc_id}"
 
   ingress {
     from_port   = "${var.port}"

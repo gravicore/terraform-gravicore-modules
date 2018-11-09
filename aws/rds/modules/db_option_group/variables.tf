@@ -9,6 +9,7 @@ variable "name_prefix" {
 
 variable "identifier" {
   description = "The identifier of the resource"
+  default     = "default rds"
 }
 
 variable "option_group_description" {
