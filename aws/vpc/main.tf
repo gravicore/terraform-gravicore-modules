@@ -14,6 +14,16 @@ provider "aws" {
   }
 }
 
+provider "aws" {
+  alias   = "master"
+  version = "~> 1.35"
+  region  = "${var.aws_region}"
+
+  assume_role {
+    role_arn = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
+  }
+}
+
 locals {
   name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
 
