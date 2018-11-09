@@ -70,6 +70,8 @@ module "test_ssh_ec2_instance" {
 }
 
 resource "aws_route53_record" "test_ssh_ec2_instance" {
+  provider = "aws.master"
+
   zone_id = "${aws_route53_zone.vpc.zone_id}"
   name    = "vpc-test.${local.dns_zone_name}.${data.terraform_remote_state.master_account.parent_domain_name}"
   type    = "A"
