@@ -18,7 +18,7 @@ locals {
 
 module "create_vpc_association_authorization" {
   count  = "${1 - local.is_master_account}"
-  source = "git::https://github.com/opetch/terraform-aws-cli-resource//ref=master"
+  source = "git::https://github.com/opetch/terraform-aws-cli-resource//?ref=master"
 
   account_id  = "${var.master_account_id}"                                            # Account with the private hosted zone
   role        = "grv_deploy_svc"
@@ -28,7 +28,7 @@ module "create_vpc_association_authorization" {
 
 module "associate_vpc_with_zone" {
   count  = "${1 - local.is_master_account}"
-  source = "git::https://github.com/opetch/terraform-aws-cli-resource//ref=master"
+  source = "git::https://github.com/opetch/terraform-aws-cli-resource//?ref=master"
 
   # Uses the default provider account id if no account id is passed in
   role        = "OrganizationAccountAccessRole"
