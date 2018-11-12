@@ -27,7 +27,7 @@ module "db_parameter_group" {
   source = "./modules/db_parameter_group"
 
   create      = "${local.enable_create_db_parameter_group}"
-  name_prefix = "${local.name_prefix}-${var.family}"
+  name_prefix = "${local.name_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
   family      = "${var.family}"
 
   parameters = ["${var.parameters}"]
@@ -39,7 +39,7 @@ module "db_option_group" {
   source = "./modules/db_option_group"
 
   create                   = "${local.enable_create_db_option_group}"
-  name_prefix              = "${local.name_prefix}-${var.family}"
+  name_prefix              = "${local.name_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
   option_group_description = "${var.option_group_description}"
   engine_name              = "${var.engine}"
   major_engine_version     = "${var.major_engine_version}"
@@ -76,7 +76,7 @@ module "db_instance" {
 
   snapshot_identifier = "${var.snapshot_identifier}"
 
-  vpc_security_group_ids = ["${aws_security_group.this.name}"]
+  vpc_security_group_ids = ["${aws_security_group.this.id}"]
   db_subnet_group_name   = "${local.db_subnet_group_name}"
   parameter_group_name   = "${local.parameter_group_name}"
   option_group_name      = "${local.option_group_name}"

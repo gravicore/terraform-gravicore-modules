@@ -1,5 +1,5 @@
 resource "aws_security_group" "this" {
-  count       = "${local.creat_security_group}"
+  count       = "${local.create_security_group}"
   name        = "rds-security-group"
   description = "Allow internal and VPN traffic"
   vpc_id      = "${var.vpc_id}"
