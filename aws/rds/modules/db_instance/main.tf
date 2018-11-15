@@ -19,7 +19,7 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring" {
 resource "aws_db_instance" "this" {
   count = "${var.create && !local.is_mssql ? length(var.identifier) : 0}"
 
-  identifier = "${element(var.identifier, count.index)}"
+  identifier = "${var.namespace}-${var.environment}-${var.stage}-${element(var.identifier, count.index)}"
 
   engine            = "${var.engine}"
   engine_version    = "${var.engine_version}"
@@ -65,22 +65,23 @@ resource "aws_db_instance" "this" {
 
   character_set_name = "${var.character_set_name}"
 
-  # tags = "${merge(var.tags, map("Name", format("%s", var.identifier)))}"
+  tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index))))}"
 }
 
 resource "aws_db_instance" "this_mssql" {
   count = "${var.create && local.is_mssql ? length(var.identifier) : 0}"
 
-  identifier = "${element(var.identifier, count.index)}"
+  identifier = "${var.namespace}-${var.environment}-${var.stage}-${element(var.identifier, count.index)}"
 
-  engine            = "${var.engine}"
-  engine_version    = "${var.engine_version}"
-  instance_class    = "${var.instance_class}"
-  allocated_storage = "${var.allocated_storage}"
-  storage_type      = "${var.storage_type}"
-  storage_encrypted = "${var.storage_encrypted}"
-  kms_key_id        = "${var.kms_key_id}"
-  license_model     = "${var.license_model}"
+  engine              = "${var.engine}"
+  engine_version      = "${var.engine_version}"
+  instance_class      = "${var.instance_class}"
+  allocated_storage   = "${var.allocated_storage}"
+  storage_type        = "${var.storage_type}"
+  deletion_protection = "${var.deletion_protection}"
+  storage_encrypted   = "${var.storage_encrypted}"
+  kms_key_id          = "${var.kms_key_id}"
+  license_model       = "${var.license_model}"
 
   name                                = "${var.name}"
   username                            = "${var.username}"
@@ -113,12 +114,12 @@ resource "aws_db_instance" "this_mssql" {
   maintenance_window          = "${var.maintenance_window}"
   skip_final_snapshot         = "${var.skip_final_snapshot}"
   copy_tags_to_snapshot       = "${var.copy_tags_to_snapshot}"
-  final_snapshot_identifier   = "${element(var.identifier, count.index)}-${var.final_snapshot_identifier}"
+  final_snapshot_identifier   = "${var.namespace}-${var.environment}-${var.stage}-${element(var.identifier, count.index)}-${var.final_snapshot_identifier}"
 
   backup_retention_period = "${var.backup_retention_period}"
   backup_window           = "${var.backup_window}"
 
   timezone = "${var.timezone}"
 
-  # tags = "${merge(var.tags, map("Name", format("%s", var.identifier)))}"
+  tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index))))}"
 }

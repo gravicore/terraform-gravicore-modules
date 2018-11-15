@@ -288,3 +288,8 @@ variable "ingress_sg_cidr" {
 variable "vpc_id" {
   description = "VPC to create the security group in."
 }
+
+variable "deletion_protection" {
+  description = "(Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to true. The default is false."
+  default     = false
+}

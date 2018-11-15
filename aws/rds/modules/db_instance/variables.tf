@@ -1,3 +1,31 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# Platform Standard Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
+variable "tags" {
+  default = {}
+}
+
+variable "namespace" {
+  default = "grv"
+}
+
+variable "environment" {
+  default = "master"
+}
+
+variable "stage" {
+  default = "dev"
+}
+
+variable "repository" {
+  default = ""
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Module Custom Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
 variable "create" {
   description = "Whether to create this resource or not?"
   default     = true
@@ -174,11 +202,6 @@ variable "backup_window" {
   description = "The daily time range (in UTC) during which automated backups are created if they are enabled. Example: '09:46-10:16'. Must not overlap with maintenance_window"
 }
 
-variable "tags" {
-  description = "A mapping of tags to assign to all resources"
-  default     = {}
-}
-
 variable "option_group_name" {
   description = "Name of the DB option group to associate."
   default     = ""
@@ -202,4 +225,8 @@ variable "domain" {
 variable "domain_iam_role_name" {
   description = "(Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service."
   default     = ""
+}
+
+variable "deletion_protection" {
+  description = "(Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to true. The default is false."
 }

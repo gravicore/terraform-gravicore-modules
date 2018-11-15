@@ -52,16 +52,20 @@ module "db_option_group" {
 module "db_instance" {
   source = "./modules/db_instance"
 
-  create            = "${var.create_db_instance}"
-  identifier        = ["${var.identifier}"]
-  engine            = "${var.engine}"
-  engine_version    = "${var.engine_version}"
-  instance_class    = "${var.instance_class}"
-  allocated_storage = "${var.allocated_storage}"
-  storage_type      = "${var.storage_type}"
-  storage_encrypted = "${var.storage_encrypted}"
-  kms_key_id        = "${var.kms_key_id}"
-  license_model     = "${var.license_model}"
+  create              = "${var.create_db_instance}"
+  identifier          = ["${var.identifier}"]
+  engine              = "${var.engine}"
+  engine_version      = "${var.engine_version}"
+  instance_class      = "${var.instance_class}"
+  allocated_storage   = "${var.allocated_storage}"
+  storage_type        = "${var.storage_type}"
+  deletion_protection = "${var.deletion_protection}"
+  storage_encrypted   = "${var.storage_encrypted}"
+  kms_key_id          = "${var.kms_key_id}"
+  license_model       = "${var.license_model}"
+  namespace           = "${var.namespace}"
+  environment         = "${var.environment}"
+  stage               = "${var.stage}"
 
   name                                = "${var.name}"
   username                            = "${var.username}"
