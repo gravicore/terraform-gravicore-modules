@@ -1,4 +1,4 @@
-module "kms_key" {
+module "rds_kms_key" {
   source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.1.2"
   namespace               = ""
   stage                   = ""
@@ -10,7 +10,7 @@ module "kms_key" {
   tags                    = "${local.tags}"
 }
 
-output "key_arn" {
-  value       = "${module.kms_key.key_arn}"
+output "rds_key_arn" {
+  value       = "${module.rds_kms_key.key_arn}"
   description = "Key ARN"
 }
