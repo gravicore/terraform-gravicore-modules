@@ -36,11 +36,11 @@ module "lambda_kms_key" {
   source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.1.2"
   namespace               = ""
   stage                   = ""
-  name                    = "${local.account_name}-workspaces"
-  description             = "KMS key for workspaces"
+  name                    = "${local.account_name}-lambda"
+  description             = "KMS key for lambda"
   deletion_window_in_days = 10
   enable_key_rotation     = "true"
-  alias                   = "alias/${replace(local.account_name, "-", "/")}/workspaces"
+  alias                   = "alias/${replace(local.account_name, "-", "/")}/lambda"
   tags                    = "${local.tags}"
 }
 
@@ -53,11 +53,11 @@ module "ssm_kms_key" {
   source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.1.2"
   namespace               = ""
   stage                   = ""
-  name                    = "${local.account_name}-workspaces"
-  description             = "KMS key for workspaces"
+  name                    = "${local.account_name}-ssm"
+  description             = "KMS key for ssm"
   deletion_window_in_days = 10
   enable_key_rotation     = "true"
-  alias                   = "alias/${replace(local.account_name, "-", "/")}/workspaces"
+  alias                   = "alias/${replace(local.account_name, "-", "/")}/ssm"
   tags                    = "${local.tags}"
 }
 
@@ -70,11 +70,11 @@ module "ebs_kms_key" {
   source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.1.2"
   namespace               = ""
   stage                   = ""
-  name                    = "${local.account_name}-workspaces"
-  description             = "KMS key for workspaces"
+  name                    = "${local.account_name}-ebs"
+  description             = "KMS key for ebs"
   deletion_window_in_days = 10
   enable_key_rotation     = "true"
-  alias                   = "alias/${replace(local.account_name, "-", "/")}/workspaces"
+  alias                   = "alias/${replace(local.account_name, "-", "/")}/ebs"
   tags                    = "${local.tags}"
 }
 
