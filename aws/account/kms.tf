@@ -45,7 +45,7 @@ module "lambda_kms_key" {
 }
 
 output "lambda_key_arn" {
-  value       = "${module.workspaces_kms_key.key_arn}"
+  value       = "${module.lambda_kms_key.key_arn}"
   description = "Key ARN"
 }
 
@@ -62,7 +62,7 @@ module "ssm_kms_key" {
 }
 
 output "ssm_key_arn" {
-  value       = "${module.workspaces_kms_key.key_arn}"
+  value       = "${module.ssm_kms_key.key_arn}"
   description = "Key ARN"
 }
 
@@ -79,6 +79,6 @@ module "ebs_kms_key" {
 }
 
 output "ebs_key_arn" {
-  value       = "${module.workspaces_kms_key.key_arn}"
+  value       = "${module.ebs_kms_key.key_arn}"
   description = "Key ARN"
 }
