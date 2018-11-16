@@ -121,5 +121,5 @@ resource "aws_db_instance" "this_mssql" {
 
   timezone = "${var.timezone}"
 
-  tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index))))}"
+  tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index)), "schedule", format("%s", var.schedule)))}"
 }

@@ -293,3 +293,7 @@ variable "deletion_protection" {
   description = "(Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to true. The default is false."
   default     = false
 }
+
+variable "schedule" {
+  description = "(Optional) Which schedule from the instance scheduler to adhere to"
+}
