@@ -1,10 +1,37 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# VARIABLES
+# ----------------------------------------------------------------------------------------------------------------------
+
+variable "create_test_instance" {
+  default = "false"
+}
+
+variable "test_instance_type" {
+  default = "t2.nano"
+}
+
+variable "test_ingress_cidr_block" {
+  default = "10.0.0.0/8"
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
+
 # Create a default key/pair for public and private instances
+
+locals {
+  module_test_ssh_key_pair_public_tags = "${merge(local.tags, map(
+    "TerraformModule", "github.com/cloudposse/terraform-aws-key-pair",
+    "TerraformModuleVersion", "0.2.5"))}"
+}
+
 module "ssh_key_pair_public" {
   source    = "git::https://github.com/cloudposse/terraform-aws-key-pair.git?ref=0.2.5"
   namespace = "${var.namespace}"
   stage     = "${var.stage}"
   name      = "${var.environment}-${var.name}-public"
-  tags      = "${local.tags}"
+  tags      = "${local.module_test_ssh_key_pair_public_tags}"
 
   ssh_public_key_path   = "${pathexpand("~/.ssh")}/${var.namespace}"
   generate_ssh_key      = "true"
@@ -13,12 +40,18 @@ module "ssh_key_pair_public" {
   chmod_command         = "chmod 600 %v"
 }
 
+locals {
+  module_test_ssh_key_pair_private_tags = "${merge(local.tags, map(
+    "TerraformModule", "github.com/cloudposse/terraform-aws-key-pair",
+    "TerraformModuleVersion", "0.2.5"))}"
+}
+
 module "ssh_key_pair_private" {
   source    = "git::https://github.com/cloudposse/terraform-aws-key-pair.git?ref=0.2.5"
   namespace = "${var.namespace}"
   stage     = "${var.stage}"
   name      = "${var.environment}-${var.name}-private"
-  tags      = "${local.tags}"
+  tags      = "${local.module_test_ssh_key_pair_private_tags}"
 
   ssh_public_key_path   = "${pathexpand("~/.ssh")}/${var.namespace}"
   generate_ssh_key      = "true"
@@ -37,12 +70,22 @@ module "test_ssh_sg" {
   source      = "terraform-aws-modules/security-group/aws//modules/ssh"
   version     = "2.9.0"
   create      = "${var.create_test_instance == "true" ? true : false}"
-  name        = "${local.name_prefix}-test"
-  description = "Security group for testing ssh within VPC"
+  name        = "${local.module_prefix}-test"
+  description = "${join(" ", list(var.desc_prefix, "Test SSH Instance"))}"
   tags        = "${local.module_test_ssh_sg_tags}"
 
   vpc_id              = "${module.vpc.vpc_id}"
-  ingress_cidr_blocks = "${var.test_ingress_cidr_blocks}"
+  ingress_cidr_blocks = ["${var.test_ingress_cidr_block}"]
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port   = -1
+      to_port     = -1
+      protocol    = "icmp"
+      description = "All ICMP - IPv4"
+      cidr_blocks = "${var.test_ingress_cidr_block}"
+    },
+  ]
 }
 
 # Test EC2 instance
@@ -57,7 +100,7 @@ module "test_ssh_ec2_instance" {
   instance_enabled = "${var.create_test_instance}"
   namespace        = ""
   stage            = ""
-  name             = "${local.name_prefix}-test"
+  name             = "${local.module_prefix}-test"
   tags             = "${local.module_test_ssh_ec2_instance_tags}"
 
   ssh_key_pair                = "${module.ssh_key_pair_private.key_name}"
@@ -73,8 +116,13 @@ resource "aws_route53_record" "test_ssh_ec2_instance" {
   provider = "aws.master"
 
   zone_id = "${aws_route53_zone.vpc.zone_id}"
-  name    = "vpc-test.${local.dns_zone_name}.${data.terraform_remote_state.master_account.parent_domain_name}"
+  name    = "test.${local.dns_zone_name}"
   type    = "A"
   ttl     = "60"
   records = ["${module.test_ssh_ec2_instance.private_ip}"]
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
+
