@@ -26,6 +26,18 @@ variable "repository" {
 variable "master_account_id" {}
 variable "account_id" {}
 
+variable "master_account_assume_role_name" {
+  default = "grv_deploy_svc"
+}
+
+variable "account_assume_role_name" {
+  default = "OrganizationAccountAccessRole"
+}
+
+variable "desc_prefix" {
+  default = "Gravicore Module:"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
