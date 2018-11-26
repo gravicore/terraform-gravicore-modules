@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------------------------------------------------
-# VARIABLES
+# VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "create_test_instance" {
@@ -22,7 +22,7 @@ variable "test_ingress_cidr_block" {
 
 locals {
   module_test_ssh_key_pair_public_tags = "${merge(local.tags, map(
-    "TerraformModule", "github.com/cloudposse/terraform-aws-key-pair",
+    "TerraformModule", "cloudposse/terraform-aws-key-pair",
     "TerraformModuleVersion", "0.2.5"))}"
 }
 
@@ -42,12 +42,12 @@ module "ssh_key_pair_public" {
 
 locals {
   module_test_ssh_key_pair_private_tags = "${merge(local.tags, map(
-    "TerraformModule", "github.com/cloudposse/terraform-aws-key-pair",
-    "TerraformModuleVersion", "0.2.5"))}"
+    "TerraformModule", "gravicore/terraform-gravicore-modules/aws/shared-vpc/key-pair",
+    "TerraformModuleVersion", "issues/4"))}"
 }
 
 module "ssh_key_pair_private" {
-  source    = "git::https://github.com/cloudposse/terraform-aws-key-pair.git?ref=0.2.5"
+  source    = "./key-pair"
   namespace = "${var.namespace}"
   stage     = "${var.stage}"
   name      = "${var.environment}-${var.name}-private"
@@ -61,8 +61,38 @@ module "ssh_key_pair_private" {
 }
 
 locals {
+  module_test_ssh_ec2_instance_secret_tags = "${merge(local.tags, map(
+    "TerraformModule", "cloudposse/terraform-aws-ssm-parameter-store",
+    "TerraformModuleVersion", "0.2.5"))}"
+}
+
+module "test_ssh_ec2_instance_secret" {
+  source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
+  tags   = "${local.module_test_ssh_ec2_instance_secret_tags}"
+
+  kms_arn = "alias/parameter_store_key"
+
+  parameter_write = [
+    {
+      name        = "/${local.stage_prefix}/${var.name}-test-pem"
+      value       = "${module.ssh_key_pair_private.private_key}"
+      type        = "SecureString"
+      overwrite   = "true"
+      description = "${join(" ", list(var.desc_prefix, "VPC Test SSH Instance Private Key"))}"
+    },
+    {
+      name        = "/${local.stage_prefix}/${var.name}-test-pub"
+      value       = "${module.ssh_key_pair_private.public_key}"
+      type        = "SecureString"
+      overwrite   = "true"
+      description = "${join(" ", list(var.desc_prefix, "VPC Test SSH Instance Public Key"))}"
+    },
+  ]
+}
+
+locals {
   module_test_ssh_sg_tags = "${merge(local.tags, map(
-    "TerraformModule", "registry.terraform.io/modules/terraform-aws-modules/security-group/aws",
+    "TerraformModule", "terraform-aws-modules/security-group/aws",
     "TerraformModuleVersion", "2.9.0"))}"
 }
 
@@ -91,7 +121,7 @@ module "test_ssh_sg" {
 # Test EC2 instance
 locals {
   module_test_ssh_ec2_instance_tags = "${merge(local.tags, map(
-    "TerraformModule", "github.com/cloudposse/terraform-aws-ec2-instance",
+    "TerraformModule", "cloudposse/terraform-aws-ec2-instance",
     "TerraformModuleVersion", "0.7.5"))}"
 }
 

@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------------------------------------------------
-# VARIABLES
+# VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "create_ds" {
@@ -11,6 +11,10 @@ variable "ds_subdomain_name" {
 }
 
 variable "ds_short_name" {}
+
+data "aws_kms_key" "parameter_store_key" {
+  key_id = "alias/parameter_store_key"
+}
 
 locals {
   ds_alias           = "${replace("${var.namespace}-${var.ds_subdomain_name}-${var.stage}", "-prd", "")}"
@@ -24,13 +28,14 @@ locals {
 
 locals {
   module_ds_ssm_param_password_tags = "${merge(local.tags, map(
-    "TerraformModule", "github.com/cloudposse/terraform-aws-ssm-parameter-store",
+    "TerraformModule", "cloudposse/terraform-aws-ssm-parameter-store",
     "TerraformModuleVersion", "0.1.5"))}"
 }
 
 module "ds_ssm_param_secret" {
   source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
 
+  kms_arn        = "alias/parameter_store_key"
   parameter_read = ["/${local.stage_prefix}/${var.name}-ds-secret"]
 }
 

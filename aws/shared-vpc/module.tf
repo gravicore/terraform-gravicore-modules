@@ -59,7 +59,7 @@ variable "aws_region" {
 }
 
 variable terraform_module {
-  default = "github.com/gravicore/terraform-gravicore-modules/aws/shared-vpc"
+  default = "gravicore/terraform-gravicore-modules/aws/shared-vpc"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
