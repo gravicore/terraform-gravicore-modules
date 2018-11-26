@@ -39,7 +39,7 @@ variable "aws_region" {
 }
 
 variable terraform_module {
-  default = "github.com/gravicore/terraform-gravicore-modules/aws/account"
+  default = "gravicore/terraform-gravicore-modules/aws/account"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
