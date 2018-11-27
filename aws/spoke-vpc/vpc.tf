@@ -57,13 +57,13 @@ module "vpc" {
   enable_s3_endpoint       = true
   enable_dns_support       = true
   enable_dns_hostnames     = true
-}
 
-resource "aws_vpc_dhcp_options_association" "vpc" {
-  count = "${var.associate_ds == "true" ? 1 : 0}"
-
-  vpc_id          = "${module.vpc.vpc_id}"
-  dhcp_options_id = "${data.terraform_remote_state.shared_vpc.ds_dhcp_options_id}"
+  enable_dhcp_options               = "${var.associate_ds == "true" ? true : false}"
+  dhcp_options_domain_name          = "${data.terraform_remote_state.shared_vpc.ds_domain_name}"
+  dhcp_options_domain_name_servers  = "${data.terraform_remote_state.shared_vpc.ds_dns_ip_addresses}"
+  dhcp_options_ntp_servers          = "${data.terraform_remote_state.shared_vpc.ds_dns_ip_addresses}"
+  dhcp_options_netbios_name_servers = "${data.terraform_remote_state.shared_vpc.ds_dns_ip_addresses}"
+  dhcp_options_netbios_node_type    = "2"
 }
 
 resource "aws_route53_zone" "vpc" {
@@ -83,7 +83,8 @@ resource "aws_route53_zone" "vpc" {
 # dns_ips - (Required) A list of forwarder IP addresses.
 # remote_domain_name - (Required) The fully qualified domain name of the remote domain for which forwarders will be used.
 resource "aws_directory_service_conditional_forwarder" "vpc" {
-  count = "${var.associate_ds == "true" ? 1 : 0}"
+  count    = "${var.associate_ds == "true" ? 1 : 0}"
+  provider = "aws.master"
 
   directory_id       = "${data.terraform_remote_state.shared_vpc.ds_directory_id}"
   dns_ips            = ["${cidrhost(module.vpc.vpc_cidr_block, 2)}"]
@@ -230,11 +231,6 @@ output "vpc_vgw_id" {
 output "vpc_endpoint_dynamodb_pl_id" {
   description = "The prefix list for the DynamoDB VPC endpoint."
   value       = "${module.vpc.vpc_endpoint_dynamodb_pl_id}"
-}
-
-output "vpc_dhcp_options_association_id" {
-  description = "The ID of the DHCP Options Set Association."
-  value       = "${join("", aws_vpc_dhcp_options_association.vpc.*.id)}"
 }
 
 # DNS
