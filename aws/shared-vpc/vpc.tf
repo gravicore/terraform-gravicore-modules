@@ -219,7 +219,7 @@ output "vpc_dns_zone_id" {
 }
 
 output "vpc_dns_zone_name_servers" {
-  value = "${aws_route53_zone.vpc.*.name_servers}"
+  value = "${aws_route53_zone.vpc.name_servers}"
 }
 
 output "vpc_dns_zone_vpc_id" {

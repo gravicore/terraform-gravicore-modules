@@ -170,7 +170,7 @@ output "ds_access_console_url" {
 }
 
 output "ds_dns_ip_addresses" {
-  value = "${aws_directory_service_directory.ad.*.dns_ip_addresses}"
+  value = "${aws_directory_service_directory.ad.dns_ip_addresses}"
 }
 
 output "ds_security_group_id" {
@@ -193,17 +193,17 @@ output "ds_dhcp_options_domain_name" {
 
 output "ds_dhcp_options_domain_name_servers" {
   description = "List of name servers to configure in /etc/resolv.conf. If you want to use the default AWS nameservers you should set this to AmazonProvidedDNS."
-  value       = "${aws_directory_service_directory.ad.*.dns_ip_addresses}"
+  value       = "${aws_directory_service_directory.ad.dns_ip_addresses}"
 }
 
 output "ds_dhcp_options_ntp_servers" {
   description = "List of NTP servers to configure."
-  value       = "${aws_directory_service_directory.ad.*.dns_ip_addresses}"
+  value       = "${aws_directory_service_directory.ad.dns_ip_addresses}"
 }
 
 output "ds_dhcp_options_netbios_name_servers" {
   description = "List of NETBIOS name servers."
-  value       = "${aws_directory_service_directory.ad.*.dns_ip_addresses}"
+  value       = "${aws_directory_service_directory.ad.dns_ip_addresses}"
 }
 
 output "ds_dhcp_options_netbios_node_type" {
