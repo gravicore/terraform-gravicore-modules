@@ -108,32 +108,6 @@ locals {
   vpc_association_cli_flags = "--hosted-zone-id ${aws_route53_zone.vpc.zone_id} --vpc VPCRegion=${var.aws_region},VPCId=${module.vpc.vpc_id}"
 }
 
-# module "create_vpc_association_authorization" {
-#   source  = "./cli-resource"
-#   enabled = "${local.is_not_master_account}"
-
-#   # role        = "grv_deploy_svc"
-#   account_id = "${var.master_account_id}"                                                            # Account with the private hosted zone
-#   cmd        = "aws route53 create-vpc-association-authorization ${local.vpc_association_cli_flags}"
-#   # destroy_cmd = "aws route53 list-vpc-association-authorizations --hosted-zone-id ${aws_route53_zone.vpc.zone_id}"
-#   destroy_cmd = "aws route53 delete-vpc-association-authorization ${local.vpc_association_cli_flags}"
-# }
-
-# module "associate_vpc_with_zone" {
-#   source  = "./cli-resource"
-#   enabled = "${local.is_not_master_account}"
-
-#   # Uses the default provider account id if no account id is passed in
-#   # account_id  = "${var.account_id}"                                                                # Account with the private hosted zone
-#   role = "OrganizationAccountAccessRole"
-
-#   cmd         = "aws route53 associate-vpc-with-hosted-zone ${local.vpc_association_cli_flags}"
-#   destroy_cmd = "aws route53 disassociate-vpc-from-hosted-zone ${local.vpc_association_cli_flags}"
-
-#   # Require that the above resource is created first 
-#   dependency_ids = ["${module.create_vpc_association_authorization.id}"]
-# }
-
 # https://medium.com/@dalethestirling/managing-route53-cross-account-zone-associations-with-terraform-e1e45de8f3ea
 
 resource "null_resource" "create_remote_zone_auth" {
@@ -149,13 +123,27 @@ resource "null_resource" "create_remote_zone_auth" {
   }
 
   provisioner "local-exec" {
-    when    = "destroy"
-    command = "aws route53 delete-vpc-association-authorization ${local.vpc_association_cli_flags}"
+    when    = "create"
+    command = "echo ====== PRIVATE ZONE ASSOCIATION COMMANDS ====== && echo av ${var.namespace}-${var.environment}-${var.stage} aws route53 associate-vpc-with-hosted-zone ${local.vpc_association_cli_flags} && echo av ${var.namespace} aws route53 disassociate-vpc-from-hosted-zone --hosted-zone-id ${join("", aws_route53_zone.vpc.*.zone_id)} --vpc VPCRegion=${var.aws_region},VPCId=${aws_default_vpc.default.id}"
+  }
+
+  provisioner "local-exec" {
+    when       = "destroy"
+    command    = "aws route53 delete-vpc-association-authorization ${local.vpc_association_cli_flags}"
+    on_failure = "continue"
   }
 }
 
+output "vpc_dns_association_commands" {
+  value = [
+    "av ${var.namespace}-${var.environment}-${var.stage} aws route53 associate-vpc-with-hosted-zone ${local.vpc_association_cli_flags}",
+    "av ${var.namespace} aws route53 disassociate-vpc-from-hosted-zone --hosted-zone-id ${join("", aws_route53_zone.vpc.*.zone_id)} --vpc VPCRegion=${var.aws_region},VPCId=${aws_default_vpc.default.id}",
+  ]
+}
+
 # resource "null_resource" "associate_with_remote_zone" {
-#   count = "${local.is_not_master_account == "true" ? 1 : 0}"
+#   count      = "${local.is_not_master_account == "true" ? 1 : 0}"
+#   depends_on = ["null_resource.create_remote_zone_auth"]
 
 #   triggers {
 #     vpc_id = "${module.vpc.vpc_id}"
@@ -167,22 +155,34 @@ resource "null_resource" "create_remote_zone_auth" {
 #   }
 
 #   provisioner "local-exec" {
-#     when    = "destroy"
-#     command = "aws route53 disassociate-vpc-with-hosted-zone ${local.vpc_association_cli_flags}"
+#     when       = "destroy"
+#     command    = "aws route53 disassociate-vpc-with-hosted-zone ${local.vpc_association_cli_flags}"
+#     on_failure = "continue"
 #   }
-
-#   depends_on = ["null_resource.create_remote_zone_auth"]
 # }
 
-resource "aws_route53_zone_association" "spoke_vpc" {
-  count    = "${local.is_not_master_account == "true" ? 1 : 0}"
-  provider = "aws.master"
+# resource "aws_route53_zone_association" "spoke_vpc" {
+#   count = "${local.is_not_master_account == "true" ? 1 : 0}"
 
-  zone_id = "${aws_route53_zone.vpc.zone_id}"
-  vpc_id  = "${module.vpc.vpc_id}"
+#   # provider = "aws.master"
 
-  depends_on = ["null_resource.create_remote_zone_auth"]
-}
+#   depends_on = ["null_resource.create_remote_zone_auth"]
+#   zone_id = "${aws_route53_zone.vpc.zone_id}"
+#   vpc_id  = "${module.vpc.vpc_id}"
+# }
+
+# resource "null_resource" "disassociate_default_vpc" {
+#   count = "${local.is_not_master_account == "true" ? 1 : 0}"
+
+#   triggers {
+#     zone_association_id = "${aws_route53_zone_association.spoke_vpc.id}"
+#   }
+
+#   provisioner "local-exec" {
+#     when    = "create"
+#     command = "aws route53 disassociate-vpc-from-hosted-zone --hosted-zone-id ${aws_route53_zone.vpc.zone_id} --vpc VPCRegion=${var.aws_region},VPCId=${aws_default_vpc.default.id}"
+#   }
+# }
 
 # directory_id - (Required) The id of directory.
 # dns_ips - (Required) A list of forwarder IP addresses.
