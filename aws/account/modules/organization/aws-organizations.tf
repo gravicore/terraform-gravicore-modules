@@ -2,6 +2,14 @@
 resource "aws_organizations_organization" "organization" {
   count = "${var.create_organization ? 1 : 0}"
 
+  aws_service_access_principals = [
+    "aws-artifact-account-sync.amazonaws.com",
+    "ds.amazonaws.com",
+    "fms.amazonaws.com",
+    "config.amazonaws.com",
+    "sso.amazonaws.com",
+  ]
+
   feature_set = "${var.organization_feature_set}"
 }
 

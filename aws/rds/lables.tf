@@ -1,21 +1,5 @@
-terraform {
-  required_version = "~> 0.11.8"
-
-  # The configuration for this backend will be filled in by Terragrunt
-  backend "s3" {}
-}
-
-provider "aws" {
-  version = "~> 1.35"
-  region  = "${var.aws_region}"
-
-  assume_role {
-    role_arn = "arn:aws:iam::${var.account_id}:role/grv_deploy_svc"
-  }
-}
-
 locals {
-  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
+  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage))}"
 
   business_tags = {
     Namespace   = "${var.namespace}"
@@ -27,12 +11,11 @@ locals {
     Repository      = "${var.repository}"
     MasterAccountID = "${var.master_account_id}"
     AccountID       = "${var.account_id}"
-    TerraformModule = "${var.terraform_module}"
+    TerraformModule = "github.com/gravicore/terraform-gravicore-modules/aws/rds"
   }
 
   automation_tags = {}
-
-  security_tags = {}
+  security_tags   = {}
 
   tags = "${merge(
     local.technical_tags,

@@ -8,11 +8,12 @@ This is a collection of reusable Terraform modules for Gravicore's cloud automat
 
 ### AWS
 
-| Module                   | Description                                                                                                |
-| :----------------------- | :--------------------------------------------------------------------------------------------------------- |
-| [Account](aws/account)   | A collection of modules for bootstrapping an AWS Organization and associate children accounts.             |
-| [VPC](aws/vpc)           | A standard, secure VPC with public subnets (2), private subnets (2), NAT Gateways and an Internet Gateway. |
-| [Aviatrix](aws/aviatrix) | A collection of modules for deploying Aviatrix's global transit hub solution.                              |
+| Module                       | Description                                                                                                                              |
+| :--------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- |
+| [Account](aws/account)       | A collection of modules for bootstrapping an [AWS Organization](https://aws.amazon.com/organizations/) and associated children accounts. |
+| [Shared VPC](aws/shared-vpc) | A secure, dual-AZ Shared Services VPC with public subnets, private subnets, Internet Gateway and shared Directory Service.               |
+| [Spoke VPC](aws/spoke-vpc)   | A secure, dual-AZ Spoke VPC with public subnets, private subnets and an Internet Gateway.                                                |
+| [Aviatrix](aws/aviatrix)     | A collection of modules for deploying [Aviatrix](https://www.aviatrix.com)'s global transit hub solution.                                |
 
 ## Contributing
 
