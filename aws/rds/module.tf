@@ -1,3 +1,27 @@
+terraform {
+  required_version = "~> 0.11.8"
+
+  # The configuration for this backend will be filled in by Terragrunt
+  backend "s3" {}
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Providers
+# ----------------------------------------------------------------------------------------------------------------------
+
+provider "aws" {
+  version = "~> 1.35"
+  region  = "${var.aws_region}"
+
+  assume_role {
+    role_arn = "arn:aws:iam::${var.account_id}:role/grv_deploy_svc"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Module Standard Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
 locals {
   db_subnet_group_name          = "${coalesce(var.db_subnet_group_name, module.db_subnet_group.this_db_subnet_group_id)}"
   enable_create_db_subnet_group = "${var.db_subnet_group_name == "" ? var.create_db_subnet_group : 0}"
@@ -18,7 +42,7 @@ module "db_subnet_group" {
 
   create      = "${local.enable_create_db_subnet_group}"
   name_prefix = "${local.name_prefix}"
-  subnet_ids  = ["${var.subnet_ids}"]
+  subnet_ids  = ["${var.ingress_cidr_for_rds_security_group}"]
 
   tags = "${local.tags}"
 }
@@ -39,10 +63,12 @@ module "db_option_group" {
   source = "./modules/db_option_group"
 
   create                   = "${local.enable_create_db_option_group}"
-  name_prefix              = "${local.name_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
+  name_prefix              = "${local.name_prefix}"
   option_group_description = "${var.option_group_description}"
   engine_name              = "${var.engine}"
   major_engine_version     = "${var.major_engine_version}"
+  aws_region               = "${var.aws_region}"
+  kms_key_id               = "${var.kms_key_id}"
 
   options = ["${var.options}"]
 
@@ -61,7 +87,7 @@ module "db_instance" {
   storage_type        = "${var.storage_type}"
   deletion_protection = "${var.deletion_protection}"
   storage_encrypted   = "${var.storage_encrypted}"
-  kms_key_id          = "${var.kms_key_id}"
+  kms_key_id          = "${data.terraform_remote_state.acct.rds_key_arn}"
   license_model       = "${var.license_model}"
   namespace           = "${var.namespace}"
   environment         = "${var.environment}"
@@ -73,7 +99,7 @@ module "db_instance" {
   port                                = "${var.port}"
   iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
 
-  domain               = "${var.domain}"
+  domain               = "${join("", data.terraform_remote_state.vpc.*.ds_directory_id)}"
   domain_iam_role_name = "${local.enable_domain_iam_role}"
 
   replicate_source_db = "${var.replicate_source_db}"

@@ -240,6 +240,16 @@ variable "options" {
   default     = []
 }
 
+# DB parameter group
+variable "ingress_sg_cidr" {
+  description = "List of the ingress cidr's to create the security group."
+  default     = []
+}
+
+variable "vpc_id" {
+  description = "VPC to create the security group in."
+}
+
 variable "create_db_subnet_group" {
   description = "Whether to create a database subnet group"
   default     = true
@@ -280,15 +290,6 @@ variable "domain_iam_role_name" {
   default     = ""
 }
 
-variable "ingress_sg_cidr" {
-  description = "List of the ingress cidr's to create the security group."
-  default     = []
-}
-
-variable "vpc_id" {
-  description = "VPC to create the security group in."
-}
-
 variable "deletion_protection" {
   description = "(Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to true. The default is false."
   default     = false
@@ -296,4 +297,8 @@ variable "deletion_protection" {
 
 variable "schedule" {
   description = "(Optional) Which schedule from the instance scheduler to adhere to"
+}
+
+variable "aws_region" {
+  default = "us-east-1"
 }

@@ -96,5 +96,5 @@ output "this_db_rds_ds_access_id" {
 
 output "this_db_security_group_name" {
   description = "The ARN of the db option group"
-  value       = "${aws_security_group.this.name}"
+  value       = "${aws_security_group.this.*.name}"
 }
