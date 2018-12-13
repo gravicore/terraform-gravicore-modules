@@ -124,6 +124,6 @@ resource "aws_db_instance" "this_mssql" {
   tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index)), "Schedule", format("%s", var.schedule)))}"
 
   lifecycle {
-    ignore_changes = ["tags"]
+    ignore_changes = ["tags.%", "tags.Schedule", "tags.ScheduleStatus", "tags.ScheduleTimestamp"]
   }
 }

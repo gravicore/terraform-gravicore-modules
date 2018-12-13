@@ -1,7 +1,6 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
-
 variable "tags" {
   default = {}
 }
@@ -28,7 +27,6 @@ variable "account_id" {}
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Custom Variables
 # ----------------------------------------------------------------------------------------------------------------------
-
 variable "identifier" {
   description = "The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier"
   default     = []
@@ -108,6 +106,7 @@ variable "port" {
 }
 
 variable "vpc_security_group_ids" {
+  type        = "list"
   description = "List of VPC security groups to associate"
   default     = []
 }
@@ -248,6 +247,7 @@ variable "ingress_sg_cidr" {
 
 variable "vpc_id" {
   description = "VPC to create the security group in."
+  default     = ""
 }
 
 variable "create_db_subnet_group" {
@@ -262,6 +262,11 @@ variable "create_db_parameter_group" {
 
 variable "create_db_option_group" {
   description = "Whether to create a database option group"
+  default     = true
+}
+
+variable "create_db_security_group" {
+  description = "Whether to create a database VPC security group"
   default     = true
 }
 

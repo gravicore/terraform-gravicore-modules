@@ -34,7 +34,7 @@ locals {
 
   enable_domain_iam_role = "${var.domain == "" ? "" : aws_iam_role.rds_ds_access.id}"
 
-  create_security_group = "${var.vpc_id == "" ? 0 : 1}"
+  enable_create_security_group = "${var.vpc_id == "" ? var.create_db_security_group : 0}"
 }
 
 module "db_subnet_group" {
@@ -42,7 +42,7 @@ module "db_subnet_group" {
 
   create      = "${local.enable_create_db_subnet_group}"
   name_prefix = "${local.name_prefix}"
-  subnet_ids  = ["${var.ingress_cidr_for_rds_security_group}"]
+  subnet_ids  = ["${data.terraform_remote_state.vpc.vpc_private_subnets}"]
 
   tags = "${local.tags}"
 }
@@ -100,22 +100,20 @@ module "db_instance" {
   iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
 
   domain               = "${join("", data.terraform_remote_state.vpc.*.ds_directory_id)}"
-  domain_iam_role_name = "${local.enable_domain_iam_role}"
+  domain_iam_role_name = "${aws_iam_role.rds_ds_access.id}"
+
+  # domain_iam_role_name = "${data.terraform_remote_state.acct.rds_ds_access_id}"
 
   replicate_source_db = "${var.replicate_source_db}"
-
   snapshot_identifier = "${var.snapshot_identifier}"
-
-  vpc_security_group_ids = ["${aws_security_group.this.id}"]
+  vpc_security_group_ids = ["${coalescelist(var.vpc_security_group_ids, aws_security_group.this.*.id)}"]
   db_subnet_group_name   = "${local.db_subnet_group_name}"
   parameter_group_name   = "${local.parameter_group_name}"
   option_group_name      = "${local.option_group_name}"
-
   availability_zone   = "${var.availability_zone}"
   multi_az            = "${var.multi_az}"
   iops                = "${var.iops}"
   publicly_accessible = "${var.publicly_accessible}"
-
   allow_major_version_upgrade = "${var.allow_major_version_upgrade}"
   auto_minor_version_upgrade  = "${var.auto_minor_version_upgrade}"
   apply_immediately           = "${var.apply_immediately}"
@@ -123,18 +121,14 @@ module "db_instance" {
   skip_final_snapshot         = "${var.skip_final_snapshot}"
   copy_tags_to_snapshot       = "${var.copy_tags_to_snapshot}"
   final_snapshot_identifier   = "${var.final_snapshot_identifier}"
-
   backup_retention_period = "${var.backup_retention_period}"
   backup_window           = "${var.backup_window}"
-
   monitoring_interval    = "${var.monitoring_interval}"
   monitoring_role_arn    = "${var.monitoring_role_arn}"
   monitoring_role_name   = "${var.monitoring_role_name}"
   create_monitoring_role = "${var.create_monitoring_role}"
-
   timezone           = "${var.timezone}"
   character_set_name = "${var.character_set_name}"
-
   tags     = "${local.tags}"
   schedule = "${var.schedule}"
 }
