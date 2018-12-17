@@ -21,7 +21,7 @@ provider "aws" {
 provider "aws" {
   alias   = "master"
   version = "~> 1.42.0"
-  region  = "${var.aws_region}"
+  region  = "${var.aws_master_region}"
 
   assume_role {
     role_arn = "arn:aws:iam::${var.master_account_id}:role/${var.master_account_assume_role_name}"
@@ -55,6 +55,10 @@ variable "create" {
 }
 
 variable "aws_region" {
+  default = "us-east-1"
+}
+
+variable "aws_master_region" {
   default = "us-east-1"
 }
 

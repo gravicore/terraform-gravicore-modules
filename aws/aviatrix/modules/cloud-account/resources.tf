@@ -1,5 +1,5 @@
 resource "aviatrix_account" "current" {
-  account_name       = "${local.account_name}"
+  account_name       = "${local.stage_prefix}"
   cloud_type         = "${var.aviatrix_controller_cloud_type}"
   aws_account_number = "${var.account_id}"
   aws_iam            = "true"

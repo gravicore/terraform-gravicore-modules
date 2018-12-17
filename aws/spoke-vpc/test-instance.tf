@@ -66,29 +66,29 @@ locals {
     "TerraformModuleVersion", "0.2.5"))}"
 }
 
-module "test_ssh_ec2_instance_secret" {
-  source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
-  tags   = "${local.module_test_ssh_ec2_instance_secret_tags}"
+# module "test_ssh_ec2_instance_secret" {
+#   source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
+#   tags   = "${local.module_test_ssh_ec2_instance_secret_tags}"
 
-  kms_arn = "alias/parameter_store_key"
+#   kms_arn = "alias/parameter_store_key"
 
-  parameter_write = [
-    {
-      name        = "/${local.stage_prefix}/${var.name}-test-pem"
-      value       = "${module.ssh_key_pair_private.private_key}"
-      type        = "SecureString"
-      overwrite   = "true"
-      description = "${join(" ", list(var.desc_prefix, "VPC Test SSH Instance Private Key"))}"
-    },
-    {
-      name        = "/${local.stage_prefix}/${var.name}-test-pub"
-      value       = "${module.ssh_key_pair_private.public_key}"
-      type        = "SecureString"
-      overwrite   = "true"
-      description = "${join(" ", list(var.desc_prefix, "VPC Test SSH Instance Public Key"))}"
-    },
-  ]
-}
+#   parameter_write = [
+#     {
+#       name        = "/${local.stage_prefix}/${var.name}-test-pem"
+#       value       = "${module.ssh_key_pair_private.private_key}"
+#       type        = "SecureString"
+#       overwrite   = "true"
+#       description = "${join(" ", list(var.desc_prefix, "VPC Test SSH Instance Private Key"))}"
+#     },
+#     {
+#       name        = "/${local.stage_prefix}/${var.name}-test-pub"
+#       value       = "${module.ssh_key_pair_private.public_key}"
+#       type        = "SecureString"
+#       overwrite   = "true"
+#       description = "${join(" ", list(var.desc_prefix, "VPC Test SSH Instance Public Key"))}"
+#     },
+#   ]
+# }
 
 locals {
   module_test_ssh_sg_tags = "${merge(local.tags, map(
