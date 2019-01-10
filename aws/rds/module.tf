@@ -111,7 +111,7 @@ module "db_instance" {
 
   name                                = "${var.name}"
   username                            = "${var.username}"
-  password                            = "${lookup(module.rds_ssm_param_secret.map, format("/%s/rds-secret", local.stage_prefix))}"
+  password                            = "${coalesce(var.password, lookup(module.rds_ssm_param_secret.map, format("/%s/rds-secret", local.stage_prefix)))}"
   port                                = "${var.port}"
   iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
 
