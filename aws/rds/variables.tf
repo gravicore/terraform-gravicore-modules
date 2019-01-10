@@ -95,6 +95,7 @@ variable "name" {
 
 variable "username" {
   description = "Username for the master DB user"
+  default     = ""
 }
 
 variable "password" {

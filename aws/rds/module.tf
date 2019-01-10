@@ -33,6 +33,12 @@ module "rds_ssm_param_secret" {
   parameter_read = ["/${local.stage_prefix}/rds-secret"]
 }
 
+module "rds_ssm_param_username" {
+  source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
+
+  parameter_read = ["/${local.stage_prefix}/rds-username"]
+}
+
 locals {
   environment_prefix = "${join("-", list(var.namespace, var.environment))}"
   stage_prefix       = "${join("-", list(var.namespace, var.environment, var.stage))}"
@@ -109,8 +115,10 @@ module "db_instance" {
   environment         = "${var.environment}"
   stage               = "${var.stage}"
 
-  name                                = "${var.name}"
-  username                            = "${var.username}"
+  name = "${var.name}"
+
+  # username                            = "${var.username}"
+  username                            = "${coalesce(var.username, lookup(module.rds_ssm_param_username.map, format("/%s/rds-username", local.stage_prefix)))}"
   password                            = "${coalesce(var.password, lookup(module.rds_ssm_param_secret.map, format("/%s/rds-secret", local.stage_prefix)))}"
   port                                = "${var.port}"
   iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
