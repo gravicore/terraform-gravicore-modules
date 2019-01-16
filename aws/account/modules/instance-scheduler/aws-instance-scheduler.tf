@@ -32,15 +32,15 @@ resource "aws_cloudformation_stack" "aws_instance_scheduler" {
   template_body = "${file("${path.module}/cloudformation/aws-instance-scheduler.cft")}"
 }
 
-resource "aws_cloudformation_stack" "aws_instance_scheduler_schedules" {
+resource "aws_cloudformation_stack" "schedule" {
   count        = "${var.is_master}"
   depends_on   = ["aws_cloudformation_stack.aws_instance_scheduler"]
-  name         = "aws-instance-scheduler-schedules"
+  name         = "schedule"
   capabilities = ["CAPABILITY_IAM"]
 
   parameters {
     ServiceTokenID = "${aws_cloudformation_stack.aws_instance_scheduler.outputs["ServiceInstanceScheduleServiceToken"]}"
   }
 
-  template_body = "${file("${path.module}/cloudformation/aws-instance-scheduler-schedules.cft")}"
+  template_body = "${file("${path.module}/cloudformation/schedule.cft")}"
 }
