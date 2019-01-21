@@ -7,7 +7,11 @@ locals {
   aviatrix_controller_admin_password = "${var.aviatrix_controller_admin_password == "" ? sha256(bcrypt(random_string.password.result)) : var.aviatrix_controller_admin_password}"
 
   module_aviatrix_controller_init_tags = "${merge(local.tags, map(
+<<<<<<< HEAD
     "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-initialize",
+=======
+    "TerraformModule", "AviatrixSystems/terraform-modules/aviatrix-controller-initialize",
+>>>>>>> master
     "TerraformModuleVersion", "master"))}"
 }
 

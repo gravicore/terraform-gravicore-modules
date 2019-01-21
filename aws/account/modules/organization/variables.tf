@@ -36,7 +36,7 @@ variable "tags" {
   # local.tags["Component"]
 
   default = {
-    TerraformModule = "github.com/gravicore/terraform-aws-organization"
+    TerraformModule = "gravicore/terraform-aws-organization"
   }
 }
 

@@ -6,7 +6,7 @@ variable "tags" {
   description = "https://aws.amazon.com/answers/account-management/aws-tagging-strategies/"
 
   default = {
-    TerraformModule = "github.com/gravicore/terraform-aws-organization"
+    TerraformModule = "gravicore/terraform-aws-organization"
   }
 }
 
