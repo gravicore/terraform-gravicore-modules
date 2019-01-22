@@ -7,20 +7,11 @@ locals {
   aviatrix_controller_admin_password = "${var.aviatrix_controller_admin_password == "" ? sha256(bcrypt(random_string.password.result)) : var.aviatrix_controller_admin_password}"
 
   module_aviatrix_controller_init_tags = "${merge(local.tags, map(
-<<<<<<< HEAD
-    "TerraformModule", "github.com/AviatrixSystems/terraform-modules/aviatrix-controller-initialize",
-=======
     "TerraformModule", "AviatrixSystems/terraform-modules/aviatrix-controller-initialize",
->>>>>>> master
     "TerraformModuleVersion", "master"))}"
 }
 
 module "aviatrix_controller_init" {
-<<<<<<< HEAD
-  # source = "git::https://github.com/mike-r-mclaughlin/terraform-modules.git//aviatrix-controller-initialize?ref=0cd96b8"
-  # source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=master"
-=======
->>>>>>> master
   source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
 
   admin_email           = "${var.aviatrix_controller_admin_email}"

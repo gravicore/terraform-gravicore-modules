@@ -38,11 +38,7 @@ variable "aws_region" {
 }
 
 variable terraform_module {
-<<<<<<< HEAD
-  default = "github.com/gravicore/terraform-gravicore-modules/aws/aviatrix"
-=======
   default = "gravicore/terraform-gravicore-modules/aws/aviatrix"
->>>>>>> master
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

@@ -18,11 +18,7 @@ data "terraform_remote_state" "vpc" {
     region         = "${var.aws_region}"
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
-<<<<<<< HEAD
-    key            = "${var.environment}/${var.stage}/vpc/terraform.tfstate"
-=======
     key            = "${var.environment}/${var.stage}/${var.transit_vpc_name}/terraform.tfstate"
->>>>>>> master
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
   }
