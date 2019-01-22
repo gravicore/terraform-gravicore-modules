@@ -1,5 +1,5 @@
 locals {
-  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage))}-vpc"
+  name_prefix = "${join("-", list(var.namespace, var.environment, var.stage))}"
 
   business_tags = {
     Namespace   = "${var.namespace}"
@@ -11,12 +11,11 @@ locals {
     Repository      = "${var.repository}"
     MasterAccountID = "${var.master_account_id}"
     AccountID       = "${var.account_id}"
-    TerraformModule = "github.com/gravicore/terraform-gravicore-modules/aws/vpc"
+    TerraformModule = "github.com/gravicore/terraform-gravicore-modules/aws/rds"
   }
 
   automation_tags = {}
-
-  security_tags = {}
+  security_tags   = {}
 
   tags = "${merge(
     local.technical_tags,

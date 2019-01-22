@@ -26,6 +26,21 @@ variable "repository" {
 variable "master_account_id" {}
 variable "account_id" {}
 
+<<<<<<< HEAD
+=======
+variable "master_account_assume_role_name" {
+  default = "grv_deploy_svc"
+}
+
+variable "account_assume_role_name" {
+  default = "OrganizationAccountAccessRole"
+}
+
+variable "desc_prefix" {
+  default = "Gravicore Module:"
+}
+
+>>>>>>> master
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
@@ -39,7 +54,11 @@ variable "aws_region" {
 }
 
 variable terraform_module {
+<<<<<<< HEAD
   default = "github.com/gravicore/terraform-gravicore-modules/aws/account"
+=======
+  default = "gravicore/terraform-gravicore-modules/aws/account"
+>>>>>>> master
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
