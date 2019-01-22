@@ -3,7 +3,7 @@ locals {
 }
 
 resource "aws_cloudformation_stack" "aws_instance_scheduler" {
-  count        = "${var.is_master}"
+  count        = "${local.creat_instance_scheduler}"
   name         = "aws-instance-scheduler"
   capabilities = ["CAPABILITY_IAM"]
 
@@ -33,7 +33,7 @@ resource "aws_cloudformation_stack" "aws_instance_scheduler" {
 }
 
 resource "aws_cloudformation_stack" "schedule" {
-  count        = "${var.is_master}"
+  count        = "${local.creat_instance_scheduler}"
   depends_on   = ["aws_cloudformation_stack.aws_instance_scheduler"]
   name         = "schedule"
   capabilities = ["CAPABILITY_IAM"]
@@ -43,4 +43,8 @@ resource "aws_cloudformation_stack" "schedule" {
   }
 
   template_body = "${file("${path.module}/cloudformation/schedule.cft")}"
+}
+
+locals {
+  creat_instance_scheduler = "${var.create == true ? var.is_master : 0 }"
 }
