@@ -3,10 +3,10 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
-variable "PrimarySchedulerAccount" {
+variable "master_account_id" {
   type        = "string"
   default     = ""
-  description = "Account number of Instance Scheduler account"
+  description = "Account number containing the parent Instance Scheduler"
 }
 
 variable "is_child" {

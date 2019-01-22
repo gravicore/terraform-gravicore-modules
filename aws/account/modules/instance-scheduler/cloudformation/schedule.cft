@@ -48,6 +48,30 @@
         ]
       }
     },
+    "AlwaysOffMaintenance": {
+      "Type": "Custom::ServiceInstanceSchedule",
+      "Properties": {
+        "ServiceToken": {
+          "Ref": "ServiceTokenID"
+        },
+        "Description": "",
+        "Enforced": "False",
+        "Timezone": "America/Denver",
+        "Periods": [
+          {
+            "Description": "AlwaysOffMaintanence",
+            "BeginTime": "00:00",
+            "EndTime": "03:00",
+            "WeekDays": "Sun"
+          },
+          {
+            "Description": "SundayMaintenance",
+            "EndTime": "03:00",
+            "WeekDays": "Mon-Sat"
+          }
+        ]
+      }
+    },
     "AlwaysOffUnenforced": {
       "Type": "Custom::ServiceInstanceSchedule",
       "Properties": {
