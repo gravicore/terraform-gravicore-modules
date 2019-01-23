@@ -46,5 +46,7 @@ resource "aws_cloudformation_stack" "schedule" {
 }
 
 locals {
-  creat_instance_scheduler = "${var.create == true ? var.is_master : 0 }"
+  # creat_instance_scheduler = true
+
+  creat_instance_scheduler = "${var.create == 1 ? var.is_master : 0 }"
 }

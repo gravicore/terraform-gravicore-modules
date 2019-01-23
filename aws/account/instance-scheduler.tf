@@ -1,6 +1,8 @@
 module "instance_scheduler" {
-  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/account/modules/instance-scheduler?ref=0.5.0"
-  create                = "${var.creat_instance_scheduler}"
+  source = "./modules/instance-scheduler"
+
+  # source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/account/modules/instance-scheduler?ref=0.5.0"
+  create                = "${var.create_instance_scheduler}"
   is_master             = "${local.is_master}"
   TagName               = "Schedule"
   ScheduledServices     = "Both"
@@ -24,8 +26,10 @@ module "instance_scheduler" {
 }
 
 module "instance_scheduler_agent" {
-  source            = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/account/modules/instance-scheduler-agent?ref=0.5.0"
-  create            = "${var.creat_instance_scheduler}"
+  source = "./modules/instance-scheduler-agent"
+
+  # source            = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/account/modules/instance-scheduler-agent?ref=0.5.0"
+  create            = "${var.create_instance_scheduler}"
   master_account_id = "${var.master_account_id}"
   is_child          = "${local.is_child}"
 }
