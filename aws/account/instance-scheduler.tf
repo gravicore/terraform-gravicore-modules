@@ -1,7 +1,6 @@
 module "instance_scheduler" {
   source = "./modules/instance-scheduler"
 
-  # source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/account/modules/instance-scheduler?ref=0.5.0"
   create                = "${var.create_instance_scheduler}"
   is_master             = "${local.is_master}"
   TagName               = "${var.TagName}"
@@ -28,16 +27,10 @@ module "instance_scheduler" {
 module "instance_scheduler_agent" {
   source = "./modules/instance-scheduler-agent"
 
-  # source            = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/account/modules/instance-scheduler-agent?ref=0.5.0"
   create            = "${var.create_instance_scheduler}"
   master_account_id = "${var.master_account_id}"
   is_child          = "${local.is_child}"
 }
-
-# locals {
-#   is_master = "${var.master_account_id == var.account_id ? 1 : 0 }"
-#   is_child  = "${var.master_account_id != var.account_id ? 1 : 0 }"
-# }
 
 variable "TagName" {
   description = "Name for tag key value"
