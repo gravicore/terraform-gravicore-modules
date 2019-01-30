@@ -1,7 +1,3 @@
-locals {
-  aws_instance_scheduler_cross_account_roles = "${join(",",(formatlist("arn:aws:iam::%s:role/aws-instance-scheduler-re-EC2SchedulerCrossAccount", var.child_account)))}"
-}
-
 resource "aws_cloudformation_stack" "aws_instance_scheduler" {
   count        = "${local.creat_instance_scheduler}"
   name         = "aws-instance-scheduler"
@@ -45,8 +41,22 @@ resource "aws_cloudformation_stack" "schedule" {
   template_body = "${file("${path.module}/cloudformation/schedule.cft")}"
 }
 
+module "instance_scheduler_agent" {
+  source = "./instance-scheduler-agent"
+
+  create            = "${local.creat_instance_scheduler_agent}"
+  master_account_id = "${var.master_account_id}"
+
+  # is_child          = "${local.is_child}"
+}
+
 locals {
   # creat_instance_scheduler = true
 
-  creat_instance_scheduler = "${var.create == 1 ? var.is_master : 0 }"
+  creat_instance_scheduler                   = "${var.create == 1 ? local.is_master : 0 }"
+  creat_instance_scheduler_agent             = "${var.create == 1 ? local.is_child : 0 }"
+  aws_instance_scheduler_cross_account_roles = "${join(",",(formatlist("arn:aws:iam::%s:role/aws-instance-scheduler-re-EC2SchedulerCrossAccount", var.accounts)))}"
+
+  # is_master                                  = "${var.master_account_id == var.account_id ? 1 : 0 }"
+  # is_child                                   = "${var.master_account_id != var.account_id ? 1 : 0 }"
 }

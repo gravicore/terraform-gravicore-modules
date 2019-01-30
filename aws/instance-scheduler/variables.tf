@@ -1,3 +1,10 @@
+variable "master_account_id" {}
+variable "account_id" {}
+variable "namespace" {}
+variable "environment" {}
+variable "stage" {}
+variable "repository" {}
+
 variable "aws_region" {
   description = "AWS region"
   default     = "us-east-1"
@@ -95,9 +102,22 @@ variable "SendAnonymousData" {
   description = "Send Anonymous Metrics Data."
 }
 
-variable "is_master" {
-  description = "Passes through if account is master. 1 or 0"
-  default     = "0"
+variable "create" {
+  default = true
 }
 
-variable "create" {}
+variable "accounts" {
+  type = "list"
+}
+
+variable "tags" {
+  default = {}
+}
+
+variable "name" {
+  default = "instance-scheduler"
+}
+
+variable terraform_module {
+  default = "gravicore/terraform-gravicore-modules/aws/instance-scheduler"
+}
