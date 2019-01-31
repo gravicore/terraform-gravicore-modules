@@ -49,7 +49,7 @@ module "instance_scheduler_agent" {
 }
 
 locals {
-  create_instance_scheduler                  = "${coalesce(var.is_standalone_scheduler, local.is_master)}"
-  create_instance_scheduler_agent            = "${local.create_instance_scheduler == 1 ? 0 : local.is_child }"
+  create_instance_scheduler                  = "${var.create == 1 ? coalesce(var.is_standalone_scheduler, local.is_master) : 0}"
+  create_instance_scheduler_agent            = "${var.create == 1 ? local.create_instance_scheduler == 1 ? 0 : local.is_child : 0}"
   aws_instance_scheduler_cross_account_roles = "${var.is_standalone_scheduler == 1 ? "" : coalesce(var.cross_account_roles, join(",",(formatlist("arn:aws:iam::%s:role/aws-instance-scheduler-re-EC2SchedulerCrossAccount", var.accounts)))) }"
 }

@@ -104,6 +104,10 @@ variable "send_anonymous_data" {
   description = "Send Anonymous Metrics Data."
 }
 
+variable "create" {
+  default = true
+}
+
 variable "is_standalone_scheduler" {
   default     = ""
   description = "Will deploy the master scheduler instead of the agent if set to true."
