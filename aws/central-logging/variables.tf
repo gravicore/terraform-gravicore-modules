@@ -1,3 +1,11 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# Platform Standard Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
+variable "tags" {
+  default = {}
+}
+
 variable "name" {
   default     = ""
   description = "Name  (e.g. `bastion` or `db`)"
@@ -17,3 +25,10 @@ variable "environment" {
   description = "Environment (e.g. `master`)"
   type        = "string"
 }
+
+variable "repository" {
+  default = ""
+}
+
+variable "master_account_id" {}
+variable "account_id" {}
