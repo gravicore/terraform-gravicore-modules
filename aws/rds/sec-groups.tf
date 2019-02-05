@@ -1,8 +1,8 @@
 resource "aws_security_group" "this" {
-  count       = "${local.create_security_group}"
+  count       = "${local.enable_create_security_group}"
   name        = "rds-security-group"
   description = "Allow internal and VPN traffic"
-  vpc_id      = "${var.vpc_id}"
+  vpc_id      = "${coalesce(var.vpc_id, data.terraform_remote_state.vpc.vpc_id)}"
 
   ingress {
     from_port   = "${var.port}"

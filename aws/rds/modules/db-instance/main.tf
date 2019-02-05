@@ -122,4 +122,8 @@ resource "aws_db_instance" "this_mssql" {
   timezone = "${var.timezone}"
 
   tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index)), "Schedule", format("%s", var.schedule)))}"
+
+  lifecycle {
+    ignore_changes = ["tags.%", "tags.Schedule", "tags.ScheduleStatus", "tags.ScheduleTimestamp"]
+  }
 }

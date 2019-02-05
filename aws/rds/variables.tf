@@ -1,7 +1,6 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
-
 variable "tags" {
   default = {}
 }
@@ -28,7 +27,6 @@ variable "account_id" {}
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Custom Variables
 # ----------------------------------------------------------------------------------------------------------------------
-
 variable "identifier" {
   description = "The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier"
   default     = []
@@ -97,10 +95,12 @@ variable "name" {
 
 variable "username" {
   description = "Username for the master DB user"
+  default     = ""
 }
 
 variable "password" {
   description = "Password for the master DB user. Note that this may show up in logs, and it will be stored in the state file"
+  default     = ""
 }
 
 variable "port" {
@@ -108,6 +108,7 @@ variable "port" {
 }
 
 variable "vpc_security_group_ids" {
+  type        = "list"
   description = "List of VPC security groups to associate"
   default     = []
 }
@@ -240,6 +241,17 @@ variable "options" {
   default     = []
 }
 
+# DB parameter group
+variable "ingress_sg_cidr" {
+  description = "List of the ingress cidr's to create the security group."
+  default     = []
+}
+
+variable "vpc_id" {
+  description = "VPC to create the security group in."
+  default     = ""
+}
+
 variable "create_db_subnet_group" {
   description = "Whether to create a database subnet group"
   default     = true
@@ -252,6 +264,11 @@ variable "create_db_parameter_group" {
 
 variable "create_db_option_group" {
   description = "Whether to create a database option group"
+  default     = true
+}
+
+variable "create_db_security_group" {
+  description = "Whether to create a database VPC security group"
   default     = true
 }
 
@@ -280,15 +297,6 @@ variable "domain_iam_role_name" {
   default     = ""
 }
 
-variable "ingress_sg_cidr" {
-  description = "List of the ingress cidr's to create the security group."
-  default     = []
-}
-
-variable "vpc_id" {
-  description = "VPC to create the security group in."
-}
-
 variable "deletion_protection" {
   description = "(Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to true. The default is false."
   default     = false
@@ -296,4 +304,8 @@ variable "deletion_protection" {
 
 variable "schedule" {
   description = "(Optional) Which schedule from the instance scheduler to adhere to"
+}
+
+variable "aws_region" {
+  default = "us-east-1"
 }
