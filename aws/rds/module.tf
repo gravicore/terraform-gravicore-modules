@@ -60,7 +60,7 @@ locals {
 }
 
 module "db_subnet_group" {
-  source = "./modules/db_subnet_group"
+  source = "./modules/db-subnet-group"
 
   create      = "${local.enable_create_db_subnet_group}"
   name_prefix = "${local.name_prefix}"
@@ -70,7 +70,7 @@ module "db_subnet_group" {
 }
 
 module "db_parameter_group" {
-  source = "./modules/db_parameter_group"
+  source = "./modules/db-parameter-group"
 
   create      = "${local.enable_create_db_parameter_group}"
   name_prefix = "${local.name_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
@@ -82,7 +82,7 @@ module "db_parameter_group" {
 }
 
 module "db_option_group" {
-  source = "./modules/db_option_group"
+  source = "./modules/db-option-group"
 
   create                   = "${local.enable_create_db_option_group}"
   name_prefix              = "${local.name_prefix}"
@@ -98,7 +98,7 @@ module "db_option_group" {
 }
 
 module "db_instance" {
-  source = "./modules/db_instance"
+  source = "./modules/db-instance"
 
   create              = "${var.create_db_instance}"
   identifier          = ["${var.identifier}"]
