@@ -2,12 +2,17 @@
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "aws_region" {
+  description = "AWS region"
+  default     = "us-east-1"
+}
+
 variable "tags" {
   default = {}
 }
 
 variable "name" {
-  default     = ""
+  default     = "central-logging"
   description = "Name  (e.g. `bastion` or `db`)"
 }
 
@@ -28,6 +33,10 @@ variable "environment" {
 
 variable "repository" {
   default = ""
+}
+
+variable terraform_module {
+  default = "gravicore/terraform-gravicore-modules/aws/central-logging"
 }
 
 variable "master_account_id" {}
