@@ -1,6 +1,6 @@
-data "aws_region" "default" {
-  current = "true"
-}
+# data "aws_region" "default" {
+#   current = "true"
+# }
 
 resource "aws_cloudwatch_log_group" "default" {
   count             = "${var.enabled == "true" ? 1 : 0}"

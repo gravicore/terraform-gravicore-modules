@@ -4,17 +4,23 @@ output "flow_log_group_name" {
 }
 
 output "log_group_iam_role_arn" {
-  value       = "${aws_iam_role.log.arn}"
+  value = "${element(concat(aws_iam_role.log.*.arn, list("")), 0)}"
+
+  # value       = "${aws_iam_role.log.arn}"
   description = "The Amazon Resource Name (ARN) specifying the role"
 }
 
 output "log_group_iam_role_unique_id" {
-  value       = "${aws_iam_role.log.unique_id}"
+  value = "${element(concat(aws_iam_role.log.*.unique_id, list("")), 0)}"
+
+  # value       = "${aws_iam_role.log.unique_id}"
   description = "The stable and unique string identifying the role"
 }
 
 output "log_group_iam_role_name" {
-  value       = "${aws_iam_role.log.name}"
+  value = "${element(concat(aws_iam_role.log.*.name, list("")), 0)}"
+
+  # value       = "${aws_iam_role.log.name}"
   description = "The name of the role."
 }
 
