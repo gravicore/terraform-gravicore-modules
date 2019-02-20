@@ -26,6 +26,10 @@ variable "repository" {
 variable "master_account_id" {}
 variable "account_id" {}
 
+variable "accounts" {
+  default = []
+}
+
 variable "master_account_assume_role_name" {
   default = "grv_deploy_svc"
 }
@@ -65,4 +69,9 @@ variable allow_gravicore_access {
 
 variable "iam_account_alias" {
   description = "The account alias to create."
+}
+
+variable "create_instance_scheduler" {
+  description = "Flag to determine if instance scheduler is created"
+  default     = true
 }
