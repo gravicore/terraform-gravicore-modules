@@ -84,7 +84,7 @@ output "log_bucket_name" {
 }
 
 output "central_logging_lambda" {
-  value       = "${element(concat(aws_cloudformation_stack.aws_central_logging_lambda.*.outputs, list("")), 0)}"
+  value       = "${aws_cloudformation_stack.aws_central_logging_lambda.outputs["Function"]}"
   description = "ARN of the central logging lambda"
 }
 
