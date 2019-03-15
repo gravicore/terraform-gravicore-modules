@@ -3,12 +3,12 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "namespace" {
-  description = "Namespace (e.g. `cp` or `cloudposse`)"
+  description = "Namespace (e.g. `grv` or `gravicore`)"
   type        = "string"
 }
 
 variable "stage" {
-  description = "Stage (e.g. `prod`, `dev`, `staging`)"
+  description = "Stage (e.g. `prod`, `uat`, `dev`)"
   type        = "string"
 }
 
@@ -71,7 +71,7 @@ data "terraform_remote_state" "master_acct" {
     encrypt        = true
     key            = "master/prd/acct/terraform.tfstate"
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
-    role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
+    role_arn       = "arn:aws:iam::${var.master_account_id}:role/${var.master_account_assume_role_name}"
   }
 }
 
@@ -127,4 +127,8 @@ output "log_group_arn" {
 output "destination_arn" {
   value       = "${element(concat(aws_cloudformation_stack.aws_central_logging_destination.*.outputs, list("")), 0)}"
   description = "The kinesis destination's Amazon Resource Name (ARN) specifying the log group"
+}
+
+variable "master_account_assume_role_name" {
+  default = "grv_deploy_svc"
 }

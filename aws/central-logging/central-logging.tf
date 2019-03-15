@@ -17,12 +17,12 @@ variable "name" {
 }
 
 variable "namespace" {
-  description = "Namespace (e.g. `cp` or `cloudposse`)"
+  description = "Namespace (e.g. `grv` or `gravicore`)"
   type        = "string"
 }
 
 variable "stage" {
-  description = "Stage (e.g. `prod`, `dev`, `staging`)"
+  description = "Stage (e.g. `prod`, `uat`, `dev`)"
   type        = "string"
 }
 
@@ -64,13 +64,14 @@ resource "aws_cloudformation_stack" "aws_central_logging_lambda" {
 module "central_logging_agent" {
   source = "./agent"
 
-  enabled           = "${local.is_child == 1 ? true : false }"
-  namespace         = "${var.namespace}"
-  environment       = "${var.environment}"
-  stage             = "${var.stage}"
-  master_account_id = "${var.master_account_id}"
-  repository        = "${var.repository}"
-  account_id        = "${var.account_id}"
+  master_account_assume_role_name = "${var.master_account_assume_role_name}"
+  enabled                         = "${local.is_child == 1 ? true : false }"
+  namespace                       = "${var.namespace}"
+  environment                     = "${var.environment}"
+  stage                           = "${var.stage}"
+  master_account_id               = "${var.master_account_id}"
+  repository                      = "${var.repository}"
+  account_id                      = "${var.account_id}"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

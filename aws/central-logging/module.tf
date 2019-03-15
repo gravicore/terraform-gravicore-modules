@@ -6,21 +6,21 @@ terraform {
 }
 
 provider "aws" {
-  version = "~> 1.48"
+  version = "~> 1.48.0"
   region  = "${var.aws_region}"
 
   assume_role {
-    role_arn = "arn:aws:iam::${var.account_id}:role/grv_deploy_svc"
+    role_arn = "arn:aws:iam::${var.account_id}:role/${var.account_assume_role_name}"
   }
 }
 
 provider "aws" {
   alias   = "master"
-  version = "~> 1.48"
+  version = "~> 1.48.0"
   region  = "${var.aws_region}"
 
   assume_role {
-    role_arn = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
+    role_arn = "arn:aws:iam::${var.master_account_id}:role/${var.master_account_assume_role_name}"
   }
 }
 
@@ -56,4 +56,12 @@ locals {
     local.security_tags,
     var.tags
   )}"
+}
+
+variable "master_account_assume_role_name" {
+  default = "grv_deploy_svc"
+}
+
+variable "account_assume_role_name" {
+  default = "OrganizationAccountAccessRole"
 }
