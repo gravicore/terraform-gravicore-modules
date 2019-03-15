@@ -128,7 +128,3 @@ output "destination_arn" {
   value       = "${element(concat(aws_cloudformation_stack.aws_central_logging_destination.*.outputs, list("")), 0)}"
   description = "The kinesis destination's Amazon Resource Name (ARN) specifying the log group"
 }
-
-variable "master_account_assume_role_name" {
-  default = "grv_deploy_svc"
-}

@@ -142,7 +142,3 @@ output "flow_log_destination_arn" {
   value       = "${module.flow_log_destination.destination_arn}"
   description = "The kinesis destination's Amazon Resource Name (ARN) specifying the log group"
 }
-
-variable "master_account_assume_role_name" {
-  default = "grv_deploy_svc"
-}

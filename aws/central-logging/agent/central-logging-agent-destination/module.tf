@@ -1,3 +1,7 @@
+variable "master_account_assume_role_name" {
+  default = "grv_deploy_svc"
+}
+
 locals {
   is_master = "${var.master_account_id == var.account_id ? 1 : 0 }"
   is_child  = "${var.master_account_id != var.account_id ? 1 : 0 }"
