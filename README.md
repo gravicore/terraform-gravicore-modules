@@ -16,6 +16,7 @@ This is a collection of reusable Terraform modules for Gravicore's cloud automat
 | [Aviatrix](aws/aviatrix)                     | A collection of modules for deploying [Aviatrix](https://www.aviatrix.com)'s global transit hub solution.                                                                                          |
 | [Instance Scheduler](aws/instance-scheduler) | A module enabling the configuration of custom start and stop schedules for Amazon EC2 and RDS instances. [Read More](https://aws.amazon.com/answers/infrastructure-management/instance-scheduler/) |
 | [RDS](aws/rds)                               | A collection of modules for deploying Relational Database Service (RDS) resources.                                                                                                                 |
+| [Central Logging](aws/central-logging)       | A collection of modules for deploying resources for centralized logging.                                                                                                                           |
 
 ## Contributing
 
