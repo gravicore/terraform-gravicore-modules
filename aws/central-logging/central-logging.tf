@@ -2,6 +2,11 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "terraform_remote_state_key" {
+  description = "Key for the location of the remote state of the master account module"
+  default     = ""
+}
+
 variable "aws_region" {
   description = "AWS region"
   default     = "us-east-1"
@@ -65,6 +70,7 @@ module "central_logging_agent" {
   source = "./agent"
 
   master_account_assume_role_name = "${var.master_account_assume_role_name}"
+  terraform_remote_state_key      = "${var.terraform_remote_state_key}"
   enabled                         = "${local.is_child == 1 ? true : false }"
   namespace                       = "${var.namespace}"
   environment                     = "${var.environment}"
