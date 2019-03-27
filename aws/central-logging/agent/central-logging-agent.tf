@@ -2,6 +2,10 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "terraform_remote_state_key" {
+  description = "Key for the location of the remote state of the master account module"
+}
+
 variable "namespace" {
   description = "Namespace (e.g. `grv` or `gravicore`)"
   type        = "string"
@@ -98,6 +102,7 @@ module "flow_log_destination" {
   source = "./central-logging-agent-destination"
 
   master_account_assume_role_name = "${var.master_account_assume_role_name}"
+  terraform_remote_state_key      = "${var.terraform_remote_state_key}"
   namespace                       = "${var.namespace}"
   environment                     = "${var.environment}"
   stage                           = "${var.stage}"

@@ -2,6 +2,10 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "terraform_remote_state_key" {
+  description = "Key for the location of the remote state of the master account module"
+}
+
 variable "namespace" {
   description = "Namespace (e.g. `grv` or `gravicore`)"
   type        = "string"
@@ -62,6 +66,10 @@ variable terraform_module {
   default = "gravicore/terraform-gravicore-modules/aws/central-logging/agent/central-logging-agent-destination"
 }
 
+locals {
+  terraform_remote_state_key = "${coalesce(var.terraform_remote_state_key, "master/prd/central-logging")}"
+}
+
 data "terraform_remote_state" "master_acct" {
   backend = "s3"
 
@@ -69,7 +77,7 @@ data "terraform_remote_state" "master_acct" {
     region         = "${var.aws_region}"
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
-    key            = "master/prd/acct/terraform.tfstate"
+    key            = "${local.terraform_remote_state_key}/terraform.tfstate"
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
     role_arn       = "arn:aws:iam::${var.master_account_id}:role/${var.master_account_assume_role_name}"
   }
@@ -125,6 +133,8 @@ output "log_group_arn" {
 }
 
 output "destination_arn" {
-  value       = "${element(concat(aws_cloudformation_stack.aws_central_logging_destination.*.outputs, list("")), 0)}"
+  # value = "${aws_cloudformation_stack.aws_central_logging_destination.outputs["Destination"]}"
+
+  value       = "${element(concat(aws_cloudformation_stack.aws_central_logging_destination.*.outputs.Destination, list("")), 0)}"
   description = "The kinesis destination's Amazon Resource Name (ARN) specifying the log group"
 }
