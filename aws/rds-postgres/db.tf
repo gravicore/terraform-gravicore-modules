@@ -55,6 +55,7 @@ variable "iam_database_authentication_enabled" {
 
 variable "engine" {
   description = "The database engine to use"
+  default     = "postgres"
 }
 
 variable "engine_version" {
@@ -87,6 +88,7 @@ variable "password" {
 
 variable "port" {
   description = "The port on which the DB accepts connections"
+  default     = "5432"
 }
 
 variable "vpc_security_group_ids" {
@@ -376,6 +378,7 @@ module "db_instance" {
   source              = "./modules/db-instance"
   create              = "${var.create_db_instance}"
   identifier          = ["${var.identifier}"]
+  stage_prefix        = "${local.stage_prefix}"
   engine              = "${var.engine}"
   engine_version      = "${var.engine_version}"
   instance_class      = "${var.instance_class}"

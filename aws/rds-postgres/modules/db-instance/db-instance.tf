@@ -22,6 +22,8 @@ variable "repository" {
   default = ""
 }
 
+variable "stage_prefix" {}
+
 variable "create" {
   description = "Whether to create this resource or not?"
   default     = true
@@ -242,7 +244,7 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring" {
 resource "aws_db_instance" "this" {
   count = "${var.create && !local.is_mssql ? length(var.identifier) : 0}"
 
-  identifier = "${var.namespace}-${var.environment}-${var.stage}-${element(var.identifier, count.index)}"
+  identifier = "${var.stage_prefix}-${element(var.identifier, count.index)}"
 
   engine            = "${var.engine}"
   engine_version    = "${var.engine_version}"
@@ -280,14 +282,13 @@ resource "aws_db_instance" "this" {
   maintenance_window          = "${var.maintenance_window}"
   skip_final_snapshot         = "${var.skip_final_snapshot}"
   copy_tags_to_snapshot       = "${var.copy_tags_to_snapshot}"
-  final_snapshot_identifier   = "${var.final_snapshot_identifier}"
+  final_snapshot_identifier   = "${var.stage_prefix}-${element(var.identifier, count.index)}-${var.final_snapshot_identifier}"
 
   backup_retention_period = "${var.backup_retention_period}"
   backup_window           = "${var.backup_window}"
 
   character_set_name = "${var.character_set_name}"
 
-  # tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index))))}"
   tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index)), "Schedule", format("%s", var.schedule)))}"
 
   lifecycle {
