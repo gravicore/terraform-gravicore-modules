@@ -14,9 +14,10 @@ This is a collection of reusable Terraform modules for Gravicore's cloud automat
 | [Shared VPC](aws/shared-vpc)                 | A secure, dual-AZ Shared Services VPC with public subnets, private subnets, Internet Gateway and shared Directory Service.                                                                         |
 | [Spoke VPC](aws/spoke-vpc)                   | A secure, dual-AZ Spoke VPC with public subnets, private subnets and an Internet Gateway.                                                                                                          |
 | [Aviatrix](aws/aviatrix)                     | A collection of modules for deploying [Aviatrix](https://www.aviatrix.com)'s global transit hub solution.                                                                                          |
+| [Central Logging](aws/central-logging)       | A collection of modules for deploying resources for centralized logging.                                                                                                                           |
 | [Instance Scheduler](aws/instance-scheduler) | A module enabling the configuration of custom start and stop schedules for Amazon EC2 and RDS instances. [Read More](https://aws.amazon.com/answers/infrastructure-management/instance-scheduler/) |
 | [RDS](aws/rds)                               | A collection of modules for deploying Relational Database Service (RDS) resources.                                                                                                                 |
-| [Central Logging](aws/central-logging)       | A collection of modules for deploying resources for centralized logging.                                                                                                                           |
+| [ElastiCache (Redis)](aws/elasticache-redis) | A module for deploying an ElastiCache for Redis instance.                                                                                                                                          |
 
 ## Contributing
 
