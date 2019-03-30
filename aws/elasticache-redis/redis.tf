@@ -188,42 +188,6 @@ resource "random_string" "auth_token" {
   special = true
 }
 
-# module "redis" {
-#   source    = "git::https://github.com/cloudposse/terraform-aws-elasticache-redis.git?ref=tags/0.9.0"
-#   enabled   = "${var.create}"
-#   namespace = ""
-#   stage     = ""
-#   name      = "${local.module_prefix}-db"
-#   tags      = "${local.tags}"
-
-#   auth_token           = "${random_string.auth_token.result}"
-#   zone_id              = "${data.terraform_remote_state.vpc.vpc_dns_zone_id}"
-#   vpc_id               = "${data.terraform_remote_state.vpc.vpc_id}"
-#   subnets              = "${data.terraform_remote_state.vpc.vpc_private_subnets}"
-#   maintenance_window   = "${var.maintenance_window}"
-#   cluster_size         = "${var.cluster_size}"
-#   instance_type        = "${var.instance_type}"
-#   apply_immediately    = "${var.apply_immediately}"
-#   availability_zones   = "${local.availability_zones}"
-#   automatic_failover   = "${var.automatic_failover}"
-#   replication_group_id = "${substr(replace(local.module_prefix, "-", ""), 0, 20)}"
-
-#   # replication_group_id = "${local.module_prefix}"
-
-#   engine_version               = "${var.engine_version}"
-#   family                       = "${var.family}"
-#   port                         = "${var.port}"
-#   alarm_cpu_threshold_percent  = "${var.alarm_cpu_threshold_percent}"
-#   alarm_memory_threshold_bytes = "${var.alarm_memory_threshold_bytes}"
-#   at_rest_encryption_enabled   = "${var.at_rest_encryption_enabled}"
-#   parameter = [
-#     {
-#       name  = "notify-keyspace-events"
-#       value = "lK"
-#     },
-#   ]
-# }
-
 #
 # Security Group Resources
 #
