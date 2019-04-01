@@ -11,7 +11,7 @@ variable "namespace" {
 }
 
 variable "environment" {
-  default = "master"
+  default = "shared"
 }
 
 variable "stage" {
