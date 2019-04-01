@@ -37,7 +37,7 @@ provider "aws" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "name" {
-  default = "rds"
+  default = "rds-postgres"
 }
 
 variable "create" {
@@ -49,7 +49,7 @@ variable "aws_region" {
 }
 
 variable terraform_module {
-  default = "gravicore/terraform-gravicore-modules/aws/rds"
+  default = "gravicore/terraform-gravicore-modules/aws/rds-postgres"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
