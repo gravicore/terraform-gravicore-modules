@@ -305,40 +305,17 @@ data "aws_kms_key" "parameter_store_key" {
 module "rds_ssm_param_secret" {
   source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
   kms_arn        = "alias/parameter_store_key"
-  parameter_read = ["/${local.stage_prefix}/rds-secret"]
+  parameter_read = ["/${local.module_prefix}/rds-secret"]
 }
 
 module "rds_ssm_param_username" {
   source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
-  parameter_read = ["/${local.stage_prefix}/rds-username"]
-}
-
-data "aws_iam_policy_document" "rds_ds_access" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["rds.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "rds_ds_access" {
-  count              = 0
-  name               = "rds-ds-access-role"
-  assume_role_policy = "${data.aws_iam_policy_document.rds_ds_access.json}"
-}
-
-resource "aws_iam_role_policy_attachment" "rds_ds_access" {
-  count      = 0
-  role       = "${aws_iam_role.rds_ds_access.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
+  parameter_read = ["/${local.module_prefix}/rds-username"]
 }
 
 resource "aws_security_group" "this" {
   count       = "${local.enable_create_security_group}"
-  name        = "rds-security-group"
+  name        = "${join("-", list(local.stage_prefix, coalesce(var.name, "postgres")))}"
   description = "Allow internal and VPN traffic"
   vpc_id      = "${coalesce(var.vpc_id, data.terraform_remote_state.vpc.vpc_id)}"
 
@@ -355,30 +332,34 @@ resource "aws_security_group" "this" {
     protocol    = "-1"
     cidr_blocks = ["${var.ingress_sg_cidr}"]
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 module "db_subnet_group" {
-  source       = "./modules/db-subnet-group"
-  create       = "${local.enable_create_db_subnet_group}"
-  stage_prefix = "${local.stage_prefix}"
-  subnet_ids   = ["${data.terraform_remote_state.vpc.vpc_private_subnets}"]
-  tags         = "${local.tags}"
+  source        = "./modules/db-subnet-group"
+  create        = "${local.enable_create_db_subnet_group}"
+  module_prefix = "${local.module_prefix}"
+  subnet_ids    = ["${data.terraform_remote_state.vpc.vpc_private_subnets}"]
+  tags          = "${local.tags}"
 }
 
 module "db_parameter_group" {
-  source       = "./modules/db-parameter-group"
-  create       = "${local.enable_create_db_parameter_group}"
-  stage_prefix = "${local.stage_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
-  family       = "${var.family}"
-  parameters   = ["${var.parameters}"]
-  tags         = "${local.tags}"
+  source        = "./modules/db-parameter-group"
+  create        = "${local.enable_create_db_parameter_group}"
+  module_prefix = "${local.module_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
+  family        = "${var.family}"
+  parameters    = ["${var.parameters}"]
+  tags          = "${local.tags}"
 }
 
 module "db_instance" {
   source              = "./modules/db-instance"
   create              = "${var.create_db_instance}"
   identifier          = ["${var.identifier}"]
-  stage_prefix        = "${local.stage_prefix}"
+  module_prefix       = "${local.module_prefix}"
   engine              = "${var.engine}"
   engine_version      = "${var.engine_version}"
   instance_class      = "${var.instance_class}"
@@ -393,8 +374,8 @@ module "db_instance" {
   stage               = "${var.stage}"
   name                = "${var.db_name}"
 
-  username                            = "${coalesce(var.username, lookup(module.rds_ssm_param_username.map, format("/%s/rds-username", local.stage_prefix)))}"
-  password                            = "${coalesce(var.password, lookup(module.rds_ssm_param_secret.map, format("/%s/rds-secret", local.stage_prefix)))}"
+  username                            = "${coalesce(var.username, lookup(module.rds_ssm_param_username.map, format("/%s/rds-username", local.module_prefix)))}"
+  password                            = "${coalesce(var.password, lookup(module.rds_ssm_param_secret.map, format("/%s/rds-secret", local.module_prefix)))}"
   port                                = "${var.port}"
   iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
 

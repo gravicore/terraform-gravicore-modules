@@ -37,7 +37,7 @@ provider "aws" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "name" {
-  default = "rds-postgres"
+  default = "postgres"
 }
 
 variable "create" {
@@ -94,7 +94,7 @@ variable "tags" {
 locals {
   environment_prefix = "${join("-", list(var.namespace, var.environment))}"
   stage_prefix       = "${join("-", list(var.namespace, var.environment, var.stage))}"
-  module_prefix      = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
+  module_prefix      = "${var.name == "" ? local.stage_prefix : join("-", list(var.namespace, var.environment, var.stage, var.name))}"
 
   business_tags = {
     Namespace   = "${var.namespace}"

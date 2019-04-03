@@ -7,7 +7,7 @@ variable "create" {
   default     = true
 }
 
-variable "stage_prefix" {
+variable "module_prefix" {
   description = "Creates a unique name beginning with the specified prefix"
 }
 
@@ -33,7 +33,7 @@ variable "tags" {
 resource "aws_db_parameter_group" "this" {
   count = "${var.create ? 1 : 0}"
 
-  name        = "${var.stage_prefix}"
+  name        = "${var.module_prefix}"
   description = "Default database parameter group"
   family      = "${var.family}"
 
