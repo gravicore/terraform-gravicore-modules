@@ -18,6 +18,7 @@ This is a collection of reusable Terraform modules for Gravicore's cloud automat
 | [Datadog Agent](aws/datadog-agent)           | A module for deploying a centralized logging solution leveraging [Datadog](https://www.datadoghq.com/).                                                                                            |
 | [Instance Scheduler](aws/instance-scheduler) | A module enabling the configuration of custom start and stop schedules for Amazon EC2 and RDS instances. [Read More](https://aws.amazon.com/answers/infrastructure-management/instance-scheduler/) |
 | [RDS](aws/rds)                               | A collection of modules for deploying Relational Database Service (RDS) resources.                                                                                                                 |
+| [RDS (PostgreSQL)](aws/rds-postgres)         | A module for deploying [Amazon RDS for PostgreSQL](https://aws.amazon.com/rds/postgresql/) resources.                                                                                              |
 | [ElastiCache (Redis)](aws/elasticache-redis) | A module for deploying an ElastiCache for Redis instance.                                                                                                                                          |
 
 ## Contributing
