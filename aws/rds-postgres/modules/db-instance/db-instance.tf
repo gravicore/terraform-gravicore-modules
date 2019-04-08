@@ -289,7 +289,7 @@ resource "aws_db_instance" "this" {
 
   character_set_name = "${var.character_set_name}"
 
-  tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index)), "Schedule", format("%s", var.schedule)))}"
+  tags = "${merge(var.tags, map("Name", format("${var.module_prefix}-%s", element(var.identifier, count.index)), "Schedule", format("%s", var.schedule)))}"
 
   lifecycle {
     ignore_changes = ["tags.%", "tags.Schedule", "tags.ScheduleStatus", "tags.ScheduleTimestamp"]
