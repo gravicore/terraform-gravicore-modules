@@ -69,17 +69,28 @@ variable "enable_https" {
   default     = "true"
 }
 
+variable "https_health_check_interval" {
+  description = "Average interval for https health check. Allowed Values:5-300"
+  default     = "30"
+}
+
 variable "enable_sftp" {
   description = "Adds infrastructure nessesary for sftp"
   default     = "true"
 }
 
+variable "sftp_health_check_interval" {
+  description = "Average interval for sftp health check. Allowed Values:10, 30"
+  default     = "30"
+}
+
 variable "parent_domain_name" {}
 
 locals {
-    module_kms_key_tags = "${merge(local.tags, map(
+  module_kms_key_tags = "${merge(local.tags, map(
     "TerraformModule", "cloudposse/terraform-aws-kms-key",
     "TerraformModuleVersion", "0.1.2"))}"
+
   remote_state_acct_key = "${coalesce(var.terraform_remote_state_acct_key, "master/${var.stage}/acct")}"
   remote_state_vpc_key  = "${coalesce(var.terraform_remote_state_vpc_key, "master/${var.stage}/shared-vpc")}"
   create_domain_join    = "${var.create == "true" && var.add_instance_to_ad == "true" ? var.create : "false" }"
@@ -148,13 +159,15 @@ resource "aws_security_group" "cerberus_ec2" {
     cidr_blocks = ["${var.ingress_sg_cidr}"]
     description = "RDP from internal"
   }
-    ingress {
+
+  ingress {
     from_port   = "22"
     to_port     = "22"
     protocol    = "6"
     cidr_blocks = ["0.0.0.0/0"]
     description = "SSH/SFTP"
   }
+
   ingress {
     from_port   = 0
     to_port     = 0
@@ -162,13 +175,16 @@ resource "aws_security_group" "cerberus_ec2" {
     cidr_blocks = ["${var.ingress_sg_cidr}"]
     description = "All from internal"
   }
+
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   tags = "${merge(local.tags, map("Name", "${local.module_prefix}-ec2"))}"
+
   lifecycle {
     create_before_destroy = true
   }
@@ -360,10 +376,9 @@ resource "aws_lb_target_group" "cerberus_alb_target_group" {
     timeout             = "5"
     healthy_threshold   = "5"
     unhealthy_threshold = "2"
-    interval            = "30"
+    interval            = "${var.https_health_check_interval}"
     matcher             = "200"
   }
-
 }
 
 resource "aws_lb_listener" "cerberus_https" {
@@ -428,9 +443,10 @@ resource "aws_lb" "cerberus_nlb" {
   name               = "${local.module_prefix}-nlb"
   internal           = "false"
   load_balancer_type = "network"
+
   # security_groups    = ["${aws_security_group.cerberus_alb.id}"]
-  subnets            = ["${data.terraform_remote_state.vpc.vpc_public_subnets}"]
-  idle_timeout       = "60"
+  subnets      = ["${data.terraform_remote_state.vpc.vpc_public_subnets}"]
+  idle_timeout = "60"
 
   tags = "${local.tags}"
 }
@@ -450,7 +466,7 @@ resource "aws_lb_target_group" "cerberus_nlb_sftp_target_group" {
     protocol            = "TCP"
     healthy_threshold   = "3"
     unhealthy_threshold = "3"
-    interval            = "30"
+    interval            = "${var.sftp_health_check_interval}"
   }
 }
 
