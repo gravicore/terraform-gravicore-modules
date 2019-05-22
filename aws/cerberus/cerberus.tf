@@ -71,7 +71,7 @@ variable "enable_https" {
 
 variable "https_health_check_interval" {
   description = "Average interval for https health check. Allowed Values:5-300"
-  default     = "30"
+  default     = "300"
 }
 
 variable "enable_sftp" {
@@ -374,7 +374,7 @@ resource "aws_lb_target_group" "cerberus_alb_target_group" {
     path                = "/login"
     protocol            = "HTTPS"
     timeout             = "5"
-    healthy_threshold   = "5"
+    healthy_threshold   = "2"
     unhealthy_threshold = "2"
     interval            = "${var.https_health_check_interval}"
     matcher             = "200"
