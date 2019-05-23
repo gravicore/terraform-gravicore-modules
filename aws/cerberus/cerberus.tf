@@ -93,7 +93,6 @@ locals {
 
   remote_state_acct_key = "${coalesce(var.terraform_remote_state_acct_key, "master/${var.stage}/acct")}"
   remote_state_vpc_key  = "${coalesce(var.terraform_remote_state_vpc_key, "master/${var.stage}/shared-vpc")}"
-  create_domain_join    = "${var.create == "true" && var.add_instance_to_ad == "true" ? var.create : "false" }"
 }
 
 data "terraform_remote_state" "acct" {
@@ -105,7 +104,7 @@ data "terraform_remote_state" "acct" {
     encrypt        = true
     key            = "${local.remote_state_acct_key}/terraform.tfstate"
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
-    role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
+    role_arn       = "arn:aws:iam::${var.master_account_id}:role/${var.master_account_assume_role_name}"
   }
 }
 
@@ -118,7 +117,7 @@ data "terraform_remote_state" "vpc" {
     encrypt        = true
     key            = "${local.remote_state_vpc_key}/terraform.tfstate"
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
-    role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
+    role_arn       = "arn:aws:iam::${var.master_account_id}:role/${var.master_account_assume_role_name}"
   }
 }
 
@@ -145,11 +144,11 @@ resource "aws_security_group" "cerberus_ec2" {
   vpc_id      = "${data.terraform_remote_state.vpc.vpc_id}"
 
   ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
+    from_port       = "443"
+    to_port         = "443"
+    protocol        = "6"
     security_groups = ["${aws_security_group.cerberus_alb.id}"]
-    description     = "All from ALB"
+    description     = "${var.desc_prefix} All from ALB"
   }
 
   ingress {
@@ -157,7 +156,15 @@ resource "aws_security_group" "cerberus_ec2" {
     to_port     = "3389"
     protocol    = "6"
     cidr_blocks = ["${var.ingress_sg_cidr}"]
-    description = "RDP from internal"
+    description = "${var.desc_prefix} RDP from internal"
+  }
+
+  ingress {
+    from_port   = "8443"
+    to_port     = "8443"
+    protocol    = "6"
+    cidr_blocks = ["${var.ingress_sg_cidr}"]
+    description = "${var.desc_prefix} Cerberus web adminitration port from internal"
   }
 
   ingress {
@@ -165,15 +172,15 @@ resource "aws_security_group" "cerberus_ec2" {
     to_port     = "22"
     protocol    = "6"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "SSH/SFTP"
+    description = "${var.desc_prefix} SSH/SFTP"
   }
 
   ingress {
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["${var.ingress_sg_cidr}"]
-    description = "All from internal"
+    protocol    = "ICMP"
+    cidr_blocks = ["10.0.0.0/8"]
+    description = "${var.desc_prefix} ICMP"
   }
 
   egress {
@@ -181,6 +188,7 @@ resource "aws_security_group" "cerberus_ec2" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "${var.desc_prefix} EC2 egress"
   }
 
   tags = "${merge(local.tags, map("Name", "${local.module_prefix}-ec2"))}"
@@ -223,8 +231,9 @@ resource "aws_iam_role_policy_attachment" "cerberus_ssm_attach" {
 }
 
 resource "aws_iam_instance_profile" "cerberus_profile" {
-  name = "${local.module_prefix}-ec2"
-  role = "${aws_iam_role.cerberus_ec2.name}"
+  count = "${var.create == "true" ? 1 : 0 }"
+  name  = "${local.module_prefix}-ec2"
+  role  = "${aws_iam_role.cerberus_ec2.name}"
 }
 
 resource "aws_ebs_volume" "cerberus_ebs" {
@@ -270,7 +279,7 @@ resource "aws_instance" "cerberus_ec2" {
 }
 
 resource "aws_ssm_association" "domain_join" {
-  count = "${local.create_domain_join == "true" ? var.number_of_instances : 0}"
+  count = "${var.create && var.add_instance_to_ad == "true" ? var.number_of_instances : 0}"
   name  = "AWS-JoinDirectoryServiceDomain"
 
   instance_id = "${aws_instance.cerberus_ec2.*.id[count.index]}"
@@ -289,7 +298,7 @@ resource "aws_route53_record" "cerberus_ec2" {
   zone_id = "${data.terraform_remote_state.vpc.vpc_dns_zone_id}"
   name    = "${var.name}-${format("%d", count.index + 1 )}"
   type    = "CNAME"
-  ttl     = "60"
+  ttl     = "30"
   records = ["${aws_instance.cerberus_ec2.*.private_dns[count.index]}"]
 }
 
@@ -302,19 +311,11 @@ resource "aws_security_group" "cerberus_alb" {
   vpc_id      = "${data.terraform_remote_state.vpc.vpc_id}"
 
   ingress {
-    from_port   = "21"
-    to_port     = "22"
-    protocol    = "6"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "SSH/SFTP"
-  }
-
-  ingress {
     from_port   = "80"
     to_port     = "80"
     protocol    = "6"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP"
+    description = "${var.desc_prefix} HTTP"
   }
 
   ingress {
@@ -322,15 +323,7 @@ resource "aws_security_group" "cerberus_alb" {
     to_port     = "443"
     protocol    = "6"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS"
-  }
-
-  ingress {
-    from_port   = "990"
-    to_port     = "990"
-    protocol    = "6"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "FTPS"
+    description = "${var.desc_prefix} HTTPS"
   }
 
   egress {
@@ -338,6 +331,7 @@ resource "aws_security_group" "cerberus_alb" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    description = "${var.desc_prefix} ALB egress"
   }
 
   tags = "${merge(local.tags, map("Name", "${local.module_prefix}-alb"))}"
@@ -379,6 +373,8 @@ resource "aws_lb_target_group" "cerberus_alb_target_group" {
     interval            = "${var.https_health_check_interval}"
     matcher             = "200"
   }
+
+  tags = "${local.tags}"
 }
 
 resource "aws_lb_listener" "cerberus_https" {
@@ -440,13 +436,12 @@ resource "aws_route53_record" "cerberus_alb" {
 resource "aws_lb" "cerberus_nlb" {
   count = "${var.create && var.enable_sftp == "true" ? 1 : 0 }"
 
-  name               = "${local.module_prefix}-nlb"
-  internal           = "false"
-  load_balancer_type = "network"
-
-  # security_groups    = ["${aws_security_group.cerberus_alb.id}"]
-  subnets      = ["${data.terraform_remote_state.vpc.vpc_public_subnets}"]
-  idle_timeout = "60"
+  name                             = "${local.module_prefix}-nlb"
+  internal                         = "false"
+  load_balancer_type               = "network"
+  enable_cross_zone_load_balancing = "true"
+  subnets                          = ["${data.terraform_remote_state.vpc.vpc_public_subnets}"]
+  idle_timeout                     = "60"
 
   tags = "${local.tags}"
 }
@@ -464,10 +459,12 @@ resource "aws_lb_target_group" "cerberus_nlb_sftp_target_group" {
   health_check {
     port                = "traffic-port"
     protocol            = "TCP"
-    healthy_threshold   = "3"
-    unhealthy_threshold = "3"
+    healthy_threshold   = "2"
+    unhealthy_threshold = "2"
     interval            = "${var.sftp_health_check_interval}"
   }
+
+  tags = "${local.tags}"
 }
 
 resource "aws_lb_listener" "cerberus_sftp" {
@@ -495,7 +492,7 @@ resource "aws_route53_record" "cerberus_nlb" {
   zone_id = "${data.aws_route53_zone.public.zone_id}"
   name    = "sftp"
   type    = "CNAME"
-  ttl     = "60"
+  ttl     = "30"
   records = ["${aws_lb.cerberus_nlb.dns_name}"]
 }
 

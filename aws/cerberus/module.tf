@@ -63,7 +63,7 @@ variable "namespace" {
 variable "environment" {}
 
 variable "stage" {
-  default = "prd"
+  default = "dev"
 }
 
 variable "repository" {
