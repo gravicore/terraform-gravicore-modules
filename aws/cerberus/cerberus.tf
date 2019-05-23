@@ -229,12 +229,6 @@ resource "aws_iam_role" "cerberus_ec2" {
   assume_role_policy = "${data.aws_iam_policy_document.cerberus_ec2.json}"
 }
 
-resource "aws_iam_role_policy_attachment" "cerberus_s3_access" {
-  count      = "${var.create ? 1 : 0 }"
-  role       = "${aws_iam_role.cerberus_ec2.name}"
-  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-}
-
 resource "aws_iam_role_policy_attachment" "cerberus_ssm_attach" {
   count      = "${var.create ? 1 : 0 }"
   role       = "${aws_iam_role.cerberus_ec2.name}"

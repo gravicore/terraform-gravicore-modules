@@ -82,7 +82,7 @@ variable "account_assume_role_name" {
 }
 
 variable "desc_prefix" {
-  default = "Gravicore Module:"
+  default = "Gravicore:"
 }
 
 variable "tags" {
