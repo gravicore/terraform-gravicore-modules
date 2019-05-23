@@ -13,12 +13,12 @@ variable "ingress_sg_cidr" {
 }
 
 variable "cerberus_instance_type" {
-  description = "Instance type for cerberus EC2 instance"
+  description = "Instance type for Cerberus EC2 instance"
   default     = "t3.medium"
 }
 
 variable "cerberus_instance_ami" {
-  description = "ami for cerberus EC2 instance"
+  description = "ami for Cerberus EC2 instance"
   default     = "ami-0a7d688fe3e239b69"
 }
 
@@ -74,6 +74,16 @@ variable "https_health_check_interval" {
   default     = "300"
 }
 
+variable "https_health_check_threshold" {
+  description = "Healthy/unhelthy threshold for https health check. Allowed Values:2-10"
+  default     = "2"
+}
+
+variable "https_health_check_timeout" {
+  description = "Timeout for https health check. Allowed Values:2-120"
+  default     = "5"
+}
+
 variable "enable_sftp" {
   description = "Adds infrastructure nessesary for sftp"
   default     = "true"
@@ -82,6 +92,11 @@ variable "enable_sftp" {
 variable "sftp_health_check_interval" {
   description = "Average interval for sftp health check. Allowed Values:10, 30"
   default     = "30"
+}
+
+variable "sftp_health_check_threshold" {
+  description = "Healthy/unhelthy threshold for sftp health check. Allowed Values:2-10"
+  default     = "2"
 }
 
 variable "parent_domain_name" {}
@@ -130,7 +145,7 @@ module "cerberus_kms_key" {
   namespace               = ""
   stage                   = ""
   name                    = "${local.stage_prefix}-cerberus"
-  description             = "${join(" ", list(var.desc_prefix, "KMS key for cerberus"))}"
+  description             = "${join(" ", list(var.desc_prefix, "KMS key for Cerberus"))}"
   deletion_window_in_days = 10
   enable_key_rotation     = "true"
   alias                   = "alias/${replace(local.stage_prefix, "-", "/")}/cerberus"
@@ -138,9 +153,9 @@ module "cerberus_kms_key" {
 }
 
 resource "aws_security_group" "cerberus_ec2" {
-  count       = "${var.create == "true" ? 1 : 0 }"
+  count       = "${var.create ? 1 : 0 }"
   name        = "${local.module_prefix}-ec2"
-  description = "${var.desc_prefix} Allow  traffic from internal and VPN and ALB"
+  description = "${var.desc_prefix} Allow traffic to Cerberus EC2 application instances"
   vpc_id      = "${data.terraform_remote_state.vpc.vpc_id}"
 
   ingress {
@@ -148,7 +163,7 @@ resource "aws_security_group" "cerberus_ec2" {
     to_port         = "443"
     protocol        = "6"
     security_groups = ["${aws_security_group.cerberus_alb.id}"]
-    description     = "${var.desc_prefix} All from ALB"
+    description     = "${var.desc_prefix} HTTPS from ALB"
   }
 
   ingress {
@@ -164,7 +179,7 @@ resource "aws_security_group" "cerberus_ec2" {
     to_port     = "8443"
     protocol    = "6"
     cidr_blocks = ["${var.ingress_sg_cidr}"]
-    description = "${var.desc_prefix} Cerberus web adminitration port from internal"
+    description = "${var.desc_prefix} Cerberus Web Administration from internal"
   }
 
   ingress {
@@ -176,11 +191,11 @@ resource "aws_security_group" "cerberus_ec2" {
   }
 
   ingress {
-    from_port   = 0
-    to_port     = 0
+    from_port   = -1
+    to_port     = -1
     protocol    = "ICMP"
     cidr_blocks = ["10.0.0.0/8"]
-    description = "${var.desc_prefix} ICMP"
+    description = "${var.desc_prefix} ICMP from internal"
   }
 
   egress {
@@ -188,18 +203,14 @@ resource "aws_security_group" "cerberus_ec2" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "${var.desc_prefix} EC2 egress"
+    description = "${var.desc_prefix} Allow All"
   }
 
   tags = "${merge(local.tags, map("Name", "${local.module_prefix}-ec2"))}"
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 data "aws_iam_policy_document" "cerberus_ec2" {
-  count = "${var.create == "true" ? 1 : 0 }"
+  count = "${var.create ? 1 : 0 }"
 
   statement {
     actions = ["sts:AssumeRole"]
@@ -212,32 +223,32 @@ data "aws_iam_policy_document" "cerberus_ec2" {
 }
 
 resource "aws_iam_role" "cerberus_ec2" {
-  count              = "${var.create == "true" ? 1 : 0 }"
+  count              = "${var.create ? 1 : 0 }"
   name               = "${local.module_prefix}-ec2"
   description        = "${var.desc_prefix} Allows EC2 instances to call AWS services on your behalf."
   assume_role_policy = "${data.aws_iam_policy_document.cerberus_ec2.json}"
 }
 
 resource "aws_iam_role_policy_attachment" "cerberus_s3_access" {
-  count      = "${var.create == "true" ? 1 : 0 }"
+  count      = "${var.create ? 1 : 0 }"
   role       = "${aws_iam_role.cerberus_ec2.name}"
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "cerberus_ssm_attach" {
-  count      = "${var.create == "true" ? 1 : 0 }"
+  count      = "${var.create ? 1 : 0 }"
   role       = "${aws_iam_role.cerberus_ec2.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 }
 
 resource "aws_iam_instance_profile" "cerberus_profile" {
-  count = "${var.create == "true" ? 1 : 0 }"
+  count = "${var.create ? 1 : 0 }"
   name  = "${local.module_prefix}-ec2"
   role  = "${aws_iam_role.cerberus_ec2.name}"
 }
 
 resource "aws_ebs_volume" "cerberus_ebs" {
-  count             = "${var.create == "true" ? var.number_of_instances : 0}"
+  count             = "${var.create ? var.number_of_instances : 0}"
   availability_zone = "${aws_instance.cerberus_ec2.*.availability_zone[count.index]}"
   size              = "${var.ebs_volume_size}"
   type              = "gp2"
@@ -247,14 +258,14 @@ resource "aws_ebs_volume" "cerberus_ebs" {
 }
 
 resource "aws_volume_attachment" "cerberus" {
-  count       = "${var.create == "true" ? var.number_of_instances : 0}"
+  count       = "${var.create ? var.number_of_instances : 0}"
   device_name = "/dev/sdb"
   volume_id   = "${aws_ebs_volume.cerberus_ebs.*.id[count.index]}"
   instance_id = "${aws_instance.cerberus_ec2.*.id[count.index]}"
 }
 
 resource "aws_instance" "cerberus_ec2" {
-  count         = "${var.create == "true" ? var.number_of_instances : 0}"
+  count         = "${var.create ? var.number_of_instances : 0}"
   instance_type = "${var.cerberus_instance_type}"
   ami           = "${var.cerberus_instance_ami}"
 
@@ -279,7 +290,7 @@ resource "aws_instance" "cerberus_ec2" {
 }
 
 resource "aws_ssm_association" "domain_join" {
-  count = "${var.create && var.add_instance_to_ad == "true" ? var.number_of_instances : 0}"
+  count = "${var.create && var.add_instance_to_ad ? var.number_of_instances : 0}"
   name  = "AWS-JoinDirectoryServiceDomain"
 
   instance_id = "${aws_instance.cerberus_ec2.*.id[count.index]}"
@@ -292,7 +303,7 @@ resource "aws_ssm_association" "domain_join" {
 }
 
 resource "aws_route53_record" "cerberus_ec2" {
-  count    = "${var.create == "true" ? var.number_of_instances : 0}"
+  count    = "${var.create ? var.number_of_instances : 0}"
   provider = "aws.master"
 
   zone_id = "${data.terraform_remote_state.vpc.vpc_dns_zone_id}"
@@ -305,7 +316,7 @@ resource "aws_route53_record" "cerberus_ec2" {
 # ALB & resources
 
 resource "aws_security_group" "cerberus_alb" {
-  count       = "${var.create == "true" ? 1 : 0 }"
+  count       = "${var.create ? 1 : 0 }"
   name        = "${local.module_prefix}-alb"
   description = "${var.desc_prefix} Controls traffic to ALB"
   vpc_id      = "${data.terraform_remote_state.vpc.vpc_id}"
@@ -331,18 +342,14 @@ resource "aws_security_group" "cerberus_alb" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "${var.desc_prefix} ALB egress"
+    description = "${var.desc_prefix} Allow All"
   }
 
   tags = "${merge(local.tags, map("Name", "${local.module_prefix}-alb"))}"
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_lb" "cerberus_alb" {
-  count = "${var.create && var.enable_https == "true" ? 1 : 0 }"
+  count = "${var.create && var.enable_https ? 1 : 0 }"
 
   name               = "${local.module_prefix}-alb"
   internal           = "false"
@@ -355,7 +362,7 @@ resource "aws_lb" "cerberus_alb" {
 }
 
 resource "aws_lb_target_group" "cerberus_alb_target_group" {
-  count = "${var.create && var.enable_https == "true" ? 1 : 0 }"
+  count = "${var.create && var.enable_https ? 1 : 0 }"
 
   name                 = "${local.module_prefix}-https"
   port                 = "443"
@@ -367,9 +374,9 @@ resource "aws_lb_target_group" "cerberus_alb_target_group" {
   health_check {
     path                = "/login"
     protocol            = "HTTPS"
-    timeout             = "5"
-    healthy_threshold   = "2"
-    unhealthy_threshold = "2"
+    timeout             = "${var.https_health_check_timeout}"
+    healthy_threshold   = "${var.https_health_check_threshold}"
+    unhealthy_threshold = "${var.https_health_check_threshold}"
     interval            = "${var.https_health_check_interval}"
     matcher             = "200"
   }
@@ -378,7 +385,7 @@ resource "aws_lb_target_group" "cerberus_alb_target_group" {
 }
 
 resource "aws_lb_listener" "cerberus_https" {
-  count             = "${var.create && var.enable_https == "true" ? 1 : 0 }"
+  count             = "${var.create && var.enable_https ? 1 : 0 }"
   load_balancer_arn = "${aws_lb.cerberus_alb.arn}"
   port              = "443"
   protocol          = "HTTPS"
@@ -393,7 +400,7 @@ resource "aws_lb_listener" "cerberus_https" {
 }
 
 resource "aws_lb_listener" "cerberus_http" {
-  count             = "${var.create && var.enable_https == "true" ? 1 : 0 }"
+  count             = "${var.create && var.enable_https ? 1 : 0 }"
   load_balancer_arn = "${aws_lb.cerberus_alb.arn}"
   port              = "80"
   protocol          = "HTTP"
@@ -410,7 +417,7 @@ resource "aws_lb_listener" "cerberus_http" {
 }
 
 resource "aws_lb_target_group_attachment" "cerberus" {
-  count            = "${var.create && var.enable_https == "true" ? var.number_of_instances : 0}"
+  count            = "${var.create && var.enable_https ? var.number_of_instances : 0}"
   target_group_arn = "${aws_lb_target_group.cerberus_alb_target_group.arn}"
   target_id        = "${aws_instance.cerberus_ec2.*.id[count.index]}"
 }
@@ -421,20 +428,20 @@ data "aws_route53_zone" "public" {
 }
 
 resource "aws_route53_record" "cerberus_alb" {
-  count    = "${var.create && var.enable_https == "true" ? 1 : 0 }"
+  count    = "${var.create && var.enable_https ? 1 : 0 }"
   provider = "aws.master"
 
   zone_id = "${data.aws_route53_zone.public.zone_id}"
   name    = "transfer"
   type    = "CNAME"
-  ttl     = "60"
+  ttl     = "30"
   records = ["${aws_lb.cerberus_alb.dns_name}"]
 }
 
 # NLB & resources
 
 resource "aws_lb" "cerberus_nlb" {
-  count = "${var.create && var.enable_sftp == "true" ? 1 : 0 }"
+  count = "${var.create && var.enable_sftp ? 1 : 0 }"
 
   name                             = "${local.module_prefix}-nlb"
   internal                         = "false"
@@ -447,7 +454,7 @@ resource "aws_lb" "cerberus_nlb" {
 }
 
 resource "aws_lb_target_group" "cerberus_nlb_sftp_target_group" {
-  count = "${var.create && var.enable_sftp == "true" ? 1 : 0 }"
+  count = "${var.create && var.enable_sftp ? 1 : 0 }"
 
   name                 = "${local.module_prefix}-sftp"
   port                 = "22"
@@ -455,12 +462,13 @@ resource "aws_lb_target_group" "cerberus_nlb_sftp_target_group" {
   vpc_id               = "${data.terraform_remote_state.vpc.vpc_id}"
   target_type          = "instance"
   deregistration_delay = "300"
+  proxy_protocol_v2    = "true"
 
   health_check {
     port                = "traffic-port"
     protocol            = "TCP"
-    healthy_threshold   = "2"
-    unhealthy_threshold = "2"
+    healthy_threshold   = "${var.sftp_health_check_threshold}"
+    unhealthy_threshold = "${var.sftp_health_check_threshold}"
     interval            = "${var.sftp_health_check_interval}"
   }
 
@@ -468,7 +476,7 @@ resource "aws_lb_target_group" "cerberus_nlb_sftp_target_group" {
 }
 
 resource "aws_lb_listener" "cerberus_sftp" {
-  count             = "${var.create && var.enable_sftp == "true" ? 1 : 0 }"
+  count             = "${var.create && var.enable_sftp ? 1 : 0 }"
   load_balancer_arn = "${aws_lb.cerberus_nlb.arn}"
   port              = "22"
   protocol          = "TCP"
@@ -480,13 +488,13 @@ resource "aws_lb_listener" "cerberus_sftp" {
 }
 
 resource "aws_lb_target_group_attachment" "cerberus_sftp" {
-  count            = "${var.create && var.enable_sftp == "true" ? var.number_of_instances : 0}"
+  count            = "${var.create && var.enable_sftp ? var.number_of_instances : 0}"
   target_group_arn = "${aws_lb_target_group.cerberus_nlb_sftp_target_group.arn}"
   target_id        = "${aws_instance.cerberus_ec2.*.id[count.index]}"
 }
 
 resource "aws_route53_record" "cerberus_nlb" {
-  count    = "${var.create && var.enable_sftp == "true" ? 1 : 0 }"
+  count    = "${var.create && var.enable_sftp ? 1 : 0 }"
   provider = "aws.master"
 
   zone_id = "${data.aws_route53_zone.public.zone_id}"
@@ -578,5 +586,5 @@ output "nlb_instance_route53_dns_fqdn" {
 
 output "cerberus_key_arn" {
   value       = "${module.cerberus_kms_key.key_arn}"
-  description = "Key ARN for cerberus"
+  description = "Key ARN for Cerberus"
 }
