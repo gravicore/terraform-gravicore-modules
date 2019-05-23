@@ -20,6 +20,7 @@ This is a collection of reusable Terraform modules for Gravicore's cloud automat
 | [RDS](aws/rds)                               | A collection of modules for deploying Relational Database Service (RDS) resources.                                                                                                                 |
 | [RDS (PostgreSQL)](aws/rds-postgres)         | A module for deploying [Amazon RDS for PostgreSQL](https://aws.amazon.com/rds/postgresql/) resources.                                                                                              |
 | [ElastiCache (Redis)](aws/elasticache-redis) | A module for deploying an ElastiCache for Redis instance.                                                                                                                                          |
+| [Cerberus](aws/cerberus)                     | A module for deploying the infrastructure resources needed for [Cerberus FTP](https://www.cerberusftp.com/).                                                                                       |
 
 ## Contributing
 
