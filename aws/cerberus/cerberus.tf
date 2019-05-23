@@ -194,7 +194,7 @@ resource "aws_security_group" "cerberus_ec2" {
     from_port   = -1
     to_port     = -1
     protocol    = "ICMP"
-    cidr_blocks = ["10.0.0.0/8"]
+    cidr_blocks = ["${var.ingress_sg_cidr}"]
     description = "${var.desc_prefix} ICMP from internal"
   }
 
@@ -456,7 +456,6 @@ resource "aws_lb_target_group" "cerberus_nlb_sftp_target_group" {
   vpc_id               = "${data.terraform_remote_state.vpc.vpc_id}"
   target_type          = "instance"
   deregistration_delay = "300"
-  proxy_protocol_v2    = "true"
 
   health_check {
     port                = "traffic-port"
