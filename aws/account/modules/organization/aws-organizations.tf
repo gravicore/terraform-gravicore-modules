@@ -15,7 +15,7 @@ resource "aws_organizations_organization" "organization" {
 
 # AWS Organziation Policy
 resource "aws_organizations_policy" "account" {
-  count = "${var.create_default_policies ? 1 : 0}"
+  count = "${var.create_organization && var.create_default_policies ? 1 : 0}"
 
   name        = "grv-protect-account"
   description = "Denies the modification of the account contacts & settings via the Billing Portal and My Account Page"
@@ -24,7 +24,8 @@ resource "aws_organizations_policy" "account" {
 }
 
 resource "aws_organizations_policy" "cloudtrail" {
-  count = "${var.create_default_policies ? 1 : 0}"
+  count      = "${var.create_organization && var.create_default_policies ? 1 : 0}"
+  depends_on = ["aws_organizations_policy.account"]
 
   name        = "grv-protect-cloudtrail"
   description = "Deny deletion, update, or stopping of cloudtrail"
@@ -33,7 +34,8 @@ resource "aws_organizations_policy" "cloudtrail" {
 }
 
 resource "aws_organizations_policy" "cloudwatch" {
-  count = "${var.create_default_policies ? 1 : 0}"
+  count      = "${var.create_organization && var.create_default_policies ? 1 : 0}"
+  depends_on = ["aws_organizations_policy.cloudtrail"]
 
   name        = "grv-protect-cloudwatch"
   description = "Deny altering of cloudwatch"
@@ -41,8 +43,9 @@ resource "aws_organizations_policy" "cloudwatch" {
   content     = "${file("${path.module}/policies/aws-policy-protect-cloudwatch.json")}"
 }
 
-resource "aws_organizations_policy" "flow-logs" {
-  count = "${var.create_default_policies ? 1 : 0}"
+resource "aws_organizations_policy" "flow_logs" {
+  count      = "${var.create_organization && var.create_default_policies ? 1 : 0}"
+  depends_on = ["aws_organizations_policy.cloudwatch"]
 
   name        = "grv-protect-flow-logs"
   description = "Deny deletion of flow-logs"
@@ -51,7 +54,8 @@ resource "aws_organizations_policy" "flow-logs" {
 }
 
 resource "aws_organizations_policy" "kms" {
-  count = "${var.create_default_policies ? 1 : 0}"
+  count      = "${var.create_organization && var.create_default_policies ? 1 : 0}"
+  depends_on = ["aws_organizations_policy.flow_logs"]
 
   name        = "grv-deny-kms-deletion"
   description = "Deny ability to delete KMS keys"
@@ -60,7 +64,8 @@ resource "aws_organizations_policy" "kms" {
 }
 
 resource "aws_organizations_policy" "org" {
-  count = "${var.create_default_policies ? 1 : 0}"
+  count      = "${var.create_organization && var.create_default_policies ? 1 : 0}"
+  depends_on = ["aws_organizations_policy.kms"]
 
   name        = "grv-deny-leave-org"
   description = "Deny ability to leave organization"
