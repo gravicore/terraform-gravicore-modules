@@ -10,6 +10,14 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+variable "master_account_assume_role_name" {
+  default = "grv-deployment-service"
+}
+
+variable "account_assume_role_name" {
+  default = "OrganizationAccountAccessRole"
+}
+
 variable "scheduling_active" {
   type        = "string"
   default     = "Yes"

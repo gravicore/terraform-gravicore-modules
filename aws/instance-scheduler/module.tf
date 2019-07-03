@@ -1,16 +1,16 @@
 terraform {
-  required_version = "~> 0.11.8"
+  required_version = "~> 0.11.14"
 
   # The configuration for this backend will be filled in by Terragrunt
   backend "s3" {}
 }
 
 provider "aws" {
-  version = "~> 1.35"
+  version = "~> 2.11.0"
   region  = "${var.aws_region}"
 
   assume_role {
-    role_arn = "arn:aws:iam::${var.account_id}:role/grv_deploy_svc"
+    role_arn = "arn:aws:iam::${var.account_id}:role/${var.account_assume_role_name}"
   }
 }
 
