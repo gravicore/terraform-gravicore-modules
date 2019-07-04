@@ -74,7 +74,7 @@ variable "master_account_id" {}
 variable "account_id" {}
 
 variable "master_account_assume_role_name" {
-  default = "grv_deploy_svc"
+  default = "grv-deployment-service"
 }
 
 variable "account_assume_role_name" {
