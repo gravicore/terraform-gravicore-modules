@@ -67,10 +67,6 @@ module "ssh_key_pair_private" {
 }
 
 locals {
-  module_test_ssh_ec2_instance_secret_tags = "${merge(local.tags, map(
-    "TerraformModule", "cloudposse/terraform-aws-ssm-parameter-store",
-    "TerraformModuleVersion", "0.2.5"))}"
-
   test_ssh_ec2_instance_secret_ssm_write = [
     {
       name        = "/${local.stage_prefix}/${var.name}-test-pem"
@@ -101,7 +97,7 @@ resource "aws_ssm_parameter" "default" {
   value           = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "value")}"
   overwrite       = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "overwrite", "false")}"
   allowed_pattern = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "allowed_pattern", "")}"
-  tags            = "${local.module_test_ssh_ec2_instance_secret_tags}"
+  tags            = "${local.tags}"
 }
 
 locals {
