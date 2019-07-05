@@ -14,6 +14,12 @@ variable "test_ingress_cidr_block" {
   default = "10.0.0.0/8"
 }
 
+variable "kms_arn" {
+  type        = "string"
+  default     = "alias/parameter_store_key"
+  description = "The ARN of a KMS key used to encrypt and decrypt SecretString values"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -61,18 +67,7 @@ module "ssh_key_pair_private" {
 }
 
 locals {
-  module_test_ssh_ec2_instance_secret_tags = "${merge(local.tags, map(
-    "TerraformModule", "cloudposse/terraform-aws-ssm-parameter-store",
-    "TerraformModuleVersion", "0.2.5"))}"
-}
-
-module "test_ssh_ec2_instance_secret" {
-  source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
-  tags   = "${local.module_test_ssh_ec2_instance_secret_tags}"
-
-  kms_arn = "alias/parameter_store_key"
-
-  parameter_write = [
+  test_ssh_ec2_instance_secret_ssm_write = [
     {
       name        = "/${local.stage_prefix}/${var.name}-test-pem"
       value       = "${module.ssh_key_pair_private.private_key}"
@@ -88,6 +83,21 @@ module "test_ssh_ec2_instance_secret" {
       description = "${join(" ", list(var.desc_prefix, "VPC Test SSH Instance Public Key"))}"
     },
   ]
+
+  # `test_ssh_ec2_instance_secret_ssm_write_count` needs to be updated if `test_ssh_ec2_instance_secret_ssm_write` changes
+  test_ssh_ec2_instance_secret_ssm_write_count = 2
+}
+
+resource "aws_ssm_parameter" "default" {
+  count           = "${var.create_test_instance == "true" ? local.test_ssh_ec2_instance_secret_ssm_write_count : 0}"
+  name            = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "name")}"
+  description     = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "description", lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "name"))}"
+  type            = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "type", "SecureString")}"
+  key_id          = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "type", "SecureString") == "SecureString" && length(var.kms_arn) > 0 ? var.kms_arn : ""}"
+  value           = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "value")}"
+  overwrite       = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "overwrite", "false")}"
+  allowed_pattern = "${lookup(local.test_ssh_ec2_instance_secret_ssm_write[count.index], "allowed_pattern", "")}"
+  tags            = "${local.tags}"
 }
 
 locals {
@@ -126,12 +136,13 @@ locals {
 }
 
 module "test_ssh_ec2_instance" {
-  source           = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.7.5"
-  instance_enabled = "${var.create_test_instance}"
-  namespace        = ""
-  stage            = ""
-  name             = "${local.module_prefix}-test"
-  tags             = "${local.module_test_ssh_ec2_instance_tags}"
+  source                        = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.7.5"
+  instance_enabled              = "${var.create_test_instance}"
+  create_default_security_group = "${var.create_test_instance}"
+  namespace                     = ""
+  stage                         = ""
+  name                          = "${local.module_prefix}-test"
+  tags                          = "${local.module_test_ssh_ec2_instance_tags}"
 
   ssh_key_pair                = "${module.ssh_key_pair_private.key_name}"
   instance_type               = "${var.test_instance_type}"
@@ -144,6 +155,7 @@ module "test_ssh_ec2_instance" {
 
 resource "aws_route53_record" "test_ssh_ec2_instance" {
   provider = "aws.master"
+  count    = "${var.create_test_instance == "true" ? 1 : 0}"
 
   zone_id = "${aws_route53_zone.vpc.zone_id}"
   name    = "test.${local.dns_zone_name}"
