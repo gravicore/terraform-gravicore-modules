@@ -33,7 +33,8 @@ locals {
 }
 
 module "ds_ssm_param_secret" {
-  source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
+  source  = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
+  enabled = "${var.create_ds}"
 
   kms_arn        = "alias/parameter_store_key"
   parameter_read = ["/${local.stage_prefix}/${var.name}-ds-secret"]
