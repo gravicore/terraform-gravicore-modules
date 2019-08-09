@@ -99,6 +99,16 @@ variable "sftp_health_check_threshold" {
   default     = "2"
 }
 
+variable "alb_target_group_port" {
+  description = "EC2 target group port from ALB."
+  default     = "80"
+}
+
+variable "alb_target_group_protocol" {
+  description = "EC2 target group protocol from ALB."
+  default     = "HTTP"
+}
+
 variable "parent_domain_name" {}
 
 locals {
@@ -159,11 +169,11 @@ resource "aws_security_group" "cerberus_ec2" {
   vpc_id      = "${data.terraform_remote_state.vpc.vpc_id}"
 
   ingress {
-    from_port       = "443"
-    to_port         = "443"
+    from_port       = "${var.alb_target_group_port}"
+    to_port         = "${var.alb_target_group_port}"
     protocol        = "6"
     security_groups = ["${aws_security_group.cerberus_alb.id}"]
-    description     = "${var.desc_prefix} HTTPS from ALB"
+    description     = "${var.desc_prefix} Target group port from ALB"
   }
 
   ingress {
@@ -358,16 +368,16 @@ resource "aws_lb" "cerberus_alb" {
 resource "aws_lb_target_group" "cerberus_alb_target_group" {
   count = "${var.create && var.enable_https ? 1 : 0 }"
 
-  name                 = "${local.module_prefix}-https"
-  port                 = "443"
-  protocol             = "HTTPS"
+  name                 = "${local.module_prefix}-${lower(var.alb_target_group_protocol)}"
+  port                 = "${var.alb_target_group_port}"
+  protocol             = "${var.alb_target_group_protocol}"
   vpc_id               = "${data.terraform_remote_state.vpc.vpc_id}"
   target_type          = "instance"
   deregistration_delay = "300"
 
   health_check {
     path                = "/login"
-    protocol            = "HTTPS"
+    protocol            = "${var.alb_target_group_protocol}"
     timeout             = "${var.https_health_check_timeout}"
     healthy_threshold   = "${var.https_health_check_threshold}"
     unhealthy_threshold = "${var.https_health_check_threshold}"
