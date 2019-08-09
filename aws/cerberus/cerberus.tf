@@ -100,8 +100,13 @@ variable "sftp_health_check_threshold" {
 }
 
 variable "alb_target_group_port" {
-  description = "EC2 target group port from ALB. Allowed Values:80, 443"
-  default     = "443"
+  description = "EC2 target group port from ALB."
+  default     = "80"
+}
+
+variable "alb_target_group_protocol" {
+  description = "EC2 target group protocol from ALB."
+  default     = "HTTP"
 }
 
 variable "parent_domain_name" {}
@@ -113,7 +118,6 @@ locals {
 
   remote_state_acct_key = "${coalesce(var.terraform_remote_state_acct_key, "master/${var.stage}/acct")}"
   remote_state_vpc_key  = "${coalesce(var.terraform_remote_state_vpc_key, "master/${var.stage}/shared-vpc")}"
-  alb_protocol          = "${var.alb_target_group_port == 80 ? "HTTP" : "HTTPS" }"
 }
 
 data "terraform_remote_state" "acct" {
@@ -165,19 +169,11 @@ resource "aws_security_group" "cerberus_ec2" {
   vpc_id      = "${data.terraform_remote_state.vpc.vpc_id}"
 
   ingress {
-    from_port       = "443"
-    to_port         = "443"
+    from_port       = "${var.alb_target_group_port}"
+    to_port         = "${var.alb_target_group_port}"
     protocol        = "6"
     security_groups = ["${aws_security_group.cerberus_alb.id}"]
-    description     = "${var.desc_prefix} HTTPS from ALB"
-  }
-
-  ingress {
-    from_port       = "80"
-    to_port         = "80"
-    protocol        = "6"
-    security_groups = ["${aws_security_group.cerberus_alb.id}"]
-    description     = "${var.desc_prefix} HTTP from ALB"
+    description     = "${var.desc_prefix} Target group port from ALB"
   }
 
   ingress {
@@ -372,16 +368,16 @@ resource "aws_lb" "cerberus_alb" {
 resource "aws_lb_target_group" "cerberus_alb_target_group" {
   count = "${var.create && var.enable_https ? 1 : 0 }"
 
-  name                 = "${local.module_prefix}-${lower(local.alb_protocol)}"
+  name                 = "${local.module_prefix}-${lower(var.alb_target_group_protocol)}"
   port                 = "${var.alb_target_group_port}"
-  protocol             = "${local.alb_protocol}"
+  protocol             = "${var.alb_target_group_protocol}"
   vpc_id               = "${data.terraform_remote_state.vpc.vpc_id}"
   target_type          = "instance"
   deregistration_delay = "300"
 
   health_check {
     path                = "/login"
-    protocol            = "${local.alb_protocol}"
+    protocol            = "${var.alb_target_group_protocol}"
     timeout             = "${var.https_health_check_timeout}"
     healthy_threshold   = "${var.https_health_check_threshold}"
     unhealthy_threshold = "${var.https_health_check_threshold}"
