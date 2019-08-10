@@ -137,7 +137,6 @@ locals {
 
 module "test_ssh_ec2_instance" {
   source                        = "git::https://github.com/cloudposse/terraform-aws-ec2-instance.git?ref=0.8.0"
-  ami                           = "ami-0edd3706ab2e952c4"
   instance_enabled              = "${var.create_test_instance}"
   create_default_security_group = "${var.create_test_instance}"
   namespace                     = ""
