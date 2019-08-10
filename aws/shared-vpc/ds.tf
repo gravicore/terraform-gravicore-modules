@@ -16,6 +16,10 @@ data "aws_kms_key" "parameter_store_key" {
   key_id = "alias/parameter_store_key"
 }
 
+variable "enable_sso" {
+  default = "false"
+}
+
 locals {
   ds_alias           = "${replace("${var.namespace}-${var.ds_subdomain_name}-${var.stage}", "-prd", "")}"
   vpc_subdomain_name = "${replace("${var.stage}.${var.environment}", "prd.", "")}"
@@ -61,7 +65,7 @@ resource "aws_directory_service_directory" "ad" {
   alias       = "${local.ds_alias}"
   short_name  = "${var.ds_short_name}"
   description = "${join(" ", list(var.desc_prefix, "Shared Microsoft AD Directory Service"))}"
-  enable_sso  = "false"
+  enable_sso  = "${var.enable_sso}"
   edition     = "Standard"
 }
 
