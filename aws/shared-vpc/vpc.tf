@@ -195,7 +195,7 @@ resource "aws_ssm_parameter" "default" {
 locals {
   module_vpc_tags = "${merge(local.tags, map(
     "TerraformModule", "terraform-aws-modules/terraform-aws-vpc",
-    "TerraformModuleVersion", "v1.46.0"))}"
+    "TerraformModuleVersion", "v1.66.0"))}"
 }
 
 module "vpc" {
