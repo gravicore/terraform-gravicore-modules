@@ -6,7 +6,7 @@ terraform {
 }
 
 provider "aws" {
-  version = "~> 2.11.0"
+  version = "~> 2.26.0"
   region  = "${var.aws_region}"
 
   assume_role {

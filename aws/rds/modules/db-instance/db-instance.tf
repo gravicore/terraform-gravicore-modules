@@ -18,6 +18,8 @@ variable "stage" {
   default = "dev"
 }
 
+variable "module_prefix" {}
+
 variable "repository" {
   default = ""
 }
@@ -257,7 +259,7 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring" {
 resource "aws_db_instance" "this" {
   count = "${var.create && !local.is_mssql ? length(var.identifier) : 0}"
 
-  identifier = "${var.namespace}-${var.environment}-${var.stage}-${element(var.identifier, count.index)}"
+  identifier = "${var.module_prefix}-${element(var.identifier, count.index)}"
 
   engine            = "${var.engine}"
   engine_version    = "${var.engine_version}"
@@ -303,13 +305,18 @@ resource "aws_db_instance" "this" {
 
   character_set_name = "${var.character_set_name}"
 
-  tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index))))}"
+  # tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index))))}"
+  tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index)), "Schedule", format("%s", var.schedule)))}"
+
+  lifecycle {
+    ignore_changes = ["tags.%", "tags.Schedule", "tags.ScheduleStatus", "tags.ScheduleTimestamp", "password"]
+  }
 }
 
 resource "aws_db_instance" "this_mssql" {
   count = "${var.create && local.is_mssql ? length(var.identifier) : 0}"
 
-  identifier = "${var.namespace}-${var.environment}-${var.stage}-${element(var.identifier, count.index)}"
+  identifier = "${var.module_prefix}-${element(var.identifier, count.index)}"
 
   engine              = "${var.engine}"
   engine_version      = "${var.engine_version}"
@@ -362,7 +369,7 @@ resource "aws_db_instance" "this_mssql" {
   tags = "${merge(var.tags, map("Name", format("%s", element(var.identifier, count.index)), "Schedule", format("%s", var.schedule)))}"
 
   lifecycle {
-    ignore_changes = ["tags.%", "tags.Schedule", "tags.ScheduleStatus", "tags.ScheduleTimestamp"]
+    ignore_changes = ["tags.%", "tags.Schedule", "tags.ScheduleStatus", "tags.ScheduleTimestamp", "password"]
   }
 }
 

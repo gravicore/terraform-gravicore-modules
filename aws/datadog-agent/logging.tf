@@ -148,8 +148,9 @@ resource "aws_lambda_function" "logging" {
   count         = "${var.create == "true" ? 1 : 0}"
   function_name = "${local.module_prefix}-lambda"
   tags          = "${local.tags}"
+  filename      = "${substr(data.archive_file.logging_lambda.output_path, length(path.cwd) + 1, -1)}"
 
-  filename         = "${data.archive_file.logging_lambda.output_path}"
+  # filename         = "${data.archive_file.logging_lambda.output_path}"
   source_code_hash = "${data.archive_file.logging_lambda.output_base64sha256}"
   kms_key_arn      = "${module.logging_kms_key.key_arn}"
 

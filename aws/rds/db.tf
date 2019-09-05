@@ -2,6 +2,16 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "terraform_remote_state_vpc_key" {
+  description = "Key for the location of the remote state of the vpc module"
+  default     = ""
+}
+
+variable "terraform_remote_state_acct_key" {
+  description = "Key for the location of the remote state of the acct module"
+  default     = ""
+}
+
 variable "identifier" {
   description = "The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier"
   default     = []
@@ -294,6 +304,11 @@ locals {
   enable_domain_iam_role = "${var.domain == "" ? "" : aws_iam_role.rds_ds_access.id}"
 
   enable_create_security_group = "${var.vpc_id == "" ? var.create_db_security_group : 0}"
+  remote_state_vpc_key         = "${coalesce(var.terraform_remote_state_vpc_key, "master/${var.stage}/shared-vpc")}"
+  remote_state_acct_key        = "${coalesce(var.terraform_remote_state_vpc_key, "master/${var.stage}/acct")}"
+  kms_key_id                   = "${coalesce(var.kms_key_id, data.terraform_remote_state.acct.rds_key_arn)}"
+
+  # db_domain = ""
 }
 
 data "terraform_remote_state" "acct" {
@@ -303,7 +318,7 @@ data "terraform_remote_state" "acct" {
     region         = "${var.aws_region}"
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
-    key            = "master/${var.stage}/acct/terraform.tfstate"
+    key            = "${local.remote_state_acct_key}/terraform.tfstate"
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
   }
@@ -316,7 +331,7 @@ data "terraform_remote_state" "vpc" {
     region         = "${var.aws_region}"
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
-    key            = "master/${var.stage}/shared-vpc/terraform.tfstate"
+    key            = "${local.remote_state_vpc_key}/terraform.tfstate"
     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
   }
@@ -334,13 +349,13 @@ module "rds_ssm_param_secret" {
   source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
 
   kms_arn        = "alias/parameter_store_key"
-  parameter_read = ["/${local.stage_prefix}/rds-secret"]
+  parameter_read = ["/${local.module_prefix}/rds-secret"]
 }
 
 module "rds_ssm_param_username" {
   source = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
 
-  parameter_read = ["/${local.stage_prefix}/rds-username"]
+  parameter_read = ["/${local.module_prefix}/rds-username"]
 }
 
 data "aws_iam_policy_document" "rds_ds_access" {
@@ -355,11 +370,13 @@ data "aws_iam_policy_document" "rds_ds_access" {
 }
 
 resource "aws_iam_role" "rds_ds_access" {
+  count              = "${var.create == "true" && var.domain != "" ? 0 : 1 }"
   name               = "rds-ds-access-role"
   assume_role_policy = "${data.aws_iam_policy_document.rds_ds_access.json}"
 }
 
 resource "aws_iam_role_policy_attachment" "rds_ds_access" {
+  count      = "${var.create == "true" && var.domain != "" ? 0 : 1 }"
   role       = "${aws_iam_role.rds_ds_access.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
@@ -389,7 +406,7 @@ module "db_subnet_group" {
   source = "./modules/db-subnet-group"
 
   create       = "${local.enable_create_db_subnet_group}"
-  stage_prefix = "${local.stage_prefix}"
+  stage_prefix = "${local.module_prefix}"
   subnet_ids   = ["${data.terraform_remote_state.vpc.vpc_private_subnets}"]
 
   tags = "${local.tags}"
@@ -399,7 +416,7 @@ module "db_parameter_group" {
   source = "./modules/db-parameter-group"
 
   create       = "${local.enable_create_db_parameter_group}"
-  stage_prefix = "${local.stage_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
+  stage_prefix = "${local.module_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
   family       = "${var.family}"
 
   parameters = ["${var.parameters}"]
@@ -411,14 +428,14 @@ module "db_option_group" {
   source = "./modules/db-option-group"
 
   create                   = "${local.enable_create_db_option_group}"
-  stage_prefix             = "${local.stage_prefix}"
+  stage_prefix             = "${local.module_prefix}"
   option_group_description = "${var.option_group_description}"
   engine_name              = "${var.engine}"
   major_engine_version     = "${var.major_engine_version}"
   aws_region               = "${var.aws_region}"
-  kms_key_id               = "${data.terraform_remote_state.acct.rds_key_arn}"
-
-  options = ["${var.options}"]
+  kms_key_id               = "${local.kms_key_id}"
+  module_prefix            = "${local.module_prefix}"
+  options                  = ["${var.options}"]
 
   tags = "${local.tags}"
 }
@@ -435,21 +452,22 @@ module "db_instance" {
   storage_type        = "${var.storage_type}"
   deletion_protection = "${var.deletion_protection}"
   storage_encrypted   = "${var.storage_encrypted}"
-  kms_key_id          = "${data.terraform_remote_state.acct.rds_key_arn}"
+  kms_key_id          = "${local.kms_key_id}"
   license_model       = "${var.license_model}"
   namespace           = "${var.namespace}"
   environment         = "${var.environment}"
   stage               = "${var.stage}"
+  module_prefix       = "${local.module_prefix}"
 
   name = "${var.db_name}"
 
   # username                            = "${var.username}"
-  username                            = "${coalesce(var.username, lookup(module.rds_ssm_param_username.map, format("/%s/rds-username", local.stage_prefix)))}"
-  password                            = "${coalesce(var.password, lookup(module.rds_ssm_param_secret.map, format("/%s/rds-secret", local.stage_prefix)))}"
+  username                            = "${coalesce(var.username, lookup(module.rds_ssm_param_username.map, format("/%s/rds-username", local.module_prefix)))}"
+  password                            = "${coalesce(var.password, lookup(module.rds_ssm_param_secret.map, format("/%s/rds-secret", local.module_prefix)))}"
   port                                = "${var.port}"
   iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
 
-  domain                      = "${join("", data.terraform_remote_state.vpc.*.ds_directory_id)}"
+  domain                      = "${coalesce(var.domain, join("", data.terraform_remote_state.vpc.*.ds_directory_id))}"
   domain_iam_role_name        = "${aws_iam_role.rds_ds_access.id}"
   replicate_source_db         = "${var.replicate_source_db}"
   snapshot_identifier         = "${var.snapshot_identifier}"
@@ -575,10 +593,10 @@ output "db_option_group_arn" {
   value       = "${module.db_option_group.this_db_option_group_arn}"
 }
 
-output "db_rds_ds_access_id" {
-  description = "The ARN of the db option group"
-  value       = "${aws_iam_role.rds_ds_access.id}"
-}
+# output "db_rds_ds_access_id" {
+#   description = "The ARN of the db option group"
+#   value       = "${aws_iam_role.rds_ds_access.id}"
+# }
 
 output "db_security_group_name" {
   description = "The ARN of the db option group"

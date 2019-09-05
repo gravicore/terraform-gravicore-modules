@@ -12,13 +12,14 @@ locals {
 }
 
 module "aviatrix_controller_init" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
+  source = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.11"
 
-  admin_email           = "${var.aviatrix_controller_admin_email}"
-  admin_password        = "${local.aviatrix_controller_admin_password}"
-  private_ip            = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
-  public_ip             = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
-  aviatrix_account_name = "${var.namespace}-master-prd"
+  admin_email         = "${var.aviatrix_controller_admin_email}"
+  admin_password      = "${local.aviatrix_controller_admin_password}"
+  private_ip          = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
+  public_ip           = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
+  access_account_name = "${var.namespace}-master-prd"
+  aws_account_id      = "${var.account_id}"
 }
 
 # Launch a gateway with these parameters:

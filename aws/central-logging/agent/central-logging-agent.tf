@@ -87,14 +87,14 @@ data "aws_iam_policy_document" "log" {
 
 resource "aws_iam_role_policy" "log" {
   count  = "${var.enabled == "true" ? 1 : 0}"
-  name   = "${local.stage_prefix}-vpc"
+  name   = "${local.stage_prefix}-vpc-flow-logs"
   role   = "${aws_iam_role.log.id}"
   policy = "${data.aws_iam_policy_document.log.json}"
 }
 
 resource "aws_iam_role" "log" {
   count              = "${var.enabled == "true" ? 1 : 0}"
-  name               = "${local.stage_prefix}-vpc"
+  name               = "${local.stage_prefix}-vpc-flow-logs"
   assume_role_policy = "${data.aws_iam_policy_document.log_assume.json}"
 }
 

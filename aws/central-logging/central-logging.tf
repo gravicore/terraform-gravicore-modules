@@ -1,7 +1,6 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
-
 variable "terraform_remote_state_key" {
   description = "Key for the location of the remote state of the master account module"
   default     = ""
@@ -50,7 +49,6 @@ variable "account_id" {}
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
-
 module "log_storage" {
   source    = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=0.3.0"
   enabled   = "${local.is_master == 1 ? true : false }"
@@ -67,8 +65,7 @@ resource "aws_cloudformation_stack" "aws_central_logging_lambda" {
 }
 
 module "central_logging_agent" {
-  source = "./agent"
-
+  source                          = "./agent"
   master_account_assume_role_name = "${var.master_account_assume_role_name}"
   terraform_remote_state_key      = "${var.terraform_remote_state_key}"
   enabled                         = "${local.is_child == 1 ? true : false }"
@@ -83,7 +80,6 @@ module "central_logging_agent" {
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
-
 output "log_bucket_name" {
   value       = "${module.log_storage.bucket_id}"
   description = "Name of the logging bucket"

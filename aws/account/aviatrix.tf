@@ -1,7 +1,7 @@
 module "aviatrix_controller_iam_roles" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-iam-roles"
+  source = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles?ref=terraform_0.11"
 
-  master-account-id = "${var.master_account_id}"
+  external-controller-account-id = "${var.master_account_id}"
 }
 
 output "aviatrix_role_ec2_name" {
