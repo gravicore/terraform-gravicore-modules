@@ -10,7 +10,7 @@ terraform {
 # ----------------------------------------------------------------------------------------------------------------------
 
 provider "aws" {
-  version = "~> 1.48.0"
+  version = "~> 2.26.0"
   region  = "${var.aws_region}"
 
   assume_role {
@@ -20,7 +20,7 @@ provider "aws" {
 
 provider "aws" {
   alias   = "master"
-  version = "~> 1.48.0"
+  version = "~> 2.26.0"
   region  = "${var.aws_region}"
 
   assume_role {
@@ -94,7 +94,7 @@ variable "tags" {
 locals {
   environment_prefix = "${join("-", list(var.namespace, var.environment))}"
   stage_prefix       = "${join("-", list(var.namespace, var.environment, var.stage))}"
-  module_prefix      = "${join("-", list(var.namespace, var.environment, var.stage, var.name))}"
+  module_prefix      = "${var.name == "" ? local.stage_prefix : join("-", list(var.namespace, var.environment, var.stage, var.name))}"
 
   business_tags = {
     Namespace   = "${var.namespace}"

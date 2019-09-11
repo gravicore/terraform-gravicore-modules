@@ -46,6 +46,10 @@ variable "stage_prefix" {
   description = "Creates a unique name beginning with the specified prefix"
 }
 
+variable "module_prefix" {
+  description = "Creates a unique name beginning with the specified prefix"
+}
+
 variable "identifier" {
   description = "The identifier of the resource"
   default     = "default rds"
@@ -81,7 +85,7 @@ variable "kms_key_id" {
 
 resource "aws_s3_bucket" "rds_backup_restore" {
   count  = "${var.create ? 1 : 0}"
-  bucket = "${var.stage_prefix}-rds"
+  bucket = "${var.module_prefix}-rds"
   region = "${var.aws_region}"
   acl    = "private"
 
@@ -114,7 +118,7 @@ data "aws_iam_policy_document" "rds_backup_restore_trust" {
 
 resource "aws_iam_role" "rds_backup_restore" {
   count              = "${var.create ? 1 : 0}"
-  name               = "${var.stage_prefix}-${var.engine_name}-${replace(var.major_engine_version, ".", "-")}-backup-restore"
+  name               = "${var.module_prefix}-${var.engine_name}-${replace(var.major_engine_version, ".", "-")}-backup-restore"
   description        = "Gravicore Module: Role to allow RDS to access S3 for DB backup and restore purposes"
   assume_role_policy = "${data.aws_iam_policy_document.rds_backup_restore_trust.json}"
 
@@ -122,6 +126,19 @@ resource "aws_iam_role" "rds_backup_restore" {
 }
 
 data "aws_iam_policy_document" "rds_backup_restore" {
+  count = "${var.create ? 1 : 0}"
+
+  statement {
+    actions = [
+      "kms:DescribeKey",
+      "kms:GenerateDataKey",
+      "kms:Encrypt",
+      "kms:Decrypt",
+    ]
+
+    resources = ["${var.kms_key_id}"]
+  }
+
   statement {
     actions = [
       "s3:ListBucket",
@@ -155,7 +172,7 @@ resource "aws_iam_role_policy" "rds_backup_restore" {
 resource "aws_db_option_group" "this" {
   count = "${var.create ? 1 : 0}"
 
-  name                     = "${var.stage_prefix}-${var.engine_name}-${replace(var.major_engine_version, ".", "-")}"
+  name                     = "${var.module_prefix}-${var.engine_name}-${replace(var.major_engine_version, ".", "-")}"
   option_group_description = "${var.option_group_description == "" ? format("Option group for %s", var.identifier) : var.option_group_description}"
   engine_name              = "${var.engine_name}"
   major_engine_version     = "${var.major_engine_version}"
