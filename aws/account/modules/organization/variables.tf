@@ -1,4 +1,5 @@
-variable "name_prefix" {}
+variable "name_prefix" {
+}
 
 variable "tags" {
   description = "https://aws.amazon.com/answers/account-management/aws-tagging-strategies/"
@@ -14,18 +15,15 @@ variable "tags" {
   # AccountID    = ""
   # Version      = ""
 
-
   # BUSINESS TAGS
   # Owner      = ""
   # CostCenter = ""
   # Customer   = ""
   # Project    = ""
 
-
   # AUTOMATION TAGS
   # LastModified    = ""
   # TerraformModule = "gravicore/terraform-backend"
-
 
   # SECURITY TAGS
   # Confidentiality = ""
@@ -57,3 +55,4 @@ variable "organization_feature_set" {
 variable "create_organization" {
   default = false
 }
+

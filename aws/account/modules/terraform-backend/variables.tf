@@ -1,9 +1,9 @@
-variable policy_type_org {
+variable "policy_type_org" {
   description = "The type of policy to create, currently the only allowed value is SERVICE_CONTROL_POLICY"
   default     = "SERVICE_CONTROL_POLICY"
 }
 
-variable policy_name_org {
+variable "policy_name_org" {
   description = "Name of org protect policy"
   default     = "grv_policy_org"
 }
@@ -23,7 +23,8 @@ variable policy_name_org {
 #   default = {}
 # }
 
-variable "name_prefix" {}
+variable "name_prefix" {
+}
 
 variable "tags" {
   description = "https://aws.amazon.com/answers/account-management/aws-tagging-strategies/"
@@ -39,18 +40,15 @@ variable "tags" {
   # AccountID    = ""
   # Version      = ""
 
-
   # BUSINESS TAGS
   # Owner      = ""
   # CostCenter = ""
   # Customer   = ""
   # Project    = ""
 
-
   # AUTOMATION TAGS
   # LastModified    = ""
   # TerraformModule = "gravicore/terraform-backend"
-
 
   # SECURITY TAGS
   # Confidentiality = ""
@@ -64,3 +62,4 @@ variable "tags" {
     TerraformModule = "gravicore/terraform-backend"
   }
 }
+

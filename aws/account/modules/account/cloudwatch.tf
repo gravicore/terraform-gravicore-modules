@@ -35,16 +35,18 @@ resource "aws_kms_key" "cloudwatch" {
 }
 POLICY
 
-  tags = "${merge(
-    var.common_tags, 
-    map(
-      "Name" , "${local.name_prefix}-kms-cloudwatch",
-      "resource", "kms-cloudwatch"
-    )
-  )}"
+
+  tags = merge(
+    var.common_tags,
+    {
+      "Name"     = "${local.name_prefix}-kms-cloudwatch"
+      "resource" = "kms-cloudwatch"
+    },
+  )
 }
 
 resource "aws_kms_alias" "cloudwatch" {
   name          = "alias/${var.common_tags["application"]}-kms-cloudwatch"
-  target_key_id = "${aws_kms_key.cloudwatch.key_id}"
+  target_key_id = aws_kms_key.cloudwatch.key_id
 }
+

@@ -8,7 +8,7 @@ data "aws_iam_policy_document" "billing_full_access" {
 
 resource "aws_iam_policy" "billing_full_access" {
   name   = "${var.name_prefix}-billing-full-access"
-  policy = "${data.aws_iam_policy_document.billing_full_access.json}"
+  policy = data.aws_iam_policy_document.billing_full_access.json
 }
 
 resource "aws_iam_group" "billing_admins" {
@@ -17,6 +17,7 @@ resource "aws_iam_group" "billing_admins" {
 }
 
 resource "aws_iam_group_policy_attachment" "billing_admins" {
-  group      = "${aws_iam_group.billing_admins.name}"
-  policy_arn = "${aws_iam_policy.billing_full_access.arn}"
+  group      = aws_iam_group.billing_admins.name
+  policy_arn = aws_iam_policy.billing_full_access.arn
 }
+

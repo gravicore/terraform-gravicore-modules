@@ -1,9 +1,10 @@
-data "aws_caller_identity" "this" {}
+data "aws_caller_identity" "this" {
+}
 
 locals {
   federated_trusted_entities = [
     "arn:aws:iam::${var.trusted_entity_account_id}:saml-provider/grv-saml-provider",
-    "${data.aws_caller_identity.this.account_id}"
+    data.aws_caller_identity.this.account_id,
   ]
   aws_trusted_entities = [
   ]
@@ -29,5 +30,8 @@ data "template_file" "assume_role_policy" {
   ]
 }
 TEMPLATE
-  vars {}
+
+
+  vars = {}
 }
+
