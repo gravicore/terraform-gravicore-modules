@@ -1,7 +1,7 @@
 #KMS Keys
 resource "aws_kms_key" "cloudwatch" {
   description         = "CloudWatch KMS Key"
-  enable_key_rotation = "true"
+  enable_key_rotation = true
 
   policy = <<POLICY
 {

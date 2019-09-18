@@ -40,7 +40,7 @@ data "aws_iam_policy_document" "trusted_entities" {
       # If the expression in the following list itself returns a list, remove the
       # brackets to avoid interpretation as a list of lists. If the expression
       # returns a single list item then leave it as-is and remove this TODO comment.
-      identifiers = [local.aws_trusted_entities]
+      identifiers = local.aws_trusted_entities
     }
   }
   statement {
@@ -55,7 +55,7 @@ data "aws_iam_policy_document" "trusted_entities" {
       # If the expression in the following list itself returns a list, remove the
       # brackets to avoid interpretation as a list of lists. If the expression
       # returns a single list item then leave it as-is and remove this TODO comment.
-      identifiers = [local.federated_trusted_entities]
+      identifiers = local.federated_trusted_entities
     }
   }
 }

@@ -44,7 +44,7 @@ variable "aws_region" {
 }
 
 variable "create_default_policies" {
-  default = "false"
+  default = false
 }
 
 variable "organization_feature_set" {
