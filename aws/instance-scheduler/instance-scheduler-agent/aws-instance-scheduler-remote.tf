@@ -33,10 +33,10 @@ data "aws_iam_policy_document" "SchedulerCrossAccountPolicy" {
 }
 
 resource "aws_iam_role_policy" "EC2InstanceSchedulerRemote" {
-  count  = "${var.create}"
+  count  = var.create
   name   = "EC2InstanceSchedulerRemote"
-  role   = "${aws_iam_role.aws-instance-scheduler-re-EC2SchedulerCrossAccount.id}"
-  policy = "${data.aws_iam_policy_document.SchedulerCrossAccountPolicy.json}"
+  role   = aws_iam_role.aws-instance-scheduler-re-EC2SchedulerCrossAccount[0].id
+  policy = data.aws_iam_policy_document.SchedulerCrossAccountPolicy.json
 }
 
 data "aws_iam_policy_document" "lambda-assume-role-policy" {
@@ -56,7 +56,8 @@ data "aws_iam_policy_document" "lambda-assume-role-policy" {
 }
 
 resource "aws_iam_role" "aws-instance-scheduler-re-EC2SchedulerCrossAccount" {
-  count              = "${var.create}"
+  count              = var.create
   name               = "aws-instance-scheduler-re-EC2SchedulerCrossAccount"
-  assume_role_policy = "${data.aws_iam_policy_document.lambda-assume-role-policy.json}"
+  assume_role_policy = data.aws_iam_policy_document.lambda-assume-role-policy.json
 }
+
