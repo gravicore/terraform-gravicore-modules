@@ -1,7 +1,7 @@
 resource "aviatrix_account" "current" {
-  account_name       = "${local.account_name}"
-  cloud_type         = "${var.aviatrix_controller_cloud_type}"
-  aws_account_number = "${var.account_id}"
+  account_name       = local.account_name
+  cloud_type         = var.aviatrix_controller_cloud_type
+  aws_account_number = var.account_id
   aws_iam            = "true"
   aws_role_ec2       = "arn:aws:iam::${var.account_id}:role/aviatrix-role-ec2"
   aws_role_app       = "arn:aws:iam::${var.account_id}:role/aviatrix-role-app"
@@ -15,8 +15,6 @@ resource "aviatrix_account" "current" {
 # vpc_reg - AWS VPC region.
 # vpc_size - Gateway instance size
 # vpc_net - VPC subnet CIDR where you want to launch GW instance
-
-
 # resource "aviatrix_gateway" "default" {
 #   account_name = "${join("-", list(var.namespace, var.environment, var.stage))}"
 #   cloud_type   = "${var.aviatrix_controller_cloud_type}"
@@ -26,4 +24,3 @@ resource "aviatrix_account" "current" {
 #   vpc_net      = "${var.vpc_cidr_block}"
 #   vpc_size     = "${var.aviatrix_gateway_size}"
 # }
-
