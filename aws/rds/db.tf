@@ -13,6 +13,7 @@ variable "terraform_remote_state_acct_key" {
 }
 
 variable "identifier" {
+  type        = list(string)
   description = "The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier"
   default     = []
 }
@@ -93,7 +94,7 @@ variable "port" {
 }
 
 variable "vpc_security_group_ids" {
-  type        = "list"
+  type        = list(string)
   description = "List of VPC security groups to associate"
   default     = []
 }
@@ -193,7 +194,7 @@ variable "backup_window" {
 
 # DB subnet group
 variable "subnet_ids" {
-  type        = "list"
+  type        = list(string)
   description = "A list of VPC subnet IDs"
   default     = []
 }
@@ -207,6 +208,7 @@ variable "family" {
 variable "parameters" {
   description = "A list of DB parameters (map) to apply"
   default     = []
+  type        = list(map(string))
 }
 
 # DB option group
@@ -221,13 +223,14 @@ variable "major_engine_version" {
 }
 
 variable "options" {
-  type        = "list"
+  type        = list(string)
   description = "A list of Options to apply."
   default     = []
 }
 
 # DB parameter group
 variable "ingress_sg_cidr" {
+  type        = list(string)
   description = "List of the ingress cidr's to create the security group."
   default     = []
 }
@@ -292,30 +295,48 @@ variable "schedule" {
 }
 
 locals {
-  db_subnet_group_name          = "${coalesce(var.db_subnet_group_name, module.db_subnet_group.this_db_subnet_group_id)}"
-  enable_create_db_subnet_group = "${var.db_subnet_group_name == "" ? var.create_db_subnet_group : 0}"
+  db_subnet_group_name = coalesce(
+    var.db_subnet_group_name,
+    module.db_subnet_group.this_db_subnet_group_id,
+  )
+  enable_create_db_subnet_group = var.db_subnet_group_name == "" ? var.create_db_subnet_group : false
 
-  parameter_group_name             = "${coalesce(var.parameter_group_name, module.db_parameter_group.this_db_parameter_group_id)}"
-  enable_create_db_parameter_group = "${var.parameter_group_name == "" ? var.create_db_parameter_group : 0}"
+  parameter_group_name = coalesce(
+    var.parameter_group_name,
+    module.db_parameter_group.this_db_parameter_group_id,
+  )
+  enable_create_db_parameter_group = var.parameter_group_name == "" ? var.create_db_parameter_group : false
 
-  option_group_name             = "${coalesce(var.option_group_name, module.db_option_group.this_db_option_group_id)}"
-  enable_create_db_option_group = "${var.option_group_name == "" && var.engine != "postgres" ? var.create_db_option_group : 0}"
+  option_group_name = coalesce(
+    var.option_group_name,
+    module.db_option_group.this_db_option_group_id,
+  )
+  enable_create_db_option_group = var.option_group_name == "" && var.engine != "postgres" ? var.create_db_option_group : false
 
-  enable_domain_iam_role = "${var.domain == "" ? "" : aws_iam_role.rds_ds_access.id}"
+  enable_domain_iam_role = var.domain == "" ? "" : aws_iam_role.rds_ds_access[0].id
 
-  enable_create_security_group = "${var.vpc_id == "" ? var.create_db_security_group : 0}"
-  remote_state_vpc_key         = "${coalesce(var.terraform_remote_state_vpc_key, "master/${var.stage}/shared-vpc")}"
-  remote_state_acct_key        = "${coalesce(var.terraform_remote_state_vpc_key, "master/${var.stage}/acct")}"
-  kms_key_id                   = "${coalesce(var.kms_key_id, data.terraform_remote_state.acct.rds_key_arn)}"
+  enable_create_security_group = var.vpc_id == "" ? var.create_db_security_group : false
 
+  remote_state_vpc_key = coalesce(
+    var.terraform_remote_state_vpc_key,
+    "master/${var.stage}/shared-vpc",
+  )
+  remote_state_acct_key = coalesce(
+    var.terraform_remote_state_vpc_key,
+    "master/${var.stage}/acct",
+  )
+  kms_key_id = coalesce(
+    var.kms_key_id,
+    data.terraform_remote_state.acct.outputs.rds_key_arn,
+  )
   # db_domain = ""
 }
 
 data "terraform_remote_state" "acct" {
   backend = "s3"
 
-  config {
-    region         = "${var.aws_region}"
+  config = {
+    region         = var.aws_region
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
     key            = "${local.remote_state_acct_key}/terraform.tfstate"
@@ -327,8 +348,8 @@ data "terraform_remote_state" "acct" {
 data "terraform_remote_state" "vpc" {
   backend = "s3"
 
-  config {
-    region         = "${var.aws_region}"
+  config = {
+    region         = var.aws_region
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
     key            = "${local.remote_state_vpc_key}/terraform.tfstate"
@@ -370,132 +391,144 @@ data "aws_iam_policy_document" "rds_ds_access" {
 }
 
 resource "aws_iam_role" "rds_ds_access" {
-  count              = "${var.create == "true" && var.domain != "" ? 0 : 1 }"
+  count              = var.create && var.domain != "" ? 0 : 1
   name               = "rds-ds-access-role"
-  assume_role_policy = "${data.aws_iam_policy_document.rds_ds_access.json}"
+  assume_role_policy = data.aws_iam_policy_document.rds_ds_access.json
 }
 
 resource "aws_iam_role_policy_attachment" "rds_ds_access" {
-  count      = "${var.create == "true" && var.domain != "" ? 0 : 1 }"
-  role       = "${aws_iam_role.rds_ds_access.name}"
+  count      = var.create && var.domain != "" ? 0 : 1
+  role       = aws_iam_role.rds_ds_access[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
 
 resource "aws_security_group" "this" {
-  count       = "${local.enable_create_security_group}"
+  count       = local.enable_create_security_group ? 1 : 0
   name        = "rds-security-group"
   description = "Allow internal and VPN traffic"
-  vpc_id      = "${coalesce(var.vpc_id, data.terraform_remote_state.vpc.vpc_id)}"
+  vpc_id      = coalesce(var.vpc_id, data.terraform_remote_state.vpc.outputs.vpc_id)
 
   ingress {
-    from_port   = "${var.port}"
-    to_port     = "${var.port}"
+    from_port   = var.port
+    to_port     = var.port
     protocol    = "6"
-    cidr_blocks = ["${var.ingress_sg_cidr}"]
+    cidr_blocks = var.ingress_sg_cidr
   }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["${var.ingress_sg_cidr}"]
+    cidr_blocks = var.ingress_sg_cidr
   }
 }
 
 module "db_subnet_group" {
   source = "./modules/db-subnet-group"
 
-  create       = "${local.enable_create_db_subnet_group}"
-  stage_prefix = "${local.module_prefix}"
-  subnet_ids   = ["${data.terraform_remote_state.vpc.vpc_private_subnets}"]
+  create       = local.enable_create_db_subnet_group
+  stage_prefix = local.module_prefix
+  subnet_ids   = data.terraform_remote_state.vpc.outputs.vpc_private_subnets
 
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 module "db_parameter_group" {
   source = "./modules/db-parameter-group"
 
-  create       = "${local.enable_create_db_parameter_group}"
+  create       = local.enable_create_db_parameter_group
   stage_prefix = "${local.module_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
-  family       = "${var.family}"
+  family       = var.family
 
-  parameters = ["${var.parameters}"]
+  parameters = var.parameters
 
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 module "db_option_group" {
   source = "./modules/db-option-group"
 
-  create                   = "${local.enable_create_db_option_group}"
-  stage_prefix             = "${local.module_prefix}"
-  option_group_description = "${var.option_group_description}"
-  engine_name              = "${var.engine}"
-  major_engine_version     = "${var.major_engine_version}"
-  aws_region               = "${var.aws_region}"
-  kms_key_id               = "${local.kms_key_id}"
-  module_prefix            = "${local.module_prefix}"
-  options                  = ["${var.options}"]
+  create                   = local.enable_create_db_option_group
+  stage_prefix             = local.module_prefix
+  option_group_description = var.option_group_description
+  engine_name              = var.engine
+  major_engine_version     = var.major_engine_version
+  aws_region               = var.aws_region
+  kms_key_id               = local.kms_key_id
+  module_prefix            = local.module_prefix
+  options                  = var.options
 
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 module "db_instance" {
   source = "./modules/db-instance"
 
-  create              = "${var.create_db_instance}"
-  identifier          = ["${var.identifier}"]
-  engine              = "${var.engine}"
-  engine_version      = "${var.engine_version}"
-  instance_class      = "${var.instance_class}"
-  allocated_storage   = "${var.allocated_storage}"
-  storage_type        = "${var.storage_type}"
-  deletion_protection = "${var.deletion_protection}"
-  storage_encrypted   = "${var.storage_encrypted}"
-  kms_key_id          = "${local.kms_key_id}"
-  license_model       = "${var.license_model}"
-  namespace           = "${var.namespace}"
-  environment         = "${var.environment}"
-  stage               = "${var.stage}"
-  module_prefix       = "${local.module_prefix}"
+  create              = var.create_db_instance
+  identifier          = var.identifier
+  engine              = var.engine
+  engine_version      = var.engine_version
+  instance_class      = var.instance_class
+  allocated_storage   = var.allocated_storage
+  storage_type        = var.storage_type
+  deletion_protection = var.deletion_protection
+  storage_encrypted   = var.storage_encrypted
+  kms_key_id          = local.kms_key_id
+  license_model       = var.license_model
+  namespace           = var.namespace
+  environment         = var.environment
+  stage               = var.stage
+  module_prefix       = local.module_prefix
 
-  name = "${var.db_name}"
+  name = var.db_name
 
   # username                            = "${var.username}"
-  username                            = "${coalesce(var.username, lookup(module.rds_ssm_param_username.map, format("/%s/rds-username", local.module_prefix)))}"
-  password                            = "${coalesce(var.password, lookup(module.rds_ssm_param_secret.map, format("/%s/rds-secret", local.module_prefix)))}"
-  port                                = "${var.port}"
-  iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
+  username = coalesce(
+    var.username,
+    module.rds_ssm_param_username.map[format("/%s/rds-username", local.module_prefix)],
+  )
+  password = coalesce(
+    var.password,
+    module.rds_ssm_param_secret.map[format("/%s/rds-secret", local.module_prefix)],
+  )
+  port                                = var.port
+  iam_database_authentication_enabled = var.iam_database_authentication_enabled
 
-  domain                      = "${coalesce(var.domain, join("", data.terraform_remote_state.vpc.*.ds_directory_id))}"
-  domain_iam_role_name        = "${aws_iam_role.rds_ds_access.id}"
-  replicate_source_db         = "${var.replicate_source_db}"
-  snapshot_identifier         = "${var.snapshot_identifier}"
-  vpc_security_group_ids      = ["${coalescelist(var.vpc_security_group_ids, aws_security_group.this.*.id)}"]
-  db_subnet_group_name        = "${local.db_subnet_group_name}"
-  parameter_group_name        = "${local.parameter_group_name}"
-  option_group_name           = "${local.option_group_name}"
-  availability_zone           = "${var.availability_zone}"
-  multi_az                    = "${var.multi_az}"
-  iops                        = "${var.iops}"
-  publicly_accessible         = "${var.publicly_accessible}"
-  allow_major_version_upgrade = "${var.allow_major_version_upgrade}"
-  auto_minor_version_upgrade  = "${var.auto_minor_version_upgrade}"
-  apply_immediately           = "${var.apply_immediately}"
-  maintenance_window          = "${var.maintenance_window}"
-  skip_final_snapshot         = "${var.skip_final_snapshot}"
-  copy_tags_to_snapshot       = "${var.copy_tags_to_snapshot}"
-  final_snapshot_identifier   = "${var.final_snapshot_identifier}"
-  backup_retention_period     = "${var.backup_retention_period}"
-  backup_window               = "${var.backup_window}"
-  monitoring_interval         = "${var.monitoring_interval}"
-  monitoring_role_arn         = "${var.monitoring_role_arn}"
-  monitoring_role_name        = "${var.monitoring_role_name}"
-  create_monitoring_role      = "${var.create_monitoring_role}"
-  timezone                    = "${var.timezone}"
-  character_set_name          = "${var.character_set_name}"
-  tags                        = "${local.tags}"
-  schedule                    = "${var.schedule}"
+  domain = coalesce(
+    var.domain,
+    join(
+      "",
+      data.terraform_remote_state.vpc.*.outputs.ds_directory_id,
+    ),
+  )
+  domain_iam_role_name        = aws_iam_role.rds_ds_access[0].id
+  replicate_source_db         = var.replicate_source_db
+  snapshot_identifier         = var.snapshot_identifier
+  vpc_security_group_ids      = coalescelist(var.vpc_security_group_ids, aws_security_group.this.*.id)
+  db_subnet_group_name        = local.db_subnet_group_name
+  parameter_group_name        = local.parameter_group_name
+  option_group_name           = local.option_group_name
+  availability_zone           = var.availability_zone
+  multi_az                    = var.multi_az
+  iops                        = var.iops
+  publicly_accessible         = var.publicly_accessible
+  allow_major_version_upgrade = var.allow_major_version_upgrade
+  auto_minor_version_upgrade  = var.auto_minor_version_upgrade
+  apply_immediately           = var.apply_immediately
+  maintenance_window          = var.maintenance_window
+  skip_final_snapshot         = var.skip_final_snapshot
+  copy_tags_to_snapshot       = var.copy_tags_to_snapshot
+  final_snapshot_identifier   = var.final_snapshot_identifier
+  backup_retention_period     = var.backup_retention_period
+  backup_window               = var.backup_window
+  monitoring_interval         = var.monitoring_interval
+  monitoring_role_arn         = var.monitoring_role_arn
+  monitoring_role_name        = var.monitoring_role_name
+  create_monitoring_role      = var.create_monitoring_role
+  timezone                    = var.timezone
+  character_set_name          = var.character_set_name
+  tags                        = local.tags
+  schedule                    = var.schedule
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -504,93 +537,93 @@ module "db_instance" {
 
 output "db_instance_address" {
   description = "The address of the RDS instance"
-  value       = "${module.db_instance.this_db_instance_address}"
+  value       = module.db_instance.this_db_instance_address
 }
 
 output "db_instance_arn" {
   description = "The ARN of the RDS instance"
-  value       = "${module.db_instance.this_db_instance_arn}"
+  value       = module.db_instance.this_db_instance_arn
 }
 
 output "db_instance_availability_zone" {
   description = "The availability zone of the RDS instance"
-  value       = "${module.db_instance.this_db_instance_availability_zone}"
+  value       = module.db_instance.this_db_instance_availability_zone
 }
 
 output "db_instance_endpoint" {
   description = "The connection endpoint"
-  value       = "${module.db_instance.this_db_instance_endpoint}"
+  value       = module.db_instance.this_db_instance_endpoint
 }
 
 output "db_instance_hosted_zone_id" {
   description = "The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)"
-  value       = "${module.db_instance.this_db_instance_hosted_zone_id}"
+  value       = module.db_instance.this_db_instance_hosted_zone_id
 }
 
 output "db_instance_id" {
   description = "The RDS instance ID"
-  value       = "${module.db_instance.this_db_instance_id}"
+  value       = module.db_instance.this_db_instance_id
 }
 
 output "db_instance_resource_id" {
   description = "The RDS Resource ID of this instance"
-  value       = "${module.db_instance.this_db_instance_resource_id}"
+  value       = module.db_instance.this_db_instance_resource_id
 }
 
 output "db_instance_status" {
   description = "The RDS instance status"
-  value       = "${module.db_instance.this_db_instance_status}"
+  value       = module.db_instance.this_db_instance_status
 }
 
 output "db_instance_name" {
   description = "The database name"
-  value       = "${module.db_instance.this_db_instance_name}"
+  value       = module.db_instance.this_db_instance_name
 }
 
 output "db_instance_username" {
   description = "The master username for the database"
-  value       = "${module.db_instance.this_db_instance_username}"
+  value       = module.db_instance.this_db_instance_username
 }
 
 output "db_instance_password" {
   description = "The database password (this password may be old, because Terraform doesn't track it after initial creation)"
-  value       = "${var.password}"
+  value       = var.password
 }
 
 output "db_instance_port" {
   description = "The database port"
-  value       = "${module.db_instance.this_db_instance_port}"
+  value       = module.db_instance.this_db_instance_port
 }
 
 output "db_subnet_group_id" {
   description = "The db subnet group name"
-  value       = "${module.db_subnet_group.this_db_subnet_group_id}"
+  value       = module.db_subnet_group.this_db_subnet_group_id
 }
 
 output "db_subnet_group_arn" {
   description = "The ARN of the db subnet group"
-  value       = "${module.db_subnet_group.this_db_subnet_group_arn}"
+  value       = module.db_subnet_group.this_db_subnet_group_arn
 }
 
 output "db_parameter_group_id" {
   description = "The db parameter group id"
-  value       = "${module.db_parameter_group.this_db_parameter_group_id}"
+  value       = module.db_parameter_group.this_db_parameter_group_id
 }
 
 output "db_parameter_group_arn" {
   description = "The ARN of the db parameter group"
-  value       = "${module.db_parameter_group.this_db_parameter_group_arn}"
+  value       = module.db_parameter_group.this_db_parameter_group_arn
 }
 
 # DB option group
 output "db_option_group_id" {
   description = "The db option group id"
-  value       = "${module.db_option_group.this_db_option_group_id}"
+  value       = module.db_option_group.this_db_option_group_id
 }
 
 output "db_option_group_arn" {
   description = "The ARN of the db option group"
-  value       = "${module.db_option_group.this_db_option_group_arn}"
+  value       = module.db_option_group.this_db_option_group_arn
 }
 
 # output "db_rds_ds_access_id" {
@@ -600,5 +633,6 @@ output "db_option_group_arn" {
 
 output "db_security_group_name" {
   description = "The ARN of the db option group"
-  value       = "${aws_security_group.this.*.name}"
+  value       = aws_security_group.this.*.name
 }
+
