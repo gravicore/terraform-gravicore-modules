@@ -3,7 +3,7 @@ locals {
     local.tags,
     {
       "TerraformModule"        = "cloudposse/terraform-aws-kms-key"
-      "TerraformModuleVersion" = "0.1.2"
+      "TerraformModuleVersion" = "0.2.0"
     },
   )
 }
