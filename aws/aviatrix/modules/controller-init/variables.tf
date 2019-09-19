@@ -22,8 +22,11 @@ variable "repository" {
   default = ""
 }
 
-variable "master_account_id" {}
-variable "account_id" {}
+variable "master_account_id" {
+}
+
+variable "account_id" {
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
@@ -37,7 +40,7 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable terraform_module {
+variable "terraform_module" {
   default = "gravicore/terraform-gravicore-modules/aws/aviatrix"
 }
 
@@ -53,8 +56,10 @@ variable "aviatrix_gateway_size" {
   default = "t2.micro"
 }
 
-variable "aviatrix_controller_admin_email" {}
+variable "aviatrix_controller_admin_email" {
+}
 
 variable "aviatrix_controller_admin_password" {
   default = ""
 }
+
