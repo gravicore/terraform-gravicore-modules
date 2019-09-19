@@ -48,7 +48,7 @@ module "instance_scheduler_agent" {
 
 locals {
   create_instance_scheduler       = var.create ? coalesce(var.is_standalone_scheduler, local.is_master) : 0
-  create_instance_scheduler_agent = var.create && local.create_instance_scheduler == 1 ? local.is_child : 0
+  create_instance_scheduler_agent = var.create && local.create_instance_scheduler != 1 ? local.is_child : 0
   aws_instance_scheduler_cross_account_roles = var.is_standalone_scheduler == 1 ? "" : coalesce(
     var.cross_account_roles,
     join(
