@@ -8,6 +8,7 @@ variable "number_of_instances" {
 }
 
 variable "ingress_sg_cidr" {
+  type        = list(string)
   description = "List of the ingress cidr's to create the security group."
   default     = ["10.0.0.0/8"]
 }
@@ -32,7 +33,8 @@ variable "termination_protection" {
   default     = true
 }
 
-variable "alb_ssl_certificate" {}
+variable "alb_ssl_certificate" {
+}
 
 variable "schedule" {
   description = "Instance scheduler schedule to set RC2 instance to"
@@ -109,22 +111,33 @@ variable "alb_target_group_protocol" {
   default     = "HTTP"
 }
 
-variable "parent_domain_name" {}
+variable "parent_domain_name" {
+}
 
 locals {
-  module_kms_key_tags = "${merge(local.tags, map(
-    "TerraformModule", "cloudposse/terraform-aws-kms-key",
-    "TerraformModuleVersion", "0.1.2"))}"
+  module_kms_key_tags = merge(
+    local.tags,
+    {
+      "TerraformModule"        = "cloudposse/terraform-aws-kms-key"
+      "TerraformModuleVersion" = "0.1.2"
+    },
+  )
 
-  remote_state_acct_key = "${coalesce(var.terraform_remote_state_acct_key, "master/${var.stage}/acct")}"
-  remote_state_vpc_key  = "${coalesce(var.terraform_remote_state_vpc_key, "master/${var.stage}/shared-vpc")}"
+  remote_state_acct_key = coalesce(
+    var.terraform_remote_state_acct_key,
+    "master/${var.stage}/acct",
+  )
+  remote_state_vpc_key = coalesce(
+    var.terraform_remote_state_vpc_key,
+    "master/${var.stage}/shared-vpc",
+  )
 }
 
 data "terraform_remote_state" "acct" {
   backend = "s3"
 
-  config {
-    region         = "${var.aws_region}"
+  config = {
+    region         = var.aws_region
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
     key            = "${local.remote_state_acct_key}/terraform.tfstate"
@@ -136,8 +149,8 @@ data "terraform_remote_state" "acct" {
 data "terraform_remote_state" "vpc" {
   backend = "s3"
 
-  config {
-    region         = "${var.aws_region}"
+  config = {
+    region         = var.aws_region
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
     key            = "${local.remote_state_vpc_key}/terraform.tfstate"
@@ -155,24 +168,24 @@ module "cerberus_kms_key" {
   namespace               = ""
   stage                   = ""
   name                    = "${local.stage_prefix}-cerberus"
-  description             = "${join(" ", list(var.desc_prefix, "KMS key for Cerberus"))}"
+  description             = join(" ", [var.desc_prefix, "KMS key for Cerberus"])
   deletion_window_in_days = 10
   enable_key_rotation     = "true"
   alias                   = "alias/${replace(local.stage_prefix, "-", "/")}/cerberus"
-  tags                    = "${local.module_kms_key_tags}"
+  tags                    = local.module_kms_key_tags
 }
 
 resource "aws_security_group" "cerberus_ec2" {
-  count       = "${var.create ? 1 : 0 }"
+  count       = var.create ? 1 : 0
   name        = "${local.module_prefix}-ec2"
   description = "${var.desc_prefix} Allow traffic to Cerberus EC2 application instances"
-  vpc_id      = "${data.terraform_remote_state.vpc.vpc_id}"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   ingress {
-    from_port       = "${var.alb_target_group_port}"
-    to_port         = "${var.alb_target_group_port}"
+    from_port       = var.alb_target_group_port
+    to_port         = var.alb_target_group_port
     protocol        = "6"
-    security_groups = ["${aws_security_group.cerberus_alb.id}"]
+    security_groups = [aws_security_group.cerberus_alb[0].id]
     description     = "${var.desc_prefix} Target group port from ALB"
   }
 
@@ -180,7 +193,7 @@ resource "aws_security_group" "cerberus_ec2" {
     from_port   = "3389"
     to_port     = "3389"
     protocol    = "6"
-    cidr_blocks = ["${var.ingress_sg_cidr}"]
+    cidr_blocks = var.ingress_sg_cidr
     description = "${var.desc_prefix} RDP from internal"
   }
 
@@ -188,7 +201,7 @@ resource "aws_security_group" "cerberus_ec2" {
     from_port   = "8443"
     to_port     = "8443"
     protocol    = "6"
-    cidr_blocks = ["${var.ingress_sg_cidr}"]
+    cidr_blocks = var.ingress_sg_cidr
     description = "${var.desc_prefix} Cerberus Web Administration from internal"
   }
 
@@ -204,7 +217,7 @@ resource "aws_security_group" "cerberus_ec2" {
     from_port   = -1
     to_port     = -1
     protocol    = "ICMP"
-    cidr_blocks = ["${var.ingress_sg_cidr}"]
+    cidr_blocks = var.ingress_sg_cidr
     description = "${var.desc_prefix} ICMP from internal"
   }
 
@@ -216,11 +229,16 @@ resource "aws_security_group" "cerberus_ec2" {
     description = "${var.desc_prefix} Allow All"
   }
 
-  tags = "${merge(local.tags, map("Name", "${local.module_prefix}-ec2"))}"
+  tags = merge(
+    local.tags,
+    {
+      "Name" = "${local.module_prefix}-ec2"
+    },
+  )
 }
 
 data "aws_iam_policy_document" "cerberus_ec2" {
-  count = "${var.create ? 1 : 0 }"
+  count = var.create ? 1 : 0
 
   statement {
     actions = ["sts:AssumeRole"]
@@ -233,97 +251,113 @@ data "aws_iam_policy_document" "cerberus_ec2" {
 }
 
 resource "aws_iam_role" "cerberus_ec2" {
-  count              = "${var.create ? 1 : 0 }"
+  count              = var.create ? 1 : 0
   name               = "${local.module_prefix}-ec2"
   description        = "${var.desc_prefix} Allows EC2 instances to call AWS services on your behalf."
-  assume_role_policy = "${data.aws_iam_policy_document.cerberus_ec2.json}"
+  assume_role_policy = data.aws_iam_policy_document.cerberus_ec2[0].json
 }
 
 resource "aws_iam_role_policy_attachment" "cerberus_ssm_attach" {
-  count      = "${var.create ? 1 : 0 }"
-  role       = "${aws_iam_role.cerberus_ec2.name}"
+  count      = var.create ? 1 : 0
+  role       = aws_iam_role.cerberus_ec2[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 }
 
 resource "aws_iam_instance_profile" "cerberus_profile" {
-  count = "${var.create ? 1 : 0 }"
+  count = var.create ? 1 : 0
   name  = "${local.module_prefix}-ec2"
-  role  = "${aws_iam_role.cerberus_ec2.name}"
+  role  = aws_iam_role.cerberus_ec2[0].name
 }
 
 resource "aws_ebs_volume" "cerberus_ebs" {
-  count             = "${var.create ? var.number_of_instances : 0}"
-  availability_zone = "${aws_instance.cerberus_ec2.*.availability_zone[count.index]}"
-  size              = "${var.ebs_volume_size}"
+  count             = var.create ? var.number_of_instances : 0
+  availability_zone = aws_instance.cerberus_ec2[count.index].availability_zone
+  size              = var.ebs_volume_size
   type              = "gp2"
   encrypted         = true
-  kms_key_id        = "${data.terraform_remote_state.acct.ebs_key_arn}"
-  tags              = "${merge(local.tags, map("Name", format("${local.module_prefix}-%d", count.index + 1)))}"
+  kms_key_id        = data.terraform_remote_state.acct.outputs.ebs_key_arn
+  tags = merge(
+    local.tags,
+    {
+      "Name" = format("${local.module_prefix}-%d", count.index + 1)
+    },
+  )
 }
 
 resource "aws_volume_attachment" "cerberus" {
-  count       = "${var.create ? var.number_of_instances : 0}"
+  count       = var.create ? var.number_of_instances : 0
   device_name = "/dev/sdb"
-  volume_id   = "${aws_ebs_volume.cerberus_ebs.*.id[count.index]}"
-  instance_id = "${aws_instance.cerberus_ec2.*.id[count.index]}"
+  volume_id   = aws_ebs_volume.cerberus_ebs[count.index].id
+  instance_id = aws_instance.cerberus_ec2[count.index].id
 }
 
 resource "aws_instance" "cerberus_ec2" {
-  count         = "${var.create ? var.number_of_instances : 0}"
-  instance_type = "${var.cerberus_instance_type}"
-  ami           = "${var.cerberus_instance_ami}"
+  count         = var.create ? var.number_of_instances : 0
+  instance_type = var.cerberus_instance_type
+  ami           = var.cerberus_instance_ami
 
-  iam_instance_profile = "${aws_iam_instance_profile.cerberus_profile.name}"
+  iam_instance_profile = aws_iam_instance_profile.cerberus_profile[0].name
 
   key_name = "${var.namespace}-${var.stage}-${var.environment}-vpc-private"
 
-  vpc_security_group_ids = ["${aws_security_group.cerberus_ec2.id}"]
+  vpc_security_group_ids = [aws_security_group.cerberus_ec2[0].id]
 
-  subnet_id = "${data.terraform_remote_state.vpc.vpc_private_subnets[count.index + 1 == length(data.terraform_remote_state.vpc.vpc_private_subnets) ? 0 : count.index + 1]}"
+  subnet_id = data.terraform_remote_state.vpc.outputs.vpc_private_subnets[count.index + 1 == length(data.terraform_remote_state.vpc.outputs.vpc_private_subnets) ? 0 : count.index + 1]
 
   # Enables termination protection. Must be set to false and applied before inctance can be removed.
-  disable_api_termination = "${var.termination_protection}"
+  disable_api_termination = var.termination_protection
   monitoring              = true
   ebs_optimized           = true
 
-  tags = "${merge(local.tags, map("Name", format("${local.module_prefix}-%d", count.index + 1), "Schedule", format("%s", var.schedule)))}"
+  tags = merge(
+    local.tags,
+    {
+      "Name"     = format("${local.module_prefix}-%d", count.index + 1)
+      "Schedule" = format("%s", var.schedule)
+    },
+  )
 
   lifecycle {
-    ignore_changes = ["tags.%", "tags.Schedule", "tags.ScheduleStatus", "tags.ScheduleTimestamp"]
+    ignore_changes = [
+      tags,
+      tags.Schedule,
+      tags.ScheduleStatus,
+      tags.ScheduleTimestamp,
+    ]
   }
 }
 
 resource "aws_ssm_association" "domain_join" {
-  count = "${var.create && var.add_instance_to_ad ? var.number_of_instances : 0}"
+  count = var.create && var.add_instance_to_ad ? var.number_of_instances : 0
   name  = "AWS-JoinDirectoryServiceDomain"
 
-  instance_id = "${aws_instance.cerberus_ec2.*.id[count.index]}"
+  instance_id = aws_instance.cerberus_ec2[count.index].id
 
-  parameters {
-    directoryId   = "${data.terraform_remote_state.vpc.ds_directory_id}"
-    directoryName = "${data.terraform_remote_state.vpc.ds_domain_name}"
-    directoryOU   = "${var.directory_ou}"
+  parameters = {
+    directoryId   = data.terraform_remote_state.vpc.outputs.ds_directory_id
+    directoryName = data.terraform_remote_state.vpc.outputs.ds_domain_name
+    directoryOU   = var.directory_ou
   }
 }
 
 resource "aws_route53_record" "cerberus_ec2" {
-  count    = "${var.create ? var.number_of_instances : 0}"
-  provider = "aws.master"
+  count    = var.create ? var.number_of_instances : 0
+  provider = aws.master
 
-  zone_id = "${data.terraform_remote_state.vpc.vpc_dns_zone_id}"
-  name    = "${var.name}-${format("%d", count.index + 1 )}"
+  zone_id = data.terraform_remote_state.vpc.outputs.vpc_dns_zone_id
+  name    = "${var.name}-${format("%d", count.index + 1)}"
   type    = "CNAME"
   ttl     = "30"
-  records = ["${aws_instance.cerberus_ec2.*.private_dns[count.index]}"]
+  records = [aws_instance.cerberus_ec2[count.index].private_dns]
 }
 
 # ALB & resources
 
 resource "aws_security_group" "cerberus_alb" {
-  count       = "${var.create ? 1 : 0 }"
+  count       = var.create ? 1 : 0
   name        = "${local.module_prefix}-alb"
   description = "${var.desc_prefix} Controls traffic to ALB"
-  vpc_id      = "${data.terraform_remote_state.vpc.vpc_id}"
+  vpc_id      = data.terraform_remote_state.vpc.outputs.vpc_id
 
   ingress {
     from_port   = "80"
@@ -349,63 +383,76 @@ resource "aws_security_group" "cerberus_alb" {
     description = "${var.desc_prefix} Allow All"
   }
 
-  tags = "${merge(local.tags, map("Name", "${local.module_prefix}-alb"))}"
+  tags = merge(
+    local.tags,
+    {
+      "Name" = "${local.module_prefix}-alb"
+    },
+  )
 }
 
 resource "aws_lb" "cerberus_alb" {
-  count = "${var.create && var.enable_https ? 1 : 0 }"
+  count = var.create && var.enable_https ? 1 : 0
 
   name               = "${local.module_prefix}-alb"
   internal           = "false"
   load_balancer_type = "application"
-  security_groups    = ["${aws_security_group.cerberus_alb.id}"]
-  subnets            = ["${data.terraform_remote_state.vpc.vpc_public_subnets}"]
-  idle_timeout       = "60"
+  security_groups    = [aws_security_group.cerberus_alb[0].id]
+  # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
+  # force an interpolation expression to be interpreted as a list by wrapping it
+  # in an extra set of list brackets. That form was supported for compatibility in
+  # v0.11, but is no longer supported in Terraform v0.12.
+  #
+  # If the expression in the following list itself returns a list, remove the
+  # brackets to avoid interpretation as a list of lists. If the expression
+  # returns a single list item then leave it as-is and remove this TODO comment.
+  subnets      = data.terraform_remote_state.vpc.outputs.vpc_public_subnets
+  idle_timeout = "60"
 
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 resource "aws_lb_target_group" "cerberus_alb_target_group" {
-  count = "${var.create && var.enable_https ? 1 : 0 }"
+  count = var.create && var.enable_https ? 1 : 0
 
   name                 = "${local.module_prefix}-${lower(var.alb_target_group_protocol)}"
-  port                 = "${var.alb_target_group_port}"
-  protocol             = "${var.alb_target_group_protocol}"
-  vpc_id               = "${data.terraform_remote_state.vpc.vpc_id}"
+  port                 = var.alb_target_group_port
+  protocol             = var.alb_target_group_protocol
+  vpc_id               = data.terraform_remote_state.vpc.outputs.vpc_id
   target_type          = "instance"
   deregistration_delay = "300"
 
   health_check {
     path                = "/login"
-    protocol            = "${var.alb_target_group_protocol}"
-    timeout             = "${var.https_health_check_timeout}"
-    healthy_threshold   = "${var.https_health_check_threshold}"
-    unhealthy_threshold = "${var.https_health_check_threshold}"
-    interval            = "${var.https_health_check_interval}"
+    protocol            = var.alb_target_group_protocol
+    timeout             = var.https_health_check_timeout
+    healthy_threshold   = var.https_health_check_threshold
+    unhealthy_threshold = var.https_health_check_threshold
+    interval            = var.https_health_check_interval
     matcher             = "200"
   }
 
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 resource "aws_lb_listener" "cerberus_https" {
-  count             = "${var.create && var.enable_https ? 1 : 0 }"
-  load_balancer_arn = "${aws_lb.cerberus_alb.arn}"
+  count             = var.create && var.enable_https ? 1 : 0
+  load_balancer_arn = aws_lb.cerberus_alb[0].arn
   port              = "443"
   protocol          = "HTTPS"
 
   ssl_policy      = "ELBSecurityPolicy-2016-08"
-  certificate_arn = "${var.alb_ssl_certificate}"
+  certificate_arn = var.alb_ssl_certificate
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.cerberus_alb_target_group.arn}"
+    target_group_arn = aws_lb_target_group.cerberus_alb_target_group[0].arn
     type             = "forward"
   }
 }
 
 resource "aws_lb_listener" "cerberus_http" {
-  count             = "${var.create && var.enable_https ? 1 : 0 }"
-  load_balancer_arn = "${aws_lb.cerberus_alb.arn}"
+  count             = var.create && var.enable_https ? 1 : 0
+  load_balancer_arn = aws_lb.cerberus_alb[0].arn
   port              = "80"
   protocol          = "HTTP"
 
@@ -421,90 +468,98 @@ resource "aws_lb_listener" "cerberus_http" {
 }
 
 resource "aws_lb_target_group_attachment" "cerberus" {
-  count            = "${var.create && var.enable_https ? var.number_of_instances : 0}"
-  target_group_arn = "${aws_lb_target_group.cerberus_alb_target_group.arn}"
-  target_id        = "${aws_instance.cerberus_ec2.*.id[count.index]}"
+  count            = var.create && var.enable_https ? var.number_of_instances : 0
+  target_group_arn = aws_lb_target_group.cerberus_alb_target_group[0].arn
+  target_id        = aws_instance.cerberus_ec2[count.index].id
 }
 
 data "aws_route53_zone" "public" {
-  provider = "aws.master"
-  name     = "${var.parent_domain_name}"
+  provider = aws.master
+  name     = var.parent_domain_name
 }
 
 resource "aws_route53_record" "cerberus_alb" {
-  count    = "${var.create && var.enable_https ? 1 : 0 }"
-  provider = "aws.master"
+  count    = var.create && var.enable_https ? 1 : 0
+  provider = aws.master
 
-  zone_id = "${data.aws_route53_zone.public.zone_id}"
+  zone_id = data.aws_route53_zone.public.zone_id
   name    = "transfer"
   type    = "CNAME"
   ttl     = "30"
-  records = ["${aws_lb.cerberus_alb.dns_name}"]
+  records = [aws_lb.cerberus_alb[0].dns_name]
 }
 
 # NLB & resources
 
 resource "aws_lb" "cerberus_nlb" {
-  count = "${var.create && var.enable_sftp ? 1 : 0 }"
+  count = var.create && var.enable_sftp ? 1 : 0
 
   name                             = "${local.module_prefix}-nlb"
   internal                         = "false"
   load_balancer_type               = "network"
   enable_cross_zone_load_balancing = "true"
-  subnets                          = ["${data.terraform_remote_state.vpc.vpc_public_subnets}"]
-  idle_timeout                     = "60"
+  # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
+  # force an interpolation expression to be interpreted as a list by wrapping it
+  # in an extra set of list brackets. That form was supported for compatibility in
+  # v0.11, but is no longer supported in Terraform v0.12.
+  #
+  # If the expression in the following list itself returns a list, remove the
+  # brackets to avoid interpretation as a list of lists. If the expression
+  # returns a single list item then leave it as-is and remove this TODO comment.
+  subnets      = data.terraform_remote_state.vpc.outputs.vpc_public_subnets
+  idle_timeout = "60"
 
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 resource "aws_lb_target_group" "cerberus_nlb_sftp_target_group" {
-  count = "${var.create && var.enable_sftp ? 1 : 0 }"
+  count = var.create && var.enable_sftp ? 1 : 0
 
   name                 = "${local.module_prefix}-sftp"
   port                 = "22"
   protocol             = "TCP"
-  vpc_id               = "${data.terraform_remote_state.vpc.vpc_id}"
+  vpc_id               = data.terraform_remote_state.vpc.outputs.vpc_id
   target_type          = "instance"
   deregistration_delay = "300"
 
   health_check {
     port                = "traffic-port"
     protocol            = "TCP"
-    healthy_threshold   = "${var.sftp_health_check_threshold}"
-    unhealthy_threshold = "${var.sftp_health_check_threshold}"
-    interval            = "${var.sftp_health_check_interval}"
+    healthy_threshold   = var.sftp_health_check_threshold
+    unhealthy_threshold = var.sftp_health_check_threshold
+    interval            = var.sftp_health_check_interval
   }
 
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 resource "aws_lb_listener" "cerberus_sftp" {
-  count             = "${var.create && var.enable_sftp ? 1 : 0 }"
-  load_balancer_arn = "${aws_lb.cerberus_nlb.arn}"
+  count             = var.create && var.enable_sftp ? 1 : 0
+  load_balancer_arn = aws_lb.cerberus_nlb[0].arn
   port              = "22"
   protocol          = "TCP"
 
   default_action {
-    target_group_arn = "${aws_lb_target_group.cerberus_nlb_sftp_target_group.arn}"
+    target_group_arn = aws_lb_target_group.cerberus_nlb_sftp_target_group[0].arn
     type             = "forward"
   }
 }
 
 resource "aws_lb_target_group_attachment" "cerberus_sftp" {
-  count            = "${var.create && var.enable_sftp ? var.number_of_instances : 0}"
-  target_group_arn = "${aws_lb_target_group.cerberus_nlb_sftp_target_group.arn}"
-  target_id        = "${aws_instance.cerberus_ec2.*.id[count.index]}"
+  count            = var.create && var.enable_sftp ? var.number_of_instances : 0
+  target_group_arn = aws_lb_target_group.cerberus_nlb_sftp_target_group[0].arn
+  target_id        = aws_instance.cerberus_ec2[count.index].id
 }
 
 resource "aws_route53_record" "cerberus_nlb" {
-  count    = "${var.create && var.enable_sftp ? 1 : 0 }"
-  provider = "aws.master"
+  count    = var.create && var.enable_sftp ? 1 : 0
+  provider = aws.master
 
-  zone_id = "${data.aws_route53_zone.public.zone_id}"
+  zone_id = data.aws_route53_zone.public.zone_id
   name    = "sftp"
   type    = "CNAME"
   ttl     = "30"
-  records = ["${aws_lb.cerberus_nlb.dns_name}"]
+  records = [aws_lb.cerberus_nlb[0].dns_name]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -512,82 +567,83 @@ resource "aws_route53_record" "cerberus_nlb" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "ec2_security_group_name" {
-  value = "${join("", aws_security_group.cerberus_ec2.*.name)}"
+  value = join("", aws_security_group.cerberus_ec2.*.name)
 }
 
 output "ec2_security_group_id" {
-  value = "${join("", aws_security_group.cerberus_ec2.*.id)}"
+  value = join("", aws_security_group.cerberus_ec2.*.id)
 }
 
 output "ec2_iam_role_name" {
-  value = "${join("", aws_iam_role.cerberus_ec2.*.name)}"
+  value = join("", aws_iam_role.cerberus_ec2.*.name)
 }
 
 output "ec2_ebs_volume_id" {
-  value = "${aws_ebs_volume.cerberus_ebs.*.id}"
+  value = aws_ebs_volume.cerberus_ebs.*.id
 }
 
 output "ec2_instance_id" {
-  value = "${aws_instance.cerberus_ec2.*.id}"
+  value = aws_instance.cerberus_ec2.*.id
 }
 
 output "ec2_instance_private_ip" {
-  value = "${aws_instance.cerberus_ec2.*.private_ip}"
+  value = aws_instance.cerberus_ec2.*.private_ip
 }
 
 output "ec2_instance_private_dns" {
-  value = "${aws_instance.cerberus_ec2.*.private_dns}"
+  value = aws_instance.cerberus_ec2.*.private_dns
 }
 
 output "ec2_instance_key_pair_name" {
-  value = "${aws_instance.cerberus_ec2.*.key_name}"
+  value = aws_instance.cerberus_ec2.*.key_name
 }
 
 output "ec2_instance_route53_dns" {
-  value = "${aws_route53_record.cerberus_ec2.*.name}"
+  value = aws_route53_record.cerberus_ec2.*.name
 }
 
 output "alb_security_group_name" {
-  value = "${join("", aws_security_group.cerberus_alb.*.name)}"
+  value = join("", aws_security_group.cerberus_alb.*.name)
 }
 
 output "alb_security_group_id" {
-  value = "${join("", aws_security_group.cerberus_alb.*.id)}"
+  value = join("", aws_security_group.cerberus_alb.*.id)
 }
 
 output "alb_id" {
-  value = "${join("", aws_lb.cerberus_alb.*.id)}"
+  value = join("", aws_lb.cerberus_alb.*.id)
 }
 
 output "alb_dns_name" {
-  value = "${join("", aws_lb.cerberus_alb.*.dns_name)}"
+  value = join("", aws_lb.cerberus_alb.*.dns_name)
 }
 
 output "alb_instance_route53_dns" {
-  value = "${join("", aws_route53_record.cerberus_alb.*.name)}"
+  value = join("", aws_route53_record.cerberus_alb.*.name)
 }
 
 output "alb_instance_route53_dns_fqdn" {
-  value = "${join("", aws_route53_record.cerberus_alb.*.fqdn)}"
+  value = join("", aws_route53_record.cerberus_alb.*.fqdn)
 }
 
 output "nlb_id" {
-  value = "${join("", aws_lb.cerberus_nlb.*.id)}"
+  value = join("", aws_lb.cerberus_nlb.*.id)
 }
 
 output "nlb_dns_name" {
-  value = "${join("", aws_lb.cerberus_nlb.*.dns_name)}"
+  value = join("", aws_lb.cerberus_nlb.*.dns_name)
 }
 
 output "nlb_instance_route53_dns" {
-  value = "${join("", aws_route53_record.cerberus_nlb.*.name)}"
+  value = join("", aws_route53_record.cerberus_nlb.*.name)
 }
 
 output "nlb_instance_route53_dns_fqdn" {
-  value = "${join("", aws_route53_record.cerberus_nlb.*.fqdn)}"
+  value = join("", aws_route53_record.cerberus_nlb.*.fqdn)
 }
 
 output "cerberus_key_arn" {
-  value       = "${module.cerberus_kms_key.key_arn}"
+  value       = module.cerberus_kms_key.key_arn
   description = "Key ARN for Cerberus"
 }
+

@@ -14,7 +14,7 @@ data "aws_iam_policy_document" "billing_view_access" {
 
 resource "aws_iam_policy" "billing_view_access" {
   name   = "${var.name_prefix}-billing-view-access"
-  policy = "${data.aws_iam_policy_document.billing_view_access.json}"
+  policy = data.aws_iam_policy_document.billing_view_access.json
 }
 
 resource "aws_iam_group" "billing_viewers" {
@@ -23,36 +23,36 @@ resource "aws_iam_group" "billing_viewers" {
 }
 
 resource "aws_iam_group_policy_attachment" "billing_viewers" {
-  group      = "${aws_iam_group.billing_viewers.name}"
-  policy_arn = "${aws_iam_policy.billing_view_access.arn}"
+  group      = aws_iam_group.billing_viewers.name
+  policy_arn = aws_iam_policy.billing_view_access.arn
 }
-
 
 data "aws_iam_policy_document" "trusted_entities" {
   statement {
-    actions   = ["sts:AssumeRole"]
+    actions = ["sts:AssumeRole"]
     principals {
-        type = "AWS",
-        identifiers = ["${local.aws_trusted_entities}"]
+      type        = "AWS"
+      identifiers = local.aws_trusted_entities
     }
   }
   statement {
-    actions   = ["sts:AssumeRoleWithSAML"]
+    actions = ["sts:AssumeRoleWithSAML"]
     principals {
-        type = "Federated",
-        identifiers = ["${local.federated_trusted_entities}"]
+      type        = "Federated"
+      identifiers = local.federated_trusted_entities
     }
   }
 }
 
 resource "aws_iam_role" "billing_viewer" {
-  count = "${var.allow_gravicore_access ? 1 : 0}"
-  name  = "${var.name_prefix}-billing-viewer"
-  assume_role_policy = "${data.template_file.assume_role_policy.rendered}"
+  count              = var.allow_gravicore_access ? 1 : 0
+  name               = "${var.name_prefix}-billing-viewer"
+  assume_role_policy = data.template_file.assume_role_policy.rendered
 }
 
 resource "aws_iam_role_policy_attachment" "billing_viewer" {
-  count = "${var.allow_gravicore_access ? 1 : 0}"
-  role       = "${aws_iam_role.billing_viewer.name}"
-  policy_arn = "${aws_iam_policy.billing_view_access.arn}"
+  count      = var.allow_gravicore_access ? 1 : 0
+  role       = aws_iam_role.billing_viewer[0].name
+  policy_arn = aws_iam_policy.billing_view_access.arn
 }
+

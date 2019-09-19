@@ -12,17 +12,17 @@ resource "aws_s3_bucket" "public" {
   }
 
   logging {
-    target_bucket = "${aws_s3_bucket.log.id}"
+    target_bucket = aws_s3_bucket.log.id
     target_prefix = "prd/s3/public-bucket/"
   }
 
-  tags = "${merge(
-    var.common_tags, 
-    map(
-      "Name" , "${local.name_prefix}-s3-public",
-      "resource", "s3-public"
-    )
-  )}"
+  tags = merge(
+    var.common_tags,
+    {
+      "Name"     = "${local.name_prefix}-s3-public"
+      "resource" = "s3-public"
+    },
+  )
 }
 
 # S3 Logging bucket
@@ -81,11 +81,14 @@ resource "aws_s3_bucket" "log" {
     ]
 }
 POLICY
-  tags = "${merge(
-    var.common_tags, 
-    map(
-      "Name" , "${local.name_prefix}-s3-log",
-      "resource", "s3-log"
-    )
-  )}"
+
+
+  tags = merge(
+    var.common_tags,
+    {
+      "Name"     = "${local.name_prefix}-s3-log"
+      "resource" = "s3-log"
+    },
+  )
 }
+

@@ -18,10 +18,11 @@ variable "family" {
 variable "parameters" {
   description = "A list of DB parameter maps to apply"
   default     = []
+  type        = list(map(string))
 }
 
 variable "tags" {
-  type        = "map"
+  type        = map(string)
   description = "A mapping of tags to assign to the resource"
   default     = {}
 }
@@ -31,15 +32,27 @@ variable "tags" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_db_parameter_group" "this" {
-  count = "${var.create ? 1 : 0}"
+  count = var.create ? 1 : 0
 
-  name        = "${var.module_prefix}"
+  name        = var.module_prefix
   description = "Default database parameter group"
-  family      = "${var.family}"
+  family      = var.family
 
-  parameter = ["${var.parameters}"]
+  dynamic "parameter" {
+    for_each = var.parameters
+    content {
+      name         = parameter.value.name
+      value        = parameter.value.value
+      apply_method = lookup(parameter.value, "apply_method", null)
+    }
+  }
 
-  tags = "${merge(var.tags, map("Name", "Default parameter group"))}"
+  tags = merge(
+    var.tags,
+    {
+      "Name" = "Default parameter group"
+    },
+  )
 
   lifecycle {
     create_before_destroy = true
@@ -52,10 +65,11 @@ resource "aws_db_parameter_group" "this" {
 
 output "this_db_parameter_group_id" {
   description = "The db parameter group id"
-  value       = "${element(split(",", join(",", aws_db_parameter_group.this.*.id)), 0)}"
+  value       = element(split(",", join(",", aws_db_parameter_group.this.*.id)), 0)
 }
 
 output "this_db_parameter_group_arn" {
   description = "The ARN of the db parameter group"
-  value       = "${element(split(",", join(",", aws_db_parameter_group.this.*.arn)), 0)}"
+  value       = element(split(",", join(",", aws_db_parameter_group.this.*.arn)), 0)
 }
+

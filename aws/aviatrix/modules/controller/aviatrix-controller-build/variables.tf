@@ -2,13 +2,17 @@ variable "num_controllers" {
   default = 1
 }
 
-variable "vpc" {}
+variable "vpc" {
+}
 
-variable "subnet" {}
+variable "subnet" {
+}
 
-variable "keypair" {}
+variable "keypair" {
+}
 
-variable "ec2role" {}
+variable "ec2role" {
+}
 
 #
 # Defaults
@@ -24,7 +28,7 @@ variable "root_volume_type" {
 }
 
 variable "incoming_ssl_cidr" {
-  type    = "list"
+  type    = list(string)
   default = ["0.0.0.0/0"]
 }
 
@@ -44,10 +48,11 @@ variable "tags" {
   default = {}
 }
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+}
 
 locals {
-  name_prefix = "${var.name_prefix != "" ? "${var.name_prefix}-" : ""}"
+  name_prefix = var.name_prefix != "" ? "${var.name_prefix}-" : ""
 
   images_metered = {
     us-east-1      = "ami-df74f6a0"
@@ -86,5 +91,6 @@ locals {
     us-gov-west-1  = "ami-30890051"
   }
 
-  ami_id = "${var.type == "metered" ? local.images_metered[data.aws_region.current.name] : local.images_byol[data.aws_region.current.name]}"
+  ami_id = var.type == "metered" ? local.images_metered[data.aws_region.current.name] : local.images_byol[data.aws_region.current.name]
 }
+

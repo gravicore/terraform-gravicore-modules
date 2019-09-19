@@ -7,14 +7,14 @@ variable "name" {
 }
 
 variable "create" {
-  default = "true"
+  default = true
 }
 
 variable "aws_region" {
   default = "us-east-1"
 }
 
-variable terraform_module {
+variable "terraform_module" {
   default = "gravicore/terraform-gravicore-modules/aws/rds"
 }
 
@@ -69,7 +69,7 @@ variable "major_engine_version" {
 }
 
 variable "options" {
-  type        = "list"
+  type        = list(string)
   description = "A list of Options to apply"
   default     = []
 }
@@ -84,9 +84,9 @@ variable "kms_key_id" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "rds_backup_restore" {
-  count  = "${var.create ? 1 : 0}"
+  count  = var.create ? 1 : 0
   bucket = "${var.module_prefix}-rds"
-  region = "${var.aws_region}"
+  region = var.aws_region
   acl    = "private"
 
   versioning {
@@ -96,13 +96,13 @@ resource "aws_s3_bucket" "rds_backup_restore" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        kms_master_key_id = "${var.kms_key_id}"
+        kms_master_key_id = var.kms_key_id
         sse_algorithm     = "aws:kms"
       }
     }
   }
 
-  tags = "${var.tags}"
+  tags = var.tags
 }
 
 data "aws_iam_policy_document" "rds_backup_restore_trust" {
@@ -117,16 +117,16 @@ data "aws_iam_policy_document" "rds_backup_restore_trust" {
 }
 
 resource "aws_iam_role" "rds_backup_restore" {
-  count              = "${var.create ? 1 : 0}"
+  count              = var.create ? 1 : 0
   name               = "${var.module_prefix}-${var.engine_name}-${replace(var.major_engine_version, ".", "-")}-backup-restore"
   description        = "Gravicore Module: Role to allow RDS to access S3 for DB backup and restore purposes"
-  assume_role_policy = "${data.aws_iam_policy_document.rds_backup_restore_trust.json}"
+  assume_role_policy = data.aws_iam_policy_document.rds_backup_restore_trust.json
 
-  tags = "${var.tags}"
+  tags = var.tags
 }
 
 data "aws_iam_policy_document" "rds_backup_restore" {
-  count = "${var.create ? 1 : 0}"
+  count = var.create ? 1 : 0
 
   statement {
     actions = [
@@ -136,7 +136,7 @@ data "aws_iam_policy_document" "rds_backup_restore" {
       "kms:Decrypt",
     ]
 
-    resources = ["${var.kms_key_id}"]
+    resources = [var.kms_key_id]
   }
 
   statement {
@@ -145,7 +145,7 @@ data "aws_iam_policy_document" "rds_backup_restore" {
       "s3:GetBucketLocation",
     ]
 
-    resources = ["${aws_s3_bucket.rds_backup_restore.arn}"]
+    resources = [aws_s3_bucket.rds_backup_restore[0].arn]
   }
 
   statement {
@@ -157,40 +157,36 @@ data "aws_iam_policy_document" "rds_backup_restore" {
       "s3:AbortMultipartUpload",
     ]
 
-    resources = ["${aws_s3_bucket.rds_backup_restore.arn}/*"]
+    resources = ["${aws_s3_bucket.rds_backup_restore[0].arn}/*"]
   }
 }
 
 resource "aws_iam_role_policy" "rds_backup_restore" {
-  count = "${var.create ? 1 : 0}"
+  count = var.create ? 1 : 0
   name  = "rds-backup-restore-policy"
-  role  = "${aws_iam_role.rds_backup_restore.id}"
+  role  = aws_iam_role.rds_backup_restore[0].id
 
-  policy = "${data.aws_iam_policy_document.rds_backup_restore.json}"
+  policy = data.aws_iam_policy_document.rds_backup_restore[0].json
 }
 
 resource "aws_db_option_group" "this" {
-  count = "${var.create ? 1 : 0}"
+  count = var.create ? 1 : 0
 
   name                     = "${var.module_prefix}-${var.engine_name}-${replace(var.major_engine_version, ".", "-")}"
-  option_group_description = "${var.option_group_description == "" ? format("Option group for %s", var.identifier) : var.option_group_description}"
-  engine_name              = "${var.engine_name}"
-  major_engine_version     = "${var.major_engine_version}"
+  option_group_description = var.option_group_description == "" ? format("Option group for %s", var.identifier) : var.option_group_description
+  engine_name              = var.engine_name
+  major_engine_version     = var.major_engine_version
 
-  option = [
-    {
-      option_name = "SQLSERVER_BACKUP_RESTORE"
+  option {
+    option_name = "SQLSERVER_BACKUP_RESTORE"
 
-      option_settings = [
-        {
-          name  = "IAM_ROLE_ARN"
-          value = "${aws_iam_role.rds_backup_restore.arn}"
-        },
-      ]
-    },
-  ]
+    option_settings {
+      name  = "IAM_ROLE_ARN"
+      value = aws_iam_role.rds_backup_restore[0].arn
+    }
+  }
 
-  tags = "${var.tags}"
+  tags = var.tags
 
   lifecycle {
     create_before_destroy = true
@@ -203,10 +199,11 @@ resource "aws_db_option_group" "this" {
 
 output "this_db_option_group_id" {
   description = "The db option group id"
-  value       = "${element(split(",", join(",", aws_db_option_group.this.*.id)), 0)}"
+  value       = element(split(",", join(",", aws_db_option_group.this.*.id)), 0)
 }
 
 output "this_db_option_group_arn" {
   description = "The ARN of the db option group"
-  value       = "${element(split(",", join(",", aws_db_option_group.this.*.arn)), 0)}"
+  value       = element(split(",", join(",", aws_db_option_group.this.*.arn)), 0)
 }
+
