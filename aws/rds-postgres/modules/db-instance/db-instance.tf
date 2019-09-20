@@ -22,7 +22,8 @@ variable "repository" {
   default = ""
 }
 
-variable "module_prefix" {}
+variable "module_prefix" {
+}
 
 variable "create" {
   description = "Whether to create this resource or not?"
@@ -32,6 +33,7 @@ variable "create" {
 variable "identifier" {
   description = "The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier"
   default     = []
+  type        = list(string)
 }
 
 variable "allocated_storage" {
@@ -109,7 +111,7 @@ variable "final_snapshot_identifier" {
 
 variable "vpc_security_group_ids" {
   description = "List of VPC security groups to associate"
-  default     = []
+  type        = set(string)
 }
 
 variable "db_subnet_group_name" {
@@ -220,7 +222,7 @@ variable "schedule" {
 }
 
 locals {
-  is_mssql = "${element(split("-",var.engine), 0) == "sqlserver"}"
+  is_mssql = element(split("-", var.engine), 0) == "sqlserver"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -228,71 +230,88 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "enhanced_monitoring" {
-  count = "${var.create_monitoring_role ? 1 : 0}"
+  count = var.create_monitoring_role ? 1 : 0
 
-  name               = "${var.monitoring_role_name}"
-  assume_role_policy = "${file("${path.module}/policy/enhancedmonitoring.json")}"
+  name               = var.monitoring_role_name
+  assume_role_policy = file("${path.module}/policy/enhancedmonitoring.json")
 }
 
 resource "aws_iam_role_policy_attachment" "enhanced_monitoring" {
-  count = "${var.create_monitoring_role ? 1 : 0}"
+  count = var.create_monitoring_role ? 1 : 0
 
-  role       = "${aws_iam_role.enhanced_monitoring.name}"
+  role       = aws_iam_role.enhanced_monitoring[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 }
 
 resource "aws_db_instance" "this" {
-  count = "${var.create && !local.is_mssql ? length(var.identifier) : 0}"
+  count = var.create && false == local.is_mssql ? length(var.identifier) : 0
 
   identifier = "${var.module_prefix}-${element(var.identifier, count.index)}"
 
-  engine            = "${var.engine}"
-  engine_version    = "${var.engine_version}"
-  instance_class    = "${var.instance_class}"
-  allocated_storage = "${var.allocated_storage}"
-  storage_type      = "${var.storage_type}"
-  storage_encrypted = "${var.storage_encrypted}"
-  kms_key_id        = "${var.kms_key_id}"
-  license_model     = "${var.license_model}"
+  engine            = var.engine
+  engine_version    = var.engine_version
+  instance_class    = var.instance_class
+  allocated_storage = var.allocated_storage
+  storage_type      = var.storage_type
+  storage_encrypted = var.storage_encrypted
+  kms_key_id        = var.kms_key_id
+  license_model     = var.license_model
 
-  name                                = "${var.name}"
-  username                            = "${var.username}"
-  password                            = "${var.password}"
-  port                                = "${var.port}"
-  iam_database_authentication_enabled = "${var.iam_database_authentication_enabled}"
+  name                                = var.name
+  username                            = var.username
+  password                            = var.password
+  port                                = var.port
+  iam_database_authentication_enabled = var.iam_database_authentication_enabled
 
-  replicate_source_db = "${var.replicate_source_db}"
+  replicate_source_db = var.replicate_source_db
 
-  snapshot_identifier = "${var.snapshot_identifier}"
+  snapshot_identifier = var.snapshot_identifier
 
-  vpc_security_group_ids = ["${var.vpc_security_group_ids}"]
-  db_subnet_group_name   = "${var.db_subnet_group_name}"
-  parameter_group_name   = "${var.parameter_group_name}"
+  vpc_security_group_ids = var.vpc_security_group_ids
+  db_subnet_group_name   = var.db_subnet_group_name
+  parameter_group_name   = var.parameter_group_name
 
-  availability_zone   = "${var.availability_zone}"
-  multi_az            = "${var.multi_az}"
-  iops                = "${var.iops}"
-  publicly_accessible = "${var.publicly_accessible}"
-  monitoring_interval = "${var.monitoring_interval}"
-  monitoring_role_arn = "${coalesce(var.monitoring_role_arn, join("", aws_iam_role.enhanced_monitoring.*.arn))}"
+  availability_zone   = var.availability_zone
+  multi_az            = var.multi_az
+  iops                = var.iops
+  publicly_accessible = var.publicly_accessible
+  monitoring_interval = var.monitoring_interval
+  monitoring_role_arn = coalesce(
+    var.monitoring_role_arn,
+    join("", aws_iam_role.enhanced_monitoring.*.arn),
+  )
 
-  allow_major_version_upgrade = "${var.allow_major_version_upgrade}"
-  auto_minor_version_upgrade  = "${var.auto_minor_version_upgrade}"
-  apply_immediately           = "${var.apply_immediately}"
-  maintenance_window          = "${var.maintenance_window}"
-  skip_final_snapshot         = "${var.skip_final_snapshot}"
-  copy_tags_to_snapshot       = "${var.copy_tags_to_snapshot}"
+  allow_major_version_upgrade = var.allow_major_version_upgrade
+  auto_minor_version_upgrade  = var.auto_minor_version_upgrade
+  apply_immediately           = var.apply_immediately
+  maintenance_window          = var.maintenance_window
+  skip_final_snapshot         = var.skip_final_snapshot
+  copy_tags_to_snapshot       = var.copy_tags_to_snapshot
   final_snapshot_identifier   = "${var.module_prefix}-${element(var.identifier, count.index)}-${var.final_snapshot_identifier}"
 
-  backup_retention_period = "${var.backup_retention_period}"
-  backup_window           = "${var.backup_window}"
+  backup_retention_period = var.backup_retention_period
+  backup_window           = var.backup_window
 
-  character_set_name = "${var.character_set_name}"
+  character_set_name = var.character_set_name
 
-  tags = "${merge(var.tags, map("Name", format("${var.module_prefix}-%s", element(var.identifier, count.index)), "Schedule", format("%s", var.schedule)))}"
+  tags = merge(
+    var.tags,
+    {
+      "Name" = format(
+        "${var.module_prefix}-%s",
+        element(var.identifier, count.index),
+      )
+      "Schedule" = format("%s", var.schedule)
+    },
+  )
 
   lifecycle {
-    ignore_changes = ["tags.%", "tags.Schedule", "tags.ScheduleStatus", "tags.ScheduleTimestamp"]
+    ignore_changes = [
+      tags,
+      tags.Schedule,
+      tags.ScheduleStatus,
+      tags.ScheduleTimestamp,
+    ]
   }
 }
 
@@ -301,76 +320,77 @@ resource "aws_db_instance" "this" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 locals {
-  this_db_instance_address           = "${element(concat(aws_db_instance.this.*.address, list("")), 0)}"
-  this_db_instance_arn               = "${element(concat(aws_db_instance.this.*.arn, list("")), 0)}"
-  this_db_instance_availability_zone = "${element(concat(aws_db_instance.this.*.availability_zone, list("")), 0)}"
-  this_db_instance_endpoint          = "${element(concat(aws_db_instance.this.*.endpoint, list("")), 0)}"
-  this_db_instance_hosted_zone_id    = "${element(concat(aws_db_instance.this.*.hosted_zone_id, list("")), 0)}"
-  this_db_instance_id                = "${element(concat(aws_db_instance.this.*.id, list("")), 0)}"
-  this_db_instance_resource_id       = "${element(concat(aws_db_instance.this.*.resource_id, list("")), 0)}"
-  this_db_instance_status            = "${element(concat(aws_db_instance.this.*.status, list("")), 0)}"
-  this_db_instance_name              = "${element(concat(aws_db_instance.this.*.name, list("")), 0)}"
-  this_db_instance_username          = "${element(concat(aws_db_instance.this.*.username, list("")), 0)}"
-  this_db_instance_password          = "${element(concat(aws_db_instance.this.*.password, list("")), 0)}"
-  this_db_instance_port              = "${element(concat(aws_db_instance.this.*.port, list("")), 0)}"
+  this_db_instance_address           = element(concat(aws_db_instance.this.*.address, [""]), 0)
+  this_db_instance_arn               = element(concat(aws_db_instance.this.*.arn, [""]), 0)
+  this_db_instance_availability_zone = element(concat(aws_db_instance.this.*.availability_zone, [""]), 0)
+  this_db_instance_endpoint          = element(concat(aws_db_instance.this.*.endpoint, [""]), 0)
+  this_db_instance_hosted_zone_id    = element(concat(aws_db_instance.this.*.hosted_zone_id, [""]), 0)
+  this_db_instance_id                = element(concat(aws_db_instance.this.*.id, [""]), 0)
+  this_db_instance_resource_id       = element(concat(aws_db_instance.this.*.resource_id, [""]), 0)
+  this_db_instance_status            = element(concat(aws_db_instance.this.*.status, [""]), 0)
+  this_db_instance_name              = element(concat(aws_db_instance.this.*.name, [""]), 0)
+  this_db_instance_username          = element(concat(aws_db_instance.this.*.username, [""]), 0)
+  this_db_instance_password          = element(concat(aws_db_instance.this.*.password, [""]), 0)
+  this_db_instance_port              = element(concat(aws_db_instance.this.*.port, [""]), 0)
 }
 
 output "this_db_instance_address" {
   description = "The address of the RDS instance"
-  value       = "${local.this_db_instance_address}"
+  value       = local.this_db_instance_address
 }
 
 output "this_db_instance_arn" {
   description = "The ARN of the RDS instance"
-  value       = "${local.this_db_instance_arn}"
+  value       = local.this_db_instance_arn
 }
 
 output "this_db_instance_availability_zone" {
   description = "The availability zone of the RDS instance"
-  value       = "${local.this_db_instance_availability_zone}"
+  value       = local.this_db_instance_availability_zone
 }
 
 output "this_db_instance_endpoint" {
   description = "The connection endpoint"
-  value       = "${local.this_db_instance_endpoint}"
+  value       = local.this_db_instance_endpoint
 }
 
 output "this_db_instance_hosted_zone_id" {
   description = "The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)"
-  value       = "${local.this_db_instance_hosted_zone_id}"
+  value       = local.this_db_instance_hosted_zone_id
 }
 
 output "this_db_instance_id" {
   description = "The RDS instance ID"
-  value       = "${local.this_db_instance_id}"
+  value       = local.this_db_instance_id
 }
 
 output "this_db_instance_resource_id" {
   description = "The RDS Resource ID of this instance"
-  value       = "${local.this_db_instance_resource_id}"
+  value       = local.this_db_instance_resource_id
 }
 
 output "this_db_instance_status" {
   description = "The RDS instance status"
-  value       = "${local.this_db_instance_status}"
+  value       = local.this_db_instance_status
 }
 
 output "this_db_instance_name" {
   description = "The database name"
-  value       = "${local.this_db_instance_name}"
+  value       = local.this_db_instance_name
 }
 
 output "this_db_instance_username" {
   description = "The master username for the database"
-  value       = "${local.this_db_instance_username}"
+  value       = local.this_db_instance_username
 }
 
 output "this_db_instance_password" {
   description = "The database password (this password may be old, because Terraform doesn't track it after initial creation)"
-  value       = "${local.this_db_instance_password}"
+  value       = local.this_db_instance_password
 }
 
 output "this_db_instance_port" {
   description = "The database port"
-  value       = "${local.this_db_instance_port}"
+  value       = local.this_db_instance_port
 }
+

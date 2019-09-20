@@ -8,27 +8,28 @@ variable "terraform_remote_state_key" {
 
 variable "namespace" {
   description = "Namespace (e.g. `grv` or `gravicore`)"
-  type        = "string"
+  type        = string
 }
 
 variable "stage" {
   description = "Stage (e.g. `prod`, `uat`, `dev`)"
-  type        = "string"
+  type        = string
 }
 
 variable "environment" {
   description = "Environment (e.g. `master`)"
-  type        = "string"
+  type        = string
 }
 
 variable "repository" {
-  type = "string"
+  type = string
 }
 
-variable "master_account_id" {}
+variable "master_account_id" {
+}
 
 variable "tags" {
-  type        = "map"
+  type        = map(string)
   default     = {}
   description = "Additional tags (e.g. map(`BusinessUnit`,`XYZ`)"
 }
@@ -62,19 +63,19 @@ variable "log_type" {
   description = "Type of log. IE flow_log"
 }
 
-variable terraform_module {
+variable "terraform_module" {
   default = "gravicore/terraform-gravicore-modules/aws/central-logging/agent/central-logging-agent-destination"
 }
 
 locals {
-  terraform_remote_state_key = "${coalesce(var.terraform_remote_state_key, "master/prd/central-logging")}"
+  terraform_remote_state_key = coalesce(var.terraform_remote_state_key, "master/prd/central-logging")
 }
 
 data "terraform_remote_state" "master_acct" {
   backend = "s3"
 
-  config {
-    region         = "${var.aws_region}"
+  config = {
+    region         = var.aws_region
     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
     encrypt        = true
     key            = "${local.terraform_remote_state_key}/terraform.tfstate"
@@ -88,34 +89,36 @@ data "terraform_remote_state" "master_acct" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_cloudformation_stack" "aws_central_logging_destination" {
-  count        = "${var.enabled == "true" ? 1 : 0}"
-  provider     = "aws.master"
+  count        = var.enabled == "true" ? 1 : 0
+  provider     = aws.master
   name         = "log-destination-${var.account_id}-${var.log_type}"
   capabilities = ["CAPABILITY_IAM"]
 
-  parameters {
-    LogBucketName       = "${data.terraform_remote_state.master_acct.log_bucket_name}"
+  parameters = {
+    LogBucketName       = data.terraform_remote_state.master_acct.outputs.log_bucket_name
     LogS3Location       = "${var.account_id}/${var.log_type}"
-    ProcessingLambdaARN = "${data.terraform_remote_state.master_acct.central_logging_lambda}"
-    SourceAccount       = "${var.account_id}"
+    ProcessingLambdaARN = data.terraform_remote_state.master_acct.outputs.central_logging_lambda
+    SourceAccount       = var.account_id
   }
 
-  template_body = "${file("${path.module}/cloudformation/aws-central-logging-destination.cft")}"
+  template_body = file(
+    "${path.module}/cloudformation/aws-central-logging-destination.cft",
+  )
 }
 
 resource "aws_cloudwatch_log_group" "default" {
-  count             = "${var.enabled == "true" ? 1 : 0}"
+  count             = var.enabled == "true" ? 1 : 0
   name              = "${local.stage_prefix}-${var.log_type}"
-  retention_in_days = "${var.retention_in_days}"
-  tags              = "${local.tags}"
+  retention_in_days = var.retention_in_days
+  tags              = local.tags
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "default" {
-  count           = "${var.enabled == "true" ? 1 : 0}"
+  count           = var.enabled == "true" ? 1 : 0
   name            = "${local.stage_prefix}-${var.log_type}"
-  log_group_name  = "${aws_cloudwatch_log_group.default.name}"
-  filter_pattern  = "${var.filter_pattern}"
-  destination_arn = "${aws_cloudformation_stack.aws_central_logging_destination.outputs["Destination"]}"
+  log_group_name  = aws_cloudwatch_log_group.default[0].name
+  filter_pattern  = var.filter_pattern
+  destination_arn = aws_cloudformation_stack.aws_central_logging_destination.0.outputs["Destination"]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -123,18 +126,25 @@ resource "aws_cloudwatch_log_subscription_filter" "default" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "log_group_name" {
-  value       = "${element(concat(aws_cloudwatch_log_group.default.*.name, list("")), 0)}"
+  value       = element(concat(aws_cloudwatch_log_group.default.*.name, [""]), 0)
   description = "ARN of the log group"
 }
 
 output "log_group_arn" {
-  value       = "${element(concat(aws_cloudwatch_log_group.default.*.arn, list("")), 0)}"
+  value       = element(concat(aws_cloudwatch_log_group.default.*.arn, [""]), 0)
   description = "The log group's Amazon Resource Name (ARN) specifying the log group"
 }
 
 output "destination_arn" {
   # value = "${aws_cloudformation_stack.aws_central_logging_destination.outputs["Destination"]}"
 
-  value       = "${element(concat(aws_cloudformation_stack.aws_central_logging_destination.*.outputs.Destination, list("")), 0)}"
+  value = element(
+    concat(
+      aws_cloudformation_stack.aws_central_logging_destination.*.outputs.Destination,
+      [""],
+    ),
+    0,
+  )
   description = "The kinesis destination's Amazon Resource Name (ARN) specifying the log group"
 }
+

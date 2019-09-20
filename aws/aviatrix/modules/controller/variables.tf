@@ -22,8 +22,11 @@ variable "repository" {
   default = ""
 }
 
-variable "master_account_id" {}
-variable "account_id" {}
+variable "master_account_id" {
+}
+
+variable "account_id" {
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
@@ -37,7 +40,7 @@ variable "aws_region" {
   default = "us-east-1"
 }
 
-variable terraform_module {
+variable "terraform_module" {
   default = "gravicore/terraform-gravicore-modules/aws/aviatrix"
 }
 
@@ -48,3 +51,4 @@ variable terraform_module {
 variable "transit_vpc_name" {
   default = "shared-vpc"
 }
+

@@ -56,17 +56,17 @@
         },
         "Description": "",
         "Enforced": "False",
-        "Timezone": "America/Denver",
+        "Timezone": "UTC",
         "Periods": [
           {
             "Description": "AlwaysOffMaintanence",
-            "BeginTime": "00:00",
-            "EndTime": "03:00",
+            "BeginTime": "07:30",
+            "EndTime": "09:15",
             "WeekDays": "Sun"
           },
           {
             "Description": "SundayMaintenance",
-            "EndTime": "03:00",
+            "EndTime": "09:00",
             "WeekDays": "Mon-Sat"
           }
         ]

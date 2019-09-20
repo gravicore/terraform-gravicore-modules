@@ -1,5 +1,5 @@
 resource "aws_iam_saml_provider" "saml_provider" {
-  count = "${var.allow_gravicore_access ? 1 : 0}"
+  count = var.allow_gravicore_access ? 1 : 0
   name  = "grv-saml-provider"
 
   saml_metadata_document = <<XML
@@ -34,11 +34,12 @@ O57MyYCnXv+hyyT2X43lyepw2Zsy+oy4LyfXjVBYH/e9</ds:X509Certificate>
   </md:IDPSSODescriptor>
 </md:EntityDescriptor>
 XML
+
 }
 
 # Gravicore SecOps Admin role
 resource "aws_iam_role" "secops_admin" {
-  count = "${var.allow_gravicore_access ? 1 : 0}"
+  count = var.allow_gravicore_access ? 1 : 0
   name  = "grv-secops-admin"
 
   assume_role_policy = <<JSON
@@ -60,12 +61,14 @@ resource "aws_iam_role" "secops_admin" {
   ]
 }
 JSON
+
 }
 
 # Gravicore SecOps Admin role
 resource "aws_iam_role_policy_attachment" "attach_secops_admin_access" {
-  count = "${var.allow_gravicore_access ? 1 : 0}"
+  count = var.allow_gravicore_access ? 1 : 0
 
-  role       = "${aws_iam_role.secops_admin.name}"
+  role       = aws_iam_role.secops_admin[0].name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
+

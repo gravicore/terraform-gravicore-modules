@@ -7,35 +7,35 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_route53_zone" "parent" {
-  count = "${var.create == "true" ? 1 : 0}"
-  name  = "${var.parent_domain_name}"
-  tags  = "${local.tags}"
+  count = var.create ? 1 : 0
+  name  = var.parent_domain_name
+  tags  = local.tags
 }
 
 resource "aws_route53_record" "parent_ns" {
-  count   = "${var.create == "true" ? 1 : 0}"
-  zone_id = "${join("", aws_route53_zone.parent.*.zone_id)}"
-  name    = "${join("", aws_route53_zone.parent.*.name)}"
+  count   = var.create ? 1 : 0
+  zone_id = join("", aws_route53_zone.parent.*.zone_id)
+  name    = join("", aws_route53_zone.parent.*.name)
   type    = "NS"
   ttl     = "60"
 
   records = [
-    "${aws_route53_zone.parent.name_servers.0}",
-    "${aws_route53_zone.parent.name_servers.1}",
-    "${aws_route53_zone.parent.name_servers.2}",
-    "${aws_route53_zone.parent.name_servers.3}",
+    aws_route53_zone.parent[0].name_servers[0],
+    aws_route53_zone.parent[0].name_servers[1],
+    aws_route53_zone.parent[0].name_servers[2],
+    aws_route53_zone.parent[0].name_servers[3],
   ]
 }
 
 resource "aws_route53_record" "parent_soa" {
-  count   = "${var.create == "true" ? 1 : 0}"
-  zone_id = "${join("", aws_route53_zone.parent.*.id)}"
-  name    = "${join("", aws_route53_zone.parent.*.name)}"
+  count   = var.create ? 1 : 0
+  zone_id = join("", aws_route53_zone.parent.*.id)
+  name    = join("", aws_route53_zone.parent.*.name)
   type    = "SOA"
   ttl     = "30"
 
   records = [
-    "${aws_route53_zone.parent.name_servers.0}. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400",
+    "${aws_route53_zone.parent[0].name_servers[0]}. awsdns-hostmaster.amazon.com. 1 7200 900 1209600 86400",
   ]
 }
 
@@ -73,9 +73,10 @@ resource "aws_route53_record" "parent_soa" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "dns_parent_zone_id" {
-  value = "${join("", aws_route53_zone.parent.*.zone_id)}"
+  value = join("", aws_route53_zone.parent.*.zone_id)
 }
 
 output "dns_parent_zone_name_servers" {
-  value = "${flatten(aws_route53_zone.parent.*.name_servers)}"
+  value = flatten(aws_route53_zone.parent.*.name_servers)
 }
+

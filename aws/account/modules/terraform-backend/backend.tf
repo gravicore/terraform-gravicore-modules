@@ -19,12 +19,13 @@ resource "aws_s3_bucket" "remote-state" {
     enabled = true
   }
 
-  tags = "${merge(
+  tags = merge(
     var.tags,
-    map(
-      "Name" , "${var.name_prefix}-remote-state",
-      "Resource", "aws_s3_bucket"
-  ))}"
+    {
+      "Name"     = "${var.name_prefix}-remote-state"
+      "Resource" = "aws_s3_bucket"
+    },
+  )
 }
 
 # DynamoDB - Terraform state lock table
@@ -39,10 +40,12 @@ resource "aws_dynamodb_table" "remote-state-lock" {
     type = "S"
   }
 
-  tags = "${merge(
+  tags = merge(
     var.tags,
-    map(
-      "Name" , "${var.name_prefix}-remote-state-lock",
-      "Resource", "aws_dynamodb_table"
-  ))}"
+    {
+      "Name"     = "${var.name_prefix}-remote-state-lock"
+      "Resource" = "aws_dynamodb_table"
+    },
+  )
 }
+
