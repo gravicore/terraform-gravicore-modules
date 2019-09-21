@@ -49,7 +49,7 @@ variable "aws_region" {
 }
 
 variable "terraform_module" {
-  default = "https://gravicore/terraform-gravicore-modules/aws/billing"
+  default = "gravicore/terraform-gravicore-modules/aws/billing"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ locals {
     repository        = var.repository
     master_account_id = var.master_account_id
     account_id        = var.account_id
-    TerraformModule   = var.terraform_module
+    terraform_module  = var.terraform_module
   }
 
   automation_tags = {}
