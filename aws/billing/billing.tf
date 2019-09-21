@@ -6,6 +6,8 @@ variable "s3_bucket_versioning" {
 resource "aws_s3_bucket" "billing" {
   count  = var.create ? 1 : 0
   bucket = local.module_prefix
+  tags   = var.tags
+
   region = var.aws_region
   acl    = "private"
 
@@ -20,7 +22,5 @@ resource "aws_s3_bucket" "billing" {
       }
     }
   }
-
-  tags = var.tags
 }
 

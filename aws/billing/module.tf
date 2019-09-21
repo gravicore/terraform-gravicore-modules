@@ -49,7 +49,7 @@ variable "aws_region" {
 }
 
 variable "terraform_module" {
-  default = "gravicore/terraform-gravicore-modules/aws/billing"
+  default = "https://gravicore/terraform-gravicore-modules/aws/billing"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -61,6 +61,7 @@ variable "namespace" {
 }
 
 variable "environment" {
+  default = "shared"
 }
 
 variable "stage" {
@@ -78,7 +79,7 @@ variable "account_id" {
 }
 
 variable "master_account_assume_role_name" {
-  default = "grv_deploy_svc"
+  default = "grv-service-deployment"
 }
 
 variable "account_assume_role_name" {
@@ -99,16 +100,16 @@ locals {
   module_prefix      = join("-", [var.namespace, var.environment, var.stage, var.name])
 
   business_tags = {
-    Namespace   = var.namespace
-    Environment = var.environment
+    namespace   = var.namespace
+    environment = var.environment
   }
 
   technical_tags = {
-    Stage           = var.stage
-    Repository      = var.repository
-    MasterAccountID = var.master_account_id
-    AccountID       = var.account_id
-    TerraformModule = var.terraform_module
+    stage             = var.stage
+    repository        = var.repository
+    master_account_id = var.master_account_id
+    account_id        = var.account_id
+    terraform_module  = var.terraform_module
   }
 
   automation_tags = {}
