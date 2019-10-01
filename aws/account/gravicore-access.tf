@@ -49,7 +49,7 @@ resource "aws_iam_role" "secops_admin" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::${var.trusted_entity_account_id}:saml-provider/grv-saml-provider"
+        "Federated": "arn:aws:iam::${var.account_id}:saml-provider/grv-saml-provider"
       },
       "Action": "sts:AssumeRoleWithSAML",
       "Condition": {
@@ -61,7 +61,6 @@ resource "aws_iam_role" "secops_admin" {
   ]
 }
 JSON
-
 }
 
 # Gravicore SecOps Admin role
@@ -71,4 +70,3 @@ resource "aws_iam_role_policy_attachment" "attach_secops_admin_access" {
   role       = aws_iam_role.secops_admin[0].name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
-

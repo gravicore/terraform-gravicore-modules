@@ -34,4 +34,3 @@ resource "aws_iam_role_policy" "logging" {
   role   = aws_iam_role.logging.id
   policy = data.aws_iam_policy_document.logging.json
 }
-

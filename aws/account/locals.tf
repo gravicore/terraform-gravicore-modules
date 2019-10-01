@@ -3,7 +3,7 @@ data "aws_caller_identity" "this" {
 
 locals {
   federated_trusted_entities = [
-    "arn:aws:iam::${var.trusted_entity_account_id}:saml-provider/grv-saml-provider",
+    "arn:aws:iam::${var.account_id}:saml-provider/grv-saml-provider",
     data.aws_caller_identity.this.account_id,
   ]
   aws_trusted_entities = [
@@ -11,6 +11,7 @@ locals {
 }
 
 data "template_file" "assume_role_policy" {
+  vars     = {}
   template = <<TEMPLATE
 {
   "Version": "2012-10-17",
@@ -18,7 +19,7 @@ data "template_file" "assume_role_policy" {
     {
       "Effect": "Allow",
       "Principal": {
-        "Federated": "arn:aws:iam::${var.trusted_entity_account_id}:saml-provider/grv-saml-provider"
+        "Federated": "arn:aws:iam::${var.account_id}:saml-provider/grv-saml-provider"
       },
       "Action": "sts:AssumeRoleWithSAML",
       "Condition": {
@@ -30,8 +31,5 @@ data "template_file" "assume_role_policy" {
   ]
 }
 TEMPLATE
-
-
-  vars = {}
 }
 
