@@ -9,25 +9,7 @@ variable "devop_policy_allow" {
 
 variable "devop_policy_deny" {
   type = "list"
-  default = [
-    "iam:Add*",
-    "iam:Attach*",
-    "iam:Change*",
-    "iam:Create*",
-    "iam:Deactivate*",
-    "iam:Delete*",
-    "iam:Detach*",
-    "iam:Enable*",
-    "iam:Put*",
-    "iam:Remove*",
-    "iam:Reset*",
-    "iam:Resync*",
-    "iam:Set*",
-    "iam:Tag*",
-    "iam:Untag*",
-    "iam:Update*",
-    "iam:Upload*",
-  ]
+  default = []
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -41,8 +23,8 @@ data "aws_iam_policy_document" "devop" {
   }
 
   statement {
-    effect    = "Deny"
-    actions   = var.devop_policy_deny
+    effect    = length(var.devop_policy_deny) > 0 ? "Deny" : "Allow"
+    actions   = length(var.devop_policy_deny) > 0 ? var.devop_policy_deny : var.devop_policy_allow
     resources = ["*"]
   }
 
@@ -54,7 +36,7 @@ data "aws_iam_policy_document" "devop" {
 }
 
 resource "aws_iam_policy" "devop" {
-  name = "${var.namespace}-devop-access"
+  name = join(var.delimiter, [var.namespace, "devop", "access"])
 
   policy = data.aws_iam_policy_document.devop.json
 }
@@ -62,7 +44,7 @@ resource "aws_iam_policy" "devop" {
 # Group
 
 resource "aws_iam_group" "devops" {
-  name = "${var.namespace}-devops"
+  name = join(var.delimiter, [var.namespace, "devops"])
   path = "/"
 }
 
@@ -74,7 +56,7 @@ resource "aws_iam_group_policy_attachment" "devops" {
 # Role
 
 resource "aws_iam_role" "devop" {
-  name = "${var.namespace}-devop"
+  name = join(var.delimiter, [var.namespace, "devop"])
   tags = local.tags
 
   assume_role_policy   = data.template_file.assume_role_policy.rendered
@@ -91,7 +73,7 @@ resource "aws_iam_role_policy_attachment" "devop" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "gravicore_devop" {
-  count = "${var.allow_gravicore_access ? 1 : 0}"
+  count = var.allow_gravicore_access ? 1 : 0
   name  = "grv-devop"
   tags  = local.tags
 
@@ -100,7 +82,7 @@ resource "aws_iam_role" "gravicore_devop" {
 }
 
 resource "aws_iam_role_policy_attachment" "gravicore_devop" {
-  count = "${var.allow_gravicore_access ? 1 : 0}"
+  count = var.allow_gravicore_access ? 1 : 0
 
   role       = aws_iam_role.gravicore_devop[0].name
   policy_arn = aws_iam_policy.devop.arn

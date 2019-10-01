@@ -41,8 +41,8 @@ data "aws_iam_policy_document" "auditor" {
   }
 
   statement {
-    effect    = "Deny"
-    actions   = var.auditor_policy_deny
+    effect    = length(var.auditor_policy_deny) > 0 ? "Deny" : "Allow"
+    actions   = length(var.auditor_policy_deny) > 0 ? var.auditor_policy_deny : var.auditor_policy_allow
     resources = ["*"]
   }
 
