@@ -74,7 +74,7 @@ data "aws_iam_policy_document" "cognito_import_users" {
       "logs:DescribeLogStreams",
       "logs:PutLogEvents"
     ]
-    resources = ["arn:aws:logs:us-east-1:${var.account_id}:log-group:/aws/cognito/*"]
+    resources = ["arn:aws:logs:${var.aws_region}:${var.account_id}:log-group:/aws/cognito/*"]
   }
 }
 
