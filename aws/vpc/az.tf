@@ -42,7 +42,10 @@ data "aws_availability_zone" "ids" {
 
 locals {
   az_names_available = [for zone_id in local.az_zone_ids_available : data.aws_availability_zone.ids[zone_id].name]
-  az_names           = [for zone_id in local.az_zone_ids : data.aws_availability_zone.ids[zone_id].name]
+  az_names = coalescelist(
+    var.az_names,
+    [for zone_id in local.az_zone_ids : data.aws_availability_zone.ids[zone_id].name],
+  )
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

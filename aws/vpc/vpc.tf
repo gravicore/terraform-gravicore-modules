@@ -158,8 +158,7 @@ module "vpc" {
   name       = local.module_prefix
   tags       = local.tags
 
-  # azs             = local.az_names
-  azs             = ["${var.aws_region}a", "${var.aws_region}b"]
+  azs             = local.az_names
   cidr            = var.vpc_cidr_block
   public_subnets  = var.vpc_public_subnets != null ? local.vpc_public_subnets : null
   private_subnets = var.vpc_private_subnets != null ? local.vpc_private_subnets : null
