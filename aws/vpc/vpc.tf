@@ -136,20 +136,20 @@ resource "aws_ssm_parameter" "default" {
 
 locals {
   vpc_public_subnets = var.vpc_public_subnets != null ? coalescelist(var.vpc_public_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vpc_cidr_block, 6, 0) : "", 
-    var.az_max_count >= 2 ? cidrsubnet(var.vpc_cidr_block, 6, 1) : "", 
-    var.az_max_count >= 3 ? cidrsubnet(var.vpc_cidr_block, 6, 2) : "", 
-    ])) : []
+    var.az_max_count >= 1 ? cidrsubnet(var.vpc_cidr_block, 6, 0) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vpc_cidr_block, 6, 1) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vpc_cidr_block, 6, 2) : "",
+  ])) : []
   vpc_private_subnets = var.vpc_private_subnets != null ? coalescelist(var.vpc_private_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vpc_cidr_block, 4, 1) : "", 
-    var.az_max_count >= 2 ? cidrsubnet(var.vpc_cidr_block, 4, 2) : "", 
-    var.az_max_count >= 3 ? cidrsubnet(var.vpc_cidr_block, 4, 3) : "", 
-    ])) : []
+    var.az_max_count >= 1 ? cidrsubnet(var.vpc_cidr_block, 4, 1) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vpc_cidr_block, 4, 2) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vpc_cidr_block, 4, 3) : "",
+  ])) : []
   vpc_internal_subnets = var.vpc_internal_subnets != null ? coalescelist(var.vpc_internal_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vpc_cidr_block, 2, 1) : "", 
-    var.az_max_count >= 2 ? cidrsubnet(var.vpc_cidr_block, 2, 2) : "", 
-    var.az_max_count >= 3 ? cidrsubnet(var.vpc_cidr_block, 2, 3) : "", 
-    ])) : []
+    var.az_max_count >= 1 ? cidrsubnet(var.vpc_cidr_block, 2, 1) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vpc_cidr_block, 2, 2) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vpc_cidr_block, 2, 3) : "",
+  ])) : []
 }
 
 module "vpc" {
@@ -162,7 +162,7 @@ module "vpc" {
   azs             = ["${var.aws_region}a", "${var.aws_region}b"]
   cidr            = var.vpc_cidr_block
   public_subnets  = var.vpc_public_subnets != null ? local.vpc_public_subnets : null
-  private_subnets  = var.vpc_private_subnets != null ? local.vpc_private_subnets : null
+  private_subnets = var.vpc_private_subnets != null ? local.vpc_private_subnets : null
   intra_subnets   = local.vpc_internal_subnets
 
   map_public_ip_on_launch = var.map_public_ip_on_launch
@@ -172,8 +172,9 @@ module "vpc" {
   enable_dns_support      = var.enable_dns_support
   enable_dns_hostnames    = var.enable_dns_hostnames
 
-  enable_s3_endpoint                       = var.enable_s3_endpoint
-  enable_dynamodb_endpoint                 = var.enable_dynamodb_endpoint
+  enable_s3_endpoint       = var.enable_s3_endpoint
+  enable_dynamodb_endpoint = var.enable_dynamodb_endpoint
+
   enable_codebuild_endpoint                = var.enable_codebuild_endpoint
   enable_codecommit_endpoint               = var.enable_codecommit_endpoint
   enable_git_codecommit_endpoint           = var.enable_git_codecommit_endpoint
@@ -204,16 +205,16 @@ module "vpc" {
   enable_sts_endpoint                      = var.enable_sts_endpoint
   enable_cloudformation_endpoint           = var.enable_cloudformation_endpoint
   enable_codepipeline_endpoint             = var.enable_codepipeline_endpoint
-  enable_appmesh_envoy_management_endpoint = var.enable_appmesh_envoy_management_endpoint
   enable_servicecatalog_endpoint           = var.enable_servicecatalog_endpoint
   enable_storagegateway_endpoint           = var.enable_storagegateway_endpoint
   enable_transfer_endpoint                 = var.enable_transfer_endpoint
-  # enable_sagemaker_notebook_endpoint             = var.enable_sagemaker_notebook_endpoint
-  enable_sagemaker_api_endpoint     = var.enable_sagemaker_api_endpoint
-  enable_sagemaker_runtime_endpoint = var.enable_sagemaker_runtime_endpoint
-  # enable_appstream_endpoint             = var.enable_appstream_endpoint
-  enable_athena_endpoint      = var.enable_athena_endpoint
-  enable_rekognition_endpoint = var.enable_rekognition_endpoint
+  enable_sagemaker_notebook_endpoint       = var.enable_sagemaker_notebook_endpoint
+  enable_sagemaker_api_endpoint            = var.enable_sagemaker_api_endpoint
+  enable_sagemaker_runtime_endpoint        = var.enable_sagemaker_runtime_endpoint
+  enable_appstream_endpoint                = var.enable_appstream_endpoint
+  enable_appmesh_envoy_management_endpoint = var.enable_appmesh_envoy_management_endpoint
+  enable_athena_endpoint                   = var.enable_athena_endpoint
+  enable_rekognition_endpoint              = var.enable_rekognition_endpoint
 
   codebuild_endpoint_security_group_ids                = coalescelist(var.codebuild_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   codecommit_endpoint_security_group_ids               = coalescelist(var.codecommit_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
@@ -245,16 +246,57 @@ module "vpc" {
   sts_endpoint_security_group_ids                      = coalescelist(var.sts_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   cloudformation_endpoint_security_group_ids           = coalescelist(var.cloudformation_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   codepipeline_endpoint_security_group_ids             = coalescelist(var.codepipeline_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
-  appmesh_envoy_management_endpoint_security_group_ids = coalescelist(var.appmesh_envoy_management_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   servicecatalog_endpoint_security_group_ids           = coalescelist(var.servicecatalog_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   storagegateway_endpoint_security_group_ids           = coalescelist(var.storagegateway_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   transfer_endpoint_security_group_ids                 = coalescelist(var.transfer_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
-  # sagemaker_notebook_endpoint_security_group_ids = coalescelist(var.sagemaker_notebook_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
-  sagemaker_api_endpoint_security_group_ids     = coalescelist(var.sagemaker_api_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
-  sagemaker_runtime_endpoint_security_group_ids = coalescelist(var.sagemaker_runtime_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
-  # appstream_endpoint_security_group_ids = coalescelist(var.appstream_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
-  athena_endpoint_security_group_ids      = coalescelist(var.athena_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
-  rekognition_endpoint_security_group_ids = coalescelist(var.rekognition_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  sagemaker_notebook_endpoint_security_group_ids       = coalescelist(var.sagemaker_notebook_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  sagemaker_api_endpoint_security_group_ids            = coalescelist(var.sagemaker_api_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  sagemaker_runtime_endpoint_security_group_ids        = coalescelist(var.sagemaker_runtime_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  appstream_endpoint_security_group_ids                = coalescelist(var.appstream_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  appmesh_envoy_management_endpoint_security_group_ids = coalescelist(var.appmesh_envoy_management_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  athena_endpoint_security_group_ids                   = coalescelist(var.athena_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  rekognition_endpoint_security_group_ids              = coalescelist(var.rekognition_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+
+  codebuild_endpoint_private_dns_enabled                = var.codebuild_endpoint_private_dns_enabled
+  codecommit_endpoint_private_dns_enabled               = var.codecommit_endpoint_private_dns_enabled
+  git_codecommit_endpoint_private_dns_enabled           = var.git_codecommit_endpoint_private_dns_enabled
+  config_endpoint_private_dns_enabled                   = var.config_endpoint_private_dns_enabled
+  sqs_endpoint_private_dns_enabled                      = var.sqs_endpoint_private_dns_enabled
+  secretsmanager_endpoint_private_dns_enabled           = var.secretsmanager_endpoint_private_dns_enabled
+  ssm_endpoint_private_dns_enabled                      = var.ssm_endpoint_private_dns_enabled
+  ssmmessages_endpoint_private_dns_enabled              = var.ssmmessages_endpoint_private_dns_enabled
+  ec2_endpoint_private_dns_enabled                      = var.ec2_endpoint_private_dns_enabled
+  ec2messages_endpoint_private_dns_enabled              = var.ec2messages_endpoint_private_dns_enabled
+  transferserver_endpoint_private_dns_enabled           = var.transferserver_endpoint_private_dns_enabled
+  ecr_api_endpoint_private_dns_enabled                  = var.ecr_api_endpoint_private_dns_enabled
+  ecr_dkr_endpoint_private_dns_enabled                  = var.ecr_dkr_endpoint_private_dns_enabled
+  apigw_endpoint_private_dns_enabled                    = var.apigw_endpoint_private_dns_enabled
+  kms_endpoint_private_dns_enabled                      = var.kms_endpoint_private_dns_enabled
+  ecs_endpoint_private_dns_enabled                      = var.ecs_endpoint_private_dns_enabled
+  ecs_agent_endpoint_private_dns_enabled                = var.ecs_agent_endpoint_private_dns_enabled
+  ecs_telemetry_endpoint_private_dns_enabled            = var.ecs_telemetry_endpoint_private_dns_enabled
+  sns_endpoint_private_dns_enabled                      = var.sns_endpoint_private_dns_enabled
+  monitoring_endpoint_private_dns_enabled               = var.monitoring_endpoint_private_dns_enabled
+  logs_endpoint_private_dns_enabled                     = var.logs_endpoint_private_dns_enabled
+  events_endpoint_private_dns_enabled                   = var.events_endpoint_private_dns_enabled
+  elasticloadbalancing_endpoint_private_dns_enabled     = var.elasticloadbalancing_endpoint_private_dns_enabled
+  cloudtrail_endpoint_private_dns_enabled               = var.cloudtrail_endpoint_private_dns_enabled
+  kinesis_streams_endpoint_private_dns_enabled          = var.kinesis_streams_endpoint_private_dns_enabled
+  kinesis_firehose_endpoint_private_dns_enabled         = var.kinesis_firehose_endpoint_private_dns_enabled
+  glue_endpoint_private_dns_enabled                     = var.glue_endpoint_private_dns_enabled
+  sts_endpoint_private_dns_enabled                      = var.sts_endpoint_private_dns_enabled
+  cloudformation_endpoint_private_dns_enabled           = var.cloudformation_endpoint_private_dns_enabled
+  codepipeline_endpoint_private_dns_enabled             = var.codepipeline_endpoint_private_dns_enabled
+  servicecatalog_endpoint_private_dns_enabled           = var.servicecatalog_endpoint_private_dns_enabled
+  storagegateway_endpoint_private_dns_enabled           = var.storagegateway_endpoint_private_dns_enabled
+  transfer_endpoint_private_dns_enabled                 = var.transfer_endpoint_private_dns_enabled
+  sagemaker_notebook_endpoint_private_dns_enabled       = var.sagemaker_notebook_endpoint_private_dns_enabled
+  sagemaker_api_endpoint_private_dns_enabled            = var.sagemaker_api_endpoint_private_dns_enabled
+  sagemaker_runtime_endpoint_private_dns_enabled        = var.sagemaker_runtime_endpoint_private_dns_enabled
+  appstream_endpoint_private_dns_enabled                = var.appstream_endpoint_private_dns_enabled
+  appmesh_envoy_management_endpoint_private_dns_enabled = var.appmesh_envoy_management_endpoint_private_dns_enabled
+  athena_endpoint_private_dns_enabled                   = var.athena_endpoint_private_dns_enabled
+  rekognition_endpoint_private_dns_enabled              = var.rekognition_endpoint_private_dns_enabled
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
