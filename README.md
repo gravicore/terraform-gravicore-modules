@@ -26,7 +26,7 @@ This is a collection of reusable Terraform modules for Gravicore's cloud automat
 | [Organization](aws/organization)             | A module providing central governance and managenent of a multi-account setup using [AWS Organizations](https://aws.amazon.com/organizations/).                                                                                |
 | [RDS](aws/rds)                               | A collection of modules for deploying [Amazon Relational Database Service (RDS)](https://aws.amazon.com/rds/) resources.                                                                                                       |
 | [RDS (PostgreSQL)](aws/rds-postgres)         | A module for deploying [Amazon RDS for PostgreSQL](https://aws.amazon.com/rds/postgresql/) resources.                                                                                                                          |
-| [VPC](aws/vpc)                               | A secure, dual-AZ Spoke VPC with public subnets, private subnets, Internet Gateway, optional NAT and optional VPC Endpoints utilizing [Amazon Virtual Private Cloud](https://aws.amazon.com/vpc/).                             |
+| [VPC](aws/vpc)                               | A secure, dual-AZ VPC with public subnets, private subnets, Internet Gateway, optional NAT and optional VPC Endpoints utilizing [Amazon Virtual Private Cloud](https://aws.amazon.com/vpc/).                                   |
 | [VPC DNS](aws/vpc-dns)                       | A module for deploying environment based delegated DNS zones utilizing [Route53](https://aws.amazon.com/route53/).                                                                                                             |
 
 ## Contributing
