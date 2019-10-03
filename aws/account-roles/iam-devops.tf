@@ -8,7 +8,7 @@ variable "devop_policy_allow" {
 }
 
 variable "devop_policy_deny" {
-  type = "list"
+  type    = "list"
   default = []
 }
 
