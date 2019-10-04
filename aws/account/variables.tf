@@ -1,77 +1,44 @@
-# ----------------------------------------------------------------------------------------------------------------------
-# Platform Standard Variables
-# ----------------------------------------------------------------------------------------------------------------------
-
-variable "tags" {
-  description = "https://aws.amazon.com/answers/account-management/aws-tagging-strategies/"
-  default     = {}
-}
-
-variable "namespace" {
+variable "name_prefix" {
   default = "grv"
 }
 
-variable "environment" {
-  default = "master"
+variable "max_password_age" {
+  description = "The number of days that an user password is valid."
+  default     = 90
 }
 
-variable "stage" {
-  default = "dev"
+variable "minimum_password_length" {
+  description = "Minimum length to require for user passwords."
+  default     = 14
 }
 
-variable "repository" {
-  default = ""
+variable "password_reuse_prevention" {
+  description = "The number of previous passwords that users are prevented from reusing."
+  default     = 24
 }
 
-variable "master_account_id" {}
-variable "account_id" {}
-
-variable "accounts" {
-  default = []
-}
-
-variable "master_account_assume_role_name" {
-  default = "grv_deploy_svc"
-}
-
-variable "account_assume_role_name" {
-  default = "OrganizationAccountAccessRole"
-}
-
-variable "desc_prefix" {
-  default = "Gravicore Module:"
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Module Standard Variables
-# ----------------------------------------------------------------------------------------------------------------------
-
-variable "name" {
-  default = "acct"
-}
-
-variable "aws_region" {
-  default = "us-east-1"
-}
-
-variable terraform_module {
-  default = "gravicore/terraform-gravicore-modules/aws/account"
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Module Custom Variables
-# ----------------------------------------------------------------------------------------------------------------------
-
-variable allow_gravicore_access {
-  description = "Flag to establish SAML connectivity for Gravicore managed services"
-  default     = false
-}
-
-variable "iam_account_alias" {
-  description = "The account alias to create."
-}
-
-variable "create_instance_scheduler" {
-  description = "Flag to determine if instance scheduler is created"
+variable "require_lowercase_characters" {
+  description = "Whether to require lowercase characters for user passwords."
   default     = true
 }
+
+variable "require_numbers" {
+  description = "Whether to require numbers for user passwords."
+  default     = true
+}
+
+variable "require_uppercase_characters" {
+  description = "Whether to require uppercase characters for user passwords."
+  default     = true
+}
+
+variable "require_symbols" {
+  description = "Whether to require symbols for user passwords."
+  default     = true
+}
+
+variable "allow_users_to_change_password" {
+  description = "Whether to allow users to change their own password."
+  default     = true
+}
+

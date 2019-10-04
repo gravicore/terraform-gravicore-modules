@@ -4,9 +4,11 @@ variable "aws_region" {
 }
 
 variable "master_account_id" {
-  type        = "string"
+  type        = string
   default     = ""
   description = "Account number containing the parent Instance Scheduler"
 }
 
-variable "create" {}
+variable "create" {
+}
+

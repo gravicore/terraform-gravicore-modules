@@ -1,11 +1,11 @@
 output "bucket" {
   description = "The name of the Terrform remote state S3 bucket"
-  value       = "${aws_s3_bucket.remote-state.bucket}"
+  value       = aws_s3_bucket.remote-state.bucket
 }
 
 output "table" {
   description = "The name of the Terraform remote state lock table"
-  value       = "${aws_dynamodb_table.remote-state-lock.name}"
+  value       = aws_dynamodb_table.remote-state-lock.name
 }
 
 output "terraform_config" {
@@ -23,4 +23,6 @@ terraform {
   }
 }
 EOF
+
 }
+

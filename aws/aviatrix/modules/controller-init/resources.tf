@@ -4,21 +4,26 @@ resource "random_string" "password" {
 }
 
 locals {
-  aviatrix_controller_admin_password = "${var.aviatrix_controller_admin_password == "" ? sha256(bcrypt(random_string.password.result)) : var.aviatrix_controller_admin_password}"
+  aviatrix_controller_admin_password = var.aviatrix_controller_admin_password == "" ? sha256(bcrypt(random_string.password.result)) : var.aviatrix_controller_admin_password
 
-  module_aviatrix_controller_init_tags = "${merge(local.tags, map(
-    "TerraformModule", "AviatrixSystems/terraform-modules/aviatrix-controller-initialize",
-    "TerraformModuleVersion", "master"))}"
+  module_aviatrix_controller_init_tags = merge(
+    local.tags,
+    {
+      "TerraformModule"        = "AviatrixSystems/terraform-modules/aviatrix-controller-initialize"
+      "TerraformModuleVersion" = "master"
+    },
+  )
 }
 
 module "aviatrix_controller_init" {
-  source = "github.com/AviatrixSystems/terraform-modules.git/aviatrix-controller-initialize"
+  source = "github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.12"
 
-  admin_email           = "${var.aviatrix_controller_admin_email}"
-  admin_password        = "${local.aviatrix_controller_admin_password}"
-  private_ip            = "${data.terraform_remote_state.aviatrix_controller.private_ip}"
-  public_ip             = "${data.terraform_remote_state.aviatrix_controller.public_ip}"
-  aviatrix_account_name = "${var.namespace}-master-prd"
+  admin_email         = var.aviatrix_controller_admin_email
+  admin_password      = local.aviatrix_controller_admin_password
+  private_ip          = data.terraform_remote_state.aviatrix_controller.outputs.private_ip
+  public_ip           = data.terraform_remote_state.aviatrix_controller.outputs.public_ip
+  access_account_name = "${var.namespace}-master-prd"
+  aws_account_id      = var.account_id
 }
 
 # Launch a gateway with these parameters:
@@ -29,8 +34,6 @@ module "aviatrix_controller_init" {
 # vpc_reg - AWS VPC region.
 # vpc_size - Gateway instance size
 # vpc_net - VPC subnet CIDR where you want to launch GW instance
-
-
 # resource "aviatrix_gateway" "default" {
 #   account_name = "${join("-", list(var.namespace, var.environment, var.stage))}"
 #   cloud_type   = "${var.aviatrix_controller_cloud_type}"
@@ -40,4 +43,3 @@ module "aviatrix_controller_init" {
 #   vpc_net      = "${var.vpc_cidr_block}"
 #   vpc_size     = "${var.aviatrix_gateway_size}"
 # }
-
