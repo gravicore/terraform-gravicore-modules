@@ -42,6 +42,43 @@ variable "identity_pool_supported_login_providers" {
   description = "Key-Value pairs mapping provider names to provider app IDs"
 }
 
+variable "cognito_unauthorized_policy_statements" {
+  type = map
+  default = { "DefaultCognitoUnauthStatement" = {
+    actions = [
+      "mobileanalytics:PutEvents",
+      "cognito-sync:*"
+    ]
+    resources = ["*"]
+  } }
+  description = "The map of statements to add to the Authorized Cognito User policy"
+}
+
+variable "cognito_authorized_policy_statements" {
+  type = map
+  default = { "DefaultCognitoAuthStatement" = {
+    actions = [
+      "mobileanalytics:PutEvents",
+      "cognito-sync:*",
+      "cognito-identity:*",
+    ]
+    resources = ["*"]
+  } }
+  description = "The map of statements to add to the Authorized Cognito User policy"
+}
+
+variable "cognito_unauthorized_custom_policy_arn" {
+  type        = string
+  default     = ""
+  description = "An ARN for a custom Cognito unauthorized access policy"
+}
+
+variable "cognito_authorized_custom_policy_arn" {
+  type        = string
+  default     = ""
+  description = "An ARN for a custom Cognito authorized access policy"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -109,10 +146,20 @@ POLICY
 data "aws_iam_policy_document" "cognito_unauthorized" {
   count = var.create ? 1 : 0
 
+  dynamic "statement" {
+    for_each = var.cognito_unauthorized_policy_statements
+    content {
+      sid       = statement.key
+      actions   = statement.value.actions
+      resources = statement.value.resources
+    }
+  }
+
   statement {
+    effect = "Deny"
     actions = [
-      "mobileanalytics:PutEvents",
-      "cognito-sync:*"
+      "iam:*",
+      "kms:*",
     ]
     resources = ["*"]
   }
@@ -124,6 +171,14 @@ resource "aws_iam_role_policy" "cognito_unauthorized" {
 
   role   = aws_iam_role.cognito_unauthorized[0].name
   policy = data.aws_iam_policy_document.cognito_unauthorized[0].json
+}
+
+resource "aws_iam_policy_attachment" "cognito_unauthorized_custom" {
+  count = var.create && var.cognito_unauthorized_custom_policy_arn != "" ? 1 : 0
+  name  = "${local.module_prefix}-custom-unauth-access"
+
+  roles      = [aws_iam_role.cognito_unauthorized[0].name]
+  policy_arn = var.cognito_unauthorized_custom_policy_arn
 }
 
 # Authoried IAM
@@ -161,11 +216,20 @@ POLICY
 data "aws_iam_policy_document" "cognito_authorized" {
   count = var.create ? 1 : 0
 
+  dynamic "statement" {
+    for_each = var.cognito_authorized_policy_statements
+    content {
+      sid       = statement.key
+      actions   = statement.value.actions
+      resources = statement.value.resources
+    }
+  }
+
   statement {
+    effect = "Deny"
     actions = [
-      "mobileanalytics:PutEvents",
-      "cognito-sync:*",
-      "cognito-identity:*"
+      "iam:*",
+      "kms:*",
     ]
     resources = ["*"]
   }
@@ -177,6 +241,14 @@ resource "aws_iam_role_policy" "cognito_authorized" {
 
   role   = aws_iam_role.cognito_authorized[0].name
   policy = data.aws_iam_policy_document.cognito_authorized[0].json
+}
+
+resource "aws_iam_policy_attachment" "cognito_authorized_custom" {
+  count = var.create && var.cognito_authorized_custom_policy_arn != "" ? 1 : 0
+  name  = "${local.module_prefix}-custom-auth-access"
+
+  roles      = [aws_iam_role.cognito_authorized[0].name]
+  policy_arn = var.cognito_authorized_custom_policy_arn
 }
 
 # Roles attachment
