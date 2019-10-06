@@ -19,12 +19,12 @@ variable "default_enable_key_rotation" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "rds_kms_key" {
-  source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
-  namespace               = ""
-  stage                   = ""
-  name                    = join(var.delimiter, [local.stage_prefix, "rds"])
-  description             = join(" ", [var.desc_prefix, "KMS key for RDS"])
-  tags                    = local.tags
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  namespace   = ""
+  stage       = ""
+  name        = join(var.delimiter, [local.stage_prefix, "rds"])
+  description = join(" ", [var.desc_prefix, "KMS key for RDS"])
+  tags        = local.tags
 
   deletion_window_in_days = var.default_deletion_window_in_days
   enable_key_rotation     = true
@@ -32,12 +32,12 @@ module "rds_kms_key" {
 }
 
 module "workspaces_kms_key" {
-  source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
-  namespace               = ""
-  stage                   = ""
-  name                    = "${local.stage_prefix}-workspaces"
-  description             = join(" ", [var.desc_prefix, "KMS key for Workspaces"])
-  tags                    = local.tags
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  namespace   = ""
+  stage       = ""
+  name        = "${local.stage_prefix}-workspaces"
+  description = join(" ", [var.desc_prefix, "KMS key for Workspaces"])
+  tags        = local.tags
 
   deletion_window_in_days = var.default_deletion_window_in_days
   enable_key_rotation     = true
@@ -45,12 +45,12 @@ module "workspaces_kms_key" {
 }
 
 module "lambda_kms_key" {
-  source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
-  namespace               = ""
-  stage                   = ""
-  name                    = "${local.stage_prefix}-lambda"
-  description             = join(" ", [var.desc_prefix, "KMS key for Lambda"])
-  tags                    = local.tags
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  namespace   = ""
+  stage       = ""
+  name        = "${local.stage_prefix}-lambda"
+  description = join(" ", [var.desc_prefix, "KMS key for Lambda"])
+  tags        = local.tags
 
   deletion_window_in_days = var.default_deletion_window_in_days
   enable_key_rotation     = true
@@ -58,12 +58,12 @@ module "lambda_kms_key" {
 }
 
 module "ssm_kms_key" {
-  source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
-  namespace               = ""
-  stage                   = ""
-  name                    = "${local.stage_prefix}-ssm"
-  description             = join(" ", [var.desc_prefix, "KMS key for SSM"])
-  tags                    = local.tags
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  namespace   = ""
+  stage       = ""
+  name        = "${local.stage_prefix}-ssm"
+  description = join(" ", [var.desc_prefix, "KMS key for SSM"])
+  tags        = local.tags
 
   deletion_window_in_days = var.default_deletion_window_in_days
   enable_key_rotation     = true
@@ -83,12 +83,12 @@ module "ebs_kms_key" {
 }
 
 module "chamber_kms_key" {
-  source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
-  namespace               = ""
-  stage                   = ""
-  name                    = "${local.stage_prefix}-chamber"
-  description             = join(" ", [var.desc_prefix, "KMS key for Chamber"])
-  tags                    = local.tags
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  namespace   = ""
+  stage       = ""
+  name        = "${local.stage_prefix}-chamber"
+  description = join(" ", [var.desc_prefix, "KMS key for Chamber"])
+  tags        = local.tags
 
   deletion_window_in_days = var.default_deletion_window_in_days
   enable_key_rotation     = true
@@ -96,12 +96,12 @@ module "chamber_kms_key" {
 }
 
 module "s3_kms_key" {
-  source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
-  namespace               = ""
-  stage                   = ""
-  name                    = "${local.stage_prefix}-s3"
-  description             = join(" ", [var.desc_prefix, "KMS key for S3"])
-  tags                    = local.tags
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  namespace   = ""
+  stage       = ""
+  name        = "${local.stage_prefix}-s3"
+  description = join(" ", [var.desc_prefix, "KMS key for S3"])
+  tags        = local.tags
 
   deletion_window_in_days = var.default_deletion_window_in_days
   enable_key_rotation     = true
