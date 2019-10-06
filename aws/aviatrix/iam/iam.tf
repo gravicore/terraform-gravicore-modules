@@ -12,12 +12,6 @@ variable "controller_account_id" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-# module "aviatrix_iam_roles" {
-#   source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-iam-roles?ref=terraform_0.12"
-
-#   external-controller-account-id = var.controller_account_id != "" ? var.controller_account_id : ""
-# }
-
 # Aviatrix EC2 Service Role
 
 data "http" "assume_role" {
@@ -31,7 +25,7 @@ data "http" "assume_role" {
 
 resource "aws_iam_policy" "assume_role" {
   count       = var.create ? 1 : 0
-  name        = "${local.module_prefix}-assume-role"
+  name        = "aviatrix-assume-role-policy"
   description = join(" ", [var.desc_prefix, "Policy for creating assume_role"])
 
   path   = "/"
@@ -53,7 +47,6 @@ resource "aws_iam_role" "ec2" {
   description = join(" ", [var.desc_prefix, "Aviatrix EC2 Service Role"])
   tags        = local.tags
 
-  path               = "/"
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -91,7 +84,7 @@ resource "aws_iam_instance_profile" "ec2" {
 # Aviatrix Application Role
 
 locals {
-  policy_primary   = <<POLICY
+  policy_primary = <<POLICY
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -109,7 +102,7 @@ locals {
     ]
 }
 POLICY
-  policy_cross     = <<POLICY
+  policy_cross   = <<POLICY
 {
     "Version": "2012-10-17",
     "Statement": [
@@ -136,16 +129,14 @@ resource "aws_iam_role" "app" {
   description = join(" ", [var.desc_prefix, "Aviatrix App Role"])
   tags        = local.tags
 
-  path               = "/"
   assume_role_policy = "${var.controller_account_id == "" ? local.policy_primary : local.policy_cross}"
 }
 
 resource "aws_iam_policy" "app" {
   count       = var.create ? 1 : 0
-  name        = "${local.module_prefix}-app-policy"
+  name        = "aviatrix-app-policy"
   description = join(" ", [var.desc_prefix, "Policy for Aviatrix Application"])
 
-  path   = "/"
   policy = "${data.http.ec2[0].body}"
 }
 
