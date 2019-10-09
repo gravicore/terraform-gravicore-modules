@@ -65,30 +65,35 @@ variable "enable_ha" {
   description = "Enable HA mode for the Aviatrix Controller"
 }
 
+data "aws_ami" "metered" {
+  for_each = var.create && var.license_type == "metered" ? toset(["0"]) : []
+
+  owners = ["aws-marketplace"]
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["*0c922525-51c4-4b64-94ec-744291c05c1c*"]
+  }
+}
+
+data "aws_ami" "byol" {
+  for_each = var.create && var.license_type == "byol" ? toset(["0"]) : []
+
+  owners = ["aws-marketplace"]
+  most_recent = true
+  filter {
+    name   = "name"
+    values = ["*109cd06c-210a-4fa4-839b-708683c66dc6*"]
+  }
+}
+
 locals {
   controller          = { "aviatrix-controller" = var.vpc_public_subnets[0] }
   controller_ha       = var.enable_ha && length(var.vpc_public_subnets) > 1 ? { "aviatrix-controller-ha" = var.vpc_public_subnets[1] } : {}
   enabled_controllers = merge(local.controller, local.controller_ha)
 
-  images_metered = {
-    us-east-1      = "ami-087b5ab4feb053b4b"
-    us-east-2      = "ami-0bc1db3a5b89c6aef"
-    us-west-1      = "ami-0a928ae10544ec78e"
-    us-west-2      = "ami-0f5b26bac60280d69"
-    ca-central-1   = "ami-031442f061af55923"
-    eu-central-1   = "ami-0cf0c16d58a50f19b"
-    eu-west-1      = "ami-0301c0164e6deb6df"
-    eu-west-2      = "ami-04b5c38db962b3c13"
-    eu-west-3      = "ami-0a11977b030622939"
-    eu-north-1     = "ami-be961dc0"
-    ap-east-1      = "ami-05b4cf74"
-    ap-southeast-1 = "ami-02ae4a694e26953b2"
-    ap-southeast-2 = "ami-06773bff73422d61d"
-    ap-northeast-1 = "ami-048dff200571b34fd"
-    ap-northeast-2 = "ami-0cb08d1ebcce1495f"
-    ap-south-1     = "ami-09b9ca158a576fa9f"
-    sa-east-1      = "ami-0f23734bcd9d53cd8"
-  }
+  ami = var.license_type == "metered" ? data.aws_ami.metered["0"] : data.aws_ami.byol["0"]
+
   images_byol = {
     us-east-1      = "ami-02465f499ff5092e1"
     us-east-2      = "ami-0861f8a0e35a19b0b"
@@ -109,7 +114,6 @@ locals {
     sa-east-1      = "ami-0696240d0fc2ecc53"
     us-gov-west-1  = "ami-a9afe8c8"
   }
-  ami_id = "${var.license_type == "metered" ? local.images_metered[var.aws_region] : local.images_byol[var.aws_region]}"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -194,7 +198,7 @@ resource "aws_instance" "controllers" {
     Name = format("%s-%s", local.stage_prefix, each.key)
   })
 
-  ami                     = local.ami_id
+  ami                     = local.ami.image_id
   instance_type           = var.instance_type
   key_name                = var.key_pair
   iam_instance_profile    = var.aviatrix_role_ec2_name
@@ -209,11 +213,21 @@ resource "aws_instance" "controllers" {
     volume_size = var.root_volume_size
     volume_type = var.root_volume_type
   }
+
+  lifecycle {
+    ignore_changes = [
+      ami
+    ]
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
+
+output "controller_ami" {
+  value = local.ami
+}
 
 output "controller_private_ip" {
   value       = aws_instance.controllers["aviatrix-controller"].private_ip
@@ -239,16 +253,6 @@ output "controllers" {
   value       = aws_instance.controllers
   description = "Map of the provisioned Aviatrix Controllers"
 }
-
-# data "aws_ami" "aviatrix_controller" {
-#   owners = ["aws-marketplace"]
-
-#   most_recent = true
-#   filter {
-#     name   = "name"
-#     values = ["*0c922525-51c4-4b64-94ec-744291c05c1c*"]
-#   }
-# }
 
 # owner_id = "591182166581"
 # data "aws_ami_ids" "aviatrix_controllers" {
