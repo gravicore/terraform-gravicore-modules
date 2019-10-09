@@ -1,119 +1,146 @@
 terraform {
-  required_version = ">= 0.12"
-
-  # The configuration for this backend will be filled in by Terragrunt
-  backend "s3" {}
+  required_version = "~> 0.12"
 }
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Providers
-# ----------------------------------------------------------------------------------------------------------------------
-
-provider "aws" {
-  version = "~> 2.26.0"
-  region  = var.aws_region
-
-  assume_role {
-    role_arn = "arn:aws:iam::${var.account_id}:role/${var.account_assume_role_name}"
-  }
-}
-
-provider "aws" {
-  alias   = "master"
-  version = "~> 2.26.0"
-  region  = var.aws_region
-
-  assume_role {
-    role_arn = "arn:aws:iam::${var.master_account_id}:role/${var.master_account_assume_role_name}"
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Module Shared Variables
-# ----------------------------------------------------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "name" {
-  default = "postgres"
+  type        = string
+  default     = "rds-postgres"
+  description = "The name of the module"
 }
 
-variable "create" {
-  default = "true"
+variable terraform_module {
+  type        = string
+  default     = "gravicore/terraform-gravicore-modules/aws/rds-postgres"
+  description = "The owner and name of the Terraform module"
 }
 
 variable "aws_region" {
-  default = "us-east-1"
+  type        = string
+  default     = "us-east-1"
+  description = "The AWS region to deploy module into"
 }
 
-variable "terraform_module" {
-  default = "gravicore/terraform-gravicore-modules/aws/rds-postgres"
+variable "create" {
+  type        = bool
+  default     = true
+  description = "Set to false to prevent the module from creating any resources"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
+# Recommended
+
 variable "namespace" {
-  default = "grv"
+  type        = string
+  default     = ""
+  description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 
 variable "environment" {
-  default = "shared"
+  type        = string
+  default     = ""
+  description = "The isolated environment the module is associated with (e.g. Shared Services `shared`, Application `app`)"
 }
 
 variable "stage" {
-  default = "dev"
+  type        = string
+  default     = ""
+  description = "The development stage (i.e. `dev`, `stg`, `prd`)"
 }
 
 variable "repository" {
-  default = ""
-}
-
-variable "master_account_id" {
+  type        = string
+  default     = ""
+  description = "The repository where the code referencing the module is stored"
 }
 
 variable "account_id" {
+  type        = string
+  default     = ""
+  description = "The AWS Account ID that contains the calling entity"
 }
 
-variable "master_account_assume_role_name" {
-  default = "grv_deploy_svc"
+variable "master_account_id" {
+  type        = string
+  default     = ""
+  description = "The Master AWS Account ID that owns the associate AWS account"
 }
 
-variable "account_assume_role_name" {
-  default = "OrganizationAccountAccessRole"
+# Optional
+
+variable "tags" {
+  type        = map(string)
+  default     = {}
+  description = "Additional map of tags (e.g. business_unit, cost_center)"
 }
 
 variable "desc_prefix" {
-  default = "Gravicore Module:"
+  type        = string
+  default     = "Gravicore:"
+  description = "The prefix to add to any descriptions attached to resources"
 }
 
-variable "tags" {
-  default = {}
+variable "environment_prefix" {
+  type        = string
+  default     = ""
+  description = "Concatenation of `namespace` and `environment`"
+}
+
+variable "stage_prefix" {
+  type        = string
+  default     = ""
+  description = "Concatenation of `namespace`, `environment` and `stage`"
+}
+
+variable "module_prefix" {
+  type        = string
+  default     = ""
+  description = "Concatenation of `namespace`, `environment`, `stage` and `name`"
+}
+
+variable "delimiter" {
+  type        = string
+  default     = "-"
+  description = "Delimiter to be used between `namespace`, `environment`, `stage`, `name`"
+}
+
+# Derived
+
+data "aws_caller_identity" "current" {
+  count = var.account_id == "" ? 1 : 0
 }
 
 locals {
-  environment_prefix = join("-", [var.namespace, var.environment])
-  stage_prefix       = join("-", [var.namespace, var.environment, var.stage])
-  module_prefix      = var.name == "" ? local.stage_prefix : join("-", [var.namespace, var.environment, var.stage, var.name])
+  account_id = coalesce(var.account_id, data.aws_caller_identity.current[0].account_id)
+
+  environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
+  stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
+  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.name])))
 
   business_tags = {
-    Namespace   = var.namespace
-    Environment = var.environment
+    namespace          = var.namespace
+    environment        = var.environment
+    environment_prefix = local.environment_prefix
   }
-
   technical_tags = {
-    Stage           = var.stage
-    Repository      = var.repository
-    MasterAccountID = var.master_account_id
-    AccountID       = var.account_id
-    TerraformModule = var.terraform_module
+    stage             = var.stage
+    module            = var.name
+    repository        = var.repository
+    master_account_id = var.master_account_id
+    account_id        = local.account_id
+    aws_region        = var.aws_region
   }
-
-  automation_tags = {}
-
+  automation_tags = {
+    terraform_module = var.terraform_module
+    stage_prefix     = local.stage_prefix
+    module_prefix    = local.module_prefix
+  }
   security_tags = {}
 
   tags = merge(
@@ -121,7 +148,6 @@ locals {
     local.technical_tags,
     local.automation_tags,
     local.security_tags,
-    var.tags,
+    var.tags
   )
 }
-

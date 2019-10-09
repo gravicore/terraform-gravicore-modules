@@ -1,13 +1,13 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
-variable "terraform_remote_state_vpc_key" {
-  description = "Key for the location of the remote state of the vpc module"
-}
+# variable "terraform_remote_state_vpc_key" {
+#   description = "Key for the location of the remote state of the vpc module"
+# }
 
-variable "terraform_remote_state_acct_key" {
-  description = "Key for the location of the remote state of the acct module"
-}
+# variable "terraform_remote_state_acct_key" {
+#   description = "Key for the location of the remote state of the acct module"
+# }
 
 variable "identifier" {
   description = "The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier"
@@ -18,6 +18,12 @@ variable "identifier" {
 
 variable "allocated_storage" {
   description = "The allocated storage in gigabytes"
+}
+
+variable "max_allocated_storage" {
+  type        = number
+  default     = 0
+  description = "(Optional) When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Configuring this will automatically ignore differences to allocated_storage. Must be greater than or equal to allocated_storage or 0 to disable Storage Autoscaling"
 }
 
 variable "storage_type" {
@@ -129,6 +135,12 @@ variable "publicly_accessible" {
   default     = false
 }
 
+variable "enable_iam_s3_import" {
+  description = "Whether to crate and add s3 import IAM role to RDS instance"
+  default     = true
+  type        = bool
+}
+
 variable "monitoring_interval" {
   description = "The interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB instance. To disable collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60."
   default     = 0
@@ -217,6 +229,12 @@ variable "ingress_sg_cidr" {
   type        = list(string)
 }
 
+variable "egress_sg_cidr" {
+  description = "List of the egress cidr's to create the security group."
+  default     = []
+  type        = list(string)
+}
+
 variable "vpc_id" {
   description = "VPC to create the security group in."
   default     = ""
@@ -261,6 +279,24 @@ variable "schedule" {
   description = "(Optional) Which schedule from the instance scheduler to adhere to"
 }
 
+variable "performance_insights_enabled" {
+  description = "(Optional) Specifies whether Performance Insights are enabled. Defaults to false"
+  default     = false
+  type        = bool
+}
+
+variable "performance_insights_kms_key_id" {
+  description = "(Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying performance_insights_kms_key_id, performance_insights_enabled needs to be set to true. Once KMS key is set, it can never be changed"
+  default     = ""
+  type        = string
+}
+
+variable "performance_insights_retention_period" {
+  description = "(Optional) The amount of time in days to retain Performance Insights data. Either 7 (7 days) or 731 (2 years). When specifying performance_insights_retention_period, performance_insights_enabled needs to be set to true. Defaults to '7'"
+  default     = 7
+  type        = number
+}
+
 locals {
   db_subnet_group_name = coalesce(
     var.db_subnet_group_name,
@@ -272,46 +308,46 @@ locals {
     module.db_parameter_group.this_db_parameter_group_id,
   )
   enable_create_db_parameter_group = var.parameter_group_name == "" ? var.create_db_parameter_group : false
-  enable_create_security_group     = var.vpc_id == "" ? var.create_db_security_group : false
-  remote_state_vpc_key = coalesce(
-    var.terraform_remote_state_vpc_key,
-    "master/${var.stage}/shared-vpc",
-  )
-  remote_state_acct_key = coalesce(
-    var.terraform_remote_state_acct_key,
-    "master/${var.stage}/acct",
-  )
-  kms_key_id = coalesce(
-    var.kms_key_id,
-    data.terraform_remote_state.acct.outputs.rds_key_arn,
-  )
+  enable_create_security_group     = var.vpc_id != "" ? var.create_db_security_group : false
+  # remote_state_vpc_key = coalesce(
+  #   var.terraform_remote_state_vpc_key,
+  #   "master/${var.stage}/shared-vpc",
+  # )
+  # remote_state_acct_key = coalesce(
+  #   var.terraform_remote_state_acct_key,
+  #   "master/${var.stage}/acct",
+  # )
+  # kms_key_id = coalesce(
+  #   var.kms_key_id,
+  #   data.terraform_remote_state.acct.outputs.rds_key_arn,
+  # )
 }
 
-data "terraform_remote_state" "acct" {
-  backend = "s3"
+# data "terraform_remote_state" "acct" {
+#   backend = "s3"
 
-  config = {
-    region         = var.aws_region
-    bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
-    encrypt        = true
-    key            = "${local.remote_state_acct_key}/terraform.tfstate"
-    dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
-    role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
-  }
-}
+#   config = {
+#     region         = var.aws_region
+#     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
+#     encrypt        = true
+#     key            = "${local.remote_state_acct_key}/terraform.tfstate"
+#     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
+#     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
+#   }
+# }
 
-data "terraform_remote_state" "vpc" {
-  backend = "s3"
+# data "terraform_remote_state" "vpc" {
+#   backend = "s3"
 
-  config = {
-    region         = var.aws_region
-    bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
-    encrypt        = true
-    key            = "${local.remote_state_vpc_key}/terraform.tfstate"
-    dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
-    role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
-  }
-}
+#   config = {
+#     region         = var.aws_region
+#     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
+#     encrypt        = true
+#     key            = "${local.remote_state_vpc_key}/terraform.tfstate"
+#     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
+#     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
+#   }
+# }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -321,21 +357,35 @@ data "aws_kms_key" "parameter_store_key" {
 }
 
 module "rds_ssm_param_secret" {
+  enabled        = var.password == "" ? "true" : "false"
   source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
   kms_arn        = "alias/parameter_store_key"
-  parameter_read = ["/${local.module_prefix}/rds-secret"]
+  parameter_read = ["/${local.stage_prefix}/${var.name}-password"]
 }
 
 module "rds_ssm_param_username" {
+  enabled        = var.username == "" ? "true" : "false"
   source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
-  parameter_read = ["/${local.module_prefix}/rds-username"]
+  parameter_read = ["/${local.stage_prefix}/${var.name}-username"]
 }
+
 
 resource "aws_security_group" "this" {
   count       = local.enable_create_security_group ? 1 : 0
-  name        = join("-", [local.stage_prefix, coalesce(var.name, "postgres")])
+  name        = local.module_prefix
   description = "Allow internal and VPN traffic"
-  vpc_id      = coalesce(var.vpc_id, data.terraform_remote_state.vpc.outputs.vpc_id)
+  vpc_id      = var.vpc_id
+  # vpc_id      = coalesce(var.vpc_id, data.terraform_remote_state.vpc.outputs.vpc_id)
+
+  # dynamic "ingress" {
+  #   for_each = toset(var.ingress_sg_cidr)
+  #   content {
+  #     from_port = var.port
+  #     to_port = var.port
+  #     protocol = 6
+  #     cidr_blocks = 
+  #   }
+  # }
 
   ingress {
     from_port   = var.port
@@ -348,7 +398,7 @@ resource "aws_security_group" "this" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = var.ingress_sg_cidr
+    cidr_blocks = coalescelist(var.egress_sg_cidr, var.ingress_sg_cidr)
   }
 
   lifecycle {
@@ -361,8 +411,9 @@ module "db_subnet_group" {
   source        = "./modules/db-subnet-group"
   create        = local.enable_create_db_subnet_group
   module_prefix = local.module_prefix
-  subnet_ids    = data.terraform_remote_state.vpc.outputs.vpc_private_subnets
-  tags          = local.tags
+  subnet_ids    = var.subnet_ids
+  # subnet_ids    = data.terraform_remote_state.vpc.outputs.vpc_private_subnets
+  tags = local.tags
 }
 
 module "db_parameter_group" {
@@ -375,62 +426,65 @@ module "db_parameter_group" {
 }
 
 module "db_instance" {
-  source              = "./modules/db-instance"
-  create              = var.create_db_instance
-  identifier          = var.identifier
-  module_prefix       = local.module_prefix
-  engine              = var.engine
-  engine_version      = var.engine_version
-  instance_class      = var.instance_class
-  allocated_storage   = var.allocated_storage
-  storage_type        = var.storage_type
-  deletion_protection = var.deletion_protection
-  storage_encrypted   = var.storage_encrypted
-  kms_key_id          = local.kms_key_id
-  license_model       = var.license_model
-  namespace           = var.namespace
-  environment         = var.environment
-  stage               = var.stage
-  name                = var.db_name
+  source                = "./modules/db-instance"
+  create                = var.create_db_instance
+  identifier            = var.identifier
+  module_prefix         = local.module_prefix
+  stage_prefix          = local.stage_prefix
+  name                  = var.name
+  delimiter             = var.delimiter
+  engine                = var.engine
+  engine_version        = var.engine_version
+  instance_class        = var.instance_class
+  allocated_storage     = var.allocated_storage
+  max_allocated_storage = var.max_allocated_storage
+  storage_type          = var.storage_type
+  deletion_protection   = var.deletion_protection
+  storage_encrypted     = var.storage_encrypted
+  kms_key_id            = var.kms_key_id
+  license_model         = var.license_model
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  db_name               = var.db_name
 
-  username = coalesce(
-    var.username,
-    module.rds_ssm_param_username.map[format("/%s/rds-username", local.module_prefix)],
-  )
-  password = coalesce(
-    var.password,
-    module.rds_ssm_param_secret.map[format("/%s/rds-secret", local.module_prefix)],
-  )
+
+  username                            = var.username == "" ? module.rds_ssm_param_username.map[format("/%s/${var.name}-username", local.stage_prefix)] : var.username
+  password                            = var.password == "" ? module.rds_ssm_param_secret.map[format("/%s/${var.name}-password", local.stage_prefix)] : var.password
   port                                = var.port
   iam_database_authentication_enabled = var.iam_database_authentication_enabled
 
   replicate_source_db = var.replicate_source_db
 
-  snapshot_identifier         = var.snapshot_identifier
-  vpc_security_group_ids      = coalescelist(var.vpc_security_group_ids, aws_security_group.this.*.id)
-  db_subnet_group_name        = local.db_subnet_group_name
-  parameter_group_name        = local.parameter_group_name
-  availability_zone           = var.availability_zone
-  multi_az                    = var.multi_az
-  iops                        = var.iops
-  publicly_accessible         = var.publicly_accessible
-  allow_major_version_upgrade = var.allow_major_version_upgrade
-  auto_minor_version_upgrade  = var.auto_minor_version_upgrade
-  apply_immediately           = var.apply_immediately
-  maintenance_window          = var.maintenance_window
-  skip_final_snapshot         = var.skip_final_snapshot
-  copy_tags_to_snapshot       = var.copy_tags_to_snapshot
-  final_snapshot_identifier   = var.final_snapshot_identifier
-  backup_retention_period     = var.backup_retention_period
-  backup_window               = var.backup_window
-  monitoring_interval         = var.monitoring_interval
-  monitoring_role_arn         = var.monitoring_role_arn
-  monitoring_role_name        = var.monitoring_role_name
-  create_monitoring_role      = var.create_monitoring_role
-  timezone                    = var.timezone
-  character_set_name          = var.character_set_name
-  tags                        = local.tags
-  schedule                    = var.schedule
+  snapshot_identifier                   = var.snapshot_identifier
+  vpc_security_group_ids                = coalescelist(var.vpc_security_group_ids, [aws_security_group.this[0].id])
+  db_subnet_group_name                  = local.db_subnet_group_name
+  parameter_group_name                  = local.parameter_group_name
+  availability_zone                     = var.availability_zone
+  multi_az                              = var.multi_az
+  iops                                  = var.iops
+  publicly_accessible                   = var.publicly_accessible
+  allow_major_version_upgrade           = var.allow_major_version_upgrade
+  auto_minor_version_upgrade            = var.auto_minor_version_upgrade
+  apply_immediately                     = var.apply_immediately
+  maintenance_window                    = var.maintenance_window
+  skip_final_snapshot                   = var.skip_final_snapshot
+  copy_tags_to_snapshot                 = var.copy_tags_to_snapshot
+  final_snapshot_identifier             = var.final_snapshot_identifier
+  performance_insights_enabled          = var.performance_insights_enabled
+  performance_insights_kms_key_id       = var.performance_insights_enabled ? coalesce(var.performance_insights_kms_key_id, var.kms_key_id) : null
+  performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
+  backup_retention_period               = var.backup_retention_period
+  backup_window                         = var.backup_window
+  enable_iam_s3_import                  = var.enable_iam_s3_import
+  monitoring_interval                   = var.monitoring_interval
+  monitoring_role_arn                   = var.monitoring_role_arn
+  monitoring_role_name                  = var.monitoring_role_name
+  create_monitoring_role                = var.create_monitoring_role
+  timezone                              = var.timezone
+  character_set_name                    = var.character_set_name
+  tags                                  = local.tags
+  schedule                              = var.schedule
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -481,15 +535,16 @@ output "db_instance_name" {
   value       = module.db_instance.this_db_instance_name
 }
 
-output "db_instance_username" {
-  description = "The master username for the database"
-  value       = module.db_instance.this_db_instance_username
-}
+# output "db_instance_username" {
+#   description = "The master username for the database"
+#   value       = module.db_instance.this_db_instance_username
+# }
 
-output "db_instance_password" {
-  description = "The database password (this password may be old, because Terraform doesn't track it after initial creation)"
-  value       = var.password
-}
+# output "db_instance_password" {
+#   description = "The database password (this password may be old, because Terraform doesn't track it after initial creation)"
+#   value       = var.password
+#   sensitive   = true
+# }
 
 output "db_instance_port" {
   description = "The database port"

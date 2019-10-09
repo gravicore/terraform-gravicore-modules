@@ -25,9 +25,16 @@ variable "repository" {
 variable "module_prefix" {
 }
 
+variable "stage_prefix" {
+}
+
+variable "name" {
+}
+
 variable "create" {
   description = "Whether to create this resource or not?"
   default     = true
+  type        = bool
 }
 
 variable "identifier" {
@@ -38,6 +45,10 @@ variable "identifier" {
 
 variable "allocated_storage" {
   description = "The allocated storage in gigabytes"
+}
+
+variable "max_allocated_storage" {
+  description = "(Optional) When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Configuring this will automatically ignore differences to allocated_storage. Must be greater than or equal to allocated_storage or 0 to disable Storage Autoscaling"
 }
 
 variable "storage_type" {
@@ -87,7 +98,7 @@ variable "instance_class" {
   description = "The instance type of the RDS instance"
 }
 
-variable "name" {
+variable "db_name" {
   description = "The DB name to create. If omitted, no database is created initially"
   default     = ""
 }
@@ -142,6 +153,10 @@ variable "iops" {
 variable "publicly_accessible" {
   description = "Bool to control if instance is publicly accessible"
   default     = false
+}
+
+variable "enable_iam_s3_import" {
+  description = "Whether to crate and add s3 import IAM role to RDS instance"
 }
 
 variable "monitoring_interval" {
@@ -221,6 +236,21 @@ variable "schedule" {
   default     = ""
 }
 
+variable "performance_insights_enabled" {
+  description = "(Optional) Specifies whether Performance Insights are enabled. Defaults to false"
+  default     = ""
+}
+
+variable "performance_insights_kms_key_id" {
+  description = "(Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying performance_insights_kms_key_id, performance_insights_enabled needs to be set to true. Once KMS key is set, it can never be changed"
+  default     = ""
+}
+
+variable "performance_insights_retention_period" {
+  description = "(Optional) The amount of time in days to retain Performance Insights data. Either 7 (7 days) or 731 (2 years). When specifying performance_insights_retention_period, performance_insights_enabled needs to be set to true. Defaults to '7'"
+  default     = ""
+}
+
 locals {
   is_mssql = element(split("-", var.engine), 0) == "sqlserver"
 }
@@ -244,20 +274,22 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring" {
 }
 
 resource "aws_db_instance" "this" {
-  count = var.create && false == local.is_mssql ? length(var.identifier) : 0
+  # count = var.create && false == local.is_mssql ? length(var.identifier) : 0
+  for_each   = var.create && length(var.identifier) == 0 ? toset([var.name]) : toset(var.identifier)
+  identifier = replace(join(var.delimiter, compact([length(var.identifier) == 0 ? var.stage_prefix : var.module_prefix, each.key])), "--", "-")
+  # identifier = "${var.module_prefix}-${element(var.identifier, count.index)}"
 
-  identifier = "${var.module_prefix}-${element(var.identifier, count.index)}"
+  engine                = var.engine
+  engine_version        = var.engine_version
+  instance_class        = var.instance_class
+  allocated_storage     = var.allocated_storage
+  max_allocated_storage = var.max_allocated_storage
+  storage_type          = var.storage_type
+  storage_encrypted     = var.storage_encrypted
+  kms_key_id            = var.kms_key_id
+  license_model         = var.license_model
 
-  engine            = var.engine
-  engine_version    = var.engine_version
-  instance_class    = var.instance_class
-  allocated_storage = var.allocated_storage
-  storage_type      = var.storage_type
-  storage_encrypted = var.storage_encrypted
-  kms_key_id        = var.kms_key_id
-  license_model     = var.license_model
-
-  name                                = var.name
+  name                                = var.db_name
   username                            = var.username
   password                            = var.password
   port                                = var.port
@@ -287,7 +319,12 @@ resource "aws_db_instance" "this" {
   maintenance_window          = var.maintenance_window
   skip_final_snapshot         = var.skip_final_snapshot
   copy_tags_to_snapshot       = var.copy_tags_to_snapshot
-  final_snapshot_identifier   = "${var.module_prefix}-${element(var.identifier, count.index)}-${var.final_snapshot_identifier}"
+  final_snapshot_identifier   = replace(join(var.delimiter, compact([length(var.identifier) == 0 ? var.stage_prefix : var.module_prefix, each.key, var.final_snapshot_identifier])), "--", "-")
+  # final_snapshot_identifier   = "${var.module_prefix}-${element(var.identifier, count.index)}-${var.final_snapshot_identifier}"
+
+  performance_insights_enabled          = var.performance_insights_enabled
+  performance_insights_kms_key_id       = var.performance_insights_kms_key_id
+  performance_insights_retention_period = var.performance_insights_retention_period
 
   backup_retention_period = var.backup_retention_period
   backup_window           = var.backup_window
@@ -297,11 +334,8 @@ resource "aws_db_instance" "this" {
   tags = merge(
     var.tags,
     {
-      "Name" = format(
-        "${var.module_prefix}-%s",
-        element(var.identifier, count.index),
-      )
-      "Schedule" = format("%s", var.schedule)
+      "name"     = replace(join(var.delimiter, compact([length(var.identifier) == 0 ? var.stage_prefix : var.module_prefix, each.key])), "--", "-")
+      "schedule" = format("%s", var.schedule)
     },
   )
 
@@ -315,82 +349,147 @@ resource "aws_db_instance" "this" {
   }
 }
 
+resource "aws_iam_role" "s3_inegration" {
+  count = var.create && var.enable_iam_s3_import ? 1 : 0
+  name  = var.module_prefix
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "rds.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy" "s3" {
+  count = var.create && var.enable_iam_s3_import ? 1 : 0
+  name  = var.module_prefix
+  role  = aws_iam_role.s3_inegration[0].id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}
+
+resource "aws_db_instance_role_association" "this" {
+  for_each               = var.create && var.enable_iam_s3_import ? aws_db_instance.this : {}
+  db_instance_identifier = each.value.id
+  feature_name           = "s3Import"
+  role_arn               = aws_iam_role.s3_inegration[0].arn
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-locals {
-  this_db_instance_address           = element(concat(aws_db_instance.this.*.address, [""]), 0)
-  this_db_instance_arn               = element(concat(aws_db_instance.this.*.arn, [""]), 0)
-  this_db_instance_availability_zone = element(concat(aws_db_instance.this.*.availability_zone, [""]), 0)
-  this_db_instance_endpoint          = element(concat(aws_db_instance.this.*.endpoint, [""]), 0)
-  this_db_instance_hosted_zone_id    = element(concat(aws_db_instance.this.*.hosted_zone_id, [""]), 0)
-  this_db_instance_id                = element(concat(aws_db_instance.this.*.id, [""]), 0)
-  this_db_instance_resource_id       = element(concat(aws_db_instance.this.*.resource_id, [""]), 0)
-  this_db_instance_status            = element(concat(aws_db_instance.this.*.status, [""]), 0)
-  this_db_instance_name              = element(concat(aws_db_instance.this.*.name, [""]), 0)
-  this_db_instance_username          = element(concat(aws_db_instance.this.*.username, [""]), 0)
-  this_db_instance_password          = element(concat(aws_db_instance.this.*.password, [""]), 0)
-  this_db_instance_port              = element(concat(aws_db_instance.this.*.port, [""]), 0)
-}
+# locals {
+#   this_db_instance_address           = element(concat(aws_db_instance.this.*.address, [""]), 0)
+#   this_db_instance_arn               = element(concat(aws_db_instance.this.*.arn, [""]), 0)
+#   this_db_instance_availability_zone = element(concat(aws_db_instance.this.*.availability_zone, [""]), 0)
+#   this_db_instance_endpoint          = element(concat(aws_db_instance.this.*.endpoint, [""]), 0)
+#   this_db_instance_hosted_zone_id    = element(concat(aws_db_instance.this.*.hosted_zone_id, [""]), 0)
+#   this_db_instance_id                = element(concat(aws_db_instance.this.*.id, [""]), 0)
+#   this_db_instance_resource_id       = element(concat(aws_db_instance.this.*.resource_id, [""]), 0)
+#   this_db_instance_status            = element(concat(aws_db_instance.this.*.status, [""]), 0)
+#   this_db_instance_name              = element(concat(aws_db_instance.this.*.name, [""]), 0)
+#   this_db_instance_username          = element(concat(aws_db_instance.this.*.username, [""]), 0)
+#   this_db_instance_password          = element(concat(aws_db_instance.this.*.password, [""]), 0)
+#   this_db_instance_port              = element(concat(aws_db_instance.this.*.port, [""]), 0)
+# }
 
 output "this_db_instance_address" {
   description = "The address of the RDS instance"
-  value       = local.this_db_instance_address
+  # value       = aws_db_instance.this[0].address
+  value = [for i in aws_db_instance.this : i["address"]]
 }
 
 output "this_db_instance_arn" {
   description = "The ARN of the RDS instance"
-  value       = local.this_db_instance_arn
+  # value       = aws_db_instance.this[*].arn
+  value = [for i in aws_db_instance.this : i["arn"]]
 }
 
 output "this_db_instance_availability_zone" {
   description = "The availability zone of the RDS instance"
-  value       = local.this_db_instance_availability_zone
+  # value       = aws_db_instance.this.*.availability_zone
+  value = [for i in aws_db_instance.this : i["availability_zone"]]
 }
 
 output "this_db_instance_endpoint" {
   description = "The connection endpoint"
-  value       = local.this_db_instance_endpoint
+  # value       = aws_db_instance.this.*.endpoint
+  value = [for i in aws_db_instance.this : i["endpoint"]]
 }
 
 output "this_db_instance_hosted_zone_id" {
   description = "The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)"
-  value       = local.this_db_instance_hosted_zone_id
+  # value       = aws_db_instance.this.*.hosted_zone_id
+  value = [for i in aws_db_instance.this : i["hosted_zone_id"]]
 }
 
 output "this_db_instance_id" {
   description = "The RDS instance ID"
-  value       = local.this_db_instance_id
+  value       = [for i in aws_db_instance.this : i["id"]]
 }
 
 output "this_db_instance_resource_id" {
   description = "The RDS Resource ID of this instance"
-  value       = local.this_db_instance_resource_id
+  # value       = aws_db_instance.this.*.resource_id
+  value = [for i in aws_db_instance.this : i["resource_id"]]
 }
 
 output "this_db_instance_status" {
   description = "The RDS instance status"
-  value       = local.this_db_instance_status
+  # value       = aws_db_instance.this.*.status
+  value = [for i in aws_db_instance.this : i["status"]]
 }
 
 output "this_db_instance_name" {
   description = "The database name"
-  value       = local.this_db_instance_name
+  # value       = aws_db_instance.this.*.name
+  value = [for i in aws_db_instance.this : i["name"]]
 }
 
-output "this_db_instance_username" {
-  description = "The master username for the database"
-  value       = local.this_db_instance_username
-}
+# output "this_db_instance_username" {
+#   description = "The master username for the database"
+#   value       = aws_db_instance.this.*.username
+#   value = [for i in aws_db_instance.this : i["availability_zone"]]
+# }
 
-output "this_db_instance_password" {
-  description = "The database password (this password may be old, because Terraform doesn't track it after initial creation)"
-  value       = local.this_db_instance_password
-}
+# output "this_db_instance_password" {
+#   description = "The database password (this password may be old, because Terraform doesn't track it after initial creation)"
+#   value       = aws_db_instance.this.*.password
+#   value = [for i in aws_db_instance.this : i["availability_zone"]]
+# }
 
 output "this_db_instance_port" {
   description = "The database port"
-  value       = local.this_db_instance_port
+  # value       = aws_db_instance.this.*.port
+  value = [for i in aws_db_instance.this : i["port"]]
 }
 
