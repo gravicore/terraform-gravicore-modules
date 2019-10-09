@@ -274,10 +274,8 @@ resource "aws_iam_role_policy_attachment" "enhanced_monitoring" {
 }
 
 resource "aws_db_instance" "this" {
-  # count = var.create && false == local.is_mssql ? length(var.identifier) : 0
   for_each   = var.create && length(var.identifier) == 0 ? toset([var.name]) : toset(var.identifier)
   identifier = replace(join(var.delimiter, compact([length(var.identifier) == 0 ? var.stage_prefix : var.module_prefix, each.key])), "--", "-")
-  # identifier = "${var.module_prefix}-${element(var.identifier, count.index)}"
 
   engine                = var.engine
   engine_version        = var.engine_version
@@ -320,7 +318,6 @@ resource "aws_db_instance" "this" {
   skip_final_snapshot         = var.skip_final_snapshot
   copy_tags_to_snapshot       = var.copy_tags_to_snapshot
   final_snapshot_identifier   = replace(join(var.delimiter, compact([length(var.identifier) == 0 ? var.stage_prefix : var.module_prefix, each.key, var.final_snapshot_identifier])), "--", "-")
-  # final_snapshot_identifier   = "${var.module_prefix}-${element(var.identifier, count.index)}-${var.final_snapshot_identifier}"
 
   performance_insights_enabled          = var.performance_insights_enabled
   performance_insights_kms_key_id       = var.performance_insights_kms_key_id
@@ -407,48 +404,28 @@ resource "aws_db_instance_role_association" "this" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-# locals {
-#   this_db_instance_address           = element(concat(aws_db_instance.this.*.address, [""]), 0)
-#   this_db_instance_arn               = element(concat(aws_db_instance.this.*.arn, [""]), 0)
-#   this_db_instance_availability_zone = element(concat(aws_db_instance.this.*.availability_zone, [""]), 0)
-#   this_db_instance_endpoint          = element(concat(aws_db_instance.this.*.endpoint, [""]), 0)
-#   this_db_instance_hosted_zone_id    = element(concat(aws_db_instance.this.*.hosted_zone_id, [""]), 0)
-#   this_db_instance_id                = element(concat(aws_db_instance.this.*.id, [""]), 0)
-#   this_db_instance_resource_id       = element(concat(aws_db_instance.this.*.resource_id, [""]), 0)
-#   this_db_instance_status            = element(concat(aws_db_instance.this.*.status, [""]), 0)
-#   this_db_instance_name              = element(concat(aws_db_instance.this.*.name, [""]), 0)
-#   this_db_instance_username          = element(concat(aws_db_instance.this.*.username, [""]), 0)
-#   this_db_instance_password          = element(concat(aws_db_instance.this.*.password, [""]), 0)
-#   this_db_instance_port              = element(concat(aws_db_instance.this.*.port, [""]), 0)
-# }
-
 output "this_db_instance_address" {
   description = "The address of the RDS instance"
-  # value       = aws_db_instance.this[0].address
   value = [for i in aws_db_instance.this : i["address"]]
 }
 
 output "this_db_instance_arn" {
   description = "The ARN of the RDS instance"
-  # value       = aws_db_instance.this[*].arn
   value = [for i in aws_db_instance.this : i["arn"]]
 }
 
 output "this_db_instance_availability_zone" {
   description = "The availability zone of the RDS instance"
-  # value       = aws_db_instance.this.*.availability_zone
   value = [for i in aws_db_instance.this : i["availability_zone"]]
 }
 
 output "this_db_instance_endpoint" {
   description = "The connection endpoint"
-  # value       = aws_db_instance.this.*.endpoint
   value = [for i in aws_db_instance.this : i["endpoint"]]
 }
 
 output "this_db_instance_hosted_zone_id" {
   description = "The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)"
-  # value       = aws_db_instance.this.*.hosted_zone_id
   value = [for i in aws_db_instance.this : i["hosted_zone_id"]]
 }
 
@@ -459,19 +436,16 @@ output "this_db_instance_id" {
 
 output "this_db_instance_resource_id" {
   description = "The RDS Resource ID of this instance"
-  # value       = aws_db_instance.this.*.resource_id
   value = [for i in aws_db_instance.this : i["resource_id"]]
 }
 
 output "this_db_instance_status" {
   description = "The RDS instance status"
-  # value       = aws_db_instance.this.*.status
   value = [for i in aws_db_instance.this : i["status"]]
 }
 
 output "this_db_instance_name" {
   description = "The database name"
-  # value       = aws_db_instance.this.*.name
   value = [for i in aws_db_instance.this : i["name"]]
 }
 
@@ -489,7 +463,6 @@ output "this_db_instance_name" {
 
 output "this_db_instance_port" {
   description = "The database port"
-  # value       = aws_db_instance.this.*.port
   value = [for i in aws_db_instance.this : i["port"]]
 }
 

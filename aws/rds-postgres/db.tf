@@ -309,45 +309,7 @@ locals {
   )
   enable_create_db_parameter_group = var.parameter_group_name == "" ? var.create_db_parameter_group : false
   enable_create_security_group     = var.vpc_id != "" ? var.create_db_security_group : false
-  # remote_state_vpc_key = coalesce(
-  #   var.terraform_remote_state_vpc_key,
-  #   "master/${var.stage}/shared-vpc",
-  # )
-  # remote_state_acct_key = coalesce(
-  #   var.terraform_remote_state_acct_key,
-  #   "master/${var.stage}/acct",
-  # )
-  # kms_key_id = coalesce(
-  #   var.kms_key_id,
-  #   data.terraform_remote_state.acct.outputs.rds_key_arn,
-  # )
 }
-
-# data "terraform_remote_state" "acct" {
-#   backend = "s3"
-
-#   config = {
-#     region         = var.aws_region
-#     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
-#     encrypt        = true
-#     key            = "${local.remote_state_acct_key}/terraform.tfstate"
-#     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
-#     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
-#   }
-# }
-
-# data "terraform_remote_state" "vpc" {
-#   backend = "s3"
-
-#   config = {
-#     region         = var.aws_region
-#     bucket         = "${var.namespace}-master-prd-tf-state-${var.master_account_id}"
-#     encrypt        = true
-#     key            = "${local.remote_state_vpc_key}/terraform.tfstate"
-#     dynamodb_table = "${var.namespace}-master-prd-tf-state-lock"
-#     role_arn       = "arn:aws:iam::${var.master_account_id}:role/grv_deploy_svc"
-#   }
-# }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -375,17 +337,6 @@ resource "aws_security_group" "this" {
   name        = local.module_prefix
   description = "Allow internal and VPN traffic"
   vpc_id      = var.vpc_id
-  # vpc_id      = coalesce(var.vpc_id, data.terraform_remote_state.vpc.outputs.vpc_id)
-
-  # dynamic "ingress" {
-  #   for_each = toset(var.ingress_sg_cidr)
-  #   content {
-  #     from_port = var.port
-  #     to_port = var.port
-  #     protocol = 6
-  #     cidr_blocks = 
-  #   }
-  # }
 
   ingress {
     from_port   = var.port
@@ -412,7 +363,6 @@ module "db_subnet_group" {
   create        = local.enable_create_db_subnet_group
   module_prefix = local.module_prefix
   subnet_ids    = var.subnet_ids
-  # subnet_ids    = data.terraform_remote_state.vpc.outputs.vpc_private_subnets
   tags = local.tags
 }
 
