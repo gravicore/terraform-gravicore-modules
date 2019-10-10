@@ -406,27 +406,27 @@ resource "aws_db_instance_role_association" "this" {
 
 output "this_db_instance_address" {
   description = "The address of the RDS instance"
-  value = [for i in aws_db_instance.this : i["address"]]
+  value       = [for i in aws_db_instance.this : i["address"]]
 }
 
 output "this_db_instance_arn" {
   description = "The ARN of the RDS instance"
-  value = [for i in aws_db_instance.this : i["arn"]]
+  value       = [for i in aws_db_instance.this : i["arn"]]
 }
 
 output "this_db_instance_availability_zone" {
   description = "The availability zone of the RDS instance"
-  value = [for i in aws_db_instance.this : i["availability_zone"]]
+  value       = [for i in aws_db_instance.this : i["availability_zone"]]
 }
 
 output "this_db_instance_endpoint" {
   description = "The connection endpoint"
-  value = [for i in aws_db_instance.this : i["endpoint"]]
+  value       = [for i in aws_db_instance.this : i["endpoint"]]
 }
 
 output "this_db_instance_hosted_zone_id" {
   description = "The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)"
-  value = [for i in aws_db_instance.this : i["hosted_zone_id"]]
+  value       = [for i in aws_db_instance.this : i["hosted_zone_id"]]
 }
 
 output "this_db_instance_id" {
@@ -436,17 +436,17 @@ output "this_db_instance_id" {
 
 output "this_db_instance_resource_id" {
   description = "The RDS Resource ID of this instance"
-  value = [for i in aws_db_instance.this : i["resource_id"]]
+  value       = [for i in aws_db_instance.this : i["resource_id"]]
 }
 
 output "this_db_instance_status" {
   description = "The RDS instance status"
-  value = [for i in aws_db_instance.this : i["status"]]
+  value       = [for i in aws_db_instance.this : i["status"]]
 }
 
 output "this_db_instance_name" {
   description = "The database name"
-  value = [for i in aws_db_instance.this : i["name"]]
+  value       = [for i in aws_db_instance.this : i["name"]]
 }
 
 # output "this_db_instance_username" {
@@ -463,6 +463,6 @@ output "this_db_instance_name" {
 
 output "this_db_instance_port" {
   description = "The database port"
-  value = [for i in aws_db_instance.this : i["port"]]
+  value       = [for i in aws_db_instance.this : i["port"]]
 }
 

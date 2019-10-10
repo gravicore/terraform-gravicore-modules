@@ -363,7 +363,7 @@ module "db_subnet_group" {
   create        = local.enable_create_db_subnet_group
   module_prefix = local.module_prefix
   subnet_ids    = var.subnet_ids
-  tags = local.tags
+  tags          = local.tags
 }
 
 module "db_parameter_group" {
