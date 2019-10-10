@@ -1,13 +1,6 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
-# variable "terraform_remote_state_vpc_key" {
-#   description = "Key for the location of the remote state of the vpc module"
-# }
-
-# variable "terraform_remote_state_acct_key" {
-#   description = "Key for the location of the remote state of the acct module"
-# }
 
 variable "identifier" {
   description = "The name of the RDS instance, if omitted, Terraform will assign a random, unique identifier"
