@@ -68,7 +68,7 @@ variable "enable_ha" {
 data "aws_ami" "metered" {
   for_each = var.create && var.license_type == "metered" ? toset(["0"]) : []
 
-  owners = ["aws-marketplace"]
+  owners      = ["aws-marketplace"]
   most_recent = true
   filter {
     name   = "name"
@@ -79,7 +79,7 @@ data "aws_ami" "metered" {
 data "aws_ami" "byol" {
   for_each = var.create && var.license_type == "byol" ? toset(["0"]) : []
 
-  owners = ["aws-marketplace"]
+  owners      = ["aws-marketplace"]
   most_recent = true
   filter {
     name   = "name"

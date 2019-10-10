@@ -30,7 +30,7 @@ resource "aviatrix_aws_tgw_vpn_conn" "tgw_vpn_dynamic_connections" {
 
   tgw_name          = local.stage_prefix
   route_domain_name = "Default_Domain"
-  connection_name   = each.key
+  connection_name   = format("%s-%s-%s", local.stage_prefix, "vpn", each.key)
   public_ip         = each.value.public_ip
   remote_as_number  = each.value.remote_as_number
 }
@@ -41,7 +41,7 @@ resource "aviatrix_aws_tgw_vpn_conn" "tgw_vpn_static_connections" {
 
   tgw_name          = local.stage_prefix
   route_domain_name = "Default_Domain"
-  connection_name   = each.key
+  connection_name   = format("%s-%s-%s", local.stage_prefix, "vpn", each.key)
   public_ip         = each.value.public_ip
   remote_cidr       = each.value.remote_cidr
 }
