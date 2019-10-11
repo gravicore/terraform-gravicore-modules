@@ -6,8 +6,8 @@ variable "write_parameters" {
   description = <<DESC
 Map of parameters to write to the SSM Parameter store. Example:
     { "/grv-shared-dev/rds-postgres-password" = {   // Required - The name of the parameter. If the name contains a path (e.g. any forward slashes (/)), it must be fully qualified with a leading forward slash (/).
-        type = "SecureString" // Required - Valid types are String, StringList and SecureString
         value = "password1" // Required - The value of the parameter
+        type = "SecureString" // Optional - Valid types are String, StringList and SecureString
         description = "Production database master password" // Optional - The description of the parameter
         overwrite = false // Optional - Force Overwrite of value if true
         allowed_pattern = "" // Optional - A regular expression used to validate the parameter value
@@ -37,16 +37,16 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_ssm_parameter" "write_parameters" {
-  for_each    = var.create ? var.write_parameters : {}
+  for_each    = var.create ? { for k, v in var.write_parameters : k => v if v.value != "" } : {}
   name        = each.key
   description = format("%s %s", var.desc_prefix, lookup(each.value, "description", each.key))
   tags        = var.tags
 
-  type            = "${lookup(each.value, "type", "String")}"
-  key_id          = lookup(each.value, "type", "SecureString") == "SecureString" ? local.kms_arn : ""
+  type            = lookup(each.value, "type", "String")
+  key_id          = lookup(each.value, "type", "String") == "SecureString" ? local.kms_arn : null
   value           = each.value.value
-  overwrite       = "${lookup(each.value, "overwrite", true)}"
-  allowed_pattern = "${lookup(each.value, "allowed_pattern", "")}"
+  overwrite       = lookup(each.value, "overwrite", true)
+  allowed_pattern = lookup(each.value, "allowed_pattern", "")
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -54,6 +54,7 @@ resource "aws_ssm_parameter" "write_parameters" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "write_parameters" {
+  description = "Map of SSM parameters that have been written to the store"
   value       = aws_ssm_parameter.write_parameters
-  description = ""
+  sensitive   = true
 }
