@@ -151,32 +151,22 @@ resource "aws_iam_role_policy_attachment" "app" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "account_id" {
-  value       = local.account_id
-  description = "The AWS account ID"
-}
-
-output "account_name" {
-  value       = local.stage_prefix
-  description = "The AWS account alias"
-}
-
-output "aviatrix_role_ec2_name" {
+output "aviatrix_iam_role_ec2_name" {
   value       = aws_iam_role.ec2[0].name
   description = "The ARN of the newly created Aviatrix IAM EC2 Role"
 }
 
-output "aviatrix_role_app_name" {
+output "aviatrix_iam_role_app_name" {
   value       = aws_iam_role.app[0].name
   description = "The name of the newly created Aviatrix IAM App Role"
 }
 
-output "aviatrix_role_ec2_arn" {
+output "aviatrix_iam_role_ec2_arn" {
   value       = aws_iam_role.ec2[0].arn
   description = "The ARN of the newly created Aviatrix IAM EC2 Role"
 }
 
-output "aviatrix_role_app_arn" {
+output "aviatrix_iam_role_app_arn" {
   value       = aws_iam_role.app[0].arn
   description = "The ARN of the newly created Aviatrix IAM App Role"
 }

@@ -33,7 +33,7 @@ variable "key_pair" {
   type        = string
 }
 
-variable "aviatrix_role_ec2_name" {
+variable "aviatrix_iam_role_ec2_name" {
   description = "The name of the aviatrix-ec2-role IAM role"
   type        = string
   default     = "aviatrix-role-ec2"
@@ -115,48 +115,11 @@ locals {
   enabled_controllers = merge(local.controller, local.controller_ha)
 
   ami = var.license_type == "metered" ? data.aws_ami.metered["0"] : data.aws_ami.byol["0"]
-
-  images_byol = {
-    us-east-1      = "ami-02465f499ff5092e1"
-    us-east-2      = "ami-0861f8a0e35a19b0b"
-    us-west-1      = "ami-0cf70ae96639f0057"
-    us-west-2      = "ami-0d1499f297ecddea6"
-    ca-central-1   = "ami-08ca66ca024bbce49"
-    eu-central-1   = "ami-0f27d29114cb3e116"
-    eu-west-1      = "ami-08d86496a8dcb9d33"
-    eu-west-2      = "ami-001bdb44b4e47313a"
-    eu-west-3      = "ami-01838788ed74ad98d"
-    eu-north-1     = "ami-b2f378cc"
-    ap-east-1      = "ami-9a552eeb"
-    ap-southeast-1 = "ami-0a9c6a012c943b907"
-    ap-southeast-2 = "ami-0e4d20f09c0318644"
-    ap-northeast-1 = "ami-0971c3882816c1bc4"
-    ap-northeast-2 = "ami-0d5e9b905bf30d2d3"
-    ap-south-1     = "ami-0971c3882816c1bc4"
-    sa-east-1      = "ami-0696240d0fc2ecc53"
-    us-gov-west-1  = "ami-a9afe8c8"
-  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
-
-# module "controller" {
-#   source      = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-build?ref=terraform_0.12"
-#   name_prefix = local.module_prefix
-
-#   vpc                    = var.vpc_id
-#   subnet                 = var.vpc_public_subnets[0]
-#   keypair                = var.key_pair
-#   ec2role                = var.aviatrix_role_ec2_name
-#   instance_type          = var.instance_type
-#   root_volume_size       = var.root_volume_size
-#   root_volume_type       = var.root_volume_type
-#   incoming_ssl_cidr      = var.incoming_ssl_cidr
-#   type                   = var.license_type
-#   termination_protection = var.termination_protection
-# }
 
 resource "aws_security_group" "controller" {
   count       = var.create ? 1 : 0
@@ -223,7 +186,7 @@ resource "aws_instance" "controllers" {
   ami                     = local.ami.image_id
   instance_type           = var.instance_type
   key_name                = var.key_pair
-  iam_instance_profile    = var.aviatrix_role_ec2_name
+  iam_instance_profile    = var.aviatrix_iam_role_ec2_name
   disable_api_termination = var.termination_protection
 
   network_interface {
@@ -256,22 +219,6 @@ resource "random_password" "admin_password" {
   }
 }
 
-module "parameters_admin_password" {
-  source = "../../parameters"
-  # source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=GRVDEV-81-Create-Aviatrix-modules"
-  providers   = { aws = "aws" }
-  create      = var.create
-  namespace   = var.namespace
-  environment = var.environment
-  stage       = var.stage
-  tags        = local.tags
-
-  write_parameters = {
-    "/${local.stage_prefix}/${var.name}-admin-password" = { value = random_password.admin_password.result, type = "SecureString",
-    description = "The administrator's password for the Aviatrix Controller" }
-  }
-}
-
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
@@ -279,8 +226,7 @@ module "parameters_admin_password" {
 # SSM Parameters
 
 module "parameters_controller" {
-  source = "../../parameters"
-  # source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=GRVDEV-81-Create-Aviatrix-modules"
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
   providers   = { aws = "aws" }
   create      = var.create
   namespace   = var.namespace
@@ -293,6 +239,8 @@ module "parameters_controller" {
     description = "The administrator's username for the Aviatrix Controller" }
     "/${local.stage_prefix}/${var.name}-admin-email" = { value = var.admin_email,
     description = "The administrator's email address that will be used for password recovery as well as for notifications from the Controller" }
+    "/${local.stage_prefix}/${var.name}-admin-password" = { value = random_password.admin_password.result, type = "SecureString",
+    description = "The administrator's password for the Aviatrix Controller" }
     "/${local.stage_prefix}/${var.name}-access-account-name" = { value = local.access_account_name,
     description = "Access Account Name of the Avaitrix Controller" }
     "/${local.stage_prefix}/${var.name}-customer-license-id" = { value = var.customer_license_id, type = "SecureString",

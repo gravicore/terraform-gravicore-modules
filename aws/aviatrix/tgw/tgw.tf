@@ -109,8 +109,7 @@ resource "aviatrix_aws_tgw" "tgw" {
 # SSM Parameters
 
 module "parameters_tgw" {
-  source = "../../parameters"
-  # source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=GRVDEV-81-Create-Aviatrix-modules"
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
   providers   = { aws = "aws" }
   create      = var.create
   namespace   = var.namespace
