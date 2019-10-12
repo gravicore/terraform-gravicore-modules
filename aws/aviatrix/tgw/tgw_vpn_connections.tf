@@ -50,6 +50,27 @@ resource "aviatrix_aws_tgw_vpn_conn" "tgw_vpn_static_connections" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
+# SSM Parameters
+
+module "parameters_tgw_vpn_connections" {
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+  providers   = { aws = "aws" }
+  create      = var.create
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
+
+  write_parameters = {
+    "/${local.stage_prefix}/${var.name}-vpn-dynamic-connections" = { value = jsonencode(aviatrix_aws_tgw_vpn_conn.tgw_vpn_dynamic_connections),
+    description = "Map of provisioned Aviatrix AWS TGW dynamic VPN Connections" }
+    "/${local.stage_prefix}/${var.name}-vpn-static-connections" = { value = jsonencode(aviatrix_aws_tgw_vpn_conn.tgw_vpn_static_connections),
+    description = "Map of provisioned Aviatrix AWS TGW static VPN Connections" }
+  }
+}
+
+# Outputs
+
 output "tgw_vpn_dynamic_connections" {
   value       = aviatrix_aws_tgw_vpn_conn.tgw_vpn_dynamic_connections
   description = "Map of provisioned Aviatrix AWS TGW dynamic VPN Connections"
