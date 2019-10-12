@@ -1,54 +1,32 @@
 # ----------------------------------------------------------------------------------------------------------------------
-# Platform Standard Variables
+# VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "tags" {
-  default = {}
-}
-
-variable "namespace" {
-  default = "grv"
-}
-
-variable "environment" {
-  default = "master"
-}
-
-variable "stage" {
-  default = "dev"
-}
-
-variable "repository" {
-  default = ""
-}
-
-variable "master_account_id" {
-}
-
-variable "account_id" {
+variable "tgw_vpcs" {
+  type        = map
+  default     = {}
+  description = "A map of VPCs to attach to the TGW"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Module Standard Variables
+# MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "name" {
-  default = "avtrx"
-}
+resource "aviatrix_aws_tgw_vpc_attachment" "tgw_vpcs" {
+  for_each = { for vpc_id, vpc in var.tgw_vpcs : vpc_id => vpc if vpc.enabled }
 
-variable "aws_region" {
-  default = "us-east-1"
-}
-
-variable "terraform_module" {
-  default = "gravicore/terraform-gravicore-modules/aws/aviatrix"
+  tgw_name             = aviatrix_aws_tgw.tgw[0].tgw_name
+  region               = var.aws_region
+  vpc_id               = each.key
+  vpc_account_name     = each.value.vpc_account_name
+  security_domain_name = each.value.security_domain_name
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Module Custom Variables
+# OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "transit_vpc_name" {
-  default = "shared-vpc"
+output "tgw_vpcs" {
+  value       = aviatrix_aws_tgw_vpc_attachment.tgw_vpcs
+  description = ""
 }
-
