@@ -93,7 +93,32 @@ resource "aviatrix_vpn_profile" "profiles" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "vpn_profiles" {
+# SSM Parameters
+
+module "parameters_vpn_profiles" {
+  source = "../../parameters"
+  # source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=GRVDEV-81-Create-Aviatrix-modules"
+  providers   = { aws = "aws" }
+  create      = var.create
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
+
+  write_parameters = {
+    "/${local.stage_prefix}/${var.name}-profile-names" = { value = join(",", [for k, v in aviatrix_vpn_profile.profiles : k]), type = "StringList"
+    description = "List of Aviatrix VPN profile names" }
+  }
+}
+
+# Outputs
+
+output "aviatrix_vpn_profiles" {
   value       = aviatrix_vpn_profile.profiles
   description = "Map of Aviatrix VPN profiles"
+}
+
+output "aviatrix_vpn_profile_names" {
+  value       = [for k, v in aviatrix_vpn_profile.profiles : k]
+  description = "List of Aviatrix VPN profile names"
 }

@@ -123,6 +123,36 @@ resource "aws_organizations_account" "organization_accounts" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
+# SSM Parameters
+
+module "params" {
+  source      = "../parameters"
+  create      = var.create
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
+
+  write_parameters = {
+    "/${local.stage_prefix}/${var.name}-id" = { value = aws_organizations_organization.organization[0].id,
+    description = "Identifier of the organization" }
+    "/${local.stage_prefix}/${var.name}-arn" = { value = aws_organizations_organization.organization[0].arn,
+    description = "ARN of the organization" }
+    "/${local.stage_prefix}/${var.name}-master-account-id" = { value = aws_organizations_organization.organization[0].master_account_id,
+    description = "Identifier of the master account" }
+    "/${local.stage_prefix}/${var.name}-accounts" = { value = jsonencode(aws_organizations_organization.organization[0].accounts),
+    description = "List of organization accounts including the master account" }
+    "/${local.stage_prefix}/${var.name}-account-ids" = { value = join(",", aws_organizations_organization.organization[0].accounts[*].id), type = "StringList",
+    description = "A list of Organization account identifiers including the master account" }
+    "/${local.stage_prefix}/${var.name}-non-master-accounts" = { value = jsonencode(aws_organizations_organization.organization[0].non_master_accounts),
+    description = "List of organization accounts excluding the master account" }
+    "/${local.stage_prefix}/${var.name}-non-master-account-ids" = { value = join(",", aws_organizations_organization.organization[0].non_master_accounts[*].id), type = "StringList",
+    description = "A list of Organization account identifiers excluding the master account" }
+  }
+}
+
+# Outputs
+
 output "organization_id" {
   value       = aws_organizations_organization.organization[0].id
   description = "Identifier of the organization"
@@ -150,12 +180,12 @@ output "organization_master_account_email" {
 
 output "organization_service_access_principals" {
   value       = aws_organizations_organization.organization[0].aws_service_access_principals
-  description = "ARN of the organization"
+  description = "List of enabled AWS service principal names"
 }
 
 output "organization_accounts" {
   value       = aws_organizations_organization.organization[0].accounts
-  description = "List of organization accounts including the master account."
+  description = "List of organization accounts including the master account"
 }
 
 output "organization_account_ids" {
@@ -170,7 +200,7 @@ output "organization_account_arns" {
 
 output "organization_non_master_accounts" {
   value       = aws_organizations_organization.organization[0].non_master_accounts
-  description = "List of organization accounts excluding the master account."
+  description = "List of organization accounts excluding the master account"
 }
 
 output "organization_non_master_account_ids" {

@@ -23,31 +23,50 @@ variable "manage_vpc_attachment" {
 variable "security_domains" {
   type = map
   default = {
-    "Aviatrix_Edge_Domain" = { connected_domains = [
+    "Default_Domain" = { connected_domains = [
+      "Aviatrix_Firewall_Domain",
+      "Aviatrix_Edge_Domain",
       "Shared_Service_Domain",
       "dev",
       "stg",
       "prd"
     ] },
     "Shared_Service_Domain" = { connected_domains = [
+      "Aviatrix_Firewall_Domain",
       "Aviatrix_Edge_Domain",
+      "Default_Domain",
       "dev",
       "stg",
       "prd"
     ] },
-    "Default_Domain" = { connected_domains = [] },
+    "Aviatrix_Edge_Domain" = { connected_domains = [
+      "Aviatrix_Firewall_Domain",
+      "Default_Domain",
+      "Shared_Service_Domain",
+      "dev",
+      "stg",
+      "prd"
+    ] },
+    "Aviatrix_Firewall_Domain" = { connected_domains = [
+      "Aviatrix_Edge_Domain",
+      "Default_Domain",
+      "Shared_Service_Domain",
+      "prd"
+    ] },
     "dev" = { connected_domains = [
       "Aviatrix_Edge_Domain",
+      "Default_Domain",
       "Shared_Service_Domain",
-      "stg"
     ] },
     "stg" = { connected_domains = [
       "Aviatrix_Edge_Domain",
+      "Default_Domain",
       "Shared_Service_Domain",
-      "dev"
     ] },
     "prd" = { connected_domains = [
+      "Aviatrix_Firewall_Domain",
       "Aviatrix_Edge_Domain",
+      "Default_Domain",
       "Shared_Service_Domain",
     ] },
   }
@@ -78,71 +97,71 @@ resource "aviatrix_aws_tgw" "tgw" {
     content {
       security_domain_name = security_domains.key
       connected_domains    = security_domains.value.connected_domains
+      aviatrix_firewall    = security_domains.key == "Aviatrix_Firewall_Domain" ? true : false
     }
   }
-
-  #   security_domains {
-  #     security_domain_name = "SDN1"
-  #     connected_domains = [
-  #       "Aviatrix_Edge_Domain"
-  #     ]
-  #     attached_vpc {
-  #       vpc_account_name = "devops1"
-  #       vpc_id           = "vpc-0e2fac2b91"
-  #       vpc_region       = "us-east-1"
-  #     }
-  #     attached_vpc {
-  #       vpc_account_name = "devops1"
-  #       vpc_id           = "vpc-0c63660a16"
-  #       vpc_region       = "us-east-1"
-  #     }
-  #     attached_vpc {
-  #       vpc_account_name = local.stage_prefix
-  #       vpc_id           = "vpc-032005cc371"
-  #       vpc_region       = "us-east-1"
-  #     }
-  #   }
-
-  #   security_domains {
-  #     security_domain_name = "mysdn2"
-  #     attached_vpc {
-  #       vpc_region       = "us-east-1"
-  #       vpc_account_name = local.stage_prefix
-  #       vpc_id           = "vpc-032005cc371"
-  #     }
-  #   }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "tgw_name" {
+# SSM Parameters
+
+module "parameters_tgw" {
+  source = "../../parameters"
+  # source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=GRVDEV-81-Create-Aviatrix-modules"
+  providers   = { aws = "aws" }
+  create      = var.create
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
+
+  write_parameters = {
+    "/${local.stage_prefix}/${var.name}-name" = { value = aviatrix_aws_tgw.tgw[0].tgw_name,
+    description = "Name of the AWS TGW which is going to be created" }
+    "/${local.stage_prefix}/${var.name}-account-name" = { value = aviatrix_aws_tgw.tgw[0].account_name,
+    description = "This parameter represents the name of a Cloud-Account in Aviatrix controller" }
+    "/${local.stage_prefix}/${var.name}-region" = { value = aviatrix_aws_tgw.tgw[0].region,
+    description = "The AWS region the TGW is located" }
+    "/${local.stage_prefix}/${var.name}-asn" = { value = aviatrix_aws_tgw.tgw[0].aws_side_as_number,
+    description = "BGP Local ASN (Autonomous System Number" }
+    "/${local.stage_prefix}/${var.name}-attached-aviatrix-transit-gateways" = { value = join(",", aviatrix_aws_tgw.tgw[0].attached_aviatrix_transit_gateway), type = "StringList"
+    description = "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain" }
+    "/${local.stage_prefix}/${var.name}-security-domains" = { value = jsonencode(aviatrix_aws_tgw.tgw[0].security_domains),
+    description = "Security Domains created together with AWS TGW's creation" }
+  }
+}
+
+# Outputs
+
+output "aviatrix_tgw_name" {
   value       = aviatrix_aws_tgw.tgw[0].tgw_name
   description = "Name of the AWS TGW which is going to be created"
 }
 
-output "tgw_account_name" {
+output "aviatrix_tgw_account_name" {
   value       = aviatrix_aws_tgw.tgw[0].account_name
   description = "This parameter represents the name of a Cloud-Account in Aviatrix controller"
 }
 
-output "tgw_region" {
+output "aviatrix_tgw_region" {
   value       = aviatrix_aws_tgw.tgw[0].region
   description = "The AWS region the TGW is located"
 }
 
-output "tgw_asn" {
+output "aviatrix_tgw_asn" {
   value       = aviatrix_aws_tgw.tgw[0].aws_side_as_number
   description = "BGP Local ASN (Autonomous System Number)"
 }
 
-output "tgw_attached_aviatrix_transit_gateways" {
+output "aviatrix_tgw_attached_aviatrix_transit_gateways" {
   value       = aviatrix_aws_tgw.tgw[0].attached_aviatrix_transit_gateway
   description = "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain"
 }
 
-output "tgw_security_domains" {
+output "aviatrix_tgw_security_domains" {
   value       = aviatrix_aws_tgw.tgw[0].security_domains
   description = "Security Domains created together with AWS TGW's creation"
 }
