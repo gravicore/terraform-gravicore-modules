@@ -42,7 +42,7 @@ variable "create" {
 
 variable "namespace" {
   type        = string
-  default     = ""
+  default     = "namespace"
   description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 
