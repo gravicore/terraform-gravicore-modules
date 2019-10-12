@@ -1,5 +1,9 @@
 terraform {
   required_version = "~> 0.12"
+
+  required_providers {
+    aws = "~> 2.26"
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -8,13 +12,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "rds-postgres"
+  default     = "parameters"
   description = "The name of the module"
 }
 
 variable terraform_module {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/rds-postgres"
+  default     = "gravicore/terraform-gravicore-modules/aws/aviatrix/parameters"
   description = "The owner and name of the Terraform module"
 }
 
@@ -38,7 +42,7 @@ variable "create" {
 
 variable "namespace" {
   type        = string
-  default     = ""
+  default     = "namespace"
   description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 

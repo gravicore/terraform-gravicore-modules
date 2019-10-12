@@ -8,13 +8,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "rds-postgres"
+  default     = "alb"
   description = "The name of the module"
 }
 
 variable terraform_module {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/rds-postgres"
+  default     = "gravicore/terraform-gravicore-modules/aws/alb"
   description = "The owner and name of the Terraform module"
 }
 
