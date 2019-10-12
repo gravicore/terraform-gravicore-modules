@@ -30,6 +30,12 @@ variable "create" {
   description = "Set to false to prevent the module from creating any resources"
 }
 
+variable "create_parameters" {
+  type        = bool
+  default     = false
+  description = "Set to true to create SSM Parameter ouputs"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------

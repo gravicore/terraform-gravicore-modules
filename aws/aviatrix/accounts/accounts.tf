@@ -33,18 +33,18 @@ resource "aviatrix_account" "accounts" {
 module "parameters_accounts" {
   source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
   providers   = { aws = "aws" }
-  create      = var.create
+  create      = var.create && var.create_parameters
   namespace   = var.namespace
   environment = var.environment
   stage       = var.stage
   tags        = local.tags
 
   write_parameters = {
-    "/${local.stage_prefix}/${var.name}" = { value = jsonencode({for k, v in aviatrix_account.accounts : k => v.aws_account_number}),
+    "/${local.stage_prefix}/${var.name}" = { value = jsonencode({ for k, v in aviatrix_account.accounts : k => v.aws_account_number }),
     description = "Map of Aviatrix Accounts name and IDs" }
-    "/${local.stage_prefix}/${var.name}s" = { value = join(",", [for k, v in aviatrix_account.accounts : k]), type = "StringList",
+    "/${local.stage_prefix}/${var.name}_names" = { value = join(",", [for k, v in aviatrix_account.accounts : k]), type = "StringList",
     description = "List of Aviatrix Account names" }
-    "/${local.stage_prefix}/${var.name}s" = { value = join(",", [for k, v in aviatrix_account.accounts : v.aws_account_number]), type = "StringList",
+    "/${local.stage_prefix}/${var.name}_ids" = { value = join(",", [for k, v in aviatrix_account.accounts : v.aws_account_number]), type = "StringList",
     description = "List of Aviatrix Account IDs" }
   }
 }

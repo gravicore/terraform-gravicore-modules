@@ -226,9 +226,9 @@ resource "random_password" "admin_password" {
 # SSM Parameters
 
 module "parameters_controller" {
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
   providers   = { aws = "aws" }
-  create      = var.create
+  create      = var.create && var.create_parameters
   namespace   = var.namespace
   environment = var.environment
   stage       = var.stage
