@@ -2,83 +2,62 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "admin_email" {
+variable "aviatrix_controller_admin_username" {
+  description = "The administrator's username for the Aviatrix Controller"
   type        = string
+  default     = "admin"
+}
+
+variable "aviatrix_controller_admin_email" {
   description = "The administrator's email address that will be used for password recovery as well as for notifications from the Controller"
+  type        = string
 }
 
-variable "controller_private_ip" {
+variable "aviatrix_controller_admin_password" {
+  description = "The administrator's password for the Aviatrix Controller"
   type        = string
+}
+
+variable "aviatrix_controller_private_ip" {
   description = "The Controller's private IP address"
+  type        = string
 }
 
-variable "controller_public_ip" {
-  type        = string
+variable "aviatrix_controller_public_ip" {
   description = "The Controller's public IP address"
+  type        = string
 }
 
-variable "access_account_name" {
-  type        = string
-  default     = ""
+variable "aviatrix_controller_access_account_name" {
   description = "A friendly name mapping to your AWS account ID"
-}
-
-variable "customer_license_id" {
   type        = string
   default     = ""
+}
+
+variable "aviatrix_controller_customer_license_id" {
   description = "The customer license ID is required if using a BYOL controller"
-}
-
-variable "parameter_store_kms_arn" {
-  type        = "string"
-  default     = "alias/parameter_store_key"
-  description = "The ARN of a KMS key used to encrypt and decrypt SecretString values"
-}
-
-data "aws_kms_key" "parameter_store_key" {
-  key_id = "alias/parameter_store_key"
+  type        = string
+  default     = ""
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-# Generate and store password
-
-resource "random_password" "admin_password" {
-  length      = 16
-  min_upper   = 4
-  min_lower   = 4
-  min_numeric = 4
-  min_special = 4
-  # override_special = "/@\" "
-}
-
-resource "aws_ssm_parameter" "admin_password" {
-  name        = "/${local.stage_prefix}/${var.name}-admin-password"
-  description = "Aviatrix Controller Admin Password"
-  type        = "SecureString"
-  # key_id          = "${length(aws_kms_key.parameter_store_key.key_id) > 0 ? var.parameter_store_kms_arn : ""}"
-  key_id    = coalesce(data.aws_kms_key.parameter_store_key.key_id, var.parameter_store_kms_arn, "")
-  value     = random_password.admin_password.result
-  overwrite = true
-  tags      = local.tags
-}
-
 # Initialize Controller
 
 module "controller_init" {
   source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.12"
 
-  admin_email    = var.admin_email
-  admin_password = random_password.admin_password.result
+  admin_email    = var.aviatrix_controller_admin_email
+  admin_password = var.aviatrix_controller_admin_password
 
-  private_ip = var.controller_private_ip
-  public_ip  = var.controller_public_ip
+  public_ip  = var.aviatrix_controller_public_ip
+  private_ip = var.aviatrix_controller_private_ip
 
-  access_account_name = coalesce(var.access_account_name, local.stage_prefix)
   aws_account_id      = local.account_id
-  customer_license_id = var.customer_license_id
+  access_account_name = coalesce(var.aviatrix_controller_access_account_name, local.stage_prefix)
+  customer_license_id = var.aviatrix_controller_customer_license_id
 
   #   lifecycle {
   #     ignore_changes = [
@@ -93,27 +72,7 @@ module "controller_init" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "controller_private_ip" {
-  value       = var.controller_private_ip
-  description = "The private IP address of the AWS EC2 instance created for the controller"
-}
-
-output "controller_public_ip" {
-  value       = var.controller_public_ip
-  description = "The public IP address of the AWS EC2 instance created for the controller"
-}
-
-output "admin_email" {
-  value       = var.admin_email
-  description = "The administrator's email address that will be used for password recovery as well as for notifications from the Controller"
-}
-
-output "admin_password_param" {
-  value       = aws_ssm_parameter.admin_password.name
-  description = "SSM Parameter name storing the default password for the Aviatrix Controller"
-}
-
-output "lambda_result" {
+output "aviatrix_controller_init_lambda_result" {
   value       = module.controller_init.result
   description = "The status of lambda execution"
 }

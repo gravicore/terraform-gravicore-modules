@@ -46,6 +46,30 @@ module "s3_backup" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
+# SSM Parameters
+
+module "parameters_backup" {
+  source = "../../parameters"
+  # source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=GRVDEV-81-Create-Aviatrix-modules"
+  providers   = { aws = "aws" }
+  create      = var.create
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
+
+  write_parameters = {
+    "/${local.stage_prefix}/${var.name}-backup-s3-bucket-id" = { value = module.s3_backup.bucket_id,
+    description = "ID of the Aviatrix Backup S3 bucket" }
+    "/${local.stage_prefix}/${var.name}-backup-s3-bucket-arn" = { value = module.s3_backup.bucket_arn,
+    description = "ARN of the Aviatrix Backup S3 bucket" }
+    "/${local.stage_prefix}/${var.name}-backup-s3-bucket-domain-name" = { value = module.s3_backup.bucket_domain_name,
+    description = "FQDN of the Aviatrix Backup S3 bucket" }
+  }
+}
+
+# Outputs
+
 output "backup_s3_bucket_id" {
   value       = module.s3_backup.bucket_id
   description = "ID of the Aviatrix Backup S3 bucket"
