@@ -10,7 +10,7 @@ variable "az_max_count" {
 
 variable "az_zone_ids_priority" {
   type        = list(string)
-  default     = ["use1-az6", "use1-az1", "use1-az4"]
+  default     = ["use1-az6", "use1-az2", "use1-az1"]
   description = ""
 }
 
