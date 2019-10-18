@@ -1029,21 +1029,12 @@ locals {
   } } : {}
 }
 
-# ----------------------------------------------------------------------------------------------------------------------
-# OUTPUTS
-# ----------------------------------------------------------------------------------------------------------------------
-
-output "vpc_endpoint_gateways" {
-  description = "A map of all enabled VPC Endpoint Gateways"
-  value = merge(
+locals {
+  vpc_endpoint_gateways = merge(
     local.vpc_endpoint_s3,
     local.vpc_endpoint_dynamodb,
   )
-}
-
-output "vpc_endpoint_interfaces" {
-  description = "A map of all enabled VPC Endpoint Interfaces"
-  value = merge(
+  vpc_endpoint_interfaces = merge(
     local.vpc_endpoint_codebuild,
     local.vpc_endpoint_codecommit,
     local.vpc_endpoint_git_codecommit,
@@ -1085,4 +1076,45 @@ output "vpc_endpoint_interfaces" {
     local.vpc_endpoint_athena,
     local.vpc_endpoint_rekognition,
   )
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
+
+# SSM Parameters
+
+module "parameters_vpc_endpoints" {
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+  providers   = { aws = "aws" }
+  create      = var.create
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
+
+  write_parameters = {
+    "/${local.stage_prefix}/${var.name}-endpoint-gateways" = { value = jsonencode(local.vpc_endpoint_gateways)
+    description = "Map of all enabled VPC Endpoint Gateways" }
+    "/${local.stage_prefix}/${var.name}-endpoint-interface-dns-entries" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.dns_entry[*] })
+    description = "Map of all enabled VPC Endpoint Interface DNS entries" }
+    "/${local.stage_prefix}/${var.name}-endpoint-interface-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.id })
+    description = "Map of all enabled VPC Endpoint Interface IDs" }
+    "/${local.stage_prefix}/${var.name}-endpoint-interface-network-interface-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.network_interface_ids[*] })
+    description = "Map of all enabled VPC Endpoint Interface Network Interface IDs" }
+    "/${local.stage_prefix}/${var.name}-endpoint-interface-security-group-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.security_group_ids[*] })
+    description = "Map of all enabled VPC Endpoint Interface Security Group IDs" }
+  }
+}
+
+# Outputs
+
+output "vpc_endpoint_gateways" {
+  description = "Map of all enabled VPC Endpoint Gateways"
+  value       = local.vpc_endpoint_gateways
+}
+
+output "vpc_endpoint_interfaces" {
+  description = "Map of all enabled VPC Endpoint Interfaces"
+  value       = local.vpc_endpoint_interfaces
 }

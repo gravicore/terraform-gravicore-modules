@@ -30,89 +30,70 @@ module "ssh_key_pair_public" {
   path = "${pathexpand("~/.ssh")}/${var.namespace}/${var.stage}"
 }
 
-locals {
-  ssh_secret_ssm_write = [
-    {
-      name        = "/${local.stage_prefix}/${var.name}-private-pem"
-      value       = module.ssh_key_pair_private.private_key_pem
-      type        = "SecureString"
-      overwrite   = true
-      description = join(" ", [var.desc_prefix, "Private SSH Key for EC2 Instances in private VPC Subnets"])
-    },
-    {
-      name        = "/${local.stage_prefix}/${var.name}-private-pub"
-      value       = module.ssh_key_pair_private.public_key_openssh
-      type        = "SecureString"
-      overwrite   = true
-      description = join(" ", [var.desc_prefix, "Public SSH Key for EC2 Instances in private VPC Subnets"])
-    },
-    {
-      name        = "/${local.stage_prefix}/${var.name}-public-pem"
-      value       = module.ssh_key_pair_public.private_key_pem
-      type        = "SecureString"
-      overwrite   = true
-      description = join(" ", [var.desc_prefix, "Private SSH Key for EC2 Instances in public VPC Subnets"])
-    },
-    {
-      name        = "/${local.stage_prefix}/${var.name}-public-pub"
-      value       = module.ssh_key_pair_public.public_key_openssh
-      type        = "SecureString"
-      overwrite   = true
-      description = join(" ", [var.desc_prefix, "Public SSH Key for EC2 Instances in public VPC Subnets"])
-    },
-  ]
-
-  # `ssh_secret_ssm_write_count` needs to be updated if `ssh_secret_ssm_write` changes
-  ssh_secret_ssm_write_count = 4
-}
-
-resource "aws_ssm_parameter" "default" {
-  count       = var.create ? local.ssh_secret_ssm_write_count : 0
-  name        = local.ssh_secret_ssm_write[count.index].name
-  tags        = local.tags
-  description = local.ssh_secret_ssm_write[count.index].description
-
-  type            = local.ssh_secret_ssm_write[count.index].type
-  key_id          = local.ssh_secret_ssm_write[count.index].type == "SecureString" && length(var.kms_param_arn) > 0 ? var.kms_param_arn : ""
-  value           = local.ssh_secret_ssm_write[count.index].value
-  overwrite       = local.ssh_secret_ssm_write[count.index].overwrite
-  allowed_pattern = lookup(local.ssh_secret_ssm_write[count.index], "allowed_pattern", "")
-}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
+# SSM Parameters
+
+module "parameters_key_pair" {
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+  providers   = { aws = "aws" }
+  create      = var.create
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
+
+  write_parameters = {
+    "/${local.stage_prefix}/${var.name}-key-pair-private-pem" = { value = module.ssh_key_pair_private.private_key_pem, type = "SecureString",
+    description = "Private SSH Key for EC2 Instances in private VPC Subnets" }
+    "/${local.stage_prefix}/${var.name}-key-pair-private-pub" = { value = module.ssh_key_pair_private.public_key_openssh, type = "SecureString",
+    description = "Public SSH Key for EC2 Instances in private VPC Subnets" }
+    "/${local.stage_prefix}/${var.name}-key-pair-public-pem" = { value = module.ssh_key_pair_public.private_key_pem, type = "SecureString",
+    description = "Private SSH Key for EC2 Instances in public VPC Subnets" }
+    "/${local.stage_prefix}/${var.name}-key-pair-public-pub" = { value = module.ssh_key_pair_public.public_key_openssh, type = "SecureString",
+    description = "Public SSH Key for EC2 Instances in public VPC Subnets" }
+  }
+}
+
+# Outputs
+
 # Private
 
-output "key_pair_private_name" {
-  value       = var.create ? module.ssh_key_pair_private.key_name : null
+output "vpc_key_pair_private_name" {
   description = "Name of the private SSH Key for EC2 Instances in private VPC Subnets"
+  value       = var.create ? module.ssh_key_pair_private.key_name : null
 }
 
-output "key_pair_private_param_pem" {
-  value       = var.create ? "/${local.stage_prefix}/${var.name}-private-pem" : null
-  description = "SSM Parameter name of the private SSH Key for EC2 Instances in private VPC Subnets"
+output "vpc_key_pair_private_pem" {
+  description = "Private SSH Key for EC2 Instances in private VPC Subnets"
+  value       = var.create ? module.ssh_key_pair_private.private_key_pem : null
+  sensitive   = true
 }
 
-output "key_pair_private_param_pub" {
-  value       = var.create ? "/${local.stage_prefix}/${var.name}-private-pub" : null
-  description = "SSM Parameter name of the public SSH Key for EC2 Instances in private VPC Subnets"
+output "vpc_key_pair_private_pub" {
+  description = "Public SSH Key for EC2 Instances in private VPC Subnets"
+  value       = var.create ? module.ssh_key_pair_private.public_key_openssh : null
+  sensitive   = true
 }
 
 # Public
 
-output "key_pair_public_key_name" {
-  value       = var.create ? module.ssh_key_pair_public.key_name : null
+output "vpc_key_pair_public_name" {
   description = "Name of the private SSH Key for EC2 Instances in public VPC Subnets"
+  value       = var.create ? module.ssh_key_pair_public.key_name : null
 }
 
-output "key_pair_public_param_pem" {
-  value       = var.create ? "/${local.stage_prefix}/${var.name}-public-pem" : null
-  description = "SSM Parameter name of the private SSH Key for EC2 Instances in public VPC Subnets"
+output "vpc_key_pair_public_pem" {
+  description = "Private SSH Key for EC2 Instances in public VPC Subnets"
+  value       = var.create ? module.ssh_key_pair_public.private_key_pem : null
+  sensitive   = true
 }
 
-output "key_pair_public_param_pub" {
-  value       = var.create ? "/${local.stage_prefix}/${var.name}-public-pub" : null
-  description = "SSM Parameter name of the public SSH Key for EC2 Instances in public VPC Subnets"
+output "vpc_key_pair_public_pub" {
+  description = "Public SSH Key for EC2 Instances in public VPC Subnets"
+  value       = var.create ? module.ssh_key_pair_public.public_key_openssh : null
+  sensitive   = true
 }
