@@ -70,70 +70,6 @@ variable "enable_dns_support" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-# Create a default key/pair for public and private instances
-
-module "ssh_key_pair_public" {
-  source    = "git::https://github.com/cloudposse/terraform-aws-key-pair.git?ref=0.4.0"
-  namespace = var.namespace
-  stage     = var.stage
-  name      = "${var.environment}-${var.name}-public"
-  tags      = local.tags
-
-  ssh_public_key_path   = "${pathexpand("~/.ssh")}/${var.namespace}"
-  generate_ssh_key      = var.create
-  private_key_extension = ".pem"
-  public_key_extension  = ".pub"
-  chmod_command         = "chmod 600 %v"
-}
-
-module "ssh_key_pair_private" {
-  source    = "./key-pair"
-  namespace = var.namespace
-  stage     = var.stage
-  name      = "${var.environment}-${var.name}-private"
-  tags      = local.tags
-
-  ssh_public_key_path   = "${pathexpand("~/.ssh")}/${var.namespace}"
-  generate_ssh_key      = var.create
-  private_key_extension = ".pem"
-  public_key_extension  = ".pub"
-  chmod_command         = "chmod 600 %v"
-}
-
-locals {
-  ssh_secret_ssm_write = [
-    {
-      name        = "/${local.stage_prefix}/${var.name}-private-pem"
-      value       = module.ssh_key_pair_private.private_key
-      type        = "SecureString"
-      overwrite   = "true"
-      description = join(" ", [var.desc_prefix, "Private SSH Key for EC2 Instances in Private VPC Subnet"])
-    },
-    {
-      name        = "/${local.stage_prefix}/${var.name}-private-pub"
-      value       = module.ssh_key_pair_private.public_key
-      type        = "SecureString"
-      overwrite   = "true"
-      description = join(" ", [var.desc_prefix, "Public SSH Key for EC2 Instances in Private VPC Subnet"])
-    },
-  ]
-
-  # `ssh_secret_ssm_write_count` needs to be updated if `ssh_secret_ssm_write` changes
-  ssh_secret_ssm_write_count = 2
-}
-
-resource "aws_ssm_parameter" "default" {
-  count           = "${var.create ? local.ssh_secret_ssm_write_count : 0}"
-  name            = lookup(local.ssh_secret_ssm_write[count.index], "name")
-  description     = lookup(local.ssh_secret_ssm_write[count.index], "description", lookup(local.ssh_secret_ssm_write[count.index], "name"))
-  type            = lookup(local.ssh_secret_ssm_write[count.index], "type", "SecureString")
-  key_id          = "${lookup(local.ssh_secret_ssm_write[count.index], "type", "SecureString") == "SecureString" && length(var.parameter_store_kms_arn) > 0 ? var.parameter_store_kms_arn : ""}"
-  value           = lookup(local.ssh_secret_ssm_write[count.index], "value")
-  overwrite       = lookup(local.ssh_secret_ssm_write[count.index], "overwrite", "false")
-  allowed_pattern = lookup(local.ssh_secret_ssm_write[count.index], "allowed_pattern", "")
-  tags            = local.tags
-}
-
 locals {
   vpc_public_subnets = var.vpc_public_subnets != null ? coalescelist(var.vpc_public_subnets, compact([
     var.az_max_count >= 1 ? cidrsubnet(var.vpc_cidr_block, 6, 0) : "",
@@ -298,14 +234,8 @@ module "vpc" {
   rekognition_endpoint_private_dns_enabled              = var.rekognition_endpoint_private_dns_enabled
 }
 
-# ----------------------------------------------------------------------------------------------------------------------
-# OUTPUTS
-# ----------------------------------------------------------------------------------------------------------------------
-
-// VPC module outputs
-
-output "vpc_subnet_ids" {
-  value = concat(
+locals {
+  vpc_subnet_ids = concat(
     module.vpc.private_subnets,
     module.vpc.public_subnets,
     module.vpc.database_subnets,
@@ -314,29 +244,103 @@ output "vpc_subnet_ids" {
     module.vpc.intra_subnets
   )
 }
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
+
+# SSM Parameters
+
+module "parameters_vpc" {
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+  providers   = { aws = "aws" }
+  create      = var.create
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
+
+  write_parameters = {
+    "/${local.stage_prefix}/${var.name}-subnet-ids" = { value = join(",", local.vpc_subnet_ids), type = "StringList",
+    description = "List of all VPC subnet IDs" }
+    "/${local.stage_prefix}/${var.name}-id" = { value = module.vpc.vpc_id, description = "ID of the VPC" }
+    "/${local.stage_prefix}/${var.name}-cidr-block" = { value = module.vpc.vpc_cidr_block
+    description = "CIDR block of the VPC" }
+    "/${local.stage_prefix}/${var.name}-default-security-group-id" = { value = module.vpc.vpc_cidr_block
+    description = "ID of the security group created by default on VPC creation" }
+    "/${local.stage_prefix}/${var.name}-default-network-acl-id" = { value = module.vpc.default_network_acl_id
+    description = "ID of the default network ACL" }
+    "/${local.stage_prefix}/${var.name}-default-route-table-id" = { value = module.vpc.default_route_table_id
+    description = "ID of the default route table" }
+    "/${local.stage_prefix}/${var.name}-instance-tenancy" = { value = module.vpc.vpc_instance_tenancy
+    description = "Tenancy of instances spin up within VPC" }
+    "/${local.stage_prefix}/${var.name}-enable-dns-support" = { value = module.vpc.vpc_enable_dns_support
+    description = "Whether or not the VPC has DNS support" }
+    "/${local.stage_prefix}/${var.name}-enable-dns-hostnames" = { value = module.vpc.vpc_enable_dns_hostnames
+    description = "Whether or not the VPC has DNS hostname support" }
+    "/${local.stage_prefix}/${var.name}-main-route-table-id" = { value = module.vpc.vpc_main_route_table_id
+    description = "ID of the main route table associated with this VPC" }
+    "/${local.stage_prefix}/${var.name}-secondary-cidr-blocks" = { value = join(",", module.vpc.vpc_secondary_cidr_blocks), type = "StringList",
+    description = "List of secondary CIDR blocks of the VPC" }
+    "/${local.stage_prefix}/${var.name}-public-subnets" = { value = join(",", module.vpc.public_subnets), type = "StringList",
+    description = "List of IDs of public subnets" }
+    "/${local.stage_prefix}/${var.name}-public-subnets-cidr-blocks" = { value = join(",", module.vpc.public_subnets_cidr_blocks), type = "StringList",
+    description = "List of cidr_blocks of public subnets" }
+    "/${local.stage_prefix}/${var.name}-public-route-table-ids" = { value = join(",", module.vpc.public_route_table_ids), type = "StringList",
+    description = "List of IDs of public route tables" }
+    "/${local.stage_prefix}/${var.name}-private-subnets" = { value = join(",", module.vpc.private_subnets), type = "StringList",
+    description = "List of IDs of private subnets" }
+    "/${local.stage_prefix}/${var.name}-private-subnets-cidr-blocks" = { value = join(",", module.vpc.private_subnets_cidr_blocks), type = "StringList",
+    description = "List of cidr_blocks of private subnets" }
+    "/${local.stage_prefix}/${var.name}-private-route-table-ids" = { value = join(",", module.vpc.private_route_table_ids), type = "StringList",
+    description = "List of IDs of private route tables" }
+    "/${local.stage_prefix}/${var.name}-intra-subnets" = { value = join(",", module.vpc.intra_subnets), type = "StringList",
+    description = "List of IDs of internal subnets" }
+    "/${local.stage_prefix}/${var.name}-intra-subnets-cidr-blocks" = { value = join(",", module.vpc.intra_subnets_cidr_blocks), type = "StringList",
+    description = "List of cidr_blocks of internal subnets" }
+    "/${local.stage_prefix}/${var.name}-intra-route-table-ids" = { value = join(",", module.vpc.intra_route_table_ids), type = "StringList",
+    description = "List of IDs of internal route tables" }
+    "/${local.stage_prefix}/${var.name}-nat-ids" = { value = join(",", module.vpc.nat_ids), type = "StringList",
+    description = "List of allocation ID of Elastic IPs created for AWS NAT Gateway" }
+    "/${local.stage_prefix}/${var.name}-nat-public-ips" = { value = join(",", module.vpc.nat_public_ips), type = "StringList",
+    description = "List of public Elastic IPs created for AWS NAT Gateway" }
+    "/${local.stage_prefix}/${var.name}-natgw-ids" = { value = join(",", module.vpc.natgw_ids), type = "StringList",
+    description = "List of NAT Gateway IDs" }
+    "/${local.stage_prefix}/${var.name}-igw-id" = { value = module.vpc.igw_id
+    description = "ID of the Internet Gateway" }
+    "/${local.stage_prefix}/${var.name}-vgw-id" = { value = module.vpc.vgw_id
+    description = "ID of the VPN Gateway" }
+  }
+}
+
+# Outputs
+
+output "vpc_subnet_ids" {
+  description = "List of all VPC subnet IDs"
+  value       = local.vpc_subnet_ids
+}
 
 output "vpc_id" {
-  description = "The ID of the VPC"
+  description = "ID of the VPC"
   value       = module.vpc.vpc_id
 }
 
 output "vpc_cidr_block" {
-  description = "The CIDR block of the VPC"
+  description = "CIDR block of the VPC"
   value       = module.vpc.vpc_cidr_block
 }
 
 output "vpc_default_security_group_id" {
-  description = "The ID of the security group created by default on VPC creation"
+  description = "ID of the security group created by default on VPC creation"
   value       = module.vpc.default_security_group_id
 }
 
 output "vpc_default_network_acl_id" {
-  description = "The ID of the default network ACL"
+  description = "ID of the default network ACL"
   value       = module.vpc.default_network_acl_id
 }
 
 output "vpc_default_route_table_id" {
-  description = "The ID of the default route table"
+  description = "ID of the default route table"
   value       = module.vpc.default_route_table_id
 }
 
@@ -356,7 +360,7 @@ output "vpc_enable_dns_hostnames" {
 }
 
 output "vpc_main_route_table_id" {
-  description = "The ID of the main route table associated with this VPC"
+  description = "ID of the main route table associated with this VPC"
   value       = module.vpc.vpc_main_route_table_id
 }
 
@@ -426,11 +430,11 @@ output "vpc_natgw_ids" {
 }
 
 output "vpc_igw_id" {
-  description = "The ID of the Internet Gateway"
+  description = "ID of the Internet Gateway"
   value       = module.vpc.igw_id
 }
 
 output "vpc_vgw_id" {
-  description = "The ID of the VPN Gateway"
+  description = "ID of the VPN Gateway"
   value       = module.vpc.vgw_id
 }
