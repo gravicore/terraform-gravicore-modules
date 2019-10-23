@@ -20,7 +20,7 @@ variable "max_vpn_conn" {
 
 variable "gw_size" {
   type        = string
-  default     = "t2.micro"
+  default     = "t3.micro"
   description = "Size of the gateway instance"
 }
 
@@ -56,13 +56,19 @@ variable "split_tunnel" {
 variable "dns_zone_id" {
   type        = string
   default     = ""
-  description = ""
+  description = "ID of the DNS hosted zone"
 }
 
 variable "dns_zone_name" {
   type        = string
   default     = ""
-  description = ""
+  description = "Name of the DNS hosted zone"
+}
+
+variable "enable_vpc_dns_server" {
+  type        = bool
+  default     = true
+  description = "Enable VPC DNS Server for Gateway"
 }
 
 locals {
@@ -92,10 +98,10 @@ resource "aviatrix_gateway" "avx_vpn_gw" {
   peering_ha_subnet  = local.enable_peering_ha ? var.vpc_subnet_cidr_blocks[1] : null
   single_az_ha       = var.single_az_ha
 
-  vpn_access   = true
-  vpn_cidr     = var.vpn_cidr
-  max_vpn_conn = var.max_vpn_conn
-  #   enable_vpc_dns_server = true
+  vpn_access            = true
+  vpn_cidr              = var.vpn_cidr
+  max_vpn_conn          = var.max_vpn_conn
+  enable_vpc_dns_server = true
 
   split_tunnel = var.split_tunnel
   # client certificate sharing = enabled
