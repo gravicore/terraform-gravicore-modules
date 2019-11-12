@@ -73,6 +73,6 @@ module "parameters_cognito" {
 
   write_parameters = {
     "/${local.stage_prefix}/${var.name}-service-access-key" = { value = aws_iam_access_key.cognito[0].id, type = "SecureString", description = "Cognito service account access key" }
-    "/${local.stage_prefix}/${var.name}-service-secret-key" = { value = aws_iam_access_key.cognito[1].secret, type = "SecureString", description = "Cognito service account secret key" }
+    "/${local.stage_prefix}/${var.name}-service-secret-key" = { value = aws_iam_access_key.cognito[0].secret, type = "SecureString", description = "Cognito service account secret key" }
   }
 }
