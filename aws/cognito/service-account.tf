@@ -13,19 +13,19 @@ variable "create_cognito_service_user" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_user" "cognito" {
-  count = var.creat && var.create_cognito_service_user ? 1 : 0
+  count = var.create && var.create_cognito_service_user ? 1 : 0
   name  = "${local.module_prefix}-access"
 
   tags = local.tags
 }
 
 resource "aws_iam_access_key" "cognito" {
-  count = var.creat && var.create_cognito_service_user ? 1 : 0
+  count = var.create && var.create_cognito_service_user ? 1 : 0
   user  = "${aws_iam_user.cognito.name}"
 }
 
 resource "aws_iam_user_policy" "cognito_read" {
-  count = var.creat && var.create_cognito_service_user ? 1 : 0
+  count = var.create && var.create_cognito_service_user ? 1 : 0
   name  = "${local.module_prefix}-read-only"
   user  = "${aws_iam_user.cognito.name}"
 
