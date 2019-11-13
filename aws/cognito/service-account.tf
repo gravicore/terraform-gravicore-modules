@@ -62,17 +62,24 @@ EOF
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-module "parameters_cognito" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
-  providers   = { aws = "aws" }
-  create      = var.create
-  namespace   = var.namespace
-  environment = var.environment
-  stage       = var.stage
-  tags        = local.tags
+resource "aws_ssm_parameter" "service-access-key" {
+  count       = "${var.create ? 1 : 0}"
+  name        = "/${local.stage_prefix}/${var.name}-service-access-key"
+  description = "Cognito service account access key"
 
-  write_parameters = {
-    "/${local.stage_prefix}/${var.name}-service-access-key" = { value = aws_iam_access_key.cognito[0].id, type = "SecureString", description = "Cognito service account access key" }
-    "/${local.stage_prefix}/${var.name}-service-secret-key" = { value = aws_iam_access_key.cognito[0].secret, type = "SecureString", description = "Cognito service account secret key" }
-  }
+  type      = "SecureString"
+  value     = aws_iam_access_key.cognito[0].id
+  overwrite = true
+  tags      = local.tags
+}
+
+resource "aws_ssm_parameter" "service-secret-key" {
+  count       = "${var.create ? 1 : 0}"
+  name        = "/${local.stage_prefix}/${var.name}-service-secret-key"
+  description = "Cognito service account secret key"
+
+  type      = "SecureString"
+  value     = aws_iam_access_key.cognito[0].secret
+  overwrite = true
+  tags      = local.tags
 }
