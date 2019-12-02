@@ -1,3 +1,7 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# VARIABLES / LOCALS / REMOTE STATE
+# ----------------------------------------------------------------------------------------------------------------------
+
 variable "attributes" {
   type        = list(string)
   default     = []
@@ -286,6 +290,22 @@ variable "wait_for_deployment" {
   description = "When set to 'true' the resource will wait for the distribution status to change from InProgress to Deployed"
 }
 
+variable "sse_algorithm" {
+  type        = string
+  default     = "AES256"
+  description = "The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`"
+}
+
+variable "kms_master_key_arn" {
+  type        = string
+  default     = ""
+  description = "The AWS KMS master key ARN used for the `SSE-KMS` encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default aws/s3 AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`"
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
+
 resource "aws_cloudfront_origin_access_identity" "default" {
   comment = local.module_prefix
 }
@@ -345,6 +365,15 @@ resource "aws_s3_bucket" "origin" {
     )
     expose_headers  = var.cors_expose_headers
     max_age_seconds = var.cors_max_age_seconds
+  }
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm     = var.sse_algorithm
+        kms_master_key_id = var.kms_master_key_arn
+      }
+    }
   }
 }
 
