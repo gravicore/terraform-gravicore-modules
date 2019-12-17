@@ -62,10 +62,10 @@ EOF
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-resource "aws_ssm_parameter" "service-access-key" {
+resource "aws_ssm_parameter" "service_access_key_id" {
   count       = "${var.create ? 1 : 0}"
-  name        = "/${local.stage_prefix}/${var.name}-service-access-key"
-  description = "Cognito service account access key"
+  name        = "/${local.stage_prefix}/${var.name}-service-access-key-id"
+  description = format("%s %s", var.desc_prefix, "Cognito service account Access Key ID")
 
   type      = "SecureString"
   value     = aws_iam_access_key.cognito[0].id
@@ -73,10 +73,10 @@ resource "aws_ssm_parameter" "service-access-key" {
   tags      = local.tags
 }
 
-resource "aws_ssm_parameter" "service-secret-key" {
+resource "aws_ssm_parameter" "service_access_key_secret" {
   count       = "${var.create ? 1 : 0}"
-  name        = "/${local.stage_prefix}/${var.name}-service-secret-key"
-  description = "Cognito service account secret key"
+  name        = "/${local.stage_prefix}/${var.name}-service-access-key-secret"
+  description = format("%s %s", var.desc_prefix, "Cognito service account Secret Access Key")
 
   type      = "SecureString"
   value     = aws_iam_access_key.cognito[0].secret
