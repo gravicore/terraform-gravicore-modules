@@ -8,12 +8,6 @@ variable "attributes" {
   description = "Additional attributes (e.g. `1`)"
 }
 
-variable "enabled" {
-  type        = bool
-  default     = true
-  description = "Select Enabled if you want CloudFront to begin processing requests as soon as the distribution is created, or select Disabled if you do not want CloudFront to begin processing requests after the distribution is created."
-}
-
 variable "acm_certificate_arn" {
   type        = string
   description = "Existing ACM Certificate ARN"
@@ -29,6 +23,12 @@ variable "minimum_protocol_version" {
 variable "aliases" {
   type        = list(string)
   description = "List of FQDN's - Used to set the Alternate Domain Names (CNAMEs) setting on Cloudfront"
+  default     = []
+}
+
+variable "external_aliases" {
+  type        = list(string)
+  description = "List of FQDN's not associated with Route 53- Used to set the Alternate Domain Names (CNAMEs) setting on Cloudfront"
   default     = []
 }
 
@@ -83,7 +83,7 @@ variable "default_root_object" {
 
 variable "comment" {
   type        = string
-  default     = "Managed by Terraform"
+  default     = ""
   description = "Comment for the origin access identity"
 }
 
@@ -361,7 +361,7 @@ resource "aws_s3_bucket" "origin" {
     allowed_headers = var.cors_allowed_headers
     allowed_methods = var.cors_allowed_methods
     allowed_origins = sort(
-      distinct(compact(concat(var.cors_allowed_origins, var.aliases))),
+      distinct(compact(concat(var.cors_allowed_origins, var.aliases, var.external_aliases))),
     )
     expose_headers  = var.cors_expose_headers
     max_age_seconds = var.cors_max_age_seconds
@@ -413,9 +413,9 @@ locals {
 }
 
 resource "aws_cloudfront_distribution" "default" {
-  enabled             = var.enabled
+  enabled             = var.create
   is_ipv6_enabled     = var.is_ipv6_enabled
-  comment             = var.comment
+  comment             = var.desc_prefix
   default_root_object = var.default_root_object
   price_class         = var.price_class
   depends_on          = [aws_s3_bucket.origin]
@@ -426,7 +426,10 @@ resource "aws_cloudfront_distribution" "default" {
     prefix          = var.log_prefix
   }
 
-  aliases = var.aliases
+  aliases = sort(
+      distinct(compact(concat(var.aliases, var.external_aliases))),
+    )
+  # aliases = var.aliases
 
   origin {
     domain_name = local.bucket_domain_name
@@ -501,7 +504,7 @@ resource "aws_cloudfront_distribution" "default" {
 
 module "dns" {
   source           = "git::https://github.com/cloudposse/terraform-aws-route53-alias.git?ref=tags/0.3.0"
-  enabled          = var.enabled && length(var.parent_zone_id) > 0 || length(var.parent_zone_name) > 0 ? true : false
+  enabled          = var.create && length(var.parent_zone_id) > 0 || length(var.parent_zone_name) > 0 ? true : false
   aliases          = var.aliases
   parent_zone_id   = var.parent_zone_id
   parent_zone_name = var.parent_zone_name
