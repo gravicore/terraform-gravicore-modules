@@ -415,7 +415,7 @@ locals {
 resource "aws_cloudfront_distribution" "default" {
   enabled             = var.create
   is_ipv6_enabled     = var.is_ipv6_enabled
-  comment             = var.desc_prefix
+  comment             = format("%s %s", var.desc_prefix, var.comment)
   default_root_object = var.default_root_object
   price_class         = var.price_class
   depends_on          = [aws_s3_bucket.origin]
