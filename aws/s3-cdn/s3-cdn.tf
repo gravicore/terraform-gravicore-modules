@@ -95,7 +95,7 @@ variable "log_include_cookies" {
 
 variable "log_prefix" {
   type        = string
-  default     = ""
+  default     = "cloudfront"
   description = "Path of logs in S3 bucket"
 }
 
