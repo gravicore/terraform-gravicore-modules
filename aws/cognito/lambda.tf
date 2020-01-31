@@ -122,3 +122,14 @@ resource "aws_iam_role_policy" "cognito_lambda" {
   role   = aws_iam_role.cognito_lambda[0].name
   policy = data.aws_iam_policy_document.cognito_lambda[0].json
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
+
+# Lambda IAM
+
+output "cognito_lambda_service_role_arn" {
+  value       = aws_iam_role.cognito_lambda[0].arn
+  description = "ARN of Cognito IAM service role used for lambda"
+}
