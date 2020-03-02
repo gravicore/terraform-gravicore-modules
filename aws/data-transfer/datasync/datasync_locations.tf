@@ -64,10 +64,21 @@ data "aws_iam_policy_document" "datasync_s3" {
       "s3:DeleteObject",
       "s3:GetObject",
       "s3:ListMultipartUploadParts",
-      "s3:PutObject"
+      "s3:PutObject",
     ]
     resources = [
       "arn:aws:s3:::${each.value.s3_bucket}${each.value.subdirectory}*",
+    ]
+  }
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:PutLogEvents",
+      "logs:CreateLogStream",
+    ]
+    resources = [
+      "${replace(aws_cloudwatch_log_group.datasync[0].arn, ":*", "")}",
+      "${aws_cloudwatch_log_group.datasync[0].arn}",
     ]
   }
 }

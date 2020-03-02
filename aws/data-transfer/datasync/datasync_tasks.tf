@@ -18,15 +18,6 @@ variable "cloudwatch_log_group_retention_in_days" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-resource "aws_cloudwatch_log_group" "datasync" {
-  count = var.create && var.datasync_agent_id != null ? 1 : 0
-  name = "/aws/datasync/${local.module_prefix}"
-  tags = local.tags
-
-  retention_in_days = var.cloudwatch_log_group_retention_in_days
-  # kms_key_id = 
-}
-
 resource "aws_datasync_task" "datasync" {
   for_each = var.create && var.datasync_agent_id != null && length(var.datasync_tasks) > 0 ? var.datasync_tasks : {}
   name     = join("-", [local.module_prefix, each.key])
