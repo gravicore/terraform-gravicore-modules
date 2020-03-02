@@ -8,9 +8,24 @@ variable "datasync_tasks" {
   default     = {}
 }
 
+variable "cloudwatch_log_group_retention_in_days" {
+  description = "Specifies the number of days you want to retain log events in the specified log group"
+  type        = string
+  default     = 30
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_cloudwatch_log_group" "datasync" {
+  count = var.create && var.datasync_agent_id != null ? 1 : 0
+  name = "/aws/datasync/${local.module_prefix}"
+  tags = local.tags
+
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+  # kms_key_id = 
+}
 
 resource "aws_datasync_task" "datasync" {
   for_each = var.create && var.datasync_agent_id != null && length(var.datasync_tasks) > 0 ? var.datasync_tasks : {}
@@ -19,6 +34,7 @@ resource "aws_datasync_task" "datasync" {
 
   source_location_arn      = local.datasync_locations_arns[each.value.source_id]
   destination_location_arn = local.datasync_locations_arns[each.value.destination_id]
+  cloudwatch_log_group_arn = replace(aws_cloudwatch_log_group.datasync[0].arn, ":*", "")
   options {
     # V (Optional) A file metadata that shows the last time a file was accessed (that is when the file was read or written
     # to). If set to BEST_EFFORT, the DataSync Task attempts to preserve the original (that is, the version before sync
@@ -67,6 +83,11 @@ resource "aws_datasync_task" "datasync" {
 # ----------------------------------------------------------------------------------------------------------------------
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
+
+output "datasync_cloudwatch_log_group_arn" {
+  description = "ARN specifying the CloudWatch log group"
+  value = var.create && var.datasync_agent_id != null ? aws_cloudwatch_log_group.datasync[0].arn : null
+}
 
 output "datasync_tasks" {
   description = "Tasks for DataSync"
