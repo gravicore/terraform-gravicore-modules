@@ -77,8 +77,7 @@ data "aws_iam_policy_document" "datasync_s3" {
       "logs:CreateLogStream",
     ]
     resources = [
-      "${replace(aws_cloudwatch_log_group.datasync[0].arn, ":*", "")}",
-      "${aws_cloudwatch_log_group.datasync[0].arn}",
+      "*",
     ]
   }
 }
