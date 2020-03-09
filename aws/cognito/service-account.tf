@@ -4,7 +4,7 @@
 
 variable "create_cognito_service_user" {
   type        = bool
-  default     = true
+  default     = false
   description = "Creates a read only service user for congito"
 }
 
