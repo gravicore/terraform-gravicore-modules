@@ -4,7 +4,7 @@
 
 variable "create_cognito_service_user" {
   type        = bool
-  default     = true
+  default     = false
   description = "Creates a read only service user for congito"
 }
 
@@ -63,7 +63,7 @@ EOF
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_ssm_parameter" "service_access_key_id" {
-  count       = "${var.create ? 1 : 0}"
+  count       = var.create && var.create_cognito_service_user ? 1 : 0
   name        = "/${local.stage_prefix}/${var.name}-service-access-key-id"
   description = format("%s %s", var.desc_prefix, "Cognito service account Access Key ID")
 
@@ -74,7 +74,7 @@ resource "aws_ssm_parameter" "service_access_key_id" {
 }
 
 resource "aws_ssm_parameter" "service_access_key_secret" {
-  count       = "${var.create ? 1 : 0}"
+  count       = var.create && var.create_cognito_service_user ? 1 : 0
   name        = "/${local.stage_prefix}/${var.name}-service-access-key-secret"
   description = format("%s %s", var.desc_prefix, "Cognito service account Secret Access Key")
 
