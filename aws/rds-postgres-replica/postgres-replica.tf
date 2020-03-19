@@ -230,7 +230,7 @@ variable "deletion_protection" {
 
 variable "enabled_cloudwatch_logs_exports" {
   type        = list(string)
-  default     = ["alert", "audit", "error", "general", "listener", "slowquery", "trace", "postgresql", "upgrade"]
+  default     = ["postgresql", "upgrade"]
   description = "(Optional) List of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on engine): agent (MSSQL), alert, audit, error, general, listener, slowquery, trace, postgresql (PostgreSQL), upgrade (PostgreSQL)."
 }
 
