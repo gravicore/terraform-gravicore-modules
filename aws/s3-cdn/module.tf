@@ -1,5 +1,13 @@
+
 terraform {
-  required_version = "~> 0.12"
+  required_version = "~> 0.12.0"
+
+  required_providers {
+    aws      = "~> 2.0"
+    template = "~> 2.0"
+    local    = "~> 1.2"
+    null     = "~> 2.0"
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -8,13 +16,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "cognito"
+  default     = "s3-cdn"
   description = "The name of the module"
 }
 
 variable terraform_module {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/cognito"
+  default     = "gravicore/terraform-gravicore-modules/aws/s3-cdn"
   description = "The owner and name of the Terraform module"
 }
 
@@ -117,7 +125,7 @@ data "aws_caller_identity" "current" {
 }
 
 locals {
-  account_id = var.account_id == "" ? data.aws_caller_identity.current[0].account_id : var.account_id
+  account_id = coalesce(var.account_id, data.aws_caller_identity.current[0].account_id)
 
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))

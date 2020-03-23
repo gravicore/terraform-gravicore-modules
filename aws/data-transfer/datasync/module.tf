@@ -8,13 +8,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "cognito"
+  default     = "data-transfer-datasync"
   description = "The name of the module"
 }
 
 variable terraform_module {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/cognito"
+  default     = "gravicore/terraform-gravicore-modules/aws/data-transfer/datasync"
   description = "The owner and name of the Terraform module"
 }
 
