@@ -327,3 +327,135 @@ resource "aws_route53_record" "default" {
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
+
+output "pg_replica_instance_address" {
+  description = "The address of the RDS instance"
+  value       = aws_db_instance.default[*].address
+}
+
+resource "aws_ssm_parameter" "pg_replica_instance_address" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-address"
+  description = format("%s %s", var.desc_prefix, "The address of the RDS instance")
+
+  type      = "StringList"
+  value     = join(",", aws_db_instance.default[*].address)
+  overwrite = true
+  tags      = local.tags
+}
+
+output "pg_replica_instance_arn" {
+  description = "The ARN of the RDS instance"
+  value       = aws_db_instance.default[*].arn
+}
+
+resource "aws_ssm_parameter" "pg_replica_instance_arn" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-arn"
+  description = format("%s %s", var.desc_prefix, "The ARN of the RDS instance")
+
+  type      = "StringList"
+  value     = join(",", aws_db_instance.default[*].arn)
+  overwrite = true
+  tags      = local.tags
+}
+
+output "pg_replica_instance_availability_zone" {
+  description = "The availability zone of the RDS instance"
+  value       = aws_db_instance.default[*].availability_zone
+}
+
+output "pg_replica_instance_multi_az" {
+  description = "If the RDS instance is multi AZ enabled"
+  value       = aws_db_instance.default[*].multi_az
+}
+
+output "pg_replica_instance_storage_encrypted" {
+  description = "Specifies whether the DB instance is encrypted"
+  value       = aws_db_instance.default[*].storage_encrypted
+}
+
+output "pg_replica_instance_endpoint" {
+  description = "The connection endpoint in address:port format"
+  value       = aws_db_instance.default[*].endpoint
+}
+
+resource "aws_ssm_parameter" "pg_replica_instance_endpoint" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-endpoint"
+  description = format("%s %s", var.desc_prefix, "The connection endpoint in address:port format")
+
+  type      = "StringList"
+  value     = join(",", aws_db_instance.default[*].endpoint)
+  overwrite = true
+  tags      = local.tags
+}
+
+output "pg_replica_instance_hosted_zone_id" {
+  description = "The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)"
+  value       = aws_db_instance.default[*].hosted_zone_id
+}
+
+resource "aws_ssm_parameter" "pg_replica_instance_hosted_zone_id" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-hosted-zone-id"
+  description = format("%s %s", var.desc_prefix, "The canonical hosted zone ID of the DB instance (to be used in a Route 53 Alias record)")
+
+  type      = "StringList"
+  value     = join(",", aws_db_instance.default[*].hosted_zone_id)
+  overwrite = true
+  tags      = local.tags
+}
+
+output "pg_replica_instance_id" {
+  description = "The RDS instance ID"
+  value       = aws_db_instance.default[*].id
+}
+
+resource "aws_ssm_parameter" "pg_replica_instance_id" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-service-access-key-id"
+  description = format("%s %s", var.desc_prefix, "The RDS instance ID")
+
+  type      = "StringList"
+  value     = join(",", aws_db_instance.default[*].id)
+  overwrite = true
+  tags      = local.tags
+}
+
+output "pg_replica_instance_status" {
+  description = "The RDS instance status"
+  value       = aws_db_instance.default[*].status
+}
+
+output "pg_replica_instance_port" {
+  description = "The database port"
+  value       = aws_db_instance.default[*].port
+}
+
+resource "aws_ssm_parameter" "pg_replica_instance_port" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-port"
+  description = format("%s %s", var.desc_prefix, "The database port")
+
+  type      = "StringList"
+  value     = join(",", aws_db_instance.default[*].port)
+  overwrite = true
+  tags      = local.tags
+}
+
+output "pg_replica_security_group_name" {
+  description = "The name of the db security group group"
+  value       = aws_security_group.replica.*.name
+}
+
+resource "aws_ssm_parameter" "pg_replica_security_group_name" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-security-group-name"
+  description = format("%s %s", var.desc_prefix, "The name of the db security group group")
+
+  type      = "StringList"
+  value     = join(",", aws_security_group.replica.*.name)
+  overwrite = true
+  tags      = local.tags
+}
