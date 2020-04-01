@@ -5,12 +5,7 @@
 variable "solution_stack_name" {
   default = "64bit Amazon Linux 2018.03 v2.12.14 running Docker 18.06.1-ce"
   type    = string
-}
-
-variable "env_port_value" {
-  description = "The value to set for the Enviroment variable PORT"
-  default     = "80"
-  type        = string
+  description = "(Optional) A solution stack to base your environment off of. Example stacks can be found in the Amazon API documentation(https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html)"
 }
 
 variable "logs_delete_on_terminate" {
@@ -82,28 +77,43 @@ variable "default_process_protocol" {
 variable "vpc_id" {
   default = null
   type    = string
+  description = "The ID for your Amazon VPC"
 }
 
 variable "alb_subnets" {
   default = null
   type    = list
+  description = "The IDs of the subnet or subnets for the elastic load balancer. If you have multiple subnets, specify the value as a single comma-delimited string of subnet IDs"
 }
 
 variable "ec2_subnets" {
   default = null
   type    = list
+  description = "The IDs of the Auto Scaling group subnet or subnets. If you have multiple subnets, specify the value as a single comma-delimited string of subnet IDs"
+}
+
+variable "vpc_elb_scheme" {
+  type        = string
+  default     = "public"
+  description = "Specify internal if you want to create an internal load balancer in your Amazon VPC so that your Elastic Beanstalk application cannot be accessed from outside your Amazon VPC. If you specify a value other than public or internal, Elastic Beanstalk will ignore the value"
+}
+
+variable "alb_security_group_ingress_cider" {
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+  description = "List of CIDR blocks to apply to alb ingress rule"
+}
+
+variable "alb_security_group_egress_cider" {
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+  description = "List of CIDR blocks to apply to alb egress rule"
 }
 
 variable "instances_instance_types" {
   type        = string
   default     = "t3.medium"
   description = "A comma-separated list of instance types you want your environment to use. For example: t2.micro,t3.micro"
-}
-
-variable "aliases" {
-  type        = list(string)
-  description = "List of FQDN's - Used to set the Alternate Domain Names (CNAMEs) setting on Cloudfront"
-  default     = []
 }
 
 variable "parent_zone_id" {
@@ -128,7 +138,7 @@ variable "https_redirect" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-resource "aws_iam_role" "ec2" {
+resource "aws_iam_role" "eb_ec2" {
   count  = var.create ? 1 : 0
   name    = "${local.module_prefix}-ec2"
 
@@ -148,7 +158,7 @@ resource "aws_iam_role" "ec2" {
   EOF
 }
 
-data "aws_iam_policy_document" "ec2" {
+data "aws_iam_policy_document" "eb_ec2" {
   statement {
     sid = ""
 
@@ -312,26 +322,26 @@ data "aws_iam_policy_document" "ec2" {
 resource "aws_iam_role_policy" "default" {
   count  = var.create ? 1 : 0
   name    = local.module_prefix
-  role    = aws_iam_role.ec2[0].id
+  role    = aws_iam_role.eb_ec2[0].id
 
-  policy = data.aws_iam_policy_document.ec2.json
+  policy = data.aws_iam_policy_document.eb_ec2.json
 }
 
-resource "aws_iam_role_policy_attachment" "web-tier" {
+resource "aws_iam_role_policy_attachment" "web_tier" {
   count     = var.create ? 1 : 0
-  role       = aws_iam_role.ec2[0].name
+  role       = aws_iam_role.eb_ec2[0].name
   policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier"
 }
 
-resource "aws_iam_role_policy_attachment" "worker-tier" {
+resource "aws_iam_role_policy_attachment" "worker_tier" {
   count     = var.create ? 1 : 0
-  role       = aws_iam_role.ec2[0].name
+  role       = aws_iam_role.eb_ec2[0].name
   policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier"
 }
 
 resource "aws_iam_role_policy_attachment" "elastic_beanstalk_multi_container_docker" {
   count     = var.create ? 1 : 0
-  role       = aws_iam_role.ec2[0].name
+  role       = aws_iam_role.eb_ec2[0].name
   policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker"
 }
 
@@ -349,13 +359,13 @@ resource "aws_elastic_beanstalk_application" "default" {
   }
 }
 
-resource "aws_iam_instance_profile" "ec2" {
+resource "aws_iam_instance_profile" "eb_ec2" {
   count  = var.create ? 1 : 0
   name    = "${local.module_prefix}-ec2"
-  role    = "${aws_iam_role.ec2[0].name}"
+  role    = "${aws_iam_role.eb_ec2[0].name}"
 }
 
-resource "aws_security_group" "alb_sg" {
+resource "aws_security_group" "eb_alb_sg" {
   count      = var.create ? 1 : 0
   name        = "${local.module_prefix}-alb-sg"
   description = "${var.desc_prefix} ALB Security Group"
@@ -365,21 +375,21 @@ resource "aws_security_group" "alb_sg" {
     from_port   = var.default_process_port
     to_port     = var.default_process_port
     protocol    = "6"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.alb_security_group_ingress_cider
   }
 
   ingress {
     from_port   = "443"
     to_port     = "443"
     protocol    = "6"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.alb_security_group_ingress_cider
   }
 
   egress {
     from_port   = var.default_process_port
     to_port     = var.default_process_port
     protocol    = "6"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.alb_security_group_egress_cider
   }
 
   tags = "${merge(local.tags, map("Name", "${local.module_prefix}-alb"))}"
@@ -422,7 +432,7 @@ resource "aws_elastic_beanstalk_environment" "default" {
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "IamInstanceProfile"
-    value     = aws_iam_instance_profile.ec2[0].name
+    value     = aws_iam_instance_profile.eb_ec2[0].name
   }
 
   setting {
@@ -443,12 +453,6 @@ resource "aws_elastic_beanstalk_environment" "default" {
     name      = "LoadBalancerType"
     value     = var.environment_load_balancer_type
   }
-
-  # setting {
-  #   namespace = "aws:elasticbeanstalk:application:environment"
-  #   name      = "PORT"
-  #   value     = "${var.env_port_value}"
-  # }
 
   setting {
     namespace = "aws:elasticbeanstalk:cloudwatch:logs:health"
@@ -493,6 +497,12 @@ resource "aws_elastic_beanstalk_environment" "default" {
   }
 
   setting {
+    namespace = "aws:ec2:vpc"
+    name      = "ELBScheme"
+    value     = var.vpc_elb_scheme
+  }
+
+  setting {
     namespace = "aws:ec2:instances"
     name      = "InstanceTypes"
     value     = var.instances_instance_types
@@ -513,13 +523,13 @@ resource "aws_elastic_beanstalk_environment" "default" {
   setting {
     namespace = "aws:elbv2:loadbalancer"
     name      = "ManagedSecurityGroup"
-    value     = aws_security_group.alb_sg[0].id
+    value     = aws_security_group.eb_alb_sg[0].id
   }
 
   setting {
     namespace = "aws:elbv2:loadbalancer"
     name      = "SecurityGroups"
-    value     = aws_security_group.alb_sg[0].id
+    value     = aws_security_group.eb_alb_sg[0].id
   }
 
   setting {
