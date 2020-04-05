@@ -58,6 +58,13 @@ variable "sms_authentication_message" {
   default     = "Your authentication code is {####}"
 }
 
+locals {
+  sms_configuration = var.mfa_configuration != "OFF" ? { sms_configuration = {
+    sns_caller_arn = coalesce(var.sms_sns_caller_arn, aws_iam_role.cognito_sms[0].arn),
+    external_id    = coalesce(var.sms_external_id, random_uuid.sms_sns_external_id[0].result)
+  } } : {}
+}
+
 ############################################
 #######Variable for User Pool Add-ons#######
 
@@ -89,7 +96,7 @@ variable "domain_parent_domain_name" {
 
 variable "domain_subdomain_name" {
   type        = string
-  default     = "auth"
+  default     = ""
   description = "The custom sub domain CNAME"
 }
 
@@ -102,6 +109,119 @@ variable "domain_certificate_arn" {
 locals {
   domain_name = var.domain_parent_domain_name != "" ? join(".", concat([var.domain_subdomain_name], compact(split(".", var.domain_parent_domain_name)))) : null
 }
+
+# Cognito Identity Provider
+
+variable "provider_name" {
+  type        = string
+  default     = null
+  description = "(Required) - The provider name"
+}
+
+variable "provider_type" {
+  type        = string
+  default     = null
+  description = "(Required) - The provider type. See AWS API for valid values(https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#CognitoUserPools-CreateIdentityProvider-request-ProviderType)"
+}
+
+variable "cognito_identity_provider" {
+  type        = map
+  default     = null
+  description = "Map for building Cognito Identity Providers"
+}
+
+variable "attribute_mapping" {
+  type        = map
+  default     = null
+  description = ""
+}
+
+variable "provider_details" {
+  type        = map
+  default     = null
+  description = ""
+}
+
+# Cognito User Pool Client
+
+variable "allowed_oauth_flows" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) List of allowed OAuth flows (code, implicit, client_credentials)"
+}
+
+variable "allowed_oauth_flows_user_pool_client" {
+  type        = bool
+  default     = null
+  description = "(Optional) Whether the client is allowed to follow the OAuth protocol when interacting with Cognito user pools"
+}
+
+variable "allowed_oauth_scopes" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin)"
+}
+
+variable "callback_urls" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) List of allowed callback URLs for the identity providers"
+}
+
+variable "default_redirect_uri" {
+  type        = string
+  default     = null
+  description = "(Optional) The default redirect URI. Must be in the list of callback URLs"
+}
+
+variable "explicit_auth_flows" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH)"
+}
+
+variable "generate_secret" {
+  type        = bool
+  default     = null
+  description = "(Optional) Should an application secret be generated"
+}
+
+variable "logout_urls" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) List of allowed logout URLs for the identity providers"
+}
+
+variable "prevent_user_existence_errors" {
+  type        = string
+  default     = null
+  description = "(Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to ENABLED and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to LEGACY, those APIs will return a UserNotFoundException exception if the user does not exist in the user pool"
+}
+
+variable "read_attributes" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) List of user pool attributes the application client can read from"
+}
+
+variable "supported_identity_providers" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) List of provider names for the identity providers that are supported on this client"
+}
+
+variable "write_attributes" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) List of user pool attributes the application client can write to"
+}
+
+variable "refresh_token_validity" {
+  type        = number
+  default     = 1
+  description = "(Optional) The time limit in days refresh tokens are valid for"
+}
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -121,7 +241,6 @@ resource "aws_cognito_user_pool" "pool" {
 
   admin_create_user_config {
     allow_admin_create_user_only = var.admin_allow_admin_create_user_only
-    # unused_account_validity_days = var.unused_account_validity_days
     invite_message_template {
       email_message = var.admin_email_message
       email_subject = var.admin_email_subject
@@ -156,20 +275,23 @@ resource "aws_cognito_user_pool" "pool" {
   }
 
   password_policy {
-    require_uppercase = var.require_uppercase
-    require_lowercase = var.require_lowercase
-    require_numbers   = var.require_numbers
-    require_symbols   = var.require_symbols
-    minimum_length    = var.minimum_length
-    #temporary_password_validity_days = var.temporary_password_validity_days                           
+    require_uppercase                = var.require_uppercase
+    require_lowercase                = var.require_lowercase
+    require_numbers                  = var.require_numbers
+    require_symbols                  = var.require_symbols
+    minimum_length                   = var.minimum_length
+    temporary_password_validity_days = var.temporary_password_validity_days
   }
 
-  sms_configuration {
-    sns_caller_arn = coalesce(var.sms_sns_caller_arn, aws_iam_role.cognito_sms[0].arn)
-    external_id    = coalesce(var.sms_external_id, random_uuid.sms_sns_external_id.result)
+  dynamic "sms_configuration" {
+    for_each = local.sms_configuration
+    content {
+      sns_caller_arn = lookup(sms_configuration.value, "sns_caller_arn", null)
+      external_id    = lookup(sms_configuration.value, "external_id", null)
+    }
   }
-  sms_authentication_message = var.sms_authentication_message
-  sms_verification_message   = var.sms_verification_message
+  sms_authentication_message = var.mfa_configuration != "OFF" ? var.sms_authentication_message : null
+  sms_verification_message   = var.mfa_configuration != "OFF" ? var.sms_verification_message : null
 
   user_pool_add_ons {
     advanced_security_mode = var.advanced_security_mode
@@ -210,21 +332,50 @@ resource "aws_cognito_user_pool" "pool" {
       }
     }
   }
+  # lifecycle 
 }
 
 resource "aws_cognito_user_pool_domain" "pool" {
-  count = var.create && var.domain_parent_domain_name != "" ? 1 : 0
+  count = var.create && var.domain_subdomain_name != "" ? 1 : 0
 
-  domain          = local.domain_name
-  certificate_arn = var.domain_certificate_arn
-  user_pool_id    = "${aws_cognito_user_pool.pool[0].id}"
+  domain          = local.domain_name != null ? local.domain_name : join("-", [local.stage_prefix, var.domain_subdomain_name])
+  certificate_arn = local.domain_name != null ? var.domain_certificate_arn : null
+  user_pool_id    = aws_cognito_user_pool.pool[0].id
 }
 
 resource "aws_cognito_user_pool_client" "pool" {
   count = var.create ? 1 : 0
   name  = local.module_prefix
 
-  user_pool_id = "${aws_cognito_user_pool.pool[0].id}"
+  allowed_oauth_flows                  = var.allowed_oauth_flows
+  allowed_oauth_flows_user_pool_client = var.allowed_oauth_flows_user_pool_client
+  allowed_oauth_scopes                 = var.allowed_oauth_scopes
+  callback_urls                        = var.callback_urls
+  default_redirect_uri                 = var.default_redirect_uri
+  explicit_auth_flows                  = var.explicit_auth_flows
+  generate_secret                      = var.generate_secret
+  logout_urls                          = var.logout_urls
+  prevent_user_existence_errors        = var.prevent_user_existence_errors
+  supported_identity_providers         = aws_cognito_identity_provider.pool[*].provider_name
+  user_pool_id                         = aws_cognito_user_pool.pool[0].id
+  write_attributes                     = var.write_attributes
+  refresh_token_validity               = var.refresh_token_validity
+  depends_on = [
+    aws_cognito_identity_provider.pool,
+  ]
+}
+
+resource "aws_cognito_identity_provider" "pool" {
+  count = var.create && var.provider_details != null ? 1 : 0
+  # for_each = var.cognito_identity_provider
+  user_pool_id  = aws_cognito_user_pool.pool[0].id
+  provider_name = var.provider_name
+  provider_type = var.provider_type
+
+  provider_details = var.provider_details
+
+  attribute_mapping = var.attribute_mapping
+
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -305,6 +456,11 @@ output "cognito_user_pool_schemas" {
 
 # User Pool Domain
 
+output "cognito_domain_name" {
+  value       = "${aws_cognito_user_pool_domain.pool[0].domain}.auth.${var.aws_region}.amazoncognito.com"
+  description = "The domain string for the user pool"
+}
+
 output "cognito_domain_aws_account_id" {
   value       = aws_cognito_user_pool_domain.pool[0].aws_account_id
   description = "The AWS account ID for the user pool owner"
@@ -335,4 +491,14 @@ output "cognito_client_id" {
 output "cognito_client_secret" {
   value       = aws_cognito_user_pool_client.pool[0].client_secret
   description = "The app version"
+}
+
+output "cognito_client_callback_urls" {
+  value       = aws_cognito_user_pool_client.pool[0].callback_urls
+  description = ""
+}
+
+output "cognito_client_logout_urls" {
+  value       = aws_cognito_user_pool_client.pool[0].logout_urls
+  description = ""
 }
