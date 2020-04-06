@@ -112,34 +112,10 @@ locals {
 
 # Cognito Identity Provider
 
-variable "provider_name" {
-  type        = string
-  default     = null
-  description = "(Required) - The provider name"
-}
-
-variable "provider_type" {
-  type        = string
-  default     = null
-  description = "(Required) - The provider type. See AWS API for valid values(https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_CreateIdentityProvider.html#CognitoUserPools-CreateIdentityProvider-request-ProviderType)"
-}
-
 variable "cognito_identity_provider" {
   type        = map
-  default     = null
+  default     = {}
   description = "Map for building Cognito Identity Providers"
-}
-
-variable "attribute_mapping" {
-  type        = map
-  default     = null
-  description = ""
-}
-
-variable "provider_details" {
-  type        = map
-  default     = null
-  description = ""
 }
 
 # Cognito User Pool Client
@@ -206,7 +182,7 @@ variable "read_attributes" {
 
 variable "supported_identity_providers" {
   type        = list(string)
-  default     = null
+  default     = []
   description = "(Optional) List of provider names for the identity providers that are supported on this client"
 }
 
@@ -356,7 +332,7 @@ resource "aws_cognito_user_pool_client" "pool" {
   generate_secret                      = var.generate_secret
   logout_urls                          = var.logout_urls
   prevent_user_existence_errors        = var.prevent_user_existence_errors
-  supported_identity_providers         = aws_cognito_identity_provider.pool[*].provider_name
+  supported_identity_providers         = concat([for p in aws_cognito_identity_provider.pool : p.provider_name], var.supported_identity_providers)
   user_pool_id                         = aws_cognito_user_pool.pool[0].id
   write_attributes                     = var.write_attributes
   refresh_token_validity               = var.refresh_token_validity
@@ -366,16 +342,16 @@ resource "aws_cognito_user_pool_client" "pool" {
 }
 
 resource "aws_cognito_identity_provider" "pool" {
-  count = var.create && var.provider_details != null ? 1 : 0
-  # for_each = var.cognito_identity_provider
-  user_pool_id  = aws_cognito_user_pool.pool[0].id
-  provider_name = var.provider_name
-  provider_type = var.provider_type
+  for_each = var.cognito_identity_provider
 
-  provider_details = var.provider_details
+  user_pool_id = aws_cognito_user_pool.pool[0].id
 
-  attribute_mapping = var.attribute_mapping
+  provider_name = each.key
+  provider_type = each.value.type
 
+  provider_details  = lookup(each.value, "provider_details", null)
+  attribute_mapping = lookup(each.value, "attribute_mapping", null)
+  idp_identifiers   = lookup(each.value, "idp_identifiers", null)
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
