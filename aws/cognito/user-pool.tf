@@ -334,6 +334,7 @@ resource "aws_cognito_user_pool_client" "pool" {
   prevent_user_existence_errors        = var.prevent_user_existence_errors
   supported_identity_providers         = concat([for p in aws_cognito_identity_provider.pool : p.provider_name], var.supported_identity_providers)
   user_pool_id                         = aws_cognito_user_pool.pool[0].id
+  read_attributes                      = var.read_attributes
   write_attributes                     = var.write_attributes
   refresh_token_validity               = var.refresh_token_validity
   depends_on = [
