@@ -237,17 +237,20 @@ resource "aws_cognito_user_pool" "pool" {
   email_verification_subject = var.email_verification_subject
   email_verification_message = var.email_verification_message
 
-  lambda_config {
-    pre_sign_up                    = var.pre_sign_up
-    pre_authentication             = var.pre_authentication
-    custom_message                 = var.custom_message
-    post_authentication            = var.post_authentication
-    post_confirmation              = var.post_confirmation
-    define_auth_challenge          = var.define_auth_challenge
-    create_auth_challenge          = var.create_auth_challenge
-    verify_auth_challenge_response = var.verify_auth_challenge_response
-    user_migration                 = var.user_migration
-    pre_token_generation           = var.pre_token_generation
+  dynamic "lambda_config" {
+    for_each = local.lambda_config
+    content {
+      pre_sign_up                    = lookup(lambda_config.value, "pre_sign_up", null)
+      pre_authentication             = lookup(lambda_config.value, "pre_authentication", null)
+      custom_message                 = lookup(lambda_config.value, "custom_message", null)
+      post_authentication            = lookup(lambda_config.value, "post_authentication", null)
+      post_confirmation              = lookup(lambda_config.value, "post_confirmation", null)
+      define_auth_challenge          = lookup(lambda_config.value, "define_auth_challenge", null)
+      create_auth_challenge          = lookup(lambda_config.value, "create_auth_challenge", null)
+      verify_auth_challenge_response = lookup(lambda_config.value, "verify_auth_challenge_response", null)
+      user_migration                 = lookup(lambda_config.value, "user_migration", null)
+      pre_token_generation           = lookup(lambda_config.value, "pre_token_generation", null)
+    }
   }
 
   password_policy {
