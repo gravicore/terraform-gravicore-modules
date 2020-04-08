@@ -116,16 +116,40 @@ variable "instances_instance_types" {
   description = "A comma-separated list of instance types you want your environment to use. For example: t2.micro,t3.micro"
 }
 
-variable "parent_zone_id" {
-  type        = string
-  default     = null
-  description = "ID of the hosted zone to contain this record  (or specify `parent_zone_name`)"
+variable "enable_dns" {
+  type        = bool
+  description = "Create Route53 DNS entry"
+  default     = false
 }
 
-variable "parent_zone_name" {
+variable "dns_zone_id" {
   type        = string
-  default     = null
-  description = "Name of the hosted zone to contain this record (or specify `parent_zone_id`)"
+  description = "(Required) The ID of the hosted zone to contain this record"
+  default     = ""
+}
+
+variable "dns_zone_name" {
+  type        = string
+  description = "Route53 DNS Zone name"
+  default     = ""
+}
+
+variable "dns_name_prefix" {
+  type        = string
+  description = "(Optional) Overwites the module name as the prefix of the DNS record Name"
+  default     = ""
+}
+
+variable "type" {
+  type        = string
+  default     = "CNAME"
+  description = "Type of DNS records to create"
+}
+
+variable "ttl" {
+  type        = string
+  default     = "60"
+  description = "The TTL of the record to add to the DNS zone to complete certificate validation"
 }
 
 variable "https_redirect" {
@@ -580,15 +604,15 @@ resource "aws_lb_listener" "https_redirect" {
   }
 }
 
-# module "dns" {
-#   source           = "git::https://github.com/cloudposse/terraform-aws-route53-alias.git?ref=tags/0.3.0"
-#   enabled          = var.create && length(var.parent_zone_id) > 0 || length(var.parent_zone_name) > 0 ? true : false
-#   aliases          = var.aliases
-#   parent_zone_id   = var.parent_zone_id
-#   parent_zone_name = var.parent_zone_name
-#   target_dns_name  = aws_cloudfront_distribution.default.domain_name
-#   target_zone_id   = aws_cloudfront_distribution.default.hosted_zone_id
-# }
+resource "aws_route53_record" "default" {
+  count   = var.create && var.enable_dns ? 1 : 0
+  zone_id = var.dns_zone_id
+  name    = join(".", [coalesce(var.dns_name_prefix, var.name), var.dns_zone_name])
+  type    = var.type
+  ttl     = var.ttl
+  records = [aws_elastic_beanstalk_environment.default[0].endpoint_url]
+
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
