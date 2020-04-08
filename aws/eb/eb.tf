@@ -610,7 +610,7 @@ resource "aws_route53_record" "default" {
   name    = join(".", [coalesce(var.dns_name_prefix, var.name), var.dns_zone_name])
   type    = var.type
   ttl     = var.ttl
-  records = [aws_elastic_beanstalk_environment.default[0].endpoint_url]
+  records = [aws_elastic_beanstalk_environment.default[0].cname]
 
 }
 
@@ -621,6 +621,11 @@ resource "aws_route53_record" "default" {
 output "beanstalk_env_cname" {
   description = "CNAME of beanstalk enviroment"
   value       = "${aws_elastic_beanstalk_environment.default[0].cname}"
+}
+
+output "beanstalk_dns_fqdn" {
+  description = "FQDN that points to the beanstalk environment"
+  value       = "${aws_route53_record.default[0].fqdn}"
 }
 
 output "beanstalk_load_balancer" {
