@@ -38,5 +38,5 @@ variable "require_uppercase" {
 variable "temporary_password_validity_days" {
   type        = number
   description = "The user account expiration limit, in days, after which the account is no longer usable"
-  default     = null
+  default     = 7
 }

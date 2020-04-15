@@ -65,6 +65,21 @@ variable "pre_token_generation" {
   description = "Allow to customize identity token claims before token generation"
 }
 
+locals {
+  lambda_config = var.pre_sign_up != null || var.pre_authentication != null || var.custom_message != null || var.post_authentication != null || var.post_confirmation != null || var.define_auth_challenge != null || var.create_auth_challenge != null || var.verify_auth_challenge_response != null || var.user_migration != null || var.pre_token_generation != null ? { lambda_config = {
+    pre_sign_up                    = var.pre_sign_up,
+    pre_authentication             = var.pre_authentication,
+    custom_message                 = var.custom_message,
+    post_authentication            = var.post_authentication,
+    post_confirmation              = var.post_confirmation,
+    define_auth_challenge          = var.define_auth_challenge,
+    create_auth_challenge          = var.create_auth_challenge,
+    verify_auth_challenge_response = var.verify_auth_challenge_response,
+    user_migration                 = var.user_migration,
+    pre_token_generation           = var.pre_token_generation,
+  } } : {}
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------

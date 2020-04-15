@@ -1,15 +1,17 @@
 ############################################
 #######Variable for SMS Configuration#######
 
-resource "random_uuid" "sms_sns_external_id" {}
+resource "random_uuid" "sms_sns_external_id" {
+  count = var.create && var.mfa_configuration != "OFF" ? 1 : 0
+}
 
 resource "aws_ssm_parameter" "sms_sns_external_id" {
-  count       = "${var.create ? 1 : 0}"
+  count       = var.create && var.mfa_configuration != "OFF" ? 1 : 0
   name        = "/${local.stage_prefix}/${var.name}-sms-sns-external-id"
   description = "The Cognito SMS SNS external ID used in IAM role trust relationships"
 
   type      = "String"
-  value     = random_uuid.sms_sns_external_id.result
+  value     = random_uuid.sms_sns_external_id[0].result
   overwrite = true
   tags      = local.tags
 }
@@ -42,7 +44,7 @@ variable "message_template_sms_message" {
 # SMS IAM
 
 resource "aws_iam_role" "cognito_sms" {
-  count = var.create ? 1 : 0
+  count = var.create && var.mfa_configuration != "OFF" ? 1 : 0
   name  = "${local.module_prefix}-sms-service-role"
   tags  = local.tags
   # path = "/service-role/"
@@ -60,7 +62,7 @@ resource "aws_iam_role" "cognito_sms" {
       "Action": "sts:AssumeRole",
       "Condition": {
         "StringEquals": {
-          "sts:ExternalId": "${coalesce(var.sms_external_id, random_uuid.sms_sns_external_id.result)}"
+          "sts:ExternalId": "${coalesce(var.sms_external_id, random_uuid.sms_sns_external_id[0].result)}"
         }
       }
     }
@@ -70,7 +72,7 @@ POLICY
 }
 
 data "aws_iam_policy_document" "cognito_sms" {
-  count = var.create ? 1 : 0
+  count = var.create && var.mfa_configuration != "OFF" ? 1 : 0
 
   statement {
     actions = [
@@ -81,7 +83,7 @@ data "aws_iam_policy_document" "cognito_sms" {
 }
 
 resource "aws_iam_role_policy" "cognito_sms" {
-  count = var.create ? 1 : 0
+  count = var.create && var.mfa_configuration != "OFF" ? 1 : 0
   name  = "${local.module_prefix}-sms-access"
 
   role   = aws_iam_role.cognito_sms[0].name

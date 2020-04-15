@@ -40,7 +40,7 @@ variable "number_attribute_constraints" {
 
 variable "required" {
   type        = bool
-  description = "Specifies whether a user pool attribute is required. If the attribute is required ad the user does not provide a value, registration or sign-in will fail"
+  description = "Specifies whether a user pool attribute is required. If the attribute is required and the user does not provide a value, registration or sign-in will fail"
   default     = false
 }
 
