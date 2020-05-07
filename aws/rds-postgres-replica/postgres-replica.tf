@@ -117,34 +117,28 @@ variable "backup_window" {
   default     = "22:00-03:00"
 }
 
-variable "attributes" {
-  type        = list
-  default     = []
-  description = "Additional attributes (e.g. `1`)"
-}
-
-variable "db_parameter" {
-  type        = list
-  default     = []
-  description = "A list of DB parameters to apply. Note that parameters may differ from a DB family to another"
-}
-
 variable "snapshot_identifier" {
   type        = string
   description = "Snapshot identifier e.g: rds:production-2015-06-26-06-05. If specified, the module create cluster from the snapshot"
   default     = ""
 }
 
-variable "final_snapshot_identifier" {
-  type        = string
-  description = "Final snapshot identifier e.g.: some-db-final-snapshot-2015-06-26-06-05"
-  default     = "final"
-}
-
 variable "parameter_group_name" {
   type        = string
   description = "Name of the DB parameter group to associate"
-  default     = ""
+  default     = null
+}
+
+variable "parameters" {
+  description = "(Optional) If used, create new parameter group for the read replica. If not, inhearets source instance's parameter group"
+  default     = null
+  type        = list(map(string))
+}
+
+variable "family" {
+  type        = string
+  default     = null
+  description = "The family of the DB parameter group"
 }
 
 variable "kms_key_id" {
@@ -234,6 +228,108 @@ variable "enabled_cloudwatch_logs_exports" {
   description = "(Optional) List of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on engine): agent (MSSQL), alert, audit, error, general, listener, slowquery, trace, postgresql (PostgreSQL), upgrade (PostgreSQL)."
 }
 
+variable "deploy_nlb" {
+  type        = bool
+  default     = false
+  description = "(Optional) If true, all necessary recoures for creating a connection via a load balancer will be created"
+}
+
+variable "nlb_internal" {
+  type        = string
+  default     = false
+  description = "(Optional) If true, the LB will be internal"
+}
+
+variable "nlb_subnet_ids" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) A list of subnet IDs to attach to the LB. Subnets cannot be updated. Changing this value will force a recreation of the resource"
+}
+
+variable "nlb_enable_cross_zone_load_balancing" {
+  type        = bool
+  default     = false
+  description = "(Optional) If true, cross-zone load balancing of the load balancer will be enabled"
+}
+
+variable "nlb_ip_address_type" {
+  type        = string
+  default     = null
+  description = "(Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are ipv4 and dualstack"
+}
+
+variable "nlb_deletion_protection_enabled" {
+  type        = bool
+  default     = true
+  description = "(Optional) If true, deletion of the load balancer will be disabled via the AWS API. This will prevent Terraform from deleting the load balancer"
+}
+
+variable "nlb_deregistration_delay" {
+  type        = number
+  default     = 30
+  description = "(Optional) The amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused. The range is 0-3600 seconds"
+}
+
+variable "nlb_listener_port" {
+  type        = number
+  default     = null
+  description = "(Optional) The port on which the load balancer is listening"
+}
+
+variable "nlb_certificate_arn" {
+  type        = string
+  default     = null
+  description = "(Optional) The ARN of the default SSL server certificate"
+}
+
+variable "nlb_ssl_policy" {
+  type        = string
+  default     = "ELBSecurityPolicy-2016-08"
+  description = "(Optional) The name of the SSL Policy for the listener. Required if TLS"
+}
+
+variable "nlb_listener_protocol" {
+  type        = string
+  default     = null
+  description = "(Optional) The protocol for connections from clients to the load balancer. Valid values are TCP, TLS"
+}
+
+variable "nlb_health_check_enabled" {
+  type        = bool
+  default     = true
+  description = "(Optional) Indicates whether health checks are enabled"
+}
+
+variable "nlb_health_check_interval" {
+  type        = number
+  default     = 30
+  description = "(Optional) The approximate amount of time, in seconds, between health checks of an individual target. Minimum value 5 seconds, Maximum value 300 seconds"
+}
+
+variable "nlb_health_check_threshold" {
+  type        = number
+  default     = 3
+  description = "(Optional) The number of consecutive health checks successes/failures required before considering an healthy/unhealthy target healthy"
+}
+
+variable "nlb_dns_zone_id" {
+  type        = string
+  description = "Route53 DNS Zone ID"
+  default     = ""
+}
+
+variable "nlb_dns_zone_name" {
+  type        = string
+  description = "Route53 DNS Zone name"
+  default     = ""
+}
+
+variable "nlb_dns_name_prefix" {
+  type        = string
+  description = "Route53 DNS Zone name"
+  default     = "db"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -269,6 +365,7 @@ resource "aws_db_instance" "default" {
   enabled_cloudwatch_logs_exports     = var.enabled_cloudwatch_logs_exports
 }
 
+# Security group
 resource "aws_security_group" "replica" {
   count       = var.create ? 1 : 0
   name        = "${local.module_prefix}-replica"
@@ -311,7 +408,7 @@ resource "aws_security_group_rule" "allow_egress" {
 resource "aws_route53_record" "default" {
   count   = var.create && var.enable_dns ? length(aws_db_instance.default.*.name) : 0
   zone_id = var.dns_zone_id
-  name    = join(".", [var.dns_name_prefix, var.stage, var.dns_zone_name])
+  name    = join(".", [var.dns_name_prefix, var.dns_zone_name])
   type    = var.type
   ttl     = var.ttl
   records = [aws_db_instance.default[count.index].address]
@@ -324,6 +421,67 @@ resource "aws_route53_record" "default" {
 
 }
 
+# NLB 
+
+resource "aws_lb" "nlb" {
+  count = var.create && var.deploy_nlb ? 1 : 0
+  name  = local.module_prefix
+
+  load_balancer_type = "network"
+  internal           = var.nlb_internal
+
+  subnets                          = var.nlb_subnet_ids
+  enable_cross_zone_load_balancing = var.nlb_enable_cross_zone_load_balancing
+  ip_address_type                  = var.nlb_ip_address_type
+  enable_deletion_protection       = var.nlb_deletion_protection_enabled
+  tags = local.tags
+}
+
+resource "aws_lb_target_group" "nlb" {
+  count = var.create && var.deploy_nlb ? 1 : 0
+  name  = local.module_prefix
+
+  vpc_id               = var.vpc_id
+  port                 = var.database_port
+  protocol             = "TCP"
+  target_type          = "ip"
+  deregistration_delay = var.nlb_deregistration_delay
+  health_check {
+    protocol            = "TCP"
+    enabled             = var.nlb_health_check_enabled
+    healthy_threshold   = var.nlb_health_check_threshold
+    unhealthy_threshold = var.nlb_health_check_threshold
+    interval            = var.nlb_health_check_interval
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+  tags = local.tags
+}
+
+resource "aws_route53_record" "nlb" {
+  count   = var.create && var.deploy_nlb ? 1 : 0
+  zone_id = var.nlb_dns_zone_id
+  name    = join(".", [var.nlb_dns_name_prefix, var.nlb_dns_zone_name])
+  type    = var.type
+  ttl     = var.ttl
+  records = ["${aws_lb.nlb[0].dns_name}"]
+}
+
+resource "aws_lb_listener" "nlb" {
+  count = var.create && var.deploy_nlb ? 1 : 0
+
+  load_balancer_arn = aws_lb.nlb[0].arn
+  port              = coalesce(var.nlb_listener_port, var.database_port)
+  protocol          = coalesce(var.nlb_listener_protocol, var.nlb_certificate_arn != null ? "TLS" : "TCP")
+  ssl_policy        = var.nlb_certificate_arn != null ? var.nlb_ssl_policy : null
+  certificate_arn   = var.nlb_certificate_arn
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.nlb[0].arn
+  }
+}
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
@@ -445,17 +603,32 @@ resource "aws_ssm_parameter" "pg_replica_instance_port" {
 }
 
 output "pg_replica_security_group_name" {
-  description = "The name of the db security group group"
+  description = "The name of the db security group"
   value       = aws_security_group.replica.*.name
 }
 
 resource "aws_ssm_parameter" "pg_replica_security_group_name" {
   count       = var.create ? 1 : 0
   name        = "/${local.stage_prefix}/${var.name}-security-group-name"
-  description = format("%s %s", var.desc_prefix, "The name of the db security group group")
+  description = format("%s %s", var.desc_prefix, "The name of the db security group")
 
   type      = "StringList"
   value     = join(",", aws_security_group.replica.*.name)
   overwrite = true
   tags      = local.tags
 }
+
+output "pg_replica_nlb_endpoint" {
+  description = "DNS enpoint of the nlb"
+  value       = aws_lb.nlb[0].dns_name
+}
+
+output "pg_replica_nlb_route53_record" {
+  description = "Route53 DNS enpoint of the nlb"
+  value       = aws_route53_record.nlb[0].fqdn
+}
+
+# output "pg_replica_nlb_access_log_bucket_id" {
+#   description = "Route53 DNS enpoint of the nlb"
+#   value       = module.nlb_access_logs.bucket_id
+# }
