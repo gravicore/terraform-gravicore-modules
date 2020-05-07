@@ -348,6 +348,18 @@ variable "nlb_dns_name_prefix" {
   default     = "db"
 }
 
+variable "lambda_role_arn" {
+  type        = string
+  default     = null
+  description = "ARN of role to be used by nlb target group registration lambda"
+}
+
+variable "lambda_layers" {
+  type        = list(string)
+  default     = []
+  description = "List of ARNs of lambda layers to be used by target group registration lambda"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -582,6 +594,122 @@ resource "aws_lb_listener" "nlb" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.nlb[0].arn
   }
+}
+data "archive_file" "nlb_tg_register" {
+  count       = var.create && var.deploy_nlb ? 1 : 0
+  type        = "zip"
+  source_file = "./resources/pg_rr_nlb_tg_register.py"
+  output_path = "./dist/pg_rr_nlb_tg_register.zip"
+}
+
+resource "aws_lambda_function" "nlb_tg_register" {
+  count            = var.create && var.deploy_nlb ? 1 : 0
+  filename         = data.archive_file.nlb_tg_register[0].output_path
+  function_name    = "${local.module_prefix}-tg-reg"
+  role             = var.lambda_role_arn
+  handler          = "pg_rr_nlb_tg_register.handler"
+  layers           = var.lambda_layers
+  source_code_hash = data.archive_file.nlb_tg_register[0].output_base64sha256
+
+  runtime     = "python3.7"
+  timeout     = 20
+  memory_size = 128
+
+  environment {
+    variables = "${merge(local.tags, map(
+      "aws_region", "${var.aws_region}",
+      "rds_master_instance_id", "${var.replicate_source_db[0]}",
+      "nlb_target_group", "${aws_lb_target_group.nlb[0].name}",
+    ))}"
+  }
+
+  tags = "${local.tags}"
+
+  tracing_config {
+    mode = "Active"
+  }
+}
+
+resource "aws_lambda_permission" "nlb_tg_register" {
+  count               = var.create && var.deploy_nlb ? 1 : 0
+  statement_id_prefix = "AllowExecutionFromSNS"
+  action              = "lambda:InvokeFunction"
+  function_name       = aws_lambda_function.nlb_tg_register[0].arn
+  principal           = "sns.amazonaws.com"
+  source_arn          = aws_sns_topic.nlb_tg_register[0].arn
+}
+
+resource "aws_sns_topic" "nlb_tg_register" {
+  count = var.create && var.deploy_nlb ? 1 : 0
+  name  = local.module_prefix
+
+  tags = "${local.tags}"
+}
+
+resource "aws_sns_topic_subscription" "nlb_tg_register" {
+  count     = var.create && var.deploy_nlb ? 1 : 0
+  topic_arn = aws_sns_topic.nlb_tg_register[0].arn
+  protocol  = "lambda"
+  endpoint  = aws_lambda_function.nlb_tg_register[0].arn
+}
+
+resource "aws_db_event_subscription" "nlb_tg_register" {
+  count = var.create && var.deploy_nlb ? 1 : 0
+  name  = local.module_prefix
+
+  sns_topic = aws_sns_topic.nlb_tg_register[0].arn
+
+  source_type = "db-instance"
+  source_ids  = aws_db_instance.default.*.id
+
+  event_categories = [
+    "availability",
+    "failover",
+    "maintenance",
+  ]
+  tags = "${local.tags}"
+}
+
+data "aws_lambda_invocation" "nlb_tg_register" {
+  function_name = aws_lambda_function.nlb_tg_register[0].function_name
+
+  input = <<JSON
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "arn:aws:sns:us-east-1:123:ExampleTopic",
+      "Sns": {
+        "Type": "Notification",
+        "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
+        "TopicArn": "arn:aws:sns:us-east-1:123456789012:ExampleTopic",
+        "Subject": "example subject",
+        "Message": "{\"Event Message\": \"Deployment read replica nlb target group attach\", \"Source ID\": \"cel-deploy-registration\"}",
+        "Timestamp": "1970-01-01T00:00:00.000Z",
+        "SignatureVersion": "1",
+        "Signature": "EXAMPLE",
+        "SigningCertUrl": "EXAMPLE",
+        "UnsubscribeUrl": "EXAMPLE",
+        "MessageAttributes": {
+          "Test": {
+            "Type": "String",
+            "Value": "TestString"
+          },
+          "TestBinary": {
+            "Type": "Binary",
+            "Value": "TestBinary"
+          }
+        }
+      }
+    }
+  ]
+}
+JSON
+
+  depends_on = [
+    aws_lambda_function.nlb_tg_register[0],
+  ]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
