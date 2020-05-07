@@ -234,6 +234,12 @@ variable "deploy_nlb" {
   description = "(Optional) If true, all necessary recoures for creating a connection via a load balancer will be created"
 }
 
+variable "nlb_force_destroy_access_logs" {
+  type        = bool
+  default     = false
+  description = "A boolean that indicates the bucket can be destroyed even if it contains objects. These objects are not recoverable"
+}
+
 variable "nlb_internal" {
   type        = string
   default     = false
@@ -262,6 +268,18 @@ variable "nlb_deletion_protection_enabled" {
   type        = bool
   default     = true
   description = "(Optional) If true, deletion of the load balancer will be disabled via the AWS API. This will prevent Terraform from deleting the load balancer"
+}
+
+variable "nbl_access_logs_prefix" {
+  type        = string
+  default     = ""
+  description = "(Optional) The S3 bucket prefix. Logs are stored in the root if not configured"
+}
+
+variable "enable_nlb_access_logs" {
+  type        = bool
+  default     = true
+  description = "(Optional) Boolean to enable / disable access_logs"
 }
 
 variable "nlb_deregistration_delay" {
@@ -423,6 +441,18 @@ resource "aws_route53_record" "default" {
 
 # NLB 
 
+# module "nlb_access_logs" {
+#   source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.3.0"
+#   enabled   = var.create && var.deploy_nlb && var.enable_nlb_access_logs
+#   name      = "${local.module_prefix}-nlb-access-logs"
+#   namespace = ""
+#   stage     = ""
+
+#   region        = var.aws_region
+#   force_destroy = var.nlb_force_destroy_access_logs
+#   tags          = local.tags
+# }
+
 resource "aws_lb" "nlb" {
   count = var.create && var.deploy_nlb ? 1 : 0
   name  = local.module_prefix
@@ -434,8 +464,79 @@ resource "aws_lb" "nlb" {
   enable_cross_zone_load_balancing = var.nlb_enable_cross_zone_load_balancing
   ip_address_type                  = var.nlb_ip_address_type
   enable_deletion_protection       = var.nlb_deletion_protection_enabled
+  # access_logs {
+  #   bucket  = module.nlb_access_logs.bucket_id
+  #   prefix  = var.nbl_access_logs_prefix
+  #   enabled = var.enable_nlb_access_logs
+  # }
   tags = local.tags
 }
+
+# data "aws_elb_service_account" "nlb_access_log" {
+#   count = var.create && var.deploy_nlb && var.enable_nlb_access_logs ? 1 : 0
+# }
+
+# data "aws_iam_policy_document" "nlb_access_log" {
+#   count = var.create && var.deploy_nlb && var.enable_nlb_access_logs ? 1 : 0
+
+#   statement {
+#     sid = ""
+#     effect = "Allow"
+
+#     principals {
+#       type        = "AWS"
+#       identifiers = [data.aws_elb_service_account.nlb_access_log[0].arn]
+#     }
+
+#     actions   = ["s3:PutObject"]
+#     resources = ["arn:aws:s3:::${local.module_prefix}-nlb-access-logs/*"]
+#   }
+
+#   statement {
+#     sid    = "AWSLogDeliveryWrite"
+#     effect = "Allow"
+
+#     principals {
+#       type        = "Service"
+#       identifiers = ["delivery.logs.amazonaws.com"]
+#     }
+
+#     actions   = ["s3:PutObject"]
+#     resources = ["arn:aws:s3:::${local.module_prefix}-nlb-access-logs/*"]
+
+#     condition {
+#       test     = "StringLike"
+#       variable = "s3:x-amz-acl"
+#       values   = ["bucket-owner-full-control"]
+#     }
+#   }
+
+#   statement {
+#     sid    = "AWSLogDeliveryAclCheck"
+#     effect = "Allow"
+
+#     principals {
+#       type        = "Service"
+#       identifiers = ["delivery.logs.amazonaws.com"]
+#     }
+
+#     actions   = ["s3:GetBucketAcl"]
+#     resources = ["arn:aws:s3:::${local.module_prefix}-nlb-access-logs/*"]
+#   }
+# }
+
+# module "nlb_access_logs" {
+#   source    = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.7.0"
+#   enabled   = var.create && var.deploy_nlb && var.enable_nlb_access_logs
+#   name      = "${local.module_prefix}-nlb-access-logs"
+#   namespace = ""
+#   stage     = ""
+
+#   region        = var.aws_region
+#   force_destroy = var.nlb_force_destroy_access_logs
+#   tags          = local.tags
+#   policy        = data.aws_iam_policy_document.nlb_access_log[0].json
+# }
 
 resource "aws_lb_target_group" "nlb" {
   count = var.create && var.deploy_nlb ? 1 : 0
@@ -482,6 +583,7 @@ resource "aws_lb_listener" "nlb" {
     target_group_arn = aws_lb_target_group.nlb[0].arn
   }
 }
+
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
