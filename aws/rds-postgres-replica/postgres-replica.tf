@@ -389,6 +389,7 @@ resource "aws_db_instance" "default" {
   monitoring_interval         = var.monitoring_interval
   replicate_source_db         = var.replicate_source_db[0]
 
+  parameter_group_name                = var.parameter_group_name != null || var.parameters != null ? coalesce(var.parameter_group_name, aws_db_parameter_group.replica[0].name) : null
   iam_database_authentication_enabled = var.iam_database_authentication_enabled
   max_allocated_storage               = var.max_allocated_storage
   deletion_protection                 = var.deletion_protection
@@ -435,7 +436,39 @@ resource "aws_security_group_rule" "allow_egress" {
   cidr_blocks       = ["0.0.0.0/0"]
 }
 
-resource "aws_route53_record" "default" {
+# Parameter group
+
+resource "aws_db_parameter_group" "replica" {
+  count = var.create && var.parameters != null ? 1 : 0
+
+  name        = join("-", [local.module_prefix, replace(var.family, "/([a-z]+)([0-9]+)/", "$1-$2")])
+  description = join(" ", [var.desc_prefix, "Parameter group for read replica"])
+  family      = var.family
+
+  dynamic "parameter" {
+    for_each = var.parameters
+    content {
+      name         = parameter.value.name
+      value        = parameter.value.value
+      apply_method = lookup(parameter.value, "apply_method", null)
+    }
+  }
+
+  tags = merge(
+    var.tags,
+    {
+      "Name" = "Default parameter group"
+    },
+  )
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# DNS for loadbalancing when internal
+
+resource "aws_route53_record" "replica" {
   count   = var.create && var.enable_dns ? length(aws_db_instance.default.*.name) : 0
   zone_id = var.dns_zone_id
   name    = join(".", [var.dns_name_prefix, var.dns_zone_name])
@@ -846,6 +879,11 @@ resource "aws_ssm_parameter" "pg_replica_security_group_name" {
   value     = join(",", aws_security_group.replica.*.name)
   overwrite = true
   tags      = local.tags
+}
+
+output "pg_replica_parameter_group_name" {
+  description = "The name of the db parameter group"
+  value       = aws_db_parameter_group.replica[0].name
 }
 
 output "pg_replica_nlb_endpoint" {
