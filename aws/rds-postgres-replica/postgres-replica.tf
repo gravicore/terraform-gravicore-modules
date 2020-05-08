@@ -174,6 +174,13 @@ variable "enable_dns" {
   default     = false
 }
 
+variable "dns_routing_policy_weight" {
+  type        = number
+  default     = 10
+  description = "(Required) A numeric value indicating the relative weight of the record"
+  # See http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-weighted
+}
+
 variable "dns_zone_id" {
   type        = string
   description = "Route53 DNS Zone ID"
@@ -479,7 +486,7 @@ resource "aws_route53_record" "replica" {
   set_identifier = "read-replica-${count.index}"
 
   weighted_routing_policy {
-    weight = 10
+    weight = var.dns_routing_policy_weight
   }
 
 }
@@ -712,28 +719,10 @@ data "aws_lambda_invocation" "nlb_tg_register" {
     {
       "EventSource": "aws:sns",
       "EventVersion": "1.0",
-      "EventSubscriptionArn": "arn:aws:sns:us-east-1:123:ExampleTopic",
+      "EventSubscriptionArn": "",
       "Sns": {
-        "Type": "Notification",
-        "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-        "TopicArn": "arn:aws:sns:us-east-1:123456789012:ExampleTopic",
-        "Subject": "example subject",
-        "Message": "{\"Event Message\": \"Deployment read replica nlb target group attach\", \"Source ID\": \"cel-deploy-registration\"}",
-        "Timestamp": "1970-01-01T00:00:00.000Z",
-        "SignatureVersion": "1",
-        "Signature": "EXAMPLE",
-        "SigningCertUrl": "EXAMPLE",
-        "UnsubscribeUrl": "EXAMPLE",
-        "MessageAttributes": {
-          "Test": {
-            "Type": "String",
-            "Value": "TestString"
-          },
-          "TestBinary": {
-            "Type": "Binary",
-            "Value": "TestBinary"
-          }
-        }
+        "Message": "{\"Event Message\": \"Deployment read replica nlb target group attach\", \"Source ID\": \"${local.module_prefix}-deploy-registration\"}",
+        "Timestamp": "${timestamp()}"
       }
     }
   ]

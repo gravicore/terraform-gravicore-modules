@@ -103,7 +103,7 @@ def handler(event, context):
 
 
         ### nlb for targets ###
-        func_log.log_entry('Checking NLB tagerts')
+        func_log.log_entry('Checking NLB targets')
         resp = elbc.describe_target_groups(Names=[nlb_tar])
         print(resp)
         tar_grp_arn = resp['TargetGroups'][0]['TargetGroupArn']
