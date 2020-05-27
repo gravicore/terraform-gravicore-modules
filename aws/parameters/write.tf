@@ -29,7 +29,8 @@ data "aws_kms_key" "kms" {
 }
 
 locals {
-  kms_arn = coalesce(var.kms_arn, data.aws_kms_key.kms["0"].key_id, "")
+  kms_arn          = coalesce(var.kms_arn, data.aws_kms_key.kms["0"].key_id, "")
+  write_parameters = [for k, v in var.write_parameters : merge({ name = k }, v) if v.value != ""]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -37,16 +38,17 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_ssm_parameter" "write_parameters" {
-  for_each    = var.create ? { for k, v in var.write_parameters : k => v if v.value != "" } : {}
-  name        = each.key
-  description = format("%s %s", var.desc_prefix, lookup(each.value, "description", each.key))
+  count = var.create ? length(local.write_parameters) : 0
+  # for_each    = var.create ? { for k, v in var.write_parameters : k => v if v.value != "" } : {}
+  name        = local.write_parameters[count.index].name
+  description = format("%s %s", var.desc_prefix, lookup(local.write_parameters[count.index], "description", local.write_parameters[count.index].name))
   tags        = var.tags
 
-  type            = lookup(each.value, "type", "String")
-  key_id          = lookup(each.value, "type", "String") == "SecureString" ? local.kms_arn : null
-  value           = each.value.value
-  overwrite       = lookup(each.value, "overwrite", true)
-  allowed_pattern = lookup(each.value, "allowed_pattern", "")
+  type            = lookup(local.write_parameters[count.index], "type", "String")
+  key_id          = lookup(local.write_parameters[count.index], "type", "String") == "SecureString" ? local.kms_arn : null
+  value           = local.write_parameters[count.index].value
+  overwrite       = lookup(local.write_parameters[count.index], "overwrite", true)
+  allowed_pattern = lookup(local.write_parameters[count.index], "allowed_pattern", "")
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
