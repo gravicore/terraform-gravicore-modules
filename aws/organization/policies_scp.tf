@@ -79,7 +79,7 @@ resource "aws_organizations_policy" "protect_organization" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "organization_service_control_policies" {
-  value = distinct([
+  value = var.create && var.organization_enable_default_service_control_policies ? distinct([
     { name        = aws_organizations_policy.protect_account[0].name
       description = aws_organizations_policy.protect_account[0].description
       type        = aws_organizations_policy.protect_account[0].type
@@ -110,6 +110,6 @@ output "organization_service_control_policies" {
       type        = aws_organizations_policy.protect_organization[0].type
       content     = aws_organizations_policy.protect_organization[0].content
     },
-  ])
+  ]) : null
   description = "A map of deployed service control policies"
 }
