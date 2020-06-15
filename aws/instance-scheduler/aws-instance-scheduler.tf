@@ -149,7 +149,6 @@ resource "aws_cloudformation_stack" "aws_instance_scheduler" {
     StoppedTags      = var.stopped_tags
   }
 
-  # template_body = file("${path.module}/cloudformation/aws-instance-scheduler.cft")
   template_url = "https://s3.amazonaws.com/solutions-reference/aws-instance-scheduler/latest/instance-scheduler.template"
 }
 
