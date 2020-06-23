@@ -49,7 +49,7 @@ variable "vpc_flow_log_group_name" {
   description = ""
 }
 
-variable "cloudtrail" {
+variable "cloudtrail_name" {
   type        = string
   default     = null
   description = ""
@@ -60,7 +60,7 @@ variable "cloudtrail" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "default" {
-  count  = var.create && var.cloudtrail == null ? 1 : 0
+  count  = var.create && var.cloudtrail_name == null ? 1 : 0
   bucket = "${local.module_prefix}-cloudtrail-events"
   region = var.aws_region
   acl    = "private"
@@ -111,7 +111,7 @@ POLICY
 }
 
 resource "aws_s3_bucket_public_access_block" "default" {
-  count  = var.create && var.cloudtrail == null ? 1 : 0
+  count  = var.create && var.cloudtrail_name == null ? 1 : 0
   bucket = aws_s3_bucket.default[0].id
 
   block_public_acls       = true
@@ -121,7 +121,7 @@ resource "aws_s3_bucket_public_access_block" "default" {
 }
 
 resource "aws_cloudtrail" "default" {
-  count                 = var.create && var.cloudtrail == null ? 1 : 0
+  count                 = var.create && var.cloudtrail_name == null ? 1 : 0
   name                  = join("-", [local.module_prefix])
   s3_bucket_name        = aws_s3_bucket.default[0].id
   is_multi_region_trail = true
@@ -133,7 +133,7 @@ resource "aws_cloudformation_stack" "cloudtrail" {
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
-    cloudtrailTrail  = var.cloudtrail == null ? aws_cloudtrail.default[0].name : var.cloudtrail
+    cloudtrailTrail  = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : var.cloudtrail_name
     logRetentionDays = 30
   }
 
@@ -201,12 +201,12 @@ resource "aws_cloudformation_stack" "vpc_flow_log_group" {
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "cloudtrail" {
-  value       = var.cloudtrail == null ? aws_cloudtrail.default[0].name : null
+output "cloudtrail_name" {
+  value       = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : null
   description = ""
 }
 
-output "topicArn" {
+output "cloudtrail_stack_outputs" {
   value       = aws_cloudformation_stack.cloudtrail[0].outputs
   description = ""
 }
