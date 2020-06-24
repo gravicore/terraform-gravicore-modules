@@ -31,7 +31,7 @@ variable "vpc_internal_subnets" {
 }
 
 variable "parameter_store_kms_arn" {
-  type        = "string"
+  type        = string
   default     = "alias/parameter_store_key"
   description = "The ARN of a KMS key used to encrypt and decrypt SecretString values"
 }
@@ -66,6 +66,77 @@ variable "enable_dns_support" {
   default     = true
 }
 
+variable "enable_flow_log" {
+  description = "Whether or not to enable VPC Flow Logs"
+  type        = bool
+  default     = true
+}
+
+variable "create_flow_log_cloudwatch_log_group" {
+  description = "Whether to create CloudWatch log group for VPC Flow Logs"
+  type        = bool
+  default     = true
+}
+
+variable "create_flow_log_cloudwatch_iam_role" {
+  description = "Whether to create IAM role for VPC Flow Logs"
+  type        = bool
+  default     = true
+}
+
+variable "flow_log_traffic_type" {
+  description = "The type of traffic to capture. Valid values: ACCEPT, REJECT, ALL."
+  type        = string
+  default     = "ALL"
+}
+
+variable "flow_log_destination_type" {
+  description = "Type of flow log destination. Can be s3 or cloud-watch-logs."
+  type        = string
+  default     = "cloud-watch-logs"
+}
+
+variable "flow_log_log_format" {
+  description = "The fields to include in the flow log record, in the order in which they should appear."
+  type        = string
+  default     = null
+}
+
+variable "flow_log_destination_arn" {
+  description = "The ARN of the CloudWatch log group or S3 bucket where VPC Flow Logs will be pushed. If this ARN is a S3 bucket the appropriate permissions need to be set on that bucket's policy. When create_flow_log_cloudwatch_log_group is set to false this argument must be provided."
+  type        = string
+  default     = null
+}
+
+variable "flow_log_cloudwatch_iam_role_arn" {
+  description = "The ARN for the IAM role that's used to post flow logs to a CloudWatch Logs log group. When flow_log_destination_arn is set to ARN of Cloudwatch Logs, this argument needs to be provided."
+  type        = string
+  default     = null
+}
+
+variable "flow_log_cloudwatch_log_group_name_prefix" {
+  description = "Specifies the name prefix of CloudWatch Log Group for VPC flow logs."
+  type        = string
+  default     = "/aws/vpc-flow-log/"
+}
+
+variable "flow_log_cloudwatch_log_group_retention_in_days" {
+  description = "Specifies the number of days you want to retain log events in the specified log group for VPC flow logs."
+  type        = number
+  default     = null
+}
+
+variable "flow_log_cloudwatch_log_group_kms_key_id" {
+  description = "The ARN of the KMS Key to use when encrypting log data for VPC flow logs."
+  type        = string
+  default     = null
+}
+
+data "aws_kms_key" "kms" {
+  for_each = var.create ? toset(["0"]) : []
+  key_id   = "alias/parameter_store_key"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -89,7 +160,7 @@ locals {
 }
 
 module "vpc" {
-  source     = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc?ref=v2.17.0"
+  source     = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc?ref=v2.33.0"
   create_vpc = var.create
   name       = local.module_prefix
   tags       = local.tags
@@ -106,6 +177,18 @@ module "vpc" {
   one_nat_gateway_per_az  = var.one_nat_gateway_per_az
   enable_dns_support      = var.enable_dns_support
   enable_dns_hostnames    = var.enable_dns_hostnames
+
+  enable_flow_log                                 = var.enable_flow_log
+  flow_log_traffic_type                           = var.flow_log_traffic_type
+  flow_log_destination_type                       = var.flow_log_destination_type
+  create_flow_log_cloudwatch_iam_role             = var.create_flow_log_cloudwatch_iam_role
+  create_flow_log_cloudwatch_log_group            = var.create_flow_log_cloudwatch_log_group
+  flow_log_cloudwatch_log_group_name_prefix       = var.flow_log_cloudwatch_log_group_name_prefix
+  flow_log_cloudwatch_log_group_retention_in_days = var.flow_log_cloudwatch_log_group_retention_in_days
+  flow_log_cloudwatch_log_group_kms_key_id        = var.flow_log_cloudwatch_log_group_kms_key_id
+  flow_log_destination_arn                        = var.flow_log_destination_arn
+  flow_log_cloudwatch_iam_role_arn                = var.flow_log_cloudwatch_iam_role_arn
+  flow_log_log_format                             = var.flow_log_log_format
 
   enable_s3_endpoint       = var.enable_s3_endpoint
   enable_dynamodb_endpoint = var.enable_dynamodb_endpoint
@@ -250,67 +333,67 @@ locals {
 
 # SSM Parameters
 
-module "parameters_vpc" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
-  providers   = { aws = "aws" }
-  create      = var.create
-  namespace   = var.namespace
-  environment = var.environment
-  stage       = var.stage
-  tags        = local.tags
+# module "parameters_vpc" {
+#   source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+#   providers   = { aws = aws }
+#   create      = var.create
+#   namespace   = var.namespace
+#   environment = var.environment
+#   stage       = var.stage
+#   tags        = local.tags
 
-  write_parameters = {
-    "/${local.stage_prefix}/${var.name}-subnet-ids" = { value = join(",", local.vpc_subnet_ids), type = "StringList",
-    description = "List of all VPC subnet IDs" }
-    "/${local.stage_prefix}/${var.name}-id" = { value = module.vpc.vpc_id, description = "ID of the VPC" }
-    "/${local.stage_prefix}/${var.name}-cidr-block" = { value = module.vpc.vpc_cidr_block
-    description = "CIDR block of the VPC" }
-    "/${local.stage_prefix}/${var.name}-default-security-group-id" = { value = module.vpc.vpc_cidr_block
-    description = "ID of the security group created by default on VPC creation" }
-    "/${local.stage_prefix}/${var.name}-default-network-acl-id" = { value = module.vpc.default_network_acl_id
-    description = "ID of the default network ACL" }
-    "/${local.stage_prefix}/${var.name}-default-route-table-id" = { value = module.vpc.default_route_table_id
-    description = "ID of the default route table" }
-    "/${local.stage_prefix}/${var.name}-instance-tenancy" = { value = module.vpc.vpc_instance_tenancy
-    description = "Tenancy of instances spin up within VPC" }
-    "/${local.stage_prefix}/${var.name}-enable-dns-support" = { value = module.vpc.vpc_enable_dns_support
-    description = "Whether or not the VPC has DNS support" }
-    "/${local.stage_prefix}/${var.name}-enable-dns-hostnames" = { value = module.vpc.vpc_enable_dns_hostnames
-    description = "Whether or not the VPC has DNS hostname support" }
-    "/${local.stage_prefix}/${var.name}-main-route-table-id" = { value = module.vpc.vpc_main_route_table_id
-    description = "ID of the main route table associated with this VPC" }
-    "/${local.stage_prefix}/${var.name}-secondary-cidr-blocks" = { value = join(",", module.vpc.vpc_secondary_cidr_blocks), type = "StringList",
-    description = "List of secondary CIDR blocks of the VPC" }
-    "/${local.stage_prefix}/${var.name}-public-subnets" = { value = join(",", module.vpc.public_subnets), type = "StringList",
-    description = "List of IDs of public subnets" }
-    "/${local.stage_prefix}/${var.name}-public-subnets-cidr-blocks" = { value = join(",", module.vpc.public_subnets_cidr_blocks), type = "StringList",
-    description = "List of cidr_blocks of public subnets" }
-    "/${local.stage_prefix}/${var.name}-public-route-table-ids" = { value = join(",", module.vpc.public_route_table_ids), type = "StringList",
-    description = "List of IDs of public route tables" }
-    "/${local.stage_prefix}/${var.name}-private-subnets" = { value = join(",", module.vpc.private_subnets), type = "StringList",
-    description = "List of IDs of private subnets" }
-    "/${local.stage_prefix}/${var.name}-private-subnets-cidr-blocks" = { value = join(",", module.vpc.private_subnets_cidr_blocks), type = "StringList",
-    description = "List of cidr_blocks of private subnets" }
-    "/${local.stage_prefix}/${var.name}-private-route-table-ids" = { value = join(",", module.vpc.private_route_table_ids), type = "StringList",
-    description = "List of IDs of private route tables" }
-    "/${local.stage_prefix}/${var.name}-intra-subnets" = { value = join(",", module.vpc.intra_subnets), type = "StringList",
-    description = "List of IDs of internal subnets" }
-    "/${local.stage_prefix}/${var.name}-intra-subnets-cidr-blocks" = { value = join(",", module.vpc.intra_subnets_cidr_blocks), type = "StringList",
-    description = "List of cidr_blocks of internal subnets" }
-    "/${local.stage_prefix}/${var.name}-intra-route-table-ids" = { value = join(",", module.vpc.intra_route_table_ids), type = "StringList",
-    description = "List of IDs of internal route tables" }
-    "/${local.stage_prefix}/${var.name}-nat-ids" = { value = join(",", module.vpc.nat_ids), type = "StringList",
-    description = "List of allocation ID of Elastic IPs created for AWS NAT Gateway" }
-    "/${local.stage_prefix}/${var.name}-nat-public-ips" = { value = join(",", module.vpc.nat_public_ips), type = "StringList",
-    description = "List of public Elastic IPs created for AWS NAT Gateway" }
-    "/${local.stage_prefix}/${var.name}-natgw-ids" = { value = join(",", module.vpc.natgw_ids), type = "StringList",
-    description = "List of NAT Gateway IDs" }
-    "/${local.stage_prefix}/${var.name}-igw-id" = { value = module.vpc.igw_id
-    description = "ID of the Internet Gateway" }
-    "/${local.stage_prefix}/${var.name}-vgw-id" = { value = module.vpc.vgw_id
-    description = "ID of the VPN Gateway" }
-  }
-}
+#   write_parameters = {
+#     "/${local.stage_prefix}/${var.name}-subnet-ids" = { value = join(",", local.vpc_subnet_ids), type = "StringList",
+#     description = "List of all VPC subnet IDs" }
+#     "/${local.stage_prefix}/${var.name}-id" = { value = module.vpc.vpc_id, description = "ID of the VPC" }
+#     "/${local.stage_prefix}/${var.name}-cidr-block" = { value = module.vpc.vpc_cidr_block
+#     description = "CIDR block of the VPC" }
+#     "/${local.stage_prefix}/${var.name}-default-security-group-id" = { value = module.vpc.vpc_cidr_block
+#     description = "ID of the security group created by default on VPC creation" }
+#     "/${local.stage_prefix}/${var.name}-default-network-acl-id" = { value = module.vpc.default_network_acl_id
+#     description = "ID of the default network ACL" }
+#     "/${local.stage_prefix}/${var.name}-default-route-table-id" = { value = module.vpc.default_route_table_id
+#     description = "ID of the default route table" }
+#     "/${local.stage_prefix}/${var.name}-instance-tenancy" = { value = module.vpc.vpc_instance_tenancy
+#     description = "Tenancy of instances spin up within VPC" }
+#     "/${local.stage_prefix}/${var.name}-enable-dns-support" = { value = module.vpc.vpc_enable_dns_support
+#     description = "Whether or not the VPC has DNS support" }
+#     "/${local.stage_prefix}/${var.name}-enable-dns-hostnames" = { value = module.vpc.vpc_enable_dns_hostnames
+#     description = "Whether or not the VPC has DNS hostname support" }
+#     "/${local.stage_prefix}/${var.name}-main-route-table-id" = { value = module.vpc.vpc_main_route_table_id
+#     description = "ID of the main route table associated with this VPC" }
+#     "/${local.stage_prefix}/${var.name}-secondary-cidr-blocks" = { value = join(",", module.vpc.vpc_secondary_cidr_blocks), type = "StringList",
+#     description = "List of secondary CIDR blocks of the VPC" }
+#     "/${local.stage_prefix}/${var.name}-public-subnets" = { value = join(",", module.vpc.public_subnets), type = "StringList",
+#     description = "List of IDs of public subnets" }
+#     "/${local.stage_prefix}/${var.name}-public-subnets-cidr-blocks" = { value = join(",", module.vpc.public_subnets_cidr_blocks), type = "StringList",
+#     description = "List of cidr_blocks of public subnets" }
+#     "/${local.stage_prefix}/${var.name}-public-route-table-ids" = { value = join(",", module.vpc.public_route_table_ids), type = "StringList",
+#     description = "List of IDs of public route tables" }
+#     "/${local.stage_prefix}/${var.name}-private-subnets" = { value = join(",", module.vpc.private_subnets), type = "StringList",
+#     description = "List of IDs of private subnets" }
+#     "/${local.stage_prefix}/${var.name}-private-subnets-cidr-blocks" = { value = join(",", module.vpc.private_subnets_cidr_blocks), type = "StringList",
+#     description = "List of cidr_blocks of private subnets" }
+#     "/${local.stage_prefix}/${var.name}-private-route-table-ids" = { value = join(",", module.vpc.private_route_table_ids), type = "StringList",
+#     description = "List of IDs of private route tables" }
+#     "/${local.stage_prefix}/${var.name}-intra-subnets" = { value = join(",", module.vpc.intra_subnets), type = "StringList",
+#     description = "List of IDs of internal subnets" }
+#     "/${local.stage_prefix}/${var.name}-intra-subnets-cidr-blocks" = { value = join(",", module.vpc.intra_subnets_cidr_blocks), type = "StringList",
+#     description = "List of cidr_blocks of internal subnets" }
+#     "/${local.stage_prefix}/${var.name}-intra-route-table-ids" = { value = join(",", module.vpc.intra_route_table_ids), type = "StringList",
+#     description = "List of IDs of internal route tables" }
+#     "/${local.stage_prefix}/${var.name}-nat-ids" = { value = join(",", module.vpc.nat_ids), type = "StringList",
+#     description = "List of allocation ID of Elastic IPs created for AWS NAT Gateway" }
+#     "/${local.stage_prefix}/${var.name}-nat-public-ips" = { value = join(",", module.vpc.nat_public_ips), type = "StringList",
+#     description = "List of public Elastic IPs created for AWS NAT Gateway" }
+#     "/${local.stage_prefix}/${var.name}-natgw-ids" = { value = join(",", module.vpc.natgw_ids), type = "StringList",
+#     description = "List of NAT Gateway IDs" }
+#     "/${local.stage_prefix}/${var.name}-igw-id" = { value = module.vpc.igw_id
+#     description = "ID of the Internet Gateway" }
+#     "/${local.stage_prefix}/${var.name}-vgw-id" = { value = module.vpc.vgw_id
+#     description = "ID of the VPN Gateway" }
+#   }
+# }
 
 # Outputs
 
@@ -319,9 +402,29 @@ output "vpc_subnet_ids" {
   value       = local.vpc_subnet_ids
 }
 
+resource "aws_ssm_parameter" "vpc_subnet_ids" {
+  count       = var.create && local.vpc_subnet_ids != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-subnet-ids"
+  description = format("%s %s", var.desc_prefix, "List of all VPC subnet IDs")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", local.vpc_subnet_ids)
+}
+
 output "vpc_id" {
   description = "ID of the VPC"
   value       = module.vpc.vpc_id
+}
+
+resource "aws_ssm_parameter" "vpc_id" {
+  count       = var.create && module.vpc.vpc_id != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-id"
+  description = format("%s %s", var.desc_prefix, "ID of the VPC")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_id
 }
 
 output "vpc_cidr_block" {
@@ -329,9 +432,29 @@ output "vpc_cidr_block" {
   value       = module.vpc.vpc_cidr_block
 }
 
+resource "aws_ssm_parameter" "vpc_cidr_block" {
+  count       = var.create && module.vpc.vpc_cidr_block != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-cidr-block"
+  description = format("%s %s", var.desc_prefix, "CIDR block of the VPC")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_cidr_block
+}
+
 output "vpc_default_security_group_id" {
   description = "ID of the security group created by default on VPC creation"
   value       = module.vpc.default_security_group_id
+}
+
+resource "aws_ssm_parameter" "vpc_default_security_group_id" {
+  count       = var.create && local.az_zone_ids_available != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-default-security-group-id"
+  description = format("%s %s", var.desc_prefix, "ID of the security group created by default on VPC creation")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_cidr_block
 }
 
 output "vpc_default_network_acl_id" {
@@ -339,9 +462,29 @@ output "vpc_default_network_acl_id" {
   value       = module.vpc.default_network_acl_id
 }
 
+resource "aws_ssm_parameter" "vpc_default_network_acl_id" {
+  count       = var.create && module.vpc.default_network_acl_id != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-default-network-acl-id"
+  description = format("%s %s", var.desc_prefix, "ID of the default network ACL")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.default_network_acl_id
+}
+
 output "vpc_default_route_table_id" {
   description = "ID of the default route table"
   value       = module.vpc.default_route_table_id
+}
+
+resource "aws_ssm_parameter" "vpc_default_route_table_id" {
+  count       = var.create && module.vpc.default_route_table_id != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-default-route-table-id"
+  description = format("%s %s", var.desc_prefix, "ID of the default route table")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.default_route_table_id
 }
 
 output "vpc_instance_tenancy" {
@@ -349,9 +492,29 @@ output "vpc_instance_tenancy" {
   value       = module.vpc.vpc_instance_tenancy
 }
 
+resource "aws_ssm_parameter" "vpc_instance_tenancy" {
+  count       = var.create && module.vpc.vpc_instance_tenancy != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-instance-tenancy"
+  description = format("%s %s", var.desc_prefix, "Tenancy of instances spin up within VPC")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_instance_tenancy
+}
+
 output "vpc_enable_dns_support" {
   description = "Whether or not the VPC has DNS support"
   value       = module.vpc.vpc_enable_dns_support
+}
+
+resource "aws_ssm_parameter" "vpc_enable_dns_support" {
+  count       = var.create && module.vpc.vpc_enable_dns_support != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-enable-dns-support"
+  description = format("%s %s", var.desc_prefix, "Whether or not the VPC has DNS support")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_enable_dns_support
 }
 
 output "vpc_enable_dns_hostnames" {
@@ -359,9 +522,29 @@ output "vpc_enable_dns_hostnames" {
   value       = module.vpc.vpc_enable_dns_hostnames
 }
 
+resource "aws_ssm_parameter" "vpc_enable_dns_hostnames" {
+  count       = var.create && module.vpc.vpc_enable_dns_hostnames != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-enable-dns-hostnames"
+  description = format("%s %s", var.desc_prefix, "Whether or not the VPC has DNS hostname support")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_enable_dns_hostnames
+}
+
 output "vpc_main_route_table_id" {
   description = "ID of the main route table associated with this VPC"
   value       = module.vpc.vpc_main_route_table_id
+}
+
+resource "aws_ssm_parameter" "vpc_main_route_table_id" {
+  count       = var.create && module.vpc.vpc_main_route_table_id != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-main-route-table-id"
+  description = format("%s %s", var.desc_prefix, "ID of the main route table associated with this VPC")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_main_route_table_id
 }
 
 output "vpc_secondary_cidr_blocks" {
@@ -369,9 +552,29 @@ output "vpc_secondary_cidr_blocks" {
   value       = module.vpc.vpc_secondary_cidr_blocks
 }
 
+resource "aws_ssm_parameter" "vpc_secondary_cidr_blocks" {
+  count       = var.create && module.vpc.vpc_secondary_cidr_blocks != [] ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-secondary-cidr-blocks"
+  description = format("%s %s", var.desc_prefix, "List of secondary CIDR blocks of the VPC")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.vpc_secondary_cidr_blocks)
+}
+
 output "vpc_public_subnets" {
   description = "List of IDs of public subnets"
   value       = module.vpc.public_subnets
+}
+
+resource "aws_ssm_parameter" "vpc_public_subnets" {
+  count       = var.create && module.vpc.public_subnets != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-public-subnets"
+  description = format("%s %s", var.desc_prefix, "List of IDs of public subnets")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.public_subnets)
 }
 
 output "vpc_public_subnets_cidr_blocks" {
@@ -379,9 +582,29 @@ output "vpc_public_subnets_cidr_blocks" {
   value       = module.vpc.public_subnets_cidr_blocks
 }
 
+resource "aws_ssm_parameter" "vpc_public_subnets_cidr_blocks" {
+  count       = var.create && module.vpc.public_subnets_cidr_blocks != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-public-subnets-cidr-blocks"
+  description = format("%s %s", var.desc_prefix, "List of cidr_blocks of public subnets")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.public_subnets_cidr_blocks)
+}
+
 output "vpc_public_route_table_ids" {
   description = "List of IDs of public route tables"
   value       = module.vpc.public_route_table_ids
+}
+
+resource "aws_ssm_parameter" "vpc_public_route_table_ids" {
+  count       = var.create && module.vpc.public_route_table_ids != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-public-route-table-ids"
+  description = format("%s %s", var.desc_prefix, "List of IDs of public route tables")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.public_route_table_ids)
 }
 
 output "vpc_private_subnets" {
@@ -389,9 +612,29 @@ output "vpc_private_subnets" {
   value       = module.vpc.private_subnets
 }
 
+resource "aws_ssm_parameter" "vpc_private_subnets" {
+  count       = var.create && module.vpc.private_subnets != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-private-subnets"
+  description = format("%s %s", var.desc_prefix, "List of IDs of private subnets")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.private_subnets)
+}
+
 output "vpc_private_subnets_cidr_blocks" {
   description = "List of cidr_blocks of private subnets"
   value       = module.vpc.private_subnets_cidr_blocks
+}
+
+resource "aws_ssm_parameter" "vpc_private_subnets_cidr_blocks" {
+  count       = var.create && module.vpc.private_subnets_cidr_blocks != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-private-subnets-cidr-blocks"
+  description = format("%s %s", var.desc_prefix, "List of cidr_blocks of private subnets")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.private_subnets_cidr_blocks)
 }
 
 output "vpc_private_route_table_ids" {
@@ -399,9 +642,29 @@ output "vpc_private_route_table_ids" {
   value       = module.vpc.private_route_table_ids
 }
 
+resource "aws_ssm_parameter" "vpc_private_route_table_ids" {
+  count       = var.create && module.vpc.private_route_table_ids != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-private-route-table-ids"
+  description = format("%s %s", var.desc_prefix, "List of IDs of private route tables")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.private_route_table_ids)
+}
+
 output "vpc_internal_subnets" {
   description = "List of IDs of internal subnets"
   value       = module.vpc.intra_subnets
+}
+
+resource "aws_ssm_parameter" "vpc_intra_subnets" {
+  count       = var.create && module.vpc.intra_subnets != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-intra-subnets"
+  description = format("%s %s", var.desc_prefix, "List of IDs of internal subnets")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.intra_subnets)
 }
 
 output "vpc_internal_subnets_cidr_blocks" {
@@ -409,9 +672,29 @@ output "vpc_internal_subnets_cidr_blocks" {
   value       = module.vpc.intra_subnets_cidr_blocks
 }
 
+resource "aws_ssm_parameter" "vpc_intra_subnets_cidr_blocks" {
+  count       = var.create && module.vpc.intra_subnets_cidr_blocks != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-intra-subnets-cidr-blocks"
+  description = format("%s %s", var.desc_prefix, "List of cidr_blocks of internal subnets")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.intra_subnets_cidr_blocks)
+}
+
 output "vpc_internal_route_table_ids" {
   description = "List of IDs of internal route tables"
   value       = module.vpc.intra_route_table_ids
+}
+
+resource "aws_ssm_parameter" "vpc_intra_route_table_ids" {
+  count       = var.create && module.vpc.intra_route_table_ids != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-intra-route-table-ids"
+  description = format("%s %s", var.desc_prefix, "List of IDs of internal route tables")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.intra_route_table_ids)
 }
 
 output "vpc_nat_ids" {
@@ -419,9 +702,29 @@ output "vpc_nat_ids" {
   value       = module.vpc.nat_ids
 }
 
+resource "aws_ssm_parameter" "vpc_nat_ids" {
+  count       = var.create && module.vpc.nat_ids != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-nat-ids"
+  description = format("%s %s", var.desc_prefix, "List of allocation ID of Elastic IPs created for AWS NAT Gateway")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.nat_ids)
+}
+
 output "vpc_nat_public_ips" {
   description = "List of public Elastic IPs created for AWS NAT Gateway"
   value       = module.vpc.nat_public_ips
+}
+
+resource "aws_ssm_parameter" "vpc_nat_public_ips" {
+  count       = var.create && module.vpc.nat_public_ips != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-nat-public-ips"
+  description = format("%s %s", var.desc_prefix, "List of public Elastic IPs created for AWS NAT Gateway")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.nat_public_ips)
 }
 
 output "vpc_natgw_ids" {
@@ -429,12 +732,102 @@ output "vpc_natgw_ids" {
   value       = module.vpc.natgw_ids
 }
 
+resource "aws_ssm_parameter" "vpc_natgw_ids" {
+  count       = var.create && module.vpc.natgw_ids != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-natgw-ids"
+  description = format("%s %s", var.desc_prefix, "List of NAT Gateway IDs")
+  tags        = var.tags
+
+  type  = "StringList"
+  value = join(",", module.vpc.natgw_ids)
+}
+
 output "vpc_igw_id" {
   description = "ID of the Internet Gateway"
   value       = module.vpc.igw_id
 }
 
+resource "aws_ssm_parameter" "vpc_igw_id" {
+  count       = var.create && module.vpc.igw_id != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-igw-id"
+  description = format("%s %s", var.desc_prefix, "ID of the Internet Gateway")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.igw_id
+}
+
 output "vpc_vgw_id" {
   description = "ID of the VPN Gateway"
   value       = module.vpc.vgw_id
+}
+
+resource "aws_ssm_parameter" "vpc_vgw_id" {
+  count       = var.create && module.vpc.vgw_id != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-vgw-id"
+  description = format("%s %s", var.desc_prefix, "ID of the VPN Gateway")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vgw_id
+}
+
+output "vpc_flow_log_id" {
+  description = "The ID of the Flow Log resource"
+  value       = module.vpc.vpc_flow_log_id
+}
+
+resource "aws_ssm_parameter" "vpc_flow_log_id" {
+  count       = var.create && module.vpc.vpc_flow_log_id != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-flow-log-id"
+  description = format("%s %s", var.desc_prefix, "The ID of the Flow Log resource")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_flow_log_id
+}
+
+output "vpc_flow_log_destination_arn" {
+  description = "The ARN of the destination for VPC Flow Logs"
+  value       = module.vpc.vpc_flow_log_destination_arn
+}
+
+resource "aws_ssm_parameter" "vpc_flow_log_destination_arn" {
+  count       = var.create && module.vpc.vpc_flow_log_destination_arn != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-flow-log-destination-arn"
+  description = format("%s %s", var.desc_prefix, "The ARN of the destination for VPC Flow Logs")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_flow_log_destination_arn
+}
+
+output "vpc_flow_log_destination_type" {
+  description = "The type of the destination for VPC Flow Logs"
+  value       = module.vpc.vpc_flow_log_destination_type
+}
+
+resource "aws_ssm_parameter" "vpc_flow_log_destination_type" {
+  count       = var.create && module.vpc.vpc_flow_log_destination_type != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-flow-log-destination-type"
+  description = format("%s %s", var.desc_prefix, "The type of the destination for VPC Flow Logs")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_flow_log_destination_type
+}
+
+output "vpc_flow_log_cloudwatch_iam_role_arn" {
+  description = "The ARN of the IAM role used when pushing logs to Cloudwatch log group"
+  value       = module.vpc.vpc_flow_log_cloudwatch_iam_role_arn
+}
+
+resource "aws_ssm_parameter" "vpc_flow_log_cloudwatch_iam_role_arn" {
+  count       = var.create && module.vpc.vpc_flow_log_cloudwatch_iam_role_arn != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-flow-log-cloudwatch-iam-role-arn"
+  description = format("%s %s", var.desc_prefix, "The ARN of the IAM role used when pushing logs to Cloudwatch log group")
+  tags        = var.tags
+
+  type  = "String"
+  value = module.vpc.vpc_flow_log_cloudwatch_iam_role_arn
 }
