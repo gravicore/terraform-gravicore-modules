@@ -1132,32 +1132,6 @@ locals {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-# SSM Parameters
-
-# module "parameters_vpc_endpoints" {
-#   source      = "../parameters"
-#   # source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
-#   providers   = { aws = "aws" }
-#   create      = var.create
-#   namespace   = var.namespace
-#   environment = var.environment
-#   stage       = var.stage
-#   tags        = local.tags
-
-#   write_parameters = {
-#     "/${local.stage_prefix}/${var.name}-endpoint-gateways" = { value = jsonencode(local.vpc_endpoint_gateways)
-#     description = "Map of all enabled VPC Endpoint Gateways" }
-#     "/${local.stage_prefix}/${var.name}-endpoint-interface-dns-entries" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.dns_entry[*] })
-#     description = "Map of all enabled VPC Endpoint Interface DNS entries" }
-#     "/${local.stage_prefix}/${var.name}-endpoint-interface-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.id })
-#     description = "Map of all enabled VPC Endpoint Interface IDs" }
-#     "/${local.stage_prefix}/${var.name}-endpoint-interface-network-interface-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.network_interface_ids[*] })
-#     description = "Map of all enabled VPC Endpoint Interface Network Interface IDs" }
-#     "/${local.stage_prefix}/${var.name}-endpoint-interface-security-group-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.security_group_ids[*] })
-#     description = "Map of all enabled VPC Endpoint Interface Security Group IDs" }
-#   }
-# }
-
 # Outputs
 
 output "vpc_endpoint_gateways" {
@@ -1180,15 +1154,15 @@ output "vpc_endpoint_interfaces" {
   value       = local.vpc_endpoint_interfaces
 }
 
-# resource "aws_ssm_parameter" "vpc_endpoint_interface_dns_entries" {
-#   count       = var.create && local.vpc_endpoint_interfaces != "" ? 1 : 0
-#   name        = "/${local.stage_prefix}/${var.name}-endpoint-interface-dns-entries"
-#   description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface DNS entries")
-#   tags        = var.tags
+resource "aws_ssm_parameter" "vpc_endpoint_interface_dns_entries" {
+  count       = var.create && local.vpc_endpoint_interfaces != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-endpoint-interface-dns-entries"
+  description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface DNS entries")
+  tags        = var.tags
 
-#   type = "String"
-#   value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.dns_entry[*] })
-# }
+  type = "String"
+  value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.dns_entry[*] })
+}
 
 resource "aws_ssm_parameter" "vpc_endpoint_interface_ids" {
   count       = var.create && local.vpc_endpoint_gateways != "" ? 1 : 0
@@ -1200,15 +1174,15 @@ resource "aws_ssm_parameter" "vpc_endpoint_interface_ids" {
   value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.id })
 }
 
-# resource "aws_ssm_parameter" "vpc_endpoint_interface_network_interface_ids" {
-#   count       = var.create && local.vpc_endpoint_interfaces != "" ? 1 : 0
-#   name        = "/${local.stage_prefix}/${var.name}-endpoint-interface-network-interface-ids"
-#   description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface Network Interface IDs")
-#   tags        = var.tags
+resource "aws_ssm_parameter" "vpc_endpoint_interface_network_interface_ids" {
+  count       = var.create && local.vpc_endpoint_interfaces != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-endpoint-interface-network-interface-ids"
+  description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface Network Interface IDs")
+  tags        = var.tags
 
-#   type = "String"
-#   value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.network_interface_ids[*] })
-# }
+  type = "String"
+  value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.network_interface_ids[*] })
+}
 
 resource "aws_ssm_parameter" "vpc_endpoint_interface_security_group_ids" {
   count       = var.create && local.vpc_endpoint_gateways != "" ? 1 : 0
