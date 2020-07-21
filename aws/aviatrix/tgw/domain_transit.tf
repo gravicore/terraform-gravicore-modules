@@ -53,16 +53,16 @@ resource "aviatrix_vpc" "transit" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "transit_vpc_id" {
-  value       = aviatrix_vpc.transit[0].vpc_id
+  value       = aviatrix_vpc.transit.*.vpc_id
   description = "ID of the Transit VPC"
 }
 
 output "transit_vpc_subnets" {
-  value       = aviatrix_vpc.transit[0].subnets
+  value       = aviatrix_vpc.transit.*.subnets 
   description = "List of subnet maps for the Transit VPC"
 }
 
 output "transit_vpc_subnet_ids" {
-  value       = [for subnet in aviatrix_vpc.transit[0].subnets : subnet.subnet_id]
+  value       = [for subnet in aviatrix_vpc.transit.*.subnets : subnet.subnet_id]
   description = "List of subnet IDs for the Transit VPC"
 }
