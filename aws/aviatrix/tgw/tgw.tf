@@ -128,8 +128,6 @@ module "parameters_tgw" {
     description = "BGP Local ASN (Autonomous System Number" }
     "/${local.stage_prefix}/${var.name}-attached-aviatrix-transit-gateways" = { value = join(",", aviatrix_aws_tgw.tgw[0].attached_aviatrix_transit_gateway), type = "StringList"
     description = "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain" }
-    "/${local.stage_prefix}/${var.name}-security-domains" = { value = jsonencode(aviatrix_aws_tgw.tgw[0].security_domains),
-    description = "Security Domains created together with AWS TGW's creation" }
   }
 }
 
