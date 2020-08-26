@@ -236,6 +236,12 @@ variable "schedule" {
   default     = ""
 }
 
+variable "enabled_cloudwatch_logs_exports" {
+  type        = list(string)
+  default     = []
+  description = "(Optional) List of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on engine): agent (MSSQL), alert, audit, error, general, listener, slowquery, trace, postgresql (PostgreSQL), upgrade (PostgreSQL)."
+}
+
 variable "performance_insights_enabled" {
   description = "(Optional) Specifies whether Performance Insights are enabled. Defaults to false"
   default     = ""
@@ -319,6 +325,7 @@ resource "aws_db_instance" "this" {
   copy_tags_to_snapshot       = var.copy_tags_to_snapshot
   final_snapshot_identifier   = replace(join(var.delimiter, compact([length(var.identifier) == 0 ? var.stage_prefix : var.module_prefix, each.key, var.final_snapshot_identifier])), "--", "-")
 
+  enabled_cloudwatch_logs_exports       = var.enabled_cloudwatch_logs_exports
   performance_insights_enabled          = var.performance_insights_enabled
   performance_insights_kms_key_id       = var.performance_insights_kms_key_id
   performance_insights_retention_period = var.performance_insights_retention_period

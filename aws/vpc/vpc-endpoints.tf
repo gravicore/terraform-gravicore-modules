@@ -700,6 +700,23 @@ variable "default_endpoint_security_group_ids" {
   default     = []
 }
 
+variable "enable_datasync_endpoint" {
+  description = "Should be true if you want to provision a DataSync endpoint to the VPC"
+  default     = false
+}
+
+variable "datasync_endpoint_security_group_ids" {
+  description = "The ID of one or more security groups to associate with the network interface for DataSync endpoint"
+  type        = list(string)
+  default     = []
+}
+
+variable "datasync_endpoint_private_dns_enabled" {
+  description = "Whether or not to associate a private hosted zone with the specified VPC for DataSync endpoint"
+  type        = bool
+  default     = true
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -729,6 +746,30 @@ resource "aws_security_group" "vpc_endpoint_default" {
     create_before_destroy = true
   }
 }
+
+###########################
+# VPC Endpoint for DataSync
+###########################
+data "aws_vpc_endpoint_service" "datasync" {
+  count   = var.create && var.enable_datasync_endpoint ? 1 : 0
+  service = "datasync"
+}
+
+resource "aws_vpc_endpoint" "datasync" {
+  count = var.create && var.enable_datasync_endpoint ? 1 : 0
+  tags  = local.tags
+
+  vpc_id            = module.vpc.vpc_id
+  service_name      = data.aws_vpc_endpoint_service.datasync[0].service_name
+  vpc_endpoint_type = "Interface"
+
+  security_group_ids  = coalescelist(var.datasync_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  subnet_ids          = module.vpc.private_subnets
+  private_dns_enabled = var.datasync_endpoint_private_dns_enabled
+}
+
+
+# -------
 
 locals {
   default_endpoint_security_group_ids = length(var.default_endpoint_security_group_ids) < 1 ? [aws_security_group.vpc_endpoint_default[0].id] : var.default_endpoint_security_group_ids
@@ -1027,6 +1068,14 @@ locals {
     network_interface_ids = module.vpc.vpc_endpoint_rekognition_network_interface_ids
     security_group_ids    = coalescelist(var.rekognition_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   } } : {}
+
+  vpc_endpoint_datasync = var.enable_datasync_endpoint ? { "datasync" = {
+    id                    = concat(aws_vpc_endpoint.datasync.*.id, [""])[0]
+    dns_entry             = flatten(aws_vpc_endpoint.datasync.*.dns_entry)
+    network_interface_ids = flatten(aws_vpc_endpoint.datasync.*.network_interface_ids)
+    security_group_ids    = coalescelist(var.datasync_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  } } : {}
+
 }
 
 locals {
@@ -1075,37 +1124,13 @@ locals {
     local.vpc_endpoint_appmesh_envoy_management,
     local.vpc_endpoint_athena,
     local.vpc_endpoint_rekognition,
+    local.vpc_endpoint_datasync,
   )
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
-
-# SSM Parameters
-
-module "parameters_vpc_endpoints" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
-  providers   = { aws = "aws" }
-  create      = var.create
-  namespace   = var.namespace
-  environment = var.environment
-  stage       = var.stage
-  tags        = local.tags
-
-  write_parameters = {
-    "/${local.stage_prefix}/${var.name}-endpoint-gateways" = { value = jsonencode(local.vpc_endpoint_gateways)
-    description = "Map of all enabled VPC Endpoint Gateways" }
-    "/${local.stage_prefix}/${var.name}-endpoint-interface-dns-entries" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.dns_entry[*] })
-    description = "Map of all enabled VPC Endpoint Interface DNS entries" }
-    "/${local.stage_prefix}/${var.name}-endpoint-interface-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.id })
-    description = "Map of all enabled VPC Endpoint Interface IDs" }
-    "/${local.stage_prefix}/${var.name}-endpoint-interface-network-interface-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.network_interface_ids[*] })
-    description = "Map of all enabled VPC Endpoint Interface Network Interface IDs" }
-    "/${local.stage_prefix}/${var.name}-endpoint-interface-security-group-ids" = { value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.security_group_ids[*] })
-    description = "Map of all enabled VPC Endpoint Interface Security Group IDs" }
-  }
-}
 
 # Outputs
 
@@ -1114,7 +1139,57 @@ output "vpc_endpoint_gateways" {
   value       = local.vpc_endpoint_gateways
 }
 
+resource "aws_ssm_parameter" "vpc_endpoint_gateways" {
+  count       = var.create && local.vpc_endpoint_gateways != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-endpoint-gateways"
+  description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Gateways")
+  tags        = var.tags
+
+  type  = "String"
+  value = jsonencode(local.vpc_endpoint_gateways)
+}
+
 output "vpc_endpoint_interfaces" {
   description = "Map of all enabled VPC Endpoint Interfaces"
   value       = local.vpc_endpoint_interfaces
+}
+
+resource "aws_ssm_parameter" "vpc_endpoint_interface_dns_entries" {
+  count       = var.create && local.vpc_endpoint_interfaces != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-endpoint-interface-dns-entries"
+  description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface DNS entries")
+  tags        = var.tags
+
+  type = "String"
+  value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.dns_entry[*] })
+}
+
+resource "aws_ssm_parameter" "vpc_endpoint_interface_ids" {
+  count       = var.create && local.vpc_endpoint_gateways != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-endpoint-interface-ids"
+  description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface IDs")
+  tags        = var.tags
+
+  type  = "String"
+  value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.id })
+}
+
+resource "aws_ssm_parameter" "vpc_endpoint_interface_network_interface_ids" {
+  count       = var.create && local.vpc_endpoint_interfaces != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-endpoint-interface-network-interface-ids"
+  description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface Network Interface IDs")
+  tags        = var.tags
+
+  type = "String"
+  value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.network_interface_ids[*] })
+}
+
+resource "aws_ssm_parameter" "vpc_endpoint_interface_security_group_ids" {
+  count       = var.create && local.vpc_endpoint_gateways != "" ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-endpoint-interface-security-group-ids"
+  description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface Security Group IDs")
+  tags        = var.tags
+
+  type  = "String"
+  value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.security_group_ids[*] })
 }

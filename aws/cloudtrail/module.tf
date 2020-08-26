@@ -8,13 +8,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "kms"
+  default     = "cloudtrail"
   description = "The name of the module"
 }
 
 variable terraform_module {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/kms"
+  default     = "gravicore/terraform-gravicore-modules/aws/cloudtrail"
   description = "The owner and name of the Terraform module"
 }
 
