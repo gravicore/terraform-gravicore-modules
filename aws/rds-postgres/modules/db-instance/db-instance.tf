@@ -324,6 +324,7 @@ resource "aws_db_instance" "this" {
   skip_final_snapshot         = var.skip_final_snapshot
   copy_tags_to_snapshot       = var.copy_tags_to_snapshot
   final_snapshot_identifier   = replace(join(var.delimiter, compact([length(var.identifier) == 0 ? var.stage_prefix : var.module_prefix, each.key, var.final_snapshot_identifier])), "--", "-")
+  deletion_protection         = var.deletion_protection
 
   enabled_cloudwatch_logs_exports       = var.enabled_cloudwatch_logs_exports
   performance_insights_enabled          = var.performance_insights_enabled
