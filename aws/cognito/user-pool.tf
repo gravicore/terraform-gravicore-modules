@@ -91,7 +91,7 @@ data "aws_kms_key" "parameter_store_key" {
 variable "create_domain_name" {
   type        = bool
   default     = true
-  description = "Whether to create cognito domain name."
+  description = "Create cognito domain name"
 }
 
 variable "domain_parent_domain_name" {
