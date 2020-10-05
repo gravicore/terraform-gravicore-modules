@@ -88,6 +88,12 @@ data "aws_kms_key" "parameter_store_key" {
 
 # Cognito Domain
 
+variable "create_domain_name" {
+  type        = bool
+  default     = true
+  description = "Whether to create cognito domain name."
+}
+
 variable "domain_parent_domain_name" {
   type        = string
   default     = ""
@@ -230,6 +236,7 @@ resource "aws_cognito_user_pool" "pool" {
   }
 
   email_configuration {
+    from_email_address     = var.email_from_email_address
     reply_to_email_address = var.email_reply_to_email_address
     source_arn             = var.email_source_arn
     email_sending_account  = var.email_sending_account
@@ -315,9 +322,9 @@ resource "aws_cognito_user_pool" "pool" {
 }
 
 resource "aws_cognito_user_pool_domain" "pool" {
-  count = var.create && var.domain_subdomain_name != "" ? 1 : 0
+  count = var.create && var.create_domain_name ? 1 : 0
 
-  domain          = local.domain_name != null ? local.domain_name : join("-", [local.stage_prefix, var.domain_subdomain_name])
+  domain          = local.domain_name != null ? local.domain_name : var.domain_subdomain_name != "" ? join("-", [local.stage_prefix, var.domain_subdomain_name]) : local.stage_prefix
   certificate_arn = local.domain_name != null ? var.domain_certificate_arn : null
   user_pool_id    = aws_cognito_user_pool.pool[0].id
 }
@@ -437,27 +444,27 @@ output "cognito_user_pool_schemas" {
 # User Pool Domain
 
 output "cognito_domain_name" {
-  value       = "${aws_cognito_user_pool_domain.pool[0].domain}.auth.${var.aws_region}.amazoncognito.com"
+  value       = aws_cognito_user_pool_domain.pool.*.domain != null ? "${concat(aws_cognito_user_pool_domain.pool.*.domain, [""])[0]}.auth.${var.aws_region}.amazoncognito.com" : null
   description = "The domain string for the user pool"
 }
 
 output "cognito_domain_aws_account_id" {
-  value       = aws_cognito_user_pool_domain.pool[0].aws_account_id
+  value       = concat(aws_cognito_user_pool_domain.pool.*.aws_account_id, [""])[0]
   description = "The AWS account ID for the user pool owner"
 }
 
 output "cognito_domain_cloudfront_distribution_arn" {
-  value       = aws_cognito_user_pool_domain.pool[0].cloudfront_distribution_arn
+  value       = concat(aws_cognito_user_pool_domain.pool.*.cloudfront_distribution_arn, [""])[0]
   description = "The ARN of the CloudFront distribution"
 }
 
 output "cognito_domain_s3_bucket" {
-  value       = aws_cognito_user_pool_domain.pool[0].s3_bucket
+  value       = concat(aws_cognito_user_pool_domain.pool.*.s3_bucket, [""])[0]
   description = "The S3 bucket where the static files for this domain are stored"
 }
 
 output "cognito_domain_version" {
-  value       = aws_cognito_user_pool_domain.pool[0].version
+  value       = concat(aws_cognito_user_pool_domain.pool.*.version, [""])[0]
   description = "The app version"
 }
 
