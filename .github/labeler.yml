@@ -1,5 +1,76 @@
-aws:
-  - aws/**/*
 
 github/action:
   - .github/**/*
+aws:
+ - aws/**/*
+aws/account:
+ - aws/account/**/*
+aws/account-roles:
+ - aws/account-roles/**/*
+aws/acm:
+ - aws/acm/**/*
+aws/alb:
+ - aws/alb/**/*
+aws/arctic-wolf:
+ - aws/arctic-wolf/**/*
+aws/aviatrix:
+ - aws/aviatrix/**/*
+aws/billing:
+ - aws/billing/**/*
+aws/central-logging:
+ - aws/central-logging/**/*
+aws/cerberus:
+ - aws/cerberus/**/*
+aws/cicd:
+ - aws/cicd/**/*
+aws/cloudtrail:
+ - aws/cloudtrail/**/*
+aws/codecommit:
+ - aws/codecommit/**/*
+aws/cognito:
+ - aws/cognito/**/*
+aws/data-transfer:
+ - aws/data-transfer/**/*
+aws/datadog-agent:
+ - aws/datadog-agent/**/*
+aws/dns:
+ - aws/dns/**/*
+aws/ds-msad:
+ - aws/ds-msad/**/*
+aws/ds-simplead:
+ - aws/ds-simplead/**/*
+aws/eb:
+ - aws/eb/**/*
+aws/elasticache-redis:
+ - aws/elasticache-redis/**/*
+aws/instance-scheduler:
+ - aws/instance-scheduler/**/*
+aws/kms:
+ - aws/kms/**/*
+aws/okta:
+ - aws/okta/**/*
+aws/okta-agent:
+ - aws/okta-agent/**/*
+aws/organization:
+ - aws/organization/**/*
+aws/parameters:
+ - aws/parameters/**/*
+aws/rds:
+ - aws/rds/**/*
+aws/rds-postgres:
+ - aws/rds-postgres/**/*
+aws/rds-postgres-replica:
+ - aws/rds-postgres-replica/**/*
+aws/s3-bucket:
+ - aws/s3-bucket/**/*
+aws/s3-cdn:
+ - aws/s3-cdn/**/*
+aws/terraform-backend:
+ - aws/terraform-backend/**/*
+aws/vpc:
+ - aws/vpc/**/*
+aws/vpc-dhcp:
+ - aws/vpc-dhcp/**/*
+aws/vpc-dns:
+ - aws/vpc-dns/**/*
+ 
