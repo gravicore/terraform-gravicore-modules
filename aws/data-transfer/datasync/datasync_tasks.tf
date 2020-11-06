@@ -39,7 +39,7 @@ resource "aws_datasync_task" "datasync" {
     gid = lookup(each.value, "gid", null)
     #  (Optional) A file metadata that indicates the last time a file was modified (written to) before the sync PREPARING
     # phase. Value values: NONE, PRESERVE. Default: PRESERVE.
-    mtime = lookup(each.value, "atime", null) == "BEST_EFFORT"  ? "PRESERVE" : lookup(each.value, "atime", null) == "NONE" ? "NONE" : null
+    mtime = lookup(each.value, "atime", null) == "BEST_EFFORT" ? "PRESERVE" : lookup(each.value, "atime", null) == "NONE" ? "NONE" : null
     # (Optional) Determines which users or groups can access a file for a specific purpose such as reading, writing, or
     # execution of the file. Valid values: NONE, PRESERVE. Default: PRESERVE.
     posix_permissions = lookup(each.value, "posix_permissions", null)
@@ -77,7 +77,7 @@ resource "aws_datasync_task" "datasync" {
 
 output "datasync_cloudwatch_log_group_arn" {
   description = "ARN specifying the CloudWatch log group"
-  value = var.create && var.datasync_agent_id != null ? aws_cloudwatch_log_group.datasync[0].arn : null
+  value       = var.create && var.datasync_agent_id != null ? aws_cloudwatch_log_group.datasync[0].arn : null
 }
 
 output "datasync_tasks" {

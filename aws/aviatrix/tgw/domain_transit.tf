@@ -58,7 +58,7 @@ output "transit_vpc_id" {
 }
 
 output "transit_vpc_subnets" {
-  value       = aviatrix_vpc.transit.*.subnets 
+  value       = aviatrix_vpc.transit.*.subnets
   description = "List of subnet maps for the Transit VPC"
 }
 

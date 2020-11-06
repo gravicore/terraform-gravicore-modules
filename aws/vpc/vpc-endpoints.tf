@@ -1160,7 +1160,7 @@ resource "aws_ssm_parameter" "vpc_endpoint_interface_dns_entries" {
   description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface DNS entries")
   tags        = var.tags
 
-  type = "String"
+  type  = "String"
   value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.dns_entry[*] })
 }
 
@@ -1180,7 +1180,7 @@ resource "aws_ssm_parameter" "vpc_endpoint_interface_network_interface_ids" {
   description = format("%s %s", var.desc_prefix, "Map of all enabled VPC Endpoint Interface Network Interface IDs")
   tags        = var.tags
 
-  type = "String"
+  type  = "String"
   value = jsonencode({ for k, v in local.vpc_endpoint_interfaces : k => v.network_interface_ids[*] })
 }
 
