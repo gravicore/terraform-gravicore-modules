@@ -3,8 +3,8 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "solution_stack_name" {
-  default = "64bit Amazon Linux 2018.03 v2.12.14 running Docker 18.06.1-ce"
-  type    = string
+  default     = "64bit Amazon Linux 2018.03 v2.12.14 running Docker 18.06.1-ce"
+  type        = string
   description = "(Optional) A solution stack to base your environment off of. Example stacks can be found in the Amazon API documentation(https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html)"
 }
 
@@ -75,20 +75,20 @@ variable "default_process_protocol" {
 }
 
 variable "vpc_id" {
-  default = null
-  type    = string
+  default     = null
+  type        = string
   description = "The ID for your Amazon VPC"
 }
 
 variable "alb_subnets" {
-  default = null
-  type    = list
+  default     = null
+  type        = list
   description = "The IDs of the subnet or subnets for the elastic load balancer. If you have multiple subnets, specify the value as a single comma-delimited string of subnet IDs"
 }
 
 variable "ec2_subnets" {
-  default = null
-  type    = list
+  default     = null
+  type        = list
   description = "The IDs of the Auto Scaling group subnet or subnets. If you have multiple subnets, specify the value as a single comma-delimited string of subnet IDs"
 }
 
@@ -163,8 +163,8 @@ variable "https_redirect" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "eb_ec2" {
-  count  = var.create ? 1 : 0
-  name    = "${local.module_prefix}-ec2"
+  count = var.create ? 1 : 0
+  name  = "${local.module_prefix}-ec2"
 
   assume_role_policy = <<EOF
 {
@@ -344,33 +344,33 @@ data "aws_iam_policy_document" "eb_ec2" {
 }
 
 resource "aws_iam_role_policy" "default" {
-  count  = var.create ? 1 : 0
-  name    = local.module_prefix
-  role    = aws_iam_role.eb_ec2[0].id
+  count = var.create ? 1 : 0
+  name  = local.module_prefix
+  role  = aws_iam_role.eb_ec2[0].id
 
   policy = data.aws_iam_policy_document.eb_ec2.json
 }
 
 resource "aws_iam_role_policy_attachment" "web_tier" {
-  count     = var.create ? 1 : 0
+  count      = var.create ? 1 : 0
   role       = aws_iam_role.eb_ec2[0].name
   policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier"
 }
 
 resource "aws_iam_role_policy_attachment" "worker_tier" {
-  count     = var.create ? 1 : 0
+  count      = var.create ? 1 : 0
   role       = aws_iam_role.eb_ec2[0].name
   policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkWorkerTier"
 }
 
 resource "aws_iam_role_policy_attachment" "elastic_beanstalk_multi_container_docker" {
-  count     = var.create ? 1 : 0
+  count      = var.create ? 1 : 0
   role       = aws_iam_role.eb_ec2[0].name
   policy_arn = "arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker"
 }
 
 resource "aws_elastic_beanstalk_application" "default" {
-  count      = var.create ? 1 : 0
+  count       = var.create ? 1 : 0
   name        = local.module_prefix
   description = var.app_description
 
@@ -384,13 +384,13 @@ resource "aws_elastic_beanstalk_application" "default" {
 }
 
 resource "aws_iam_instance_profile" "eb_ec2" {
-  count  = var.create ? 1 : 0
-  name    = "${local.module_prefix}-ec2"
-  role    = "${aws_iam_role.eb_ec2[0].name}"
+  count = var.create ? 1 : 0
+  name  = "${local.module_prefix}-ec2"
+  role  = "${aws_iam_role.eb_ec2[0].name}"
 }
 
 resource "aws_security_group" "eb_alb_sg" {
-  count      = var.create ? 1 : 0
+  count       = var.create ? 1 : 0
   name        = "${local.module_prefix}-alb-sg"
   description = "${var.desc_prefix} ALB Security Group"
   vpc_id      = "${var.vpc_id}"
@@ -420,7 +420,7 @@ resource "aws_security_group" "eb_alb_sg" {
 }
 
 resource "aws_elastic_beanstalk_environment" "default" {
-  count              = var.create ? 1 : 0
+  count               = var.create ? 1 : 0
   name                = "${local.module_prefix}"
   application         = "${aws_elastic_beanstalk_application.default[0].name}"
   solution_stack_name = "${var.solution_stack_name}"
@@ -588,7 +588,7 @@ resource "aws_elastic_beanstalk_environment" "default" {
 }
 
 resource "aws_lb_listener" "https_redirect" {
-  count            = var.create && var.https_redirect ? 1 : 0
+  count             = var.create && var.https_redirect ? 1 : 0
   load_balancer_arn = "${join(",", aws_elastic_beanstalk_environment.default[0].load_balancers)}"
   port              = "80"
   protocol          = "HTTP"
