@@ -48,6 +48,18 @@ variable "domain_name" {
   description = ""
 }
 
+variable "dns_zone_id" {
+  type        = string
+  default     = ""
+  description = ""
+}
+
+variable "dns_zone_name" {
+  type        = string
+  default     = ""
+  description = ""
+}
+
 variable "certificate_arn" {
   type        = string
   default     = ""
@@ -193,6 +205,11 @@ variable "target_groups" {
       unhealthy_threshold = number
       matcher             = string
     })
+    stickiness = object({
+      type            = string
+      cookie_duration = string
+      enabled         = bool
+    })
   }))
   default = [{
     target_type          = "instance"
@@ -209,6 +226,11 @@ variable "target_groups" {
       healthy_threshold   = 2
       unhealthy_threshold = 2
       matcher             = "200-399"
+    }
+    stickiness = {
+      type            = "lb_cookie"
+      cookie_duration = "604800"
+      enabled         = false
     }
   }]
   description = "A list of target group resources"
@@ -317,6 +339,15 @@ resource "aws_lb_target_group" "alb" {
     matcher             = var.target_groups[count.index].health_check.matcher
   }
 
+  dynamic "stickiness" {
+    for_each = lookup(var.target_groups[count.index], "stickiness", null) == null ? [] : [var.target_groups[count.index].stickiness]
+    content {
+      type            = stickiness.value["type"]
+      cookie_duration = stickiness.value["cookie_duration"]
+      enabled         = stickiness.value["enabled"]
+    }
+  }
+
   lifecycle {
     create_before_destroy = true
   }
@@ -351,6 +382,17 @@ resource "aws_lb_listener" "https" {
     target_group_arn = aws_lb_target_group.alb[count.index].arn
     type             = "forward"
   }
+}
+
+resource "aws_route53_record" "alb" {
+  count = var.create && var.dns_zone_id != "" && var.dns_zone_name != "" ? 1 : 0
+
+  zone_id         = var.dns_zone_id
+  name            = coalesce(var.domain_name, join(".", [var.name, var.dns_zone_name]))
+  type            = "CNAME"
+  ttl             = 30
+  records         = [aws_lb.alb[0].dns_name]
+  allow_overwrite = true
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
