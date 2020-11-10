@@ -193,6 +193,11 @@ variable "target_groups" {
       unhealthy_threshold = number
       matcher             = string
     })
+    stickiness = object({
+      type            = string
+      cookie_duration = string
+      enabled         = bool
+    })
   }))
   default = [{
     target_type          = "instance"
@@ -209,6 +214,11 @@ variable "target_groups" {
       healthy_threshold   = 2
       unhealthy_threshold = 2
       matcher             = "200-399"
+    }
+    stickiness = {
+      type            = "lb_cookie"
+      cookie_duration = "604800"
+      enabled         = false
     }
   }]
   description = "A list of target group resources"
@@ -315,6 +325,15 @@ resource "aws_lb_target_group" "alb" {
     unhealthy_threshold = var.target_groups[count.index].health_check.unhealthy_threshold
     interval            = var.target_groups[count.index].health_check.interval
     matcher             = var.target_groups[count.index].health_check.matcher
+  }
+
+  dynamic "stickiness" {
+    for_each = lookup(var.target_groups[count.index], "stickiness", null) == null ? [] : [var.target_groups[count.index].stickiness]
+    content {
+      type            = stickiness.value["type"]
+      cookie_duration = stickiness.value["cookie_duration"]
+      enabled         = stickiness.value["enabled"]
+    }
   }
 
   lifecycle {
