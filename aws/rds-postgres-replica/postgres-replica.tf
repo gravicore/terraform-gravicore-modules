@@ -706,7 +706,7 @@ resource "aws_db_event_subscription" "nlb_tg_register" {
 }
 
 data "aws_lambda_invocation" "nlb_tg_register" {
-  count         = var.create && var.deploy_nlb ? 1 : 0 
+  count         = var.create && var.deploy_nlb ? 1 : 0
   function_name = aws_lambda_function.nlb_tg_register[0].function_name
 
   input = <<JSON

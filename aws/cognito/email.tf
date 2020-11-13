@@ -5,6 +5,12 @@
 ##############################################
 #######Variable for Email Configuration#######
 
+variable "email_from_email_address" {
+  type        = string
+  description = "The FROM email address"
+  default     = null
+}
+
 variable "email_reply_to_email_address" {
   type        = string
   description = "The REPLY-TO email address"

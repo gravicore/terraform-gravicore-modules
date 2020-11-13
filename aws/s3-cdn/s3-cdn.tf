@@ -258,35 +258,35 @@ variable "custom_error_response" {
   # https://www.terraform.io/docs/providers/aws/r/cloudfront_distribution.html#custom-error-response-arguments
   type = list(object({
     error_caching_min_ttl = string
-    error_code = string
-    response_code = string
-    response_page_path = string
+    error_code            = string
+    response_code         = string
+    response_page_path    = string
   }))
 
   description = "List of one or more custom error response element maps"
-  default = []
+  default     = []
 }
 
 variable "lambda_function_association" {
   type = list(object({
-    event_type = string
+    event_type   = string
     include_body = bool
-    lambda_arn = string
+    lambda_arn   = string
   }))
 
   description = "A config block that triggers a lambda function with specific actions"
-  default = []
+  default     = []
 }
 
 variable "web_acl_id" {
-  type = string
-  default = ""
+  type        = string
+  default     = ""
   description = "ID of the AWS WAF web ACL that is associated with the distribution"
 }
 
 variable "wait_for_deployment" {
-  type = bool
-  default = true
+  type        = bool
+  default     = true
   description = "When set to 'true' the resource will wait for the distribution status to change from InProgress to Deployed"
 }
 
@@ -427,8 +427,8 @@ resource "aws_cloudfront_distribution" "default" {
   }
 
   aliases = sort(
-      distinct(compact(concat(var.aliases, var.external_aliases))),
-    )
+    distinct(compact(concat(var.aliases, var.external_aliases))),
+  )
   # aliases = var.aliases
 
   origin {

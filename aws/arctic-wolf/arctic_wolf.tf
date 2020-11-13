@@ -177,7 +177,7 @@ resource "aws_cloudformation_stack" "vpc_flow_log" {
   depends_on = [
     aws_cloudformation_stack.cloudtrail[0],
   ]
-  }
+}
 
 resource "aws_cloudformation_stack" "vpc_flow_log_group" {
   count        = var.create && var.vpc_flow_log_group_name != null ? 1 : 0
