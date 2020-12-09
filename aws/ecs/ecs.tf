@@ -185,6 +185,12 @@ variable "container_datadog_service_name" {
   description = "The service name used by datadog"
 }
 
+variable "container_docker_labels" {
+  type        = map(string)
+  description = "The configuration options to send to the `docker_labels`"
+  default     = null
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -203,6 +209,7 @@ module "container" {
   log_configuration            = var.container_log_configuration
   privileged                   = var.container_privileged
   command                      = var.container_command
+  docker_labels                = var.container_docker_labels
 }
 
 module "datadog" {

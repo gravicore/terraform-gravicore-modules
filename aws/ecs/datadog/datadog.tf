@@ -30,6 +30,12 @@ variable "container_datadog_service_name" {
   description = "The service name used by datadog"
 }
 
+variable "container_datadog_env_tag" {
+  type        = string
+  description = "The tag used by datadog to attach statsd"
+  default     = "env:none"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -58,6 +64,10 @@ locals {
         hostPort = 8126,
         protocol = "tcp",
         containerPort = 8126
+      },{
+        hostPort = 8125,
+        protocol = "udp",
+        containerPort = 8125
       }]
     environment       = [{
         name  = "DD_SERVICE",
@@ -77,6 +87,12 @@ locals {
       },{
         name  = "DD_APM_NON_LOCAL_TRAFFIC",
         value = "true"
+      },{
+        name  = "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
+        value = "true"
+      },{
+        name  = "DD_DOGSTATSD_TAGS",
+        value = "${var.container_datadog_env_tag}"
       }]
   }
 }
