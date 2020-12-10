@@ -388,7 +388,7 @@ resource "aws_route53_record" "alb" {
   count = var.create && var.dns_zone_id != "" && var.dns_zone_name != "" ? 1 : 0
 
   zone_id         = var.dns_zone_id
-  name            = coalesce(var.domain_name, join(".", [var.name, var.dns_zone_name])
+  name            = coalesce(var.domain_name, join(".", [var.name, var.dns_zone_name]))
   type            = "CNAME"
   ttl             = 30
   records         = [aws_lb.alb[0].dns_name]
