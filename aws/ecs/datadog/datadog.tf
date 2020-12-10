@@ -42,10 +42,10 @@ variable "container_datadog_env_tag" {
 
 locals {
   datadog_container_logging_definition = {
-    image                 = var.container_datadog_logging_image,
-    name                  = "${local.module_prefix}-logging",
-    essential             = true,
-    memoryReservation     = 64
+    image             = var.container_datadog_logging_image,
+    name              = "${local.module_prefix}-logging",
+    essential         = true,
+    memoryReservation = 64
     firelensConfiguration = {
       type = "fluentbit",
       options = {
@@ -60,40 +60,40 @@ locals {
     essential         = true,
     cpu               = var.container_datadog_metrics_cpu,
     memoryReservation = 256,
-    portMappings      = [{
-        hostPort = 8126,
-        protocol = "tcp",
-        containerPort = 8126
-      },{
-        hostPort = 8125,
-        protocol = "udp",
-        containerPort = 8125
-      }]
-    environment       = [{
-        name  = "DD_SERVICE",
-        value = "${var.container_datadog_service_name}"
-      },{
-        name  = "DD_API_KEY",
-        value = "${var.container_datadog_api_key}"
-      },{
-        name  = "ECS_FARGATE",
-        value = "true"
-      },{
-        name  = "DD_PROCESS_AGENT_ENABLED",
-        value = "true"
-      },{
-        name  = "DD_APM_ENABLED",
-        value = "true"
-      },{
-        name  = "DD_APM_NON_LOCAL_TRAFFIC",
-        value = "true"
-      },{
-        name  = "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
-        value = "true"
-      },{
-        name  = "DD_DOGSTATSD_TAGS",
-        value = "${var.container_datadog_env_tag}"
-      }]
+    portMappings = [{
+      hostPort      = 8126,
+      protocol      = "tcp",
+      containerPort = 8126
+      }, {
+      hostPort      = 8125,
+      protocol      = "udp",
+      containerPort = 8125
+    }]
+    environment = [{
+      name  = "DD_SERVICE",
+      value = "${var.container_datadog_service_name}"
+      }, {
+      name  = "DD_API_KEY",
+      value = "${var.container_datadog_api_key}"
+      }, {
+      name  = "ECS_FARGATE",
+      value = "true"
+      }, {
+      name  = "DD_PROCESS_AGENT_ENABLED",
+      value = "true"
+      }, {
+      name  = "DD_APM_ENABLED",
+      value = "true"
+      }, {
+      name  = "DD_APM_NON_LOCAL_TRAFFIC",
+      value = "true"
+      }, {
+      name  = "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
+      value = "true"
+      }, {
+      name  = "DD_DOGSTATSD_TAGS",
+      value = "${var.container_datadog_env_tag}"
+    }]
   }
 }
 

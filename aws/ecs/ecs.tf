@@ -70,7 +70,7 @@ variable "container_port_mappings" {
     protocol      = string
   }))
   description = "The port mappings to configure for the container. This is a list of maps. Each map should contain \"containerPort\", \"hostPort\", and \"protocol\", where \"protocol\" is one of \"tcp\" or \"udp\". If using containers in a task with the awsvpc or host network mode, the hostPort can either be left blank or set to the same value as the containerPort"
-  default = []
+  default     = []
 }
 
 variable "container_essential" {
@@ -240,11 +240,11 @@ resource "aws_ecs_task_definition" "default" {
   task_role_arn            = var.container_task_role_arn
   execution_role_arn       = var.container_execution_role_arn
   tags                     = local.tags
-  container_definitions    = var.container_datadog_enabled ? jsonencode([
-      module.container.json_map_object, 
-      module.datadog.datadog_container_logging_definition, 
-      module.datadog.datadog_container_metrics_definition
-    ]) : jsonencode([ module.container.json_map_object, ])
+  container_definitions = var.container_datadog_enabled ? jsonencode([
+    module.container.json_map_object,
+    module.datadog.datadog_container_logging_definition,
+    module.datadog.datadog_container_metrics_definition
+  ]) : jsonencode([module.container.json_map_object, ])
 }
 
 resource "aws_ecs_service" "default" {
