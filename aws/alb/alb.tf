@@ -48,6 +48,18 @@ variable "domain_name" {
   description = ""
 }
 
+variable "dns_zone_id" {
+  type        = string
+  default     = ""
+  description = ""
+}
+
+variable "dns_zone_name" {
+  type        = string
+  default     = ""
+  description = ""
+}
+
 variable "certificate_arn" {
   type        = string
   default     = ""
@@ -370,6 +382,17 @@ resource "aws_lb_listener" "https" {
     target_group_arn = aws_lb_target_group.alb[count.index].arn
     type             = "forward"
   }
+}
+
+resource "aws_route53_record" "alb" {
+  count = var.create && var.dns_zone_id != "" && var.dns_zone_name != "" ? 1 : 0
+
+  zone_id         = var.dns_zone_id
+  name            = coalesce(var.domain_name, join(".", [var.name, var.dns_zone_name])
+  type            = "CNAME"
+  ttl             = 30
+  records         = [aws_lb.alb[0].dns_name]
+  allow_overwrite = true
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
