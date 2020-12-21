@@ -8,7 +8,7 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "alb"
+  default     = "s3"
   description = "The name of the module"
 }
 

@@ -28,6 +28,22 @@ variable "lifecycle_rules" {
   description = "The configuration of the object for lifecycle management"
 }
 
+variable "create_s3_service_user" {
+  type        = bool
+  default     = false
+  description = "Creates a read only service user for congito"
+}
+
+variable "parameter_store_key_arn" {
+  type        = string
+  default     = ""
+  description = "KMS key arn used for secure strings"
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
+
 resource "aws_s3_bucket" "default" {
   count  = var.create ? 1 : 0
   bucket = local.module_prefix
@@ -112,6 +128,63 @@ resource "aws_s3_bucket_public_access_block" "default" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+resource "aws_iam_user" "default" {
+  count = var.create && var.create_s3_service_user ? 1 : 0
+  name  = "${local.module_prefix}-access"
+
+  tags = local.tags
+}
+
+resource "aws_iam_access_key" "default" {
+  count = var.create && var.create_s3_service_user ? 1 : 0
+  user  = "${aws_iam_user.default[0].name}"
+}
+
+resource "aws_iam_user_policy" "default" {
+  count = var.create && var.create_s3_service_user ? 1 : 0
+  name  = "${local.module_prefix}-read-only"
+  user  = "${aws_iam_user.default[0].name}"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "s3:PutObject*",
+          "s3:ListBucket*",
+          "s3:ListAllMyBuckets",
+          "ssm:DescribeParameters",
+          "s3:GetObject*"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "kms:Decrypt",
+          "ssm:GetParameters"
+        ],
+        "Resource": [
+          "${var.parameter_store_key_arn}",
+          "arn:aws:ssm:${var.aws_region}:${var.account_id}:parameter/${local.stage_prefix}/*"
+        ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "kms:ListKeys",
+          "kms:ListAliases",
+          "kms:Describe*"
+        ],
+        "Resource": "${var.parameter_store_key_arn}"
+      }
+    ]
+}
+EOF
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
