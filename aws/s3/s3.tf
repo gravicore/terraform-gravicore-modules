@@ -139,7 +139,7 @@ resource "aws_iam_user" "default" {
 
 resource "aws_iam_access_key" "default" {
   count = var.create && var.create_s3_service_user ? 1 : 0
-  user  = "${aws_iam_user.default[0].name}"
+  user  = aws_iam_user.default[0].name
 }
 
 resource "aws_iam_user_policy" "default" {
