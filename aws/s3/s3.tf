@@ -145,7 +145,7 @@ resource "aws_iam_access_key" "default" {
 resource "aws_iam_user_policy" "default" {
   count = var.create && var.create_s3_service_user ? 1 : 0
   name  = "${local.module_prefix}-read-only"
-  user  = "${aws_iam_user.default[0].name}"
+  user  = aws_iam_user.default[0].name
 
   policy = <<EOF
 {
