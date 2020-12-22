@@ -157,8 +157,7 @@ resource "aws_s3_bucket_public_access_block" "default" {
 resource "aws_iam_user" "default" {
   count = var.create && var.create_s3_service_user ? 1 : 0
   name  = "${local.module_prefix}-access"
-
-  tags = local.tags
+  tags  = local.tags
 }
 
 resource "aws_iam_access_key" "default" {
