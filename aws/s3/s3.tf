@@ -101,16 +101,16 @@ resource "aws_s3_bucket" "default" {
   dynamic "lifecycle_rule" {
     for_each = var.lifecycle_rules
     content {
-      id = lifecycle_rule.value.id
-      prefix = lifecycle_rule.value.prefix
-      enabled = lifecycle_rule.value.enabled
+      id                                     = lifecycle_rule.value.id
+      prefix                                 = lifecycle_rule.value.prefix
+      enabled                                = lifecycle_rule.value.enabled
       abort_incomplete_multipart_upload_days = lookup(lifecycle_rule.value, "abort_incomplete_multipart_upload_days", null)
 
       dynamic "expiration" {
         for_each = lookup(lifecycle_rule.value, "expiration", null) != null ? [1] : []
         content {
-          date = lookup(lifecycle_rule.value.expiration, "date", null)
-          days = lookup(lifecycle_rule.value.expiration, "days", null)
+          date                         = lookup(lifecycle_rule.value.expiration, "date", null)
+          days                         = lookup(lifecycle_rule.value.expiration, "days", null)
           expired_object_delete_marker = lookup(lifecycle_rule.value.expiration, "expired_object_delete_marker", null)
         }
       }
@@ -118,8 +118,8 @@ resource "aws_s3_bucket" "default" {
       dynamic "transition" {
         for_each = lookup(lifecycle_rule.value, "transition", null) != null ? [1] : []
         content {
-          date = lookup(lifecycle_rule.value.transition, "date", null)
-          days = lookup(lifecycle_rule.value.transition, "days", null)
+          date          = lookup(lifecycle_rule.value.transition, "date", null)
+          days          = lookup(lifecycle_rule.value.transition, "days", null)
           storage_class = lookup(lifecycle_rule.value.transition, "storage_class", null)
         }
       }
@@ -134,7 +134,7 @@ resource "aws_s3_bucket" "default" {
       dynamic "noncurrent_version_transition" {
         for_each = lookup(lifecycle_rule.value, "noncurrent_version_transition", null) != null ? [1] : []
         content {
-          days = lookup(lifecycle_rule.value.noncurrent_version_transition, "days", null)
+          days          = lookup(lifecycle_rule.value.noncurrent_version_transition, "days", null)
           storage_class = lookup(lifecycle_rule.value.noncurrent_version_transition, "storage_class", null)
         }
       }
