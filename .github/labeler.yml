@@ -41,6 +41,8 @@ aws/ds-simplead:
  - aws/ds-simplead/**/*
 aws/eb:
  - aws/eb/**/*
+aws/ecs:
+ - aws/ecs/**/*
 aws/elasticache-redis:
  - aws/elasticache-redis/**/*
 aws/instance-scheduler:
