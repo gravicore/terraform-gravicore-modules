@@ -189,7 +189,7 @@ variable "alb_target_groups" {
       interval            = 15
       timeout             = 10
       healthy_threshold   = 2
-      unhealthy_threshold = 4
+      unhealthy_threshold = 8
       matcher             = "200-399"
     }
     stickiness = {
@@ -448,7 +448,7 @@ module "ecs" {
   container_autoscaling_min_capacity = var.camunda_autoscaling_min_capacity
   container_autoscaling_max_capacity = var.camunda_autoscaling_max_capacity
   container_create_autoscaling       = true
-  container_definitions = datadog_enabled ? jsonencode([
+  container_definitions = var.datadog_enabled ? jsonencode([
     module.container.json_map_object,
     module.datadog.datadog_container_logging_definition,
     module.datadog.datadog_container_metrics_definition

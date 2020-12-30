@@ -1,0 +1,64 @@
+## Server
+server:
+  port: 80
+  forward-headers-strategy: NATIVE
+
+## Camunda
+camunda.bpm:
+  authorization:
+    enabled: true
+  filter:
+    create: All tasks
+  job-execution:
+    enabled: false
+
+## SSM
+awsParameterStorePropertySource:
+  enabled: true
+awsParameterStoreSource:
+  multiRegion:
+    ssmClient:
+      regions: ${AWS_DEFAULT_REGION}
+
+## Spring
+spring:
+## DataSource
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+## Cognito
+  security:
+    oauth2:
+      client:
+        registration:
+          cognito:
+            client-id: ${COGNITO_CLIENT_ID}
+            client-secret: ""
+            client-name: ${COGNITO_DOMAIN}-cognito
+            provider: cognito
+            scope: openid
+            redirect-uri: ${COGNITO_REDIRECT_URI}
+            authorization-grant-type: authorization_code
+        provider:
+          cognito:
+            authorization-uri: https://${COGNITO_DOMAIN}.auth.${AWS_DEFAULT_REGION}.amazoncognito.com/oauth2/authorize
+            token-uri: https://${COGNITO_DOMAIN}.auth.${AWS_DEFAULT_REGION}.amazoncognito.com/oauth2/token
+            user-info-uri: https://${COGNITO_DOMAIN}.auth.${AWS_DEFAULT_REGION}.amazoncognito.com/oauth2/userInfo
+            jwk-set-uri: https://cognito-idp.${AWS_DEFAULT_REGION}.amazonaws.com/${COGNITO_USER_POOL_ID}/.well-known/jwks.json
+            user-name-attribute: cognito:username
+            signout-uri: https://${COGNITO_DOMAIN}.auth.${AWS_DEFAULT_REGION}.amazoncognito.com/logout?client_id=${COGNITO_CLIENT_ID}&logout_uri=${COGNITO_SIGNOUT_URI}
+            sso:
+              signout-uri: ${COGNITO_SSO_SIGNOUT_URI}
+dd:
+  statsd:
+    agent:
+      port: 8125
+      prefix: "statsd"
