@@ -394,11 +394,13 @@ module "container" {
 }
 
 module "alb" {
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/alb?ref=0.20.0"
+  source = "~/terraform-gravicore-modules/aws/alb"
 
   create                    = var.create
   vpc_id                    = var.vpc_id
   subnet_ids                = var.alb_subnet_ids
+  dns_zone_id               = var.alb_dns_zone_id
+  dns_zone_name             = var.alb_dns_zone_name
   security_group_ids        = var.alb_security_group_ids
   http_redirect_enabled     = var.alb_http_redirect_enabled
   http_ingress_cidr_blocks  = var.alb_http_ingress_cidr_blocks
