@@ -81,13 +81,13 @@ variable "camunda_docker_labels" {
 }
 
 variable "datadog_api_key" {
-  type        = string
-  default     = ""
+  type    = string
+  default = ""
 }
 
 variable "datadog_enabled" {
-  type        = bool
-  default     = false
+  type    = bool
+  default = false
 }
 
 variable "alb_subnet_ids" {
@@ -376,16 +376,16 @@ module "container" {
     [{
       name  = "SPRING_DATASOURCE_URL",
       value = "jdbc:postgresql://$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-endpoint}:5432/camunda?gssEncMode=disable"
-    }, {
+      }, {
       name  = "SPRING_DATASOURCE_USERNAME",
       value = "$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-username}"
-    }, {
+      }, {
       name  = "SPRING_DATASOURCE_PASSWORD",
       value = "$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-password}"
-    }, {
+      }, {
       name  = "COGNITO_USER_POOL_ID",
       value = "${var.camunda_cognito_user_pool_id}"
-    }])
+  }])
   port_mappings = [{
     containerPort = 80,
     hostPort      = 80,
@@ -394,7 +394,7 @@ module "container" {
 }
 
 module "alb" {
-  source = "~/terraform-gravicore-modules/aws/alb"
+  source = "../../alb"
 
   create                    = var.create
   vpc_id                    = var.vpc_id
@@ -418,7 +418,7 @@ module "alb" {
 }
 
 module "datadog" {
-  source                         = "~/terraform-gravicore-modules/aws/datadog/ecs"
+  source                         = "../../datadog/ecs"
   container_datadog_api_key      = var.datadog_api_key
   container_datadog_service_name = var.name
   name                           = var.name
@@ -429,7 +429,7 @@ module "datadog" {
 }
 
 module "ecs" {
-  source      = "~/terraform-gravicore-modules/aws/ecs"
+  source      = "../../ecs"
   name        = var.name
   namespace   = var.namespace
   environment = var.environment
@@ -454,6 +454,6 @@ module "ecs" {
     module.container.json_map_object,
     module.datadog.datadog_container_logging_definition,
     module.datadog.datadog_container_metrics_definition
-  ]) : jsonencode([ module.container.json_map_object, ])
+  ]) : jsonencode([module.container.json_map_object, ])
 
 }
