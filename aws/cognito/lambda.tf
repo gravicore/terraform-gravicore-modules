@@ -60,7 +60,7 @@ variable "user_migration" {
 }
 
 variable "pre_token_generation" {
-  type        = bool
+  type        = string
   default     = null
   description = "Allow to customize identity token claims before token generation"
 }
