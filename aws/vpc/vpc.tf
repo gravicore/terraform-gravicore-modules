@@ -390,7 +390,7 @@ resource "aws_ssm_parameter" "vpc_default_security_group_id" {
   tags        = var.tags
 
   type  = "String"
-  value = module.vpc.vpc_cidr_block
+  value = module.vpc.default_security_group_id
 }
 
 output "vpc_default_network_acl_id" {
