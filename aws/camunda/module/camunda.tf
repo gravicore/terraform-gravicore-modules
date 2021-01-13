@@ -7,7 +7,42 @@ variable "vpc_id" {
   type        = string
 }
 
+variable "camunda_admin_user_id" {
+  description = "The Admin user id for Camunda"
+  type        = string
+}
+
+variable "camunda_admin_group_name" {
+  description = "The Admin group name for Camunda"
+  type        = string
+}
+
+variable "camunda_cognito_client_id" {
+  description = "The Cognito client id to access"
+  type        = string
+}
+
+variable "camunda_cognito_redirect_uri" {
+  description = "The Cognito user pool to check users"
+  type        = string
+}
+
+variable "camunda_cognito_domain" {
+  description = "The Cognito user pool to check users"
+  type        = string
+}
+
 variable "camunda_cognito_user_pool_id" {
+  description = "The Cognito user pool to check users"
+  type        = string
+}
+
+variable "camunda_cognito_signout_uri" {
+  description = "The Cognito user pool to check users"
+  type        = string
+}
+
+variable "camunda_cognito_sso_signout_uri" {
   description = "The Cognito user pool to check users"
   type        = string
 }
@@ -374,17 +409,38 @@ module "container" {
   privileged               = false
   environment = concat(var.camunda_docker_environment,
     [{
-      name  = "SPRING_DATASOURCE_URL",
-      value = "jdbc:postgresql://$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-endpoint}:5432/camunda?gssEncMode=disable"
+        name  = "SPRING_DATASOURCE_URL",
+        value = "jdbc:postgresql://$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-endpoint}:5432/camunda?gssEncMode=disable"
       }, {
-      name  = "SPRING_DATASOURCE_USERNAME",
-      value = "$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-username}"
+        name  = "SPRING_DATASOURCE_USERNAME",
+        value = "$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-username}"
       }, {
-      name  = "SPRING_DATASOURCE_PASSWORD",
-      value = "$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-password}"
+        name  = "SPRING_DATASOURCE_PASSWORD",
+        value = "$${/cel-srv-${var.stage}/cmnda-aurora-sls-pg-password}"
       }, {
-      name  = "COGNITO_USER_POOL_ID",
-      value = "${var.camunda_cognito_user_pool_id}"
+        name  = "COGNITO_USER_POOL_ID",
+        value = "${var.camunda_cognito_user_pool_id}",
+      }, {
+        name  = "CAMUNDA_ADMIN_USER_ID",
+        value = "${var.camunda_admin_user_id}"
+      },{
+        name  = "CAMUNDA_ADMIN_GROUP_NAME",
+        value = "${var.camunda_admin_group_name}"
+      },{
+        name  = "COGNITO_CLIENT_ID",
+        value = "${var.camunda_cognito_client_id}"
+      },{
+        name  = "COGNITO_REDIRECT_URI",
+        value = "${var.camunda_cognito_redirect_uri}"
+      },{
+        name  = "COGNITO_DOMAIN",
+        value = "${var.camunda_cognito_domain}"
+      },{
+        name  = "COGNITO_SIGNOUT_URI",
+        value = "${var.camunda_cognito_signout_uri}"
+      },{
+        name  = "COGNITO_SSO_SIGNOUT_URI",
+        value = "${var.camunda_cognito_sso_signout_uri}"
   }])
   port_mappings = [{
     containerPort = 80,
@@ -394,7 +450,7 @@ module "container" {
 }
 
 module "alb" {
-  source = "../../alb"
+  source = "../../../aws/alb"
 
   create                    = var.create
   vpc_id                    = var.vpc_id
@@ -418,7 +474,7 @@ module "alb" {
 }
 
 module "datadog" {
-  source                         = "../../datadog/ecs"
+  source                         = "../../../aws/datadog/ecs"
   container_datadog_api_key      = var.datadog_api_key
   container_datadog_service_name = var.name
   name                           = var.name
@@ -429,7 +485,7 @@ module "datadog" {
 }
 
 module "ecs" {
-  source      = "../../ecs"
+  source      = "../../../aws/ecs"
   name        = var.name
   namespace   = var.namespace
   environment = var.environment
