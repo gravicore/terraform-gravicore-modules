@@ -70,29 +70,29 @@ locals {
       containerPort = 8125
     }]
     environment = [{
-        name  = "DD_SERVICE",
-        value = "${var.container_datadog_service_name}"
+      name  = "DD_SERVICE",
+      value = "${var.container_datadog_service_name}"
       }, {
-        name  = "DD_API_KEY",
-        value = "${var.container_datadog_api_key}"
+      name  = "DD_API_KEY",
+      value = "${var.container_datadog_api_key}"
       }, {
-        name  = "ECS_FARGATE",
-        value = "true"
+      name  = "ECS_FARGATE",
+      value = "true"
       }, {
-        name  = "DD_PROCESS_AGENT_ENABLED",
-        value = "true"
+      name  = "DD_PROCESS_AGENT_ENABLED",
+      value = "true"
       }, {
-        name  = "DD_APM_ENABLED",
-        value = "true"
+      name  = "DD_APM_ENABLED",
+      value = "true"
       }, {
-        name  = "DD_APM_NON_LOCAL_TRAFFIC",
-        value = "true"
+      name  = "DD_APM_NON_LOCAL_TRAFFIC",
+      value = "true"
       }, {
-        name  = "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
-        value = "true"
+      name  = "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
+      value = "true"
       }, {
-        name  = "DD_DOGSTATSD_TAGS",
-        value = "${var.container_datadog_env_tag}"
+      name  = "DD_DOGSTATSD_TAGS",
+      value = "${var.container_datadog_env_tag}"
     }]
   }
 }
