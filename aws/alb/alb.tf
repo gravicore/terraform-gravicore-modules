@@ -191,26 +191,7 @@ variable "deletion_protection_enabled" {
 # }
 
 variable "target_groups" {
-  type = list(object({
-    target_type          = string
-    port                 = number
-    protocol             = string
-    deregistration_delay = number
-    health_check = object({
-      enabled             = bool
-      path                = string
-      interval            = number
-      timeout             = number
-      healthy_threshold   = number
-      unhealthy_threshold = number
-      matcher             = string
-    })
-    stickiness = object({
-      type            = string
-      cookie_duration = string
-      enabled         = bool
-    })
-  }))
+  type = list(any)
   default = [{
     target_type          = "instance"
     protocol             = "HTTP"
