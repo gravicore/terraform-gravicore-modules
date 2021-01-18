@@ -450,7 +450,7 @@ module "container" {
 }
 
 module "alb" {
-  source = "${path.module}/../../alb"
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/alb?ref=GRVDEV-147-create-terraform-ecs-module"
 
   create                    = var.create
   vpc_id                    = var.vpc_id
@@ -474,7 +474,7 @@ module "alb" {
 }
 
 module "datadog" {
-  source                         = "${path.module}/../../datadog/ecs"
+  source                         = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/datadog/ecs?ref=GRVDEV-147-create-terraform-ecs-module"
   container_datadog_api_key      = var.datadog_api_key
   container_datadog_service_name = var.name
   name                           = var.name
@@ -485,7 +485,7 @@ module "datadog" {
 }
 
 module "ecs" {
-  source      = "${path.module}/../../ecs"
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/ecs?ref=GRVDEV-147-create-terraform-ecs-module"
   name        = var.name
   namespace   = var.namespace
   environment = var.environment
