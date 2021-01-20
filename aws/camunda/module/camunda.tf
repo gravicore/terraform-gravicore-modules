@@ -513,3 +513,25 @@ module "ecs" {
   ]) : jsonencode([module.container.json_map_object, ])
 
 }
+
+resource "aws_ssm_parameter" "access_app_uri" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-access-app-uri"
+  description = format("%s %s", var.desc_prefix, "The WebApp URI for this Camunda instance")
+
+  type      = "String"
+  value     = "https://${module.alb.route53_dns_name}/camunda/app/welcome/default/#!/welcome"
+  overwrite = true
+  tags      = local.tags
+}
+
+resource "aws_ssm_parameter" "access_api_uri" {
+  count       = var.create ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-access-api-uri"
+  description = format("%s %s", var.desc_prefix, "The API URI for this Camunda instance")
+
+  type      = "String"
+  value     = "https://${module.alb.route53_dns_name}/engine-rest/engine"
+  overwrite = true
+  tags      = local.tags
+}
