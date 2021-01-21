@@ -25,6 +25,7 @@ variable "camunda_cognito_client_id" {
 variable "camunda_cognito_redirect_uri" {
   description = "The Cognito user pool to check users"
   type        = string
+  default     = ""
 }
 
 variable "camunda_cognito_domain" {
@@ -40,11 +41,13 @@ variable "camunda_cognito_user_pool_id" {
 variable "camunda_cognito_signout_uri" {
   description = "The Cognito user pool to check users"
   type        = string
+  default     = ""
 }
 
 variable "camunda_cognito_sso_signout_uri" {
   description = "The Cognito user pool to check users"
   type        = string
+  default     = ""
 }
 
 variable "camunda_subnet_ids" {
