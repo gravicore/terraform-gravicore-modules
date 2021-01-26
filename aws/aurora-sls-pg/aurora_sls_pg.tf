@@ -36,22 +36,10 @@ variable "db_cluster_parameter_group_name" {
   description = "(Optional) The name of the DB parameter group to associate with this instance."
 }
 
-variable "instance_type" {
-  type        = string
-  default     = "db.t2.small"
-  description = "Instance type to use"
-}
-
 variable "cluster_identifier" {
   type        = string
   default     = ""
   description = "The RDS Cluster Identifier. Will use generated label ID if not supplied"
-}
-
-variable "cluster_size" {
-  type        = number
-  default     = 0
-  description = "Number of DB instances to create in the cluster"
 }
 
 variable "snapshot_identifier" {
@@ -146,12 +134,6 @@ variable "engine_version" {
   description = "The version of the database engine to use. See `aws rds describe-db-engine-versions` "
 }
 
-variable "auto_minor_version_upgrade" {
-  type        = bool
-  default     = true
-  description = "Indicates that minor engine upgrades will be applied automatically to the DB instance during the maintenance window"
-}
-
 variable "scaling_configuration" {
   type = list(object({
     auto_pause               = bool
@@ -178,12 +160,6 @@ variable "allowed_cidr_blocks" {
   type        = list(string)
   default     = []
   description = "List of CIDR blocks allowed to access the cluster"
-}
-
-variable "publicly_accessible" {
-  type        = bool
-  description = "Set to true if you want your cluster to be publicly accessible (such as via QuickSight)"
-  default     = false
 }
 
 variable "storage_encrypted" {
@@ -228,18 +204,6 @@ variable "iam_database_authentication_enabled" {
   default     = false
 }
 
-variable "rds_monitoring_interval" {
-  type        = number
-  description = "Interval in seconds that metrics are collected, 0 to disable (values can only be 0, 1, 5, 10, 15, 30, 60)"
-  default     = 0
-}
-
-variable "rds_monitoring_role_arn" {
-  type        = string
-  default     = ""
-  description = "The ARN for the IAM role that can send monitoring metrics to CloudWatch Logs"
-}
-
 variable "replication_source_identifier" {
   type        = string
   description = "ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica"
@@ -252,81 +216,9 @@ variable "enabled_cloudwatch_logs_exports" {
   default     = []
 }
 
-variable "performance_insights_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether to enable Performance Insights"
-}
-
-variable "performance_insights_kms_key_id" {
-  type        = string
-  default     = ""
-  description = "The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true"
-}
-
-variable "autoscaling_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether to enable cluster autoscaling"
-}
-
-variable "autoscaling_policy_type" {
-  type        = string
-  default     = "TargetTrackingScaling"
-  description = "Autoscaling policy type. `TargetTrackingScaling` and `StepScaling` are supported"
-}
-
-variable "autoscaling_target_metrics" {
-  type        = string
-  default     = "RDSReaderAverageCPUUtilization"
-  description = "The metrics type to use. If this value isn't provided the default is CPU utilization"
-}
-
-variable "autoscaling_target_value" {
-  type        = number
-  default     = 75
-  description = "The target value to scale with respect to target metrics"
-}
-
-variable "autoscaling_scale_in_cooldown" {
-  type        = number
-  default     = 300
-  description = "The amount of time, in seconds, after a scaling activity completes and before the next scaling down activity can start. Default is 300s"
-}
-
-variable "autoscaling_scale_out_cooldown" {
-  type        = number
-  default     = 300
-  description = "The amount of time, in seconds, after a scaling activity completes and before the next scaling up activity can start. Default is 300s"
-}
-
-variable "autoscaling_min_capacity" {
-  type        = number
-  default     = 1
-  description = "Minimum number of instances to be maintained by the autoscaler"
-}
-
-variable "autoscaling_max_capacity" {
-  type        = number
-  default     = 5
-  description = "Maximum number of instances to be maintained by the autoscaler"
-}
-
-variable "instance_availability_zone" {
-  type        = string
-  default     = ""
-  description = "Optional parameter to place cluster instances in a specific availability zone. If left empty, will place randomly"
-}
-
 variable "cluster_dns_name" {
   type        = string
   description = "Name of the cluster CNAME record to create in the parent DNS zone specified by `zone_id`. If left empty, the name will be auto-asigned using the format `master.var.name`"
-  default     = ""
-}
-
-variable "reader_dns_name" {
-  type        = string
-  description = "Name of the reader endpoint CNAME record to create in the parent DNS zone specified by `zone_id`. If left empty, the name will be auto-asigned using the format `replicas.var.name`"
   default     = ""
 }
 
