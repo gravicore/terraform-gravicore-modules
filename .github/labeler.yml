@@ -17,6 +17,8 @@ aws/aviatrix:
  - aws/aviatrix/**/*
 aws/billing:
  - aws/billing/**/*
+aws/camunda:
+ - aws/camunda/**/*
 aws/central-logging:
  - aws/central-logging/**/*
 aws/cerberus:
