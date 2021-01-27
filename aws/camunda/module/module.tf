@@ -16,7 +16,7 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "ecs"
+  default     = "camunda"
   description = "The name of the module"
 }
 
