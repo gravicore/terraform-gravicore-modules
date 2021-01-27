@@ -11,6 +11,8 @@ aws/acm:
  - aws/acm/**/*
 aws/alb:
  - aws/alb/**/*
+aws/aurora-sls-pg:
+ - aws/aurora-sls-pg/**/*
 aws/arctic-wolf:
  - aws/arctic-wolf/**/*
 aws/aviatrix:
