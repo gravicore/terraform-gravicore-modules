@@ -176,6 +176,12 @@ variable "https_redirect" {
   description = "When ALB is used, this will create a listener to redirect http to https"
 }
 
+variable "app_healthcheck_url" {
+  type        = string
+  default     = ""
+  description = "description"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -560,6 +566,12 @@ resource "aws_elastic_beanstalk_environment" "default" {
     namespace = "aws:ec2:instances"
     name      = "InstanceTypes"
     value     = var.instances_instance_types
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:environment:process:default"
+    name      = "HealthCheckPath"
+    value     = var.app_healthcheck_url
   }
 
   setting {
