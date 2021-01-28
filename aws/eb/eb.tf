@@ -182,6 +182,12 @@ variable "app_healthcheck_url" {
   description = "description"
 }
 
+variable "environmental_variables" {
+  type        = map
+  default     = {}
+  description = "description"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -512,6 +518,15 @@ resource "aws_elastic_beanstalk_environment" "default" {
     namespace = "aws:elasticbeanstalk:healthreporting:system"
     name      = "SystemType"
     value     = "enhanced"
+  }
+
+  dynamic "setting" {
+    for_each = var.environmental_variables
+    content {
+      namespace = "aws:elasticbeanstalk:application:environment"
+      name      = setting.key
+      value     = setting.value
+    }
   }
 
   setting {
