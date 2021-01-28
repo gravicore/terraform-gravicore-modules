@@ -8,10 +8,28 @@ variable "solution_stack_name" {
   description = "(Optional) A solution stack to base your environment off of. Example stacks can be found in the Amazon API documentation(https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html)"
 }
 
+variable logs_stream_logs {
+  type        = string
+  default     = "true"
+  description = "Whether to create groups in CloudWatch Logs for proxy and deployment logs, and stream logs from each instance in your environment"
+}
+
 variable "logs_delete_on_terminate" {
-  description = "Delete cloudwatch logs on termination of beanstalk env"
+  description = "Whether to delete the log groups when the environment is terminated. If false, the logs are kept logs_retention_in_days"
   default     = "true"
   type        = string
+}
+
+variable logs_retention_in_days {
+  type        = string
+  default     = "7"
+  description = "The number of days to keep log events before they expire. Valid Values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653"
+}
+
+variable xray_enabled {
+  type        = string
+  default     = "true"
+  description = "Set to true to run the X-Ray daemon on the instances in your environment"
 }
 
 variable "app_description" {
@@ -492,6 +510,12 @@ resource "aws_elastic_beanstalk_environment" "default" {
 
   setting {
     namespace = "aws:elasticbeanstalk:cloudwatch:logs"
+    name      = "StreamLogs"
+    value     = var.logs_stream_logs
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:cloudwatch:logs"
     name      = "DeleteOnTerminate"
     value     = var.logs_delete_on_terminate
   }
@@ -499,7 +523,13 @@ resource "aws_elastic_beanstalk_environment" "default" {
   setting {
     namespace = "aws:elasticbeanstalk:cloudwatch:logs"
     name      = "RetentionInDays"
-    value     = "7"
+    value     = var.logs_retention_in_days
+  }
+
+  setting {
+    namespace = "aws:elasticbeanstalk:xray"
+    name      = "XRayEnabled"
+    value     = var.xray_enabled
   }
 
   setting {
