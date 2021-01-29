@@ -58,6 +58,12 @@ variable "restrict_public_buckets" {
   default     = true
 }
 
+variable "ssm_key_id" {
+  type        = string
+  default     = ""
+  description = "The KMS key id or arn for encrypting a SecureString"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -188,6 +194,7 @@ resource "aws_ssm_parameter" "service_access_key_id" {
   name        = "/${local.stage_prefix}/${var.name}-service-access-key-id"
   description = format("%s %s", var.desc_prefix, "S3 service account Access Key ID")
 
+  key_id    = var.ssm_key_id
   type      = "SecureString"
   value     = aws_iam_access_key.default[0].id
   overwrite = true
@@ -199,6 +206,7 @@ resource "aws_ssm_parameter" "service_access_key_secret" {
   name        = "/${local.stage_prefix}/${var.name}-service-access-key-secret"
   description = format("%s %s", var.desc_prefix, "S3 service account Secret Access Key")
 
+  key_id    = var.ssm_key_id
   type      = "SecureString"
   value     = aws_iam_access_key.default[0].secret
   overwrite = true
