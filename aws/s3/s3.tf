@@ -34,12 +34,6 @@ variable "create_s3_service_user" {
   description = "Creates a read only service user for congito"
 }
 
-variable "parameter_store_key_arn" {
-  type        = string
-  default     = ""
-  description = "KMS key arn used for secure strings"
-}
-
 variable "block_public_acls" {
   type        = bool
   description = "Whether Amazon S3 should block public ACLs for this bucket"
@@ -167,7 +161,7 @@ resource "aws_iam_access_key" "default" {
 
 resource "aws_iam_user_policy" "default" {
   count = var.create && var.create_s3_service_user ? 1 : 0
-  name  = "${local.module_prefix}-read-only"
+  name  = "${local.module_prefix}-read-write"
   user  = aws_iam_user.default[0].name
 
   policy = <<EOF
@@ -180,36 +174,47 @@ resource "aws_iam_user_policy" "default" {
           "s3:PutObject*",
           "s3:ListBucket*",
           "s3:ListAllMyBuckets",
-          "ssm:DescribeParameters",
           "s3:GetObject*"
         ],
         "Resource": "*"
-      },
-      {
-        "Effect": "Allow",
-        "Action": [
-          "kms:Decrypt",
-          "ssm:GetParameters"
-        ],
-        "Resource": [
-          "${var.parameter_store_key_arn}",
-          "arn:aws:ssm:${var.aws_region}:${var.account_id}:parameter/${local.stage_prefix}/*"
-        ]
-      },
-      {
-        "Effect": "Allow",
-        "Action": [
-          "kms:ListKeys",
-          "kms:ListAliases",
-          "kms:Describe*"
-        ],
-        "Resource": "${var.parameter_store_key_arn}"
       }
     ]
 }
 EOF
 }
 
+resource "aws_ssm_parameter" "service_access_key_id" {
+  count       = var.create && var.create_s3_service_user ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-service-access-key-id"
+  description = format("%s %s", var.desc_prefix, "S3 service account Access Key ID")
+
+  type      = "SecureString"
+  value     = aws_iam_access_key.default[0].id
+  overwrite = true
+  tags      = local.tags
+}
+
+resource "aws_ssm_parameter" "service_access_key_secret" {
+  count       = var.create && var.create_s3_service_user ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-service-access-key-secret"
+  description = format("%s %s", var.desc_prefix, "S3 service account Secret Access Key")
+
+  type      = "SecureString"
+  value     = aws_iam_access_key.default[0].secret
+  overwrite = true
+  tags      = local.tags
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
+
+output "s3_bucket_id" {
+  value       = aws_s3_bucket.default[0].id
+  description = "Id of S3 bucket"
+}
+
+output "s3_bucket_arn" {
+  value       = aws_s3_bucket.default[0].arn
+  description = "Arn of S3 bucket"
+}
