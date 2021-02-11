@@ -180,28 +180,40 @@ variable "prevent_user_existence_errors" {
   description = "(Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to ENABLED and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to LEGACY, those APIs will return a UserNotFoundException exception if the user does not exist in the user pool"
 }
 
-variable "read_attributes" {
+variable read_attributes {
   type        = list(string)
   default     = null
   description = "(Optional) List of user pool attributes the application client can read from"
 }
 
-variable "supported_identity_providers" {
+variable supported_identity_providers {
   type        = list(string)
   default     = []
   description = "(Optional) List of provider names for the identity providers that are supported on this client"
 }
 
-variable "write_attributes" {
+variable write_attributes {
   type        = list(string)
   default     = null
   description = "(Optional) List of user pool attributes the application client can write to"
 }
 
-variable "refresh_token_validity" {
+variable refresh_token_validity {
   type        = number
   default     = 1
   description = "(Optional) The time limit in days refresh tokens are valid for"
+}
+
+variable additional_app_clients {
+  type        = map(any)
+  default     = {}
+  description = ""
+}
+
+variable resource_servers {
+  type        = list(any)
+  default     = []
+  description = "description"
 }
 
 
@@ -329,6 +341,22 @@ resource "aws_cognito_user_pool_domain" "pool" {
   user_pool_id    = aws_cognito_user_pool.pool[0].id
 }
 
+resource "aws_cognito_resource_server" "pool" {
+  count = var.create && length(var.resource_servers) >= 1 ? 1 : 0
+  identifier = "https://${concat(aws_cognito_user_pool_domain.pool.*.domain, [""])[0]}.auth.${var.aws_region}.amazoncognito.com"
+  name       = local.module_prefix
+
+  dynamic "scope" {
+    for_each = var.resource_servers
+    content {
+      scope_name        = scope.value.scope_name
+      scope_description = lookup(scope.value, "scope_description", null)
+    }
+  }
+
+  user_pool_id = aws_cognito_user_pool.pool[0].id
+}
+
 resource "aws_cognito_user_pool_client" "pool" {
   count = var.create ? 1 : 0
   name  = local.module_prefix
@@ -347,6 +375,29 @@ resource "aws_cognito_user_pool_client" "pool" {
   read_attributes                      = var.read_attributes
   write_attributes                     = var.write_attributes
   refresh_token_validity               = var.refresh_token_validity
+  depends_on = [
+    aws_cognito_identity_provider.pool,
+  ]
+}
+
+resource "aws_cognito_user_pool_client" "additional_client" {
+  for_each = var.create ? var.additional_app_clients : {}
+  name  = join(var.delimiter, [local.module_prefix, each.key])
+
+  allowed_oauth_flows                  = lookup(each.value, "allowed_oauth_flows", null)
+  allowed_oauth_flows_user_pool_client = lookup(each.value, "allowed_oauth_flows_user_pool_client", null)
+  allowed_oauth_scopes                 = formatlist("${aws_cognito_resource_server.pool[0].identifier}/%s", lookup(each.value, "allowed_oauth_scopes", null))
+  callback_urls                        = lookup(each.value, "callback_urls", null)
+  logout_urls                          = lookup(each.value, "logout_urls", null)
+  default_redirect_uri                 = lookup(each.value, "default_redirect_uri", null)
+  explicit_auth_flows                  = lookup(each.value, "explicit_auth_flows", null)
+  generate_secret                      = lookup(each.value, "generate_secret", null)
+  prevent_user_existence_errors        = lookup(each.value, "prevent_user_existence_errors", null)
+  supported_identity_providers         = lookup(each.value, "supported_identity_providers", null)
+  user_pool_id                         = aws_cognito_user_pool.pool[0].id
+  read_attributes                      = lookup(each.value, "read_attributes", null)
+  write_attributes                     = lookup(each.value, "write_attributes", null)
+  refresh_token_validity               = lookup(each.value, "refresh_token_validity", 1)
   depends_on = [
     aws_cognito_identity_provider.pool,
   ]
@@ -488,4 +539,22 @@ output "cognito_client_callback_urls" {
 output "cognito_client_logout_urls" {
   value       = aws_cognito_user_pool_client.pool[0].logout_urls
   description = ""
+}
+
+output additional_app_clinet_id {
+  value       = values(aws_cognito_user_pool_client.additional_client)[*].id
+  sensitive   = false
+  description = ""
+  depends_on  = [
+    aws_cognito_user_pool_client.additional_client,
+  ]
+}
+
+output resource_server {
+  value       = aws_cognito_resource_server.pool
+  sensitive   = false
+  description = ""
+  depends_on  = [
+    aws_cognito_user_pool_client.pool
+  ]
 }

@@ -256,10 +256,10 @@ resource "aws_iam_policy_attachment" "cognito_authorized_custom" {
 resource "aws_cognito_identity_pool_roles_attachment" "pool" {
   count = var.create ? 1 : 0
 
-  identity_pool_id = "${aws_cognito_identity_pool.pool[0].id}"
+  identity_pool_id = aws_cognito_identity_pool.pool[0].id
   roles = {
-    "authenticated"   = "${aws_iam_role.cognito_authorized[0].arn}"
-    "unauthenticated" = "${aws_iam_role.cognito_unauthorized[0].arn}"
+    "authenticated"   = aws_iam_role.cognito_authorized[0].arn
+    "unauthenticated" = aws_iam_role.cognito_unauthorized[0].arn
   }
   #   role_mapping {
   #     identity_provider         = "graph.facebook.com"
