@@ -313,15 +313,24 @@ variable nodejs_security_header_code {
   default     = <<EOF
 'use strict';
 exports.handler = (event, context, callback) => {
-    
+
     //Get contents of response
     const response = event.Records[0].cf.response;
     const headers = response.headers;
 
-//Set new headers 
- headers['strict-transport-security'] = [{key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubdomains; preload'}]; 
- headers['x-frame-options'] = [{key: 'X-Frame-Options', value: 'DENY'}]; 
- headers['content-security-policy'] = [{key: 'Content-Security-Policy', value: "frame-ancestors 'none'"}]; 
+    //Set new headers 
+    headers['strict-transport-security'] = [{
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubdomains; preload'
+    }];
+    headers['x-frame-options'] = [{
+        key: 'X-Frame-Options',
+        value: 'DENY'
+    }];
+    headers['content-security-policy'] = [{
+        key: 'Content-Security-Policy',
+        value: "frame-ancestors 'none'"
+    }];
 
     //Return modified response
     callback(null, response);
