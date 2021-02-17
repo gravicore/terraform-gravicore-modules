@@ -177,12 +177,26 @@ resource "aws_iam_user_policy" "default" {
       {
         "Effect": "Allow",
         "Action": [
-          "s3:PutObject*",
-          "s3:ListBucket*",
-          "s3:ListAllMyBuckets",
-          "s3:GetObject*"
+          "s3:GetBucketLocation",
+          "s3:ListAllMyBuckets"
         ],
         "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "s3:ListBucket*"
+        ],
+        "Resource": ["${aws_s3_bucket.default[0].arn}"]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "s3:PutObject*",
+          "s3:GetObject*",
+          "s3:DeleteObject"
+        ],
+        "Resource": ["${aws_s3_bucket.default[0].arn}/*"]
       }
     ]
 }
