@@ -2,7 +2,7 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "create_cognito_service_user" {
+variable create_cognito_service_user {
   type        = bool
   default     = false
   description = "Creates a read only service user for congito"
@@ -21,13 +21,13 @@ resource "aws_iam_user" "cognito" {
 
 resource "aws_iam_access_key" "cognito" {
   count = var.create && var.create_cognito_service_user ? 1 : 0
-  user  = "${aws_iam_user.cognito[0].name}"
+  user  = aws_iam_user.cognito[0].name
 }
 
 resource "aws_iam_user_policy" "cognito_read" {
   count = var.create && var.create_cognito_service_user ? 1 : 0
   name  = "${local.module_prefix}-read-only"
-  user  = "${aws_iam_user.cognito[0].name}"
+  user  = aws_iam_user.cognito[0].name
 
   policy = <<EOF
 {

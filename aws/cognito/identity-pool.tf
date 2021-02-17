@@ -2,19 +2,19 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "identity_pool_allow_unauthenticated_identities" {
+variable identity_pool_allow_unauthenticated_identities {
   type        = bool
   default     = false
   description = "Whether the identity pool supports unauthenticated logins or not"
 }
 
-variable "identity_pool_developer_provider_name" {
+variable identity_pool_developer_provider_name {
   type        = string
   default     = null
   description = "The 'domain' by which Cognito will refer to your users. This name acts as a placeholder that allows your backend and the Cognito service to communicate about the developer provider"
 }
 
-variable "identity_pool_cognito_identity_providers" {
+variable identity_pool_cognito_identity_providers {
   type = list(object({
     client_id               = string
     provider_name           = string
@@ -24,25 +24,25 @@ variable "identity_pool_cognito_identity_providers" {
   description = "An array of Amazon Cognito Identity user pools and their client IDs"
 }
 
-variable "identity_pool_openid_connect_provider_arns" {
+variable identity_pool_openid_connect_provider_arns {
   type        = list(string)
   default     = null
   description = "A list of OpendID Connect provider ARNs"
 }
 
-variable "identity_pool_saml_provider_arns" {
+variable identity_pool_saml_provider_arns {
   type        = list(string)
   default     = null
   description = "An array of Amazon Resource Names (ARNs) of the SAML provider for your identity"
 }
 
-variable "identity_pool_supported_login_providers" {
+variable identity_pool_supported_login_providers {
   type        = map(string)
   default     = null
   description = "Key-Value pairs mapping provider names to provider app IDs"
 }
 
-variable "cognito_unauthorized_policy_statements" {
+variable cognito_unauthorized_policy_statements {
   type = map
   default = { "DefaultCognitoUnauthStatement" = {
     actions = [
@@ -54,7 +54,7 @@ variable "cognito_unauthorized_policy_statements" {
   description = "The map of statements to add to the Authorized Cognito User policy"
 }
 
-variable "cognito_authorized_policy_statements" {
+variable cognito_authorized_policy_statements {
   type = map
   default = { "DefaultCognitoAuthStatement" = {
     actions = [
@@ -67,13 +67,13 @@ variable "cognito_authorized_policy_statements" {
   description = "The map of statements to add to the Authorized Cognito User policy"
 }
 
-variable "cognito_unauthorized_custom_policy_arn" {
+variable cognito_unauthorized_custom_policy_arn {
   type        = string
   default     = ""
   description = "An ARN for a custom Cognito unauthorized access policy"
 }
 
-variable "cognito_authorized_custom_policy_arn" {
+variable cognito_authorized_custom_policy_arn {
   type        = string
   default     = ""
   description = "An ARN for a custom Cognito authorized access policy"
@@ -256,10 +256,10 @@ resource "aws_iam_policy_attachment" "cognito_authorized_custom" {
 resource "aws_cognito_identity_pool_roles_attachment" "pool" {
   count = var.create ? 1 : 0
 
-  identity_pool_id = "${aws_cognito_identity_pool.pool[0].id}"
+  identity_pool_id = aws_cognito_identity_pool.pool[0].id
   roles = {
-    "authenticated"   = "${aws_iam_role.cognito_authorized[0].arn}"
-    "unauthenticated" = "${aws_iam_role.cognito_unauthorized[0].arn}"
+    "authenticated"   = aws_iam_role.cognito_authorized[0].arn
+    "unauthenticated" = aws_iam_role.cognito_unauthorized[0].arn
   }
   #   role_mapping {
   #     identity_provider         = "graph.facebook.com"
