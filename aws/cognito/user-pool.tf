@@ -541,7 +541,7 @@ output "cognito_client_logout_urls" {
   description = ""
 }
 
-output additional_app_clinet_id {
+output additional_app_client_id {
   value       = values(aws_cognito_user_pool_client.additional_client)[*].id
   sensitive   = false
   description = ""
