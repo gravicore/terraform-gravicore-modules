@@ -16,13 +16,13 @@ resource "aws_ssm_parameter" "sms_sns_external_id" {
   tags      = local.tags
 }
 
-variable "sms_external_id" {
+variable sms_external_id {
   type        = string
   description = "he external ID used in IAM role trust relationships. For more information about using external IDs, see How to Use an External ID When Granting Access to Your AWS Resources to a Third Party"
   default     = ""
 }
 
-variable "sms_sns_caller_arn" {
+variable sms_sns_caller_arn {
   type        = string
   description = "The ARN of the Amazon SNS caller. This is usually the IAM role that you've given Cognito permission to assume"
   default     = ""
@@ -31,7 +31,7 @@ variable "sms_sns_caller_arn" {
 #########################################################
 #######Variables for Verification Message Template#######
 
-variable "message_template_sms_message" {
+variable message_template_sms_message {
   type        = string
   description = "The SMS message template. Must contain the {####} placeholder. Conflicts with sms_verification_message argument."
   default     = ""

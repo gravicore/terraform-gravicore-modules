@@ -6,7 +6,7 @@ terraform {
 # Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "name" {
+variable name {
   type        = string
   default     = "cognito"
   description = "The name of the module"
@@ -18,13 +18,13 @@ variable terraform_module {
   description = "The owner and name of the Terraform module"
 }
 
-variable "aws_region" {
+variable aws_region {
   type        = string
   default     = "us-east-1"
   description = "The AWS region to deploy module into"
 }
 
-variable "create" {
+variable create {
   type        = bool
   default     = true
   description = "Set to false to prevent the module from creating any resources"
@@ -36,37 +36,37 @@ variable "create" {
 
 # Recommended
 
-variable "namespace" {
+variable namespace {
   type        = string
   default     = ""
   description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 
-variable "environment" {
+variable environment {
   type        = string
   default     = ""
   description = "The isolated environment the module is associated with (e.g. Shared Services `shared`, Application `app`)"
 }
 
-variable "stage" {
+variable stage {
   type        = string
   default     = ""
   description = "The development stage (i.e. `dev`, `stg`, `prd`)"
 }
 
-variable "repository" {
+variable repository {
   type        = string
   default     = ""
   description = "The repository where the code referencing the module is stored"
 }
 
-variable "account_id" {
+variable account_id {
   type        = string
   default     = ""
   description = "The AWS Account ID that contains the calling entity"
 }
 
-variable "master_account_id" {
+variable master_account_id {
   type        = string
   default     = ""
   description = "The Master AWS Account ID that owns the associate AWS account"
@@ -74,37 +74,37 @@ variable "master_account_id" {
 
 # Optional
 
-variable "tags" {
+variable tags {
   type        = map(string)
   default     = {}
   description = "Additional map of tags (e.g. business_unit, cost_center)"
 }
 
-variable "desc_prefix" {
+variable desc_prefix {
   type        = string
   default     = "Gravicore:"
   description = "The prefix to add to any descriptions attached to resources"
 }
 
-variable "environment_prefix" {
+variable environment_prefix {
   type        = string
   default     = ""
   description = "Concatenation of `namespace` and `environment`"
 }
 
-variable "stage_prefix" {
+variable stage_prefix {
   type        = string
   default     = ""
   description = "Concatenation of `namespace`, `environment` and `stage`"
 }
 
-variable "module_prefix" {
+variable module_prefix {
   type        = string
   default     = ""
   description = "Concatenation of `namespace`, `environment`, `stage` and `name`"
 }
 
-variable "delimiter" {
+variable delimiter {
   type        = string
   default     = "-"
   description = "Delimiter to be used between `namespace`, `environment`, `stage`, `name`"
