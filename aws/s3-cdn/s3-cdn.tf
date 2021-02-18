@@ -302,6 +302,43 @@ variable "kms_master_key_arn" {
   description = "The AWS KMS master key ARN used for the `SSE-KMS` encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default aws/s3 AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`"
 }
 
+variable "enable_security_headers" {
+  type        = bool
+  default     = true
+  description = "Enables creation and attachment of origin-responce edge lambda to add security headers"
+}
+
+variable nodejs_security_header_code {
+  type        = string
+  default     = <<EOF
+'use strict';
+exports.handler = (event, context, callback) => {
+
+    //Get contents of response
+    const response = event.Records[0].cf.response;
+    const headers = response.headers;
+
+    //Set new headers 
+    headers['strict-transport-security'] = [{
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubdomains; preload'
+    }];
+    headers['x-frame-options'] = [{
+        key: 'X-Frame-Options',
+        value: 'DENY'
+    }];
+    headers['content-security-policy'] = [{
+        key: 'Content-Security-Policy',
+        value: "frame-ancestors 'none'"
+    }];
+
+    //Return modified response
+    callback(null, response);
+};
+EOF
+  description = "Additional code to be injected into the origin-responce edge lambda"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -477,6 +514,15 @@ resource "aws_cloudfront_distribution" "default" {
         lambda_arn   = lambda_function_association.value.lambda_arn
       }
     }
+
+    dynamic "lambda_function_association" {
+      for_each = var.create && var.enable_security_headers ? ["1"] : []
+      content {
+        event_type   = "origin-response"
+        include_body = false
+        lambda_arn   = aws_lambda_function.hsts[0].qualified_arn
+      }
+    }
   }
 
   restrictions {
@@ -510,6 +556,86 @@ module "dns" {
   parent_zone_name = var.parent_zone_name
   target_dns_name  = aws_cloudfront_distribution.default.domain_name
   target_zone_id   = aws_cloudfront_distribution.default.hosted_zone_id
+}
+
+resource "aws_iam_role" "hsts" {
+  count = var.create && var.enable_security_headers ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "hsts", "header"])
+
+  description        = "${var.desc_prefix} Lambda role for s3 cdn HSTS header attachment"
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "edgelambda.amazonaws.com",
+          "lambda.amazonaws.com"
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+
+  tags = local.tags
+}
+
+resource "aws_iam_role_policy" "hsts" {
+  count = var.create && var.enable_security_headers ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "hsts", "header"])
+  role  = aws_iam_role.hsts[0].id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    }
+  ]
+}
+EOF
+}
+
+data "archive_file" "hsts" {
+  type        = "zip"
+  output_path = "./dist/hsts.zip"
+  source {
+    content  = var.nodejs_security_header_code
+    filename = "index.js"
+  }
+}
+
+resource "aws_lambda_function" "hsts" {
+  count         = var.create && var.enable_security_headers ? 1 : 0
+  filename      = data.archive_file.hsts.output_path
+  function_name = join(var.delimiter, [local.module_prefix, "hsts"])
+  role          = aws_iam_role.hsts[0].arn
+  handler       = "index.handler"
+  description   = "Blueprint for modifying CloudFront response header implemented in NodeJS."
+
+  source_code_hash = data.archive_file.hsts.output_base64sha256
+
+  runtime     = "nodejs12.x"
+  timeout     = 1
+  memory_size = 128
+
+  tags = local.tags
+
+  tracing_config {
+    mode = "PassThrough"
+  }
+  publish = true
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
