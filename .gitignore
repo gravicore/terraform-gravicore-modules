@@ -420,3 +420,11 @@ dist/
 node_modules/
 aws-exports.js
 awsconfiguration.json
+
+# camunda
+aws/camunda/java/*/.classpath
+aws/camunda/java/*/.factorypath
+aws/camunda/java/*/.project
+aws/camunda/java/*/.settings/
+aws/camunda/java/*/*.iml
+aws/camunda/java/*/*.idea/

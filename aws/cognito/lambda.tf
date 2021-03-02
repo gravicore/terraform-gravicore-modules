@@ -5,64 +5,79 @@
 ###############################################
 #######Variables for Lambda Configuration#######
 
-variable "pre_sign_up" {
+variable pre_sign_up {
   type        = string
   default     = null
   description = "A pre-registration AWS Lambda trigger"
 }
 
-variable "pre_authentication" {
+variable pre_authentication {
   type        = string
   default     = null
   description = "A pre-authentication AWS Lambda trigger"
 }
 
-variable "custom_message" {
+variable custom_message {
   type        = string
   default     = null
   description = "A custom Message AWS Lambda trigger"
 }
 
-variable "post_authentication" {
+variable post_authentication {
   type        = string
   default     = null
   description = "A post-authentication AWS Lambda trigger"
 }
 
-variable "post_confirmation" {
+variable post_confirmation {
   type        = string
   default     = null
   description = "A post-confirmation AWS Lambda trigger"
 }
 
-variable "define_auth_challenge" {
+variable define_auth_challenge {
   type        = string
   default     = null
   description = "Defines the authentication challenge"
 }
 
-variable "create_auth_challenge" {
+variable create_auth_challenge {
   type        = string
   default     = null
   description = "The ARN of the lambda creating an authentication challenge"
 }
 
-variable "verify_auth_challenge_response" {
+variable verify_auth_challenge_response {
   type        = string
   default     = null
   description = "Verifies the authentication challenge response"
 }
 
-variable "user_migration" {
+variable user_migration {
   type        = string
   default     = null
   description = "The user migration Lambda config type"
 }
 
-variable "pre_token_generation" {
-  type        = bool
+variable pre_token_generation {
+  type        = string
   default     = null
   description = "Allow to customize identity token claims before token generation"
+}
+
+locals {
+  lambda_config = var.pre_sign_up != null || var.pre_authentication != null || var.custom_message != null || var.post_authentication != null || var.post_confirmation != null || var.define_auth_challenge != null || var.create_auth_challenge != null || var.verify_auth_challenge_response != null || var.user_migration != null || var.pre_token_generation != null ? { lambda_config = {
+    pre_sign_up                    = var.pre_sign_up,
+    pre_authentication             = var.pre_authentication,
+    custom_message                 = var.custom_message,
+    post_authentication            = var.post_authentication,
+    post_confirmation              = var.post_confirmation,
+    define_auth_challenge          = var.define_auth_challenge,
+    create_auth_challenge          = var.create_auth_challenge,
+    verify_auth_challenge_response = var.verify_auth_challenge_response,
+    user_migration                 = var.user_migration,
+    pre_token_generation           = var.pre_token_generation,
+  } } : {}
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

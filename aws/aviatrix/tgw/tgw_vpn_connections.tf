@@ -54,7 +54,7 @@ resource "aviatrix_aws_tgw_vpn_conn" "tgw_vpn_static_connections" {
 
 module "parameters_tgw_vpn_connections" {
   source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
-  providers   = { aws = "aws" }
+  providers   = { aws = aws }
   create      = var.create && var.create_parameters
   namespace   = var.namespace
   environment = var.environment

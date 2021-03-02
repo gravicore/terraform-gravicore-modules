@@ -3,7 +3,7 @@ terraform {
 
   required_providers {
     aws      = "~> 2.26"
-    aviatrix = "~> 2.0"
+    aviatrix = "2.14.1"
   }
 }
 
@@ -128,7 +128,7 @@ data "aws_caller_identity" "current" {
 }
 
 locals {
-  account_id = coalesce(var.account_id, data.aws_caller_identity.current[0].account_id)
+  account_id = var.account_id == "" ? data.aws_caller_identity.current[0].account_id : var.account_id
 
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))

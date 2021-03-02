@@ -121,7 +121,7 @@ resource "aws_route53_record" "avx_vpn_gw" {
   zone_id = var.dns_zone_id
   type    = "A"
   ttl     = "30"
-  records = distinct(compact([aviatrix_gateway.avx_vpn_gw[0].public_ip, aviatrix_gateway.avx_vpn_gw[0].backup_public_ip]))
+  records = distinct(compact([aviatrix_gateway.avx_vpn_gw[0].eip, aviatrix_gateway.avx_vpn_gw[0].peering_ha_eip]))
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -140,9 +140,9 @@ module "parameters_vpn" {
   tags        = local.tags
 
   write_parameters = {
-    "/${local.stage_prefix}/${var.name}-public-ip" = { value = aviatrix_gateway.avx_vpn_gw[0].public_ip,
+    "/${local.stage_prefix}/${var.name}-public-ip" = { value = aviatrix_gateway.avx_vpn_gw[0].eip,
     description = "Public IP address of the Gateway created" }
-    "/${local.stage_prefix}/${var.name}-backup-public-ip" = { value = aviatrix_gateway.avx_vpn_gw[0].backup_public_ip,
+    "/${local.stage_prefix}/${var.name}-backup-public-ip" = { value = aviatrix_gateway.avx_vpn_gw[0].peering_ha_eip,
     description = "Private IP address of the Gateway created" }
     "/${local.stage_prefix}/${var.name}-public-dns-server" = { value = aviatrix_gateway.avx_vpn_gw[0].public_dns_server,
     description = "DNS server used by the gateway. Default is `8.8.8.8`, can be overridden with the VPC's setting." }
@@ -150,7 +150,7 @@ module "parameters_vpn" {
     description = "Security group used for the gateway" }
     "/${local.stage_prefix}/${var.name}-instance-id" = { value = aviatrix_gateway.avx_vpn_gw[0].cloud_instance_id
     description = "Instance ID of the gateway" }
-    "/${local.stage_prefix}/${var.name}-backup-instance-id" = { value = aviatrix_gateway.avx_vpn_gw[0].cloudn_bkup_gateway_inst_id
+    "/${local.stage_prefix}/${var.name}-backup-instance-id" = { value = aviatrix_gateway.avx_vpn_gw[0].peering_ha_cloud_instance_id
     description = "Instance ID of the backup gateway" }
     "/${local.stage_prefix}/${var.name}-dns-name" = { value = aws_route53_record.avx_vpn_gw[0].name,
     description = "DNS name of the Aviatrix VPN Gateway" }
@@ -162,12 +162,12 @@ module "parameters_vpn" {
 # Outputs
 
 output "aviatrix_vpn_public_ip" {
-  value       = aviatrix_gateway.avx_vpn_gw[0].public_ip
+  value       = aviatrix_gateway.avx_vpn_gw[0].eip
   description = "Public IP address of the Gateway created"
 }
 
 output "aviatrix_vpn_backup_public_ip" {
-  value       = aviatrix_gateway.avx_vpn_gw[0].backup_public_ip
+  value       = aviatrix_gateway.avx_vpn_gw[0].peering_ha_eip
   description = "Private IP address of the Gateway created"
 }
 
@@ -187,7 +187,7 @@ output "aviatrix_vpn_instance_id" {
 }
 
 output "aviatrix_vpn_backup_instance_id" {
-  value       = aviatrix_gateway.avx_vpn_gw[0].cloudn_bkup_gateway_inst_id
+  value       = aviatrix_gateway.avx_vpn_gw[0].peering_ha_cloud_instance_id
   description = "Instance ID of the backup gateway"
 }
 
