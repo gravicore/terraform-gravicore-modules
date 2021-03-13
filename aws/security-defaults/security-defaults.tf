@@ -11,5 +11,5 @@ variable "skip_region_validation" {
 }
 
 resource "aws_default_security_group" "default" {
-  vpc_id      = var.default_aws_security_group_vpc_id
+  vpc_id = var.default_aws_security_group_vpc_id
 }
