@@ -61,13 +61,13 @@ variable "waf_arn" {
   description = ""
 }
 
-variable "log_bucket_id" {
+variable "cloudtrail_log_bucket_id" {
   type        = string
   default     = null
   description = ""
 }
 
-variable "log_bucket_arn" {
+variable "cloudtrail_log_bucket_arn" {
   type        = string
   default     = null
   description = ""
@@ -227,6 +227,10 @@ resource "aws_cloudformation_stack" "vpc_flow_log_group" {
 
 # WAF Logging
 
+locals {
+  waf_log_prefix = "AWN/WAF/${var.account_id}/"
+}
+
 resource "aws_kms_key" "default" {
   count                    = var.create && var.waf_arn != null && var.kinesis_kms_key == null ? 1 : 0
   deletion_window_in_days  = 10
@@ -299,7 +303,7 @@ resource "aws_kms_key" "default" {
                     "kms:CallerAccount": "${var.account_id}"
                 },
                 "StringLike": {
-                    "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.log_bucket_arn : aws_s3_bucket.default[0].arn}/AWN/WAF/${var.account_id}/*"
+                    "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
                 }
             }
         },
@@ -378,8 +382,8 @@ resource "aws_iam_role_policy" "kinesis" {
         "s3:PutObject"
       ],
       "Resource": [
-        "${var.cloudtrail_name != null ? var.log_bucket_arn : aws_s3_bucket.default[0].arn}",
-        "${var.cloudtrail_name != null ? var.log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+        "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}",
+        "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
       ]
     },
     {
@@ -402,7 +406,7 @@ resource "aws_iam_role_policy" "kinesis" {
           "kms:ViaService": "s3.${var.aws_region}.amazonaws.com"
         },
         "StringLike": {
-          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
         }
       }
     },
@@ -443,7 +447,7 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
   count = var.create && var.waf_arn != null ? length(keys(var.waf_arn)) : 0
-  name  = join(var.delimiter, ["aws-waf-logs", var.aws_region, local.stage_prefix])
+  name  = join(var.delimiter, ["aws-waf-logs", var.aws_region, local.stage_prefix, element(keys(var.waf_arn), count.index)])
   tags  = local.tags
 
   destination = "extended_s3"
@@ -454,9 +458,9 @@ resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
 
   extended_s3_configuration {
     role_arn           = aws_iam_role.kinesis[0].arn
-    bucket_arn         = var.cloudtrail_name != null ? var.log_bucket_arn : aws_s3_bucket.default[0].arn
+    bucket_arn         = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn
     s3_backup_mode     = "Disabled"
-    prefix             = "AWN/WAF/${var.account_id}/"
+    prefix             = local.waf_log_prefix
     kms_key_arn        = var.kinesis_kms_key == null ? aws_kms_key.default[0].arn : var.kinesis_kms_key
     compression_format = "GZIP"
     buffer_interval    = 300
@@ -482,7 +486,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "waf_logs" {
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
   count  = var.create && var.waf_arn != null ? 1 : 0
-  bucket = var.cloudtrail_name != null ? var.log_bucket_id : aws_s3_bucket.default[0].id
+  bucket = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_id : aws_s3_bucket.default[0].id
 
   topic {
     topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
@@ -492,7 +496,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   topic {
     topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
     events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "AWN/WAF/${var.account_id}/"
+    filter_prefix = local.waf_log_prefix
   }
 }
 
