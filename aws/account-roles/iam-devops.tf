@@ -44,13 +44,13 @@ resource "aws_iam_policy" "devop" {
 # Group
 
 resource "aws_iam_group" "devops" {
-  count = var.create && var.create_iam_groups ? 1 : 0
+  count = var.create && var.create_iam_groups && lookup(var.create_iam_groups_mapping, "devops", false) ? 1 : 0
   name  = join(var.delimiter, [var.namespace, "devops"])
   path  = "/"
 }
 
 resource "aws_iam_group_policy_attachment" "devops" {
-  count      = var.create && var.create_iam_groups ? 1 : 0
+  count      = var.create && var.create_iam_groups && lookup(var.create_iam_groups_mapping, "devops", false) ? 1 : 0
   group      = aws_iam_group.devops[0].name
   policy_arn = aws_iam_policy.devop[0].arn
 }

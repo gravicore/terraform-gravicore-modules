@@ -112,8 +112,19 @@ variable "delimiter" {
 
 variable "create_iam_groups" {
   type        = bool
-  default     = true
+  default     = false
   description = "Set to false to prevent the module from creating IAM group resources"
+}
+
+variable "create_iam_groups_mapping" {
+  type = map(string)
+
+  default = {
+    auditors = false
+    billing-viewers = false
+    developers = false
+    devops = false
+  }
 }
 
 # Derived

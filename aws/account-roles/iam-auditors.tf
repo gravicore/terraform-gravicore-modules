@@ -71,19 +71,19 @@ resource "aws_iam_policy" "auditor" {
 # Group
 
 resource "aws_iam_group" "auditors" {
-  count = var.create && var.create_iam_groups ? 1 : 0
+  count = var.create && var.create_iam_groups && lookup(var.create_iam_groups_mapping, "auditors", false) ? 1 : 0
   name  = join(var.delimiter, [var.namespace, "auditors"])
   path  = "/"
 }
 
 resource "aws_iam_group_policy_attachment" "auditors" {
-  count      = var.create && var.create_iam_groups ? 1 : 0
+  count      = var.create && var.create_iam_groups && lookup(var.create_iam_groups_mapping, "auditors", false)  ? 1 : 0
   group      = aws_iam_group.auditors[0].name
   policy_arn = aws_iam_policy.auditor[0].arn
 }
 
 resource "aws_iam_group_policy_attachment" "auditors_read_only" {
-  count      = var.create && var.create_iam_groups ? 1 : 0
+  count      = var.create && var.create_iam_groups && lookup(var.create_iam_groups_mapping, "auditors", false) ? 1 : 0
   group      = aws_iam_group.auditors[0].name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
