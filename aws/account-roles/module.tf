@@ -110,6 +110,23 @@ variable "delimiter" {
   description = "Delimiter to be used between `namespace`, `environment`, `stage`, `name`"
 }
 
+variable "create_iam_groups" {
+  type        = bool
+  default     = false
+  description = "Set to false to prevent the module from creating IAM group resources"
+}
+
+variable "create_iam_groups_mapping" {
+  type = map(string)
+
+  default = {
+    auditors        = false
+    billing-viewers = false
+    developers      = false
+    devops          = false
+  }
+}
+
 # Derived
 
 data "aws_caller_identity" "current" {

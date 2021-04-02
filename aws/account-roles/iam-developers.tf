@@ -3,12 +3,12 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "developer_policy_allow" {
-  type    = "list"
+  type    = list(string)
   default = ["*"]
 }
 
 variable "developer_policy_deny" {
-  type = "list"
+  type = list(string)
   default = [
     "iam:Add*",
     "iam:Attach*",
@@ -63,36 +63,40 @@ data "aws_iam_policy_document" "developer" {
 }
 
 resource "aws_iam_policy" "developer" {
-  name = join(var.delimiter, [var.namespace, "developer", "access"])
-
+  count  = var.create ? 1 : 0
+  name   = join(var.delimiter, [var.namespace, "developer", "access"])
   policy = data.aws_iam_policy_document.developer.json
 }
 
 # Group
 
 resource "aws_iam_group" "developers" {
-  name = join(var.delimiter, [var.namespace, "developers"])
-  path = "/"
+  count = var.create && var.create_iam_groups && lookup(var.create_iam_groups_mapping, "developers", false) ? 1 : 0
+  name  = join(var.delimiter, [var.namespace, "developers"])
+  path  = "/"
 }
 
 resource "aws_iam_group_policy_attachment" "developers" {
-  group      = aws_iam_group.developers.name
-  policy_arn = aws_iam_policy.developer.arn
+  count      = var.create && var.create_iam_groups && lookup(var.create_iam_groups_mapping, "developers", false) ? 1 : 0
+  group      = aws_iam_group.developers[0].name
+  policy_arn = aws_iam_policy.developer[0].arn
 }
 
 # Role
 
 resource "aws_iam_role" "developer" {
-  name = join(var.delimiter, [var.namespace, "developer"])
-  tags = local.tags
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, [var.namespace, "developer"])
+  tags  = local.tags
 
   assume_role_policy   = data.template_file.assume_role_policy.rendered
   max_session_duration = var.role_max_session_duration
 }
 
 resource "aws_iam_role_policy_attachment" "developer" {
-  role       = aws_iam_role.developer.name
-  policy_arn = aws_iam_policy.developer.arn
+  count      = var.create ? 1 : 0
+  role       = aws_iam_role.developer[0].name
+  policy_arn = aws_iam_policy.developer[0].arn
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -100,7 +104,7 @@ resource "aws_iam_role_policy_attachment" "developer" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_iam_role" "gravicore_developer" {
-  count = var.allow_gravicore_access ? 1 : 0
+  count = var.create && var.allow_gravicore_access ? 1 : 0
   name  = "grv-developer"
   tags  = local.tags
 
@@ -109,8 +113,8 @@ resource "aws_iam_role" "gravicore_developer" {
 }
 
 resource "aws_iam_role_policy_attachment" "gravicore_developer" {
-  count = var.allow_gravicore_access ? 1 : 0
+  count = var.create && var.allow_gravicore_access ? 1 : 0
 
   role       = aws_iam_role.gravicore_developer[0].name
-  policy_arn = aws_iam_policy.developer.arn
+  policy_arn = aws_iam_policy.developer[0].arn
 }
