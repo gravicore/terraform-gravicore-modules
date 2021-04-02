@@ -120,10 +120,10 @@ variable "create_iam_groups_mapping" {
   type = map(string)
 
   default = {
-    auditors = false
+    auditors        = false
     billing-viewers = false
-    developers = false
-    devops = false
+    developers      = false
+    devops          = false
   }
 }
 
