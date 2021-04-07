@@ -93,7 +93,7 @@ resource "aws_s3_bucket" "default" {
   count  = var.create && var.cloudtrail_name == null ? 1 : 0
   bucket = "${local.module_prefix}-cloudtrail-events"
   tags   = local.tags
-  
+
   region = var.aws_region
   acl    = "private"
 
@@ -326,10 +326,10 @@ resource "aws_kms_alias" "default" {
 }
 
 resource "aws_iam_role" "kinesis" {
-  count = var.create && var.waf_arns != null ? 1 : 0
-  name  = join(var.delimiter, [local.module_prefix, "kinesis"])
-  tags = local.tags
-  description        = "${var.desc_prefix} Role for Kinesis fire hose"
+  count       = var.create && var.waf_arns != null ? 1 : 0
+  name        = join(var.delimiter, [local.module_prefix, "kinesis"])
+  tags        = local.tags
+  description = "${var.desc_prefix} Role for Kinesis fire hose"
 
   assume_role_policy = <<EOF
 {
