@@ -2,57 +2,87 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "s3_bucket_versioning" {
+variable s3_bucket_versioning {
   description = "S3 bucket versioning enabled?"
   default     = false
 }
 
-variable "sse_algorithm" {
+variable sse_algorithm {
   type        = string
   default     = "AES256"
   description = "The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`"
 }
 
-variable "kms_master_key_arn" {
+variable kms_master_key_arn {
   type        = string
   default     = ""
   description = "The AWS KMS master key ARN used for the `SSE-KMS` encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default aws/s3 AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`"
 }
 
-variable "enable_guardduty_logging" {
+variable enable_guardduty_logging {
   type        = bool
   default     = false
-  description = ""
+  description = "Enable GaurdDuty Logging?"
 }
 
-variable "vpc_id" {
+variable vpc_id {
   type        = string
   default     = null
   description = ""
 }
 
-variable "guardduty_detector_id" {
+variable guardduty_detector_id {
   type        = string
   default     = null
   description = ""
 }
 
-variable "flow_log_filter_pattern" {
+variable flow_log_filter_pattern {
   type        = string
   default     = null
   description = ""
 }
 
-variable "vpc_flow_log_group_name" {
+variable vpc_flow_log_group_name {
   type        = string
   default     = null
   description = ""
 }
 
-variable "cloudtrail_name" {
+variable cloudtrail_name {
   type        = string
   default     = null
   description = ""
+}
+
+variable "waf_arns" {
+  type        = list
+  default     = null
+  description = ""
+}
+
+variable cloudtrail_log_bucket_id {
+  type        = string
+  default     = null
+  description = ""
+}
+
+variable cloudtrail_log_bucket_arn {
+  type        = string
+  default     = null
+  description = ""
+}
+
+variable kinesis_kms_key {
+  type        = string
+  default     = null
+  description = ""
+}
+
+variable enable_cspm {
+  type        = bool
+  default     = false
+  description = "Enable Cloud Security Posture Management?"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -62,6 +92,8 @@ variable "cloudtrail_name" {
 resource "aws_s3_bucket" "default" {
   count  = var.create && var.cloudtrail_name == null ? 1 : 0
   bucket = "${local.module_prefix}-cloudtrail-events"
+  tags   = local.tags
+
   region = var.aws_region
   acl    = "private"
 
@@ -107,7 +139,6 @@ resource "aws_s3_bucket" "default" {
     ]
 }
 POLICY
-  tags   = local.tags
 }
 
 resource "aws_s3_bucket_public_access_block" "default" {
@@ -122,14 +153,14 @@ resource "aws_s3_bucket_public_access_block" "default" {
 
 resource "aws_cloudtrail" "default" {
   count                 = var.create && var.cloudtrail_name == null ? 1 : 0
-  name                  = join("-", [local.module_prefix])
+  name                  = join(var.delimiter, [local.module_prefix])
   s3_bucket_name        = aws_s3_bucket.default[0].id
   is_multi_region_trail = true
 }
 
 resource "aws_cloudformation_stack" "cloudtrail" {
   count        = var.create ? 1 : 0
-  name         = join("-", [local.module_prefix])
+  name         = join(var.delimiter, [local.module_prefix])
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
@@ -141,13 +172,15 @@ resource "aws_cloudformation_stack" "cloudtrail" {
   template_url = "https://s3.amazonaws.com/arcticwolf-public/install/aws-templates/latest/primary_region_template.json"
 }
 
+# GuardDuty
+
 data "aws_guardduty_detector" "default" {
   count = var.create && var.enable_guardduty_logging && var.guardduty_detector_id == null ? 1 : 0
 }
 
 resource "aws_cloudformation_stack" "guardduty" {
   count        = var.create && var.enable_guardduty_logging ? 1 : 0
-  name         = join("-", [local.module_prefix, "guardduty"])
+  name         = join(var.delimiter, [local.module_prefix, "guardduty"])
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
@@ -162,9 +195,11 @@ resource "aws_cloudformation_stack" "guardduty" {
   ]
 }
 
+# VPC Flow Logs
+
 resource "aws_cloudformation_stack" "vpc_flow_log" {
   count        = var.create && var.vpc_id != null ? 1 : 0
-  name         = join("-", [local.module_prefix, "vpc-flow-log"])
+  name         = join(var.delimiter, [local.module_prefix, "vpc-flow-log"])
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
@@ -181,7 +216,7 @@ resource "aws_cloudformation_stack" "vpc_flow_log" {
 
 resource "aws_cloudformation_stack" "vpc_flow_log_group" {
   count        = var.create && var.vpc_flow_log_group_name != null ? 1 : 0
-  name         = join("-", [local.module_prefix, "vpc-flow-log-group"])
+  name         = join(var.delimiter, [local.module_prefix, "vpc-flow-log-group"])
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
@@ -197,16 +232,382 @@ resource "aws_cloudformation_stack" "vpc_flow_log_group" {
   ]
 }
 
+# WAF Logging
+
+locals {
+  waf_log_prefix = "AWN/WAF/${var.account_id}/"
+}
+
+resource "aws_kms_key" "default" {
+  count                    = var.create && var.waf_arns != null && var.kinesis_kms_key == null ? 1 : 0
+  deletion_window_in_days  = 10
+  enable_key_rotation      = true
+  tags                     = local.tags
+  description              = join(" ", [var.desc_prefix, "KMS Key for encrypting logs collected for monitoring by Arctic Wolf Networks"])
+  key_usage                = "ENCRYPT_DECRYPT"
+  customer_master_key_spec = "SYMMETRIC_DEFAULT"
+  policy                   = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${var.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:GenerateDataKeyWithoutPlaintext"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${var.account_id}:trail/*"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "kms:DescribeKey",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::213881032452:root"
+      },
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:CallerAccount": "${var.account_id}"
+        },
+        "StringLike": {
+          "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${var.account_id}:trail/*"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::213881032452:root"
+      },
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:CallerAccount": "${var.account_id}"
+        },
+        "StringLike": {
+          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_kms_alias" "default" {
+  count         = var.create && var.waf_arns != null && var.kinesis_kms_key == null ? 1 : 0
+  name          = "alias/${replace(local.stage_prefix, var.delimiter, "/")}/AWN"
+  target_key_id = aws_kms_key.default[0].id
+}
+
+resource "aws_iam_role" "kinesis" {
+  count       = var.create && var.waf_arns != null ? 1 : 0
+  name        = join(var.delimiter, [local.module_prefix, "kinesis"])
+  tags        = local.tags
+  description = "${var.desc_prefix} Role for Kinesis fire hose"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "kinesis" {
+  count = var.create && var.waf_arns != null ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "kinesis"])
+  role  = aws_iam_role.kinesis[0].id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetTable",
+        "glue:GetTableVersion",
+        "glue:GetTableVersions"
+      ],
+      "Resource": [
+        "arn:aws:glue:${var.aws_region}:${var.account_id}:catalog",
+        "arn:aws:glue:${var.aws_region}:${var.account_id}:database/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%",
+        "arn:aws:glue:${var.aws_region}:${var.account_id}:table/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}",
+        "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:InvokeFunction",
+        "lambda:GetFunctionConfiguration"
+      ],
+      "Resource": "arn:aws:lambda:${var.aws_region}:${var.account_id}:function:%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:Decrypt"
+      ],
+      "Resource": "${var.kinesis_kms_key == null ? aws_kms_key.default[0].arn : var.kinesis_kms_key}",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "s3.${var.aws_region}.amazonaws.com"
+        },
+        "StringLike": {
+          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "logs:PutLogEvents",
+      "Resource": "arn:aws:logs:${var.aws_region}:${var.account_id}:log-group:/aws/kinesisfirehose/aws-waf-logs-${var.aws_region}-${local.stage_prefix}:log-stream:*"
+    },        
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kinesis:DescribeStream",
+        "kinesis:GetShardIterator",
+        "kinesis:GetRecords",
+        "kinesis:ListShards"
+      ],
+      "Resource": "arn:aws:kinesis:${var.aws_region}:${var.account_id}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:Decrypt"
+      ],
+      "Resource": "arn:aws:kms:${var.aws_region}:${var.account_id}:key/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "kinesis.${var.aws_region}.amazonaws.com"
+        },
+        "StringLike": {
+          "kms:EncryptionContext:aws:kinesis:arn": "arn:aws:kinesis:${var.aws_region}:${var.account_id}:stream/%FIREHOSE_POLICY_TEMPLATE_PLACEHOLDER%"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
+  count = var.create && var.waf_arns != null ? 1 : 0
+  name  = join(var.delimiter, ["aws-waf-logs", var.aws_region, local.stage_prefix])
+  tags  = local.tags
+
+  destination = "extended_s3"
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  extended_s3_configuration {
+    role_arn           = aws_iam_role.kinesis[0].arn
+    bucket_arn         = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn
+    s3_backup_mode     = "Disabled"
+    prefix             = local.waf_log_prefix
+    kms_key_arn        = var.kinesis_kms_key == null ? aws_kms_key.default[0].arn : var.kinesis_kms_key
+    compression_format = "GZIP"
+    buffer_interval    = 300
+    buffer_size        = 5
+
+    cloudwatch_logging_options {
+      enabled         = true
+      log_group_name  = "/aws/kinesisfirehose/aws-waf-logs-${var.aws_region}-${local.stage_prefix}"
+      log_stream_name = "S3Delivery"
+    }
+
+    processing_configuration {
+      enabled = "false"
+    }
+  }
+}
+
+resource "aws_wafv2_web_acl_logging_configuration" "waf_logs" {
+  count                   = var.create && var.waf_arns != null ? length(var.waf_arns) : 0
+  log_destination_configs = [aws_kinesis_firehose_delivery_stream.waf_logs[0].arn]
+  resource_arn            = element(var.waf_arns, count.index)
+}
+
+resource "aws_s3_bucket_notification" "bucket_notification" {
+  count  = var.create && var.waf_arns != null ? 1 : 0
+  bucket = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_id : aws_s3_bucket.default[0].id
+
+  topic {
+    topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "AWSLogs/${var.account_id}/"
+  }
+  topic {
+    topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = local.waf_log_prefix
+  }
+}
+
+# CSPM
+
+resource "aws_iam_role" "cspm" {
+  count       = var.create && var.enable_cspm ? 1 : 0
+  name        = "AWNSecurityAuditRole"
+  tags        = local.tags
+  description = "${var.desc_prefix} Role for Arctic Wolf to assume to perform CSPM Audit"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "AWS": "arn:aws:iam::850827386003:root"
+      },
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "${var.account_id}"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "cspm" {
+  count      = var.create && var.enable_cspm ? 1 : 0
+  role       = aws_iam_role.cspm[0].name
+  policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "cloudtrail_name" {
-  value       = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : null
+output cloudtrail_name {
+  value       = aws_cloudtrail.default.*.name
   description = ""
 }
 
-output "cloudtrail_stack_outputs" {
-  value       = aws_cloudformation_stack.cloudtrail[0].outputs
+output cloudtrail_stack_outputs {
+  value       = aws_cloudformation_stack.cloudtrail.*.outputs
+  description = ""
+}
+
+output guardduty_stack_outputs {
+  value       = aws_cloudformation_stack.guardduty.*.outputs
+  description = ""
+}
+
+output vpc_flow_log_stack_outputs {
+  value       = coalesce(aws_cloudformation_stack.vpc_flow_log.*.outputs, aws_cloudformation_stack.vpc_flow_log_group.*.outputs)
+  description = ""
+}
+
+output kenisis_kms_key_arn {
+  value       = aws_kms_key.default.*.arn
+  description = ""
+}
+
+output kenisis_kms_key_alias_arn {
+  value       = aws_kms_alias.default.*.arn
+  description = ""
+}
+
+output kenisis_kms_key_alias_name {
+  value       = aws_kms_alias.default.*.name
+  description = ""
+}
+
+output kenisis_aws_iam_role_arn {
+  value       = aws_iam_role.kinesis.*.arn
+  description = ""
+}
+
+output kenisis_aws_iam_role_name {
+  value       = aws_iam_role.kinesis.*.name
+  description = ""
+}
+
+output kenisis_aws_iam_role_policy_id {
+  value       = aws_iam_role_policy.kinesis.*.id
+  description = ""
+}
+
+output kenisis_aws_iam_role_policy_name {
+  value       = aws_iam_role_policy.kinesis.*.name
+  description = ""
+}
+
+output cspm_aws_iam_role_arn {
+  value       = aws_iam_role.cspm.*.arn
+  description = ""
+}
+
+output cspm_aws_iam_role_name {
+  value       = aws_iam_role.cspm.*.name
+  description = ""
+}
+
+output kenisis_firehose_delivery_stream_arn {
+  value       = aws_kinesis_firehose_delivery_stream.waf_logs.*.arn
+  description = ""
+}
+
+output kenisis_firehose_delivery_stream_name {
+  value       = aws_kinesis_firehose_delivery_stream.waf_logs.*.name
   description = ""
 }

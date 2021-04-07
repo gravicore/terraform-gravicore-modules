@@ -126,6 +126,15 @@ resource "aws_cloudtrail" "default" {
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
+output "cloudtrail_bucket_id" {
+  value       = aws_s3_bucket.default[0].id
+  description = ""
+}
+
+output "cloudtrail_bucket_arn" {
+  value       = aws_s3_bucket.default[0].arn
+  description = ""
+}
 
 output "cloudtrail_name" {
   value       = aws_cloudtrail.default[0].name
