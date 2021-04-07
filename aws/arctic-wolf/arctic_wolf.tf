@@ -55,7 +55,7 @@ variable cloudtrail_name {
   description = ""
 }
 
-variable "waf_arn" {
+variable "waf_arns" {
   type        = list
   default     = null
   description = ""
@@ -92,6 +92,8 @@ variable enable_cspm {
 resource "aws_s3_bucket" "default" {
   count  = var.create && var.cloudtrail_name == null ? 1 : 0
   bucket = "${local.module_prefix}-cloudtrail-events"
+  tags   = local.tags
+  
   region = var.aws_region
   acl    = "private"
 
@@ -137,7 +139,6 @@ resource "aws_s3_bucket" "default" {
     ]
 }
 POLICY
-  tags   = local.tags
 }
 
 resource "aws_s3_bucket_public_access_block" "default" {
@@ -238,7 +239,7 @@ locals {
 }
 
 resource "aws_kms_key" "default" {
-  count                    = var.create && var.waf_arn != null && var.kinesis_kms_key == null ? 1 : 0
+  count                    = var.create && var.waf_arns != null && var.kinesis_kms_key == null ? 1 : 0
   deletion_window_in_days  = 10
   enable_key_rotation      = true
   tags                     = local.tags
@@ -319,16 +320,17 @@ EOF
 }
 
 resource "aws_kms_alias" "default" {
-  count         = var.create && var.waf_arn != null && var.kinesis_kms_key == null ? 1 : 0
+  count         = var.create && var.waf_arns != null && var.kinesis_kms_key == null ? 1 : 0
   name          = "alias/${replace(local.stage_prefix, var.delimiter, "/")}/AWN"
   target_key_id = aws_kms_key.default[0].id
 }
 
 resource "aws_iam_role" "kinesis" {
-  count = var.create && var.waf_arn != null ? 1 : 0
+  count = var.create && var.waf_arns != null ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "kinesis"])
-
+  tags = local.tags
   description        = "${var.desc_prefix} Role for Kinesis fire hose"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -343,12 +345,10 @@ resource "aws_iam_role" "kinesis" {
   ]
 }
 EOF
-
-  tags = local.tags
 }
 
 resource "aws_iam_role_policy" "kinesis" {
-  count = var.create && var.waf_arn != null ? 1 : 0
+  count = var.create && var.waf_arns != null ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "kinesis"])
   role  = aws_iam_role.kinesis[0].id
 
@@ -444,7 +444,7 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
-  count = var.create && var.waf_arn != null ? 1 : 0
+  count = var.create && var.waf_arns != null ? 1 : 0
   name  = join(var.delimiter, ["aws-waf-logs", var.aws_region, local.stage_prefix])
   tags  = local.tags
 
@@ -477,13 +477,13 @@ resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
 }
 
 resource "aws_wafv2_web_acl_logging_configuration" "waf_logs" {
-  count                   = var.create && var.waf_arn != null ? length(var.waf_arn) : 0
+  count                   = var.create && var.waf_arns != null ? length(var.waf_arns) : 0
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.waf_logs[0].arn]
-  resource_arn            = element(var.waf_arn, count.index)
+  resource_arn            = element(var.waf_arns, count.index)
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
-  count  = var.create && var.waf_arn != null ? 1 : 0
+  count  = var.create && var.waf_arns != null ? 1 : 0
   bucket = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_id : aws_s3_bucket.default[0].id
 
   topic {
