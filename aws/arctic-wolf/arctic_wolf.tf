@@ -2,81 +2,87 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "s3_bucket_versioning" {
+variable s3_bucket_versioning {
   description = "S3 bucket versioning enabled?"
   default     = false
 }
 
-variable "sse_algorithm" {
+variable sse_algorithm {
   type        = string
   default     = "AES256"
   description = "The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`"
 }
 
-variable "kms_master_key_arn" {
+variable kms_master_key_arn {
   type        = string
   default     = ""
   description = "The AWS KMS master key ARN used for the `SSE-KMS` encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default aws/s3 AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`"
 }
 
-variable "enable_guardduty_logging" {
+variable enable_guardduty_logging {
   type        = bool
   default     = false
-  description = ""
+  description = "Enable GaurdDuty Logging?"
 }
 
-variable "vpc_id" {
+variable vpc_id {
   type        = string
   default     = null
   description = ""
 }
 
-variable "guardduty_detector_id" {
+variable guardduty_detector_id {
   type        = string
   default     = null
   description = ""
 }
 
-variable "flow_log_filter_pattern" {
+variable flow_log_filter_pattern {
   type        = string
   default     = null
   description = ""
 }
 
-variable "vpc_flow_log_group_name" {
+variable vpc_flow_log_group_name {
   type        = string
   default     = null
   description = ""
 }
 
-variable "cloudtrail_name" {
+variable cloudtrail_name {
   type        = string
   default     = null
   description = ""
 }
 
 variable "waf_arn" {
-  type        = map
+  type        = list
   default     = null
   description = ""
 }
 
-variable "cloudtrail_log_bucket_id" {
+variable cloudtrail_log_bucket_id {
   type        = string
   default     = null
   description = ""
 }
 
-variable "cloudtrail_log_bucket_arn" {
+variable cloudtrail_log_bucket_arn {
   type        = string
   default     = null
   description = ""
 }
 
-variable "kinesis_kms_key" {
+variable kinesis_kms_key {
   type        = string
   default     = null
   description = ""
+}
+
+variable enable_cspm {
+  type        = bool
+  default     = false
+  description = "Enable Cloud Security Posture Management?"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -240,82 +246,74 @@ resource "aws_kms_key" "default" {
   key_usage                = "ENCRYPT_DECRYPT"
   customer_master_key_spec = "SYMMETRIC_DEFAULT"
   policy                   = <<EOF
-  {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::${var.account_id}:root"
-            },
-            "Action": "kms:*",
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "cloudtrail.amazonaws.com"
-            },
-            "Action": [
-                "kms:GenerateDataKey",
-                "kms:GenerateDataKeyWithoutPlaintext"
-            ],
-            "Resource": "*",
-            "Condition": {
-                "StringLike": {
-                    "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${var.account_id}:trail/*"
-                }
-            }
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "cloudtrail.amazonaws.com"
-            },
-            "Action": "kms:DescribeKey",
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::213881032452:root"
-            },
-            "Action": "kms:Decrypt",
-            "Resource": "*",
-            "Condition": {
-                "StringEquals": {
-                    "kms:CallerAccount": "${var.account_id}"
-                },
-                "StringLike": {
-                    "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${var.account_id}:trail/*"
-                }
-            }
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::213881032452:root"
-            },
-            "Action": "kms:Decrypt",
-            "Resource": "*",
-            "Condition": {
-                "StringEquals": {
-                    "kms:CallerAccount": "${var.account_id}"
-                },
-                "StringLike": {
-                    "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
-                }
-            }
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::213881032452:root"
-            },
-            "Action": "kms:Decrypt",
-            "Resource": "*"
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::${var.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": [
+        "kms:GenerateDataKey",
+        "kms:GenerateDataKeyWithoutPlaintext"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${var.account_id}:trail/*"
         }
-    ]
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "cloudtrail.amazonaws.com"
+      },
+      "Action": "kms:DescribeKey",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::213881032452:root"
+      },
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:CallerAccount": "${var.account_id}"
+        },
+        "StringLike": {
+          "kms:EncryptionContext:aws:cloudtrail:arn": "arn:aws:cloudtrail:*:${var.account_id}:trail/*"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::213881032452:root"
+      },
+      "Action": "kms:Decrypt",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "kms:CallerAccount": "${var.account_id}"
+        },
+        "StringLike": {
+          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+        }
+      }
+    }
+  ]
 }
 EOF
 }
@@ -446,8 +444,8 @@ EOF
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
-  count = var.create && var.waf_arn != null ? length(keys(var.waf_arn)) : 0
-  name  = join(var.delimiter, ["aws-waf-logs", var.aws_region, local.stage_prefix, element(keys(var.waf_arn), count.index)])
+  count = var.create && var.waf_arn != null ? 1 : 0
+  name  = join(var.delimiter, ["aws-waf-logs", var.aws_region, local.stage_prefix])
   tags  = local.tags
 
   destination = "extended_s3"
@@ -469,7 +467,7 @@ resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
     cloudwatch_logging_options {
       enabled         = true
       log_group_name  = "/aws/kinesisfirehose/aws-waf-logs-${var.aws_region}-${local.stage_prefix}"
-      log_stream_name = element(keys(var.waf_arn), count.index)
+      log_stream_name = "S3Delivery"
     }
 
     processing_configuration {
@@ -479,9 +477,9 @@ resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
 }
 
 resource "aws_wafv2_web_acl_logging_configuration" "waf_logs" {
-  count                   = var.create && var.waf_arn != null ? length(keys(var.waf_arn)) : 0
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.waf_logs[count.index].arn]
-  resource_arn            = element(values(var.waf_arn), count.index)
+  count                   = var.create && var.waf_arn != null ? length(var.waf_arn) : 0
+  log_destination_configs = [aws_kinesis_firehose_delivery_stream.waf_logs[0].arn]
+  resource_arn            = element(var.waf_arn, count.index)
 }
 
 resource "aws_s3_bucket_notification" "bucket_notification" {
@@ -500,16 +498,116 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   }
 }
 
+# CSPM
+
+resource "aws_iam_role" "cspm" {
+  count       = var.create && var.enable_cspm ? 1 : 0
+  name        = "AWNSecurityAuditRole"
+  tags        = local.tags
+  description = "${var.desc_prefix} Role for Arctic Wolf to assume to perform CSPM Audit"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "AWS": "arn:aws:iam::850827386003:root"
+      },
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "${var.account_id}"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "cspm" {
+  count      = var.create && var.enable_cspm ? 1 : 0
+  role       = aws_iam_role.cspm[0].name
+  policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "cloudtrail_name" {
-  value       = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : null
+output cloudtrail_name {
+  value       = aws_cloudtrail.default.*.name
   description = ""
 }
 
-output "cloudtrail_stack_outputs" {
-  value       = aws_cloudformation_stack.cloudtrail[0].outputs
+output cloudtrail_stack_outputs {
+  value       = aws_cloudformation_stack.cloudtrail.*.outputs
+  description = ""
+}
+
+output guardduty_stack_outputs {
+  value       = aws_cloudformation_stack.guardduty.*.outputs
+  description = ""
+}
+
+output vpc_flow_log_stack_outputs {
+  value       = coalesce(aws_cloudformation_stack.vpc_flow_log.*.outputs, aws_cloudformation_stack.vpc_flow_log_group.*.outputs)
+  description = ""
+}
+
+output kenisis_kms_key_arn {
+  value       = aws_kms_key.default.*.arn
+  description = ""
+}
+
+output kenisis_kms_key_alias_arn {
+  value       = aws_kms_alias.default.*.arn
+  description = ""
+}
+
+output kenisis_kms_key_alias_name {
+  value       = aws_kms_alias.default.*.name
+  description = ""
+}
+
+output kenisis_aws_iam_role_arn {
+  value       = aws_iam_role.kinesis.*.arn
+  description = ""
+}
+
+output kenisis_aws_iam_role_name {
+  value       = aws_iam_role.kinesis.*.name
+  description = ""
+}
+
+output kenisis_aws_iam_role_policy_id {
+  value       = aws_iam_role_policy.kinesis.*.id
+  description = ""
+}
+
+output kenisis_aws_iam_role_policy_name {
+  value       = aws_iam_role_policy.kinesis.*.name
+  description = ""
+}
+
+output cspm_aws_iam_role_arn {
+  value       = aws_iam_role.cspm.*.arn
+  description = ""
+}
+
+output cspm_aws_iam_role_name {
+  value       = aws_iam_role.cspm.*.name
+  description = ""
+}
+
+output kenisis_firehose_delivery_stream_arn {
+  value       = aws_kinesis_firehose_delivery_stream.waf_logs.*.arn
+  description = ""
+}
+
+output kenisis_firehose_delivery_stream_name {
+  value       = aws_kinesis_firehose_delivery_stream.waf_logs.*.name
   description = ""
 }
