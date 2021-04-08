@@ -71,8 +71,8 @@ resource "aws_iam_group_policy_attachment" "cognito_read" {
 }
 
 resource "aws_iam_group_membership" "cognito_read" {
-  count      = var.create ? 1 : 0
-  name = join(var.delimiter, [local.module_prefix, "read", "only", "membership"])
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "read", "only", "membership"])
 
   users = [
     aws_iam_user.cognito[0].name
