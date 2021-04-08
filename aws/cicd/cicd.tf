@@ -74,8 +74,8 @@ resource "aws_iam_group_policy_attachment" "elevated" {
 }
 
 resource "aws_iam_group_membership" "elevated" {
-  count      = var.create ? 1 : 0
-  name = join(var.delimiter, [local.module_prefix, "elevated", "access", "membership"])
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "elevated", "access", "membership"])
 
   users = [
     aws_iam_user.elevated[0].name
