@@ -164,7 +164,7 @@ resource "aws_cloudformation_stack" "cloudtrail" {
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
-    cloudtrailTrail  = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : var.cloudtrail_name
+    cloudtrailTrail = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : var.cloudtrail_name
   }
 
 
