@@ -164,8 +164,7 @@ resource "aws_cloudformation_stack" "cloudtrail" {
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
-    cloudtrailTrail  = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : var.cloudtrail_name
-    logRetentionDays = 30
+    cloudtrailTrail = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : var.cloudtrail_name
   }
 
 
@@ -489,13 +488,17 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
   topic {
     topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
     events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "AWSLogs/${var.account_id}/"
+    filter_prefix = "AWSLogs/"
   }
   topic {
     topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
     events        = ["s3:ObjectCreated:*"]
     filter_prefix = local.waf_log_prefix
   }
+
+  depends_on = [
+    aws_cloudformation_stack.cloudtrail[0],
+  ]
 }
 
 # CSPM
