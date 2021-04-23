@@ -115,7 +115,7 @@ resource "aws_cognito_identity_pool" "pool" {
 
 resource "aws_iam_role" "cognito_unauthorized" {
   count = var.create ? 1 : 0
-  name  = "${local.module_prefix}-unauth"
+  name  = join(var.delimiter, [local.module_prefix, "unauth"])
   tags  = local.tags
   # path = "/service-role/"
 
@@ -167,7 +167,7 @@ data "aws_iam_policy_document" "cognito_unauthorized" {
 
 resource "aws_iam_role_policy" "cognito_unauthorized" {
   count = var.create ? 1 : 0
-  name  = "${local.module_prefix}-unauth-access"
+  name  = join(var.delimiter, [local.module_prefix, "unauth", "access"])
 
   role   = aws_iam_role.cognito_unauthorized[0].name
   policy = data.aws_iam_policy_document.cognito_unauthorized[0].json
@@ -175,7 +175,7 @@ resource "aws_iam_role_policy" "cognito_unauthorized" {
 
 resource "aws_iam_policy_attachment" "cognito_unauthorized_custom" {
   count = var.create && var.cognito_unauthorized_custom_policy_arn != "" ? 1 : 0
-  name  = "${local.module_prefix}-custom-unauth-access"
+  name  = join(var.delimiter, [local.module_prefix, "custom", "unauth", "access"])
 
   roles      = [aws_iam_role.cognito_unauthorized[0].name]
   policy_arn = var.cognito_unauthorized_custom_policy_arn
@@ -185,7 +185,7 @@ resource "aws_iam_policy_attachment" "cognito_unauthorized_custom" {
 
 resource "aws_iam_role" "cognito_authorized" {
   count = var.create ? 1 : 0
-  name  = "${local.module_prefix}-auth"
+  name  = join(var.delimiter, [local.module_prefix, "auth"])
   tags  = local.tags
   # path = "/service-role/"
 
@@ -237,7 +237,7 @@ data "aws_iam_policy_document" "cognito_authorized" {
 
 resource "aws_iam_role_policy" "cognito_authorized" {
   count = var.create ? 1 : 0
-  name  = "${local.module_prefix}-auth-access"
+  name  = join(var.delimiter, [local.module_prefix, "auth", "access"])
 
   role   = aws_iam_role.cognito_authorized[0].name
   policy = data.aws_iam_policy_document.cognito_authorized[0].json
@@ -245,7 +245,7 @@ resource "aws_iam_role_policy" "cognito_authorized" {
 
 resource "aws_iam_policy_attachment" "cognito_authorized_custom" {
   count = var.create && var.cognito_authorized_custom_policy_arn != "" ? 1 : 0
-  name  = "${local.module_prefix}-custom-auth-access"
+  name  = join(var.delimiter, [local.module_prefix, "customer", "auth", "access"])
 
   roles      = [aws_iam_role.cognito_authorized[0].name]
   policy_arn = var.cognito_authorized_custom_policy_arn

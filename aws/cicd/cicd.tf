@@ -9,12 +9,12 @@ variable "parameter_store_key_arn" {
 }
 
 variable "cicd_elevated_policy_allow" {
-  type    = "list"
+  type    = list(string)
   default = ["*"]
 }
 
 variable "cicd_elevated_policy_deny" {
-  type    = "list"
+  type    = list(string)
   default = []
 }
 
@@ -56,15 +56,32 @@ resource "aws_iam_policy" "elevated" {
 
 resource "aws_iam_user" "elevated" {
   count = var.create ? 1 : 0
-  name  = "${local.module_prefix}-elevated-access"
+  name  = join(var.delimiter, [local.module_prefix, "elevated", "access"])
 
   tags = local.tags
 }
 
-resource "aws_iam_user_policy_attachment" "elevated" {
+resource "aws_iam_group" "elevated" {
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "elevated", "access"])
+  path  = "/"
+}
+
+resource "aws_iam_group_policy_attachment" "elevated" {
   count      = var.create ? 1 : 0
-  user       = aws_iam_user.elevated[0].name
+  group      = aws_iam_group.elevated[0].name
   policy_arn = aws_iam_policy.elevated[0].arn
+}
+
+resource "aws_iam_group_membership" "elevated" {
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "elevated", "access", "membership"])
+
+  users = [
+    aws_iam_user.elevated[0].name
+  ]
+
+  group = aws_iam_group.elevated[0].name
 }
 
 resource "aws_iam_access_key" "elevated" {

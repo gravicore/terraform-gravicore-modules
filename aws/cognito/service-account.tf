@@ -14,7 +14,7 @@ variable create_cognito_service_user {
 
 resource "aws_iam_user" "cognito" {
   count = var.create && var.create_cognito_service_user ? 1 : 0
-  name  = "${local.module_prefix}-access"
+  name  = join(var.delimiter, [local.module_prefix, "access"])
 
   tags = local.tags
 }
@@ -24,10 +24,10 @@ resource "aws_iam_access_key" "cognito" {
   user  = aws_iam_user.cognito[0].name
 }
 
-resource "aws_iam_user_policy" "cognito_read" {
+
+resource "aws_iam_policy" "cognito_read" {
   count = var.create && var.create_cognito_service_user ? 1 : 0
-  name  = "${local.module_prefix}-read-only"
-  user  = aws_iam_user.cognito[0].name
+  name  = join(var.delimiter, [local.module_prefix, "read", "only"])
 
   policy = <<EOF
 {
@@ -56,6 +56,29 @@ resource "aws_iam_user_policy" "cognito_read" {
     ]
 }
 EOF
+}
+
+resource "aws_iam_group" "cognito_read" {
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "read", "only"])
+  path  = "/"
+}
+
+resource "aws_iam_group_policy_attachment" "cognito_read" {
+  count      = var.create ? 1 : 0
+  group      = aws_iam_group.cognito_read[0].name
+  policy_arn = aws_iam_policy.cognito_read[0].arn
+}
+
+resource "aws_iam_group_membership" "cognito_read" {
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "read", "only", "membership"])
+
+  users = [
+    aws_iam_user.cognito[0].name
+  ]
+
+  group = aws_iam_group.cognito_read[0].name
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
