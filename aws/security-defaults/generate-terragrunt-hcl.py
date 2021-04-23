@@ -5,14 +5,16 @@ import sys, os, shutil
 from types import SimpleNamespace
 
 # CLI Arguments
-if len(sys.argv) != 4:
-    raise ValueError('Usage: ./generate-terragrunt-hcl.py [aws-profile] [stage] [output-dir] \n \
-        ie. ./generate-terragrunt-hcl.py default dev ./terragrunt/security-defaults')
+if len(sys.argv) != 6:
+    raise ValueError('Usage: ./generate-terragrunt-hcl.py [aws-profile] [stage] [default-security-groups=true|false] [delete-default-vpcs=true|false] [output-dir] \n \
+        ie. ./generate-terragrunt-hcl.py default dev true true ./terragrunt/security-defaults')
 
 # Set Arguments
 aws_profile = sys.argv[1]
 stage = sys.argv[2]
-output_dir = sys.argv[3]
+default_sg_groups = sys.argv[3]
+delete_default_vpcs = sys.argv[4]
+output_dir = sys.argv[5]
 
 # Get All Regions Associated to AWS Profile
 regions = json.loads(subprocess.check_output("aws ec2 describe-regions --profile " + aws_profile, shell=True), \
@@ -53,6 +55,9 @@ for region in regions.Regions:
         data = data.replace("###VPC_ID###", vpc.VpcId)
         data = data.replace("###AWS_REGION###", region.RegionName)
         data = data.replace("###SKIP_REGION_VALIDATION###", skip_region_validation)
+        data = data.replace("###DEFAULT_SECURITY_GROUP_RULES###", default_sg_groups)
+        data = data.replace("###DELETE_DEFAULT_VPCSs###", delete_default_vpcs)
+        
         f.close()
         f = open(stage_dir + "/stage." + stage + ".tfvars", "wt")
         f.write(data)

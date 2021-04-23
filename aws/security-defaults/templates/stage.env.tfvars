@@ -1,3 +1,5 @@
 default_aws_security_group_vpc_id = "###VPC_ID###"
 aws_region                        = "###AWS_REGION###"
 skip_region_validation            = "###SKIP_REGION_VALIDATION###"
+default_security_group_rules      = "###DEFAULT_SECURITY_GROUP_RULES###"
+delete_default_vpcs               = "###DELETE_DEFAULT_VPCSs###"
