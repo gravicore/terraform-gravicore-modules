@@ -30,7 +30,7 @@ variable "delete_default_vpcs" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_default_security_group" "default" {
-  count = var.default_security_group_rules == "true" ? 1 : 0
+  count  = var.default_security_group_rules == "true" ? 1 : 0
   vpc_id = var.default_aws_security_group_vpc_id
 }
 
