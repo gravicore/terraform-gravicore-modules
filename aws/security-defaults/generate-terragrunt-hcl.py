@@ -49,6 +49,10 @@ for region in regions.Regions:
         if region.RegionName == 'ap-northeast-3':
             skip_region_validation = "true"
 
+        # Check if VPC is a default VPC
+        if vpc.IsDefault:
+            delete_default_vpcs = "false"
+
         # Token replacement
         f = open(stage_dir + "/stage." + stage + ".tfvars", "rt")
         data = f.read()
