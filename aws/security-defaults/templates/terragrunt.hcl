@@ -7,7 +7,7 @@
 # Terragrunt will copy the Terraform configurations specified by the source parameter, along with any files in the
 # working directory, into a temporary folder, and execute your Terraform commands in that folder.
 terraform {
-  # source = "../../../terraform-gravicore-modules/aws//default"
+  # source = "../../../../../terraform-gravicore-modules//aws/security-defaults"
   source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/security-defaults?ref=master"
 
   # Copy providers.tf template that contains skip_region_validation property
