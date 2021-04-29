@@ -29,8 +29,11 @@ subs = json.loads(subprocess.check_output("aws --region=" + region + " ec2 descr
 
 # Loop Through Subnets and delete
 for sub in subs.Subnets:
-    sub = sub.SubnetId
-    subprocess.check_output("aws --region=" + region + " ec2 delete-subnet --subnet-id=" + str(sub), shell=True)
+    
+    # Check if part of same VPC
+    if (sub.VpcId == vpc_id):
+        sub = sub.SubnetId
+        subprocess.check_output("aws --region=" + region + " ec2 delete-subnet --subnet-id=" + str(sub), shell=True)
 
 try:
     # Delete vpc
