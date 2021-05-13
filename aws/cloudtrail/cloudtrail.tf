@@ -2,8 +2,52 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "attributes" {
+  type        = list(string)
+  default     = []
+  description = "Additional attributes (e.g. `1`)"
+}
+
+variable "origin_force_destroy" {
+  type        = bool
+  default     = false
+  description = "Delete all objects from the bucket  so that the bucket can be destroyed without error (e.g. `true` or `false`)"
+}
+
+variable "log_prefix" {
+  type        = string
+  default     = "cloudfront"
+  description = "Path of logs in S3 bucket"
+}
+
+variable "log_standard_transition_days" {
+  description = "Number of days to persist in the standard storage tier before moving to the glacier tier"
+  default     = 30
+}
+
+variable "log_glacier_transition_days" {
+  description = "Number of days after which to move the data to the glacier storage tier"
+  default     = 60
+}
+
+variable "log_expiration_days" {
+  description = "Number of days after which to expunge the objects"
+  default     = 90
+}
+
 variable "s3_bucket_versioning" {
   description = "S3 bucket versioning enabled?"
+  default     = false
+}
+
+variable "s3_bucket_access_logging" {
+  type        = bool
+  default     = true
+  description = "Access logging of S3 buckets"
+}
+
+variable "s3_bucket_ssl_requests_only" {
+  description = "S3 bucket ssl requests only?"
   default     = false
 }
 
@@ -59,6 +103,14 @@ resource "aws_s3_bucket" "default" {
   region = var.aws_region
   acl    = "private"
 
+  dynamic "logging" {
+    for_each = var.s3_bucket_access_logging ? [1] : []
+    content {
+      target_bucket = module.logs.bucket_id
+      target_prefix = "access-logs/"
+    }
+  }
+
   versioning {
     enabled = var.s3_bucket_versioning
   }
@@ -97,11 +149,73 @@ resource "aws_s3_bucket" "default" {
                     "s3:x-amz-acl": "bucket-owner-full-control"
                 }
             }
+        },
+        {
+          "Principal": {
+            "AWS": "*"
+          },
+          "Action": [
+            "s3:*"
+          ],
+          "Resource": [
+            "arn:aws:s3:::${local.module_prefix}-events/*",
+            "arn:aws:s3:::${local.module_prefix}-events"
+          ],
+          "Effect": "Deny",
+          "Condition": {
+            "Bool": {
+              "aws:SecureTransport": "false"
+            }
+          }
         }
     ]
 }
 POLICY
   tags   = local.tags
+}
+
+module "logs" {
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  namespace  = ""
+  stage      = ""
+  name       = local.module_prefix
+  delimiter  = var.delimiter
+  attributes = compact(concat(var.attributes, ["logs"]))
+
+  versioning_enabled     = var.s3_bucket_versioning ? true : false
+  access_log_bucket_name = var.s3_bucket_access_logging ? join(var.delimiter, [local.module_prefix, "logs"]) : ""
+
+  policy = var.s3_bucket_ssl_requests_only == false ? "" : jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Principal" : {
+            "AWS" : "*"
+          },
+          "Action" : [
+            "s3:*"
+          ],
+          "Resource" : [
+            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}/*",
+            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}"
+          ],
+          "Effect" : "Deny",
+          "Condition" : {
+            "Bool" : {
+              "aws:SecureTransport" : "false"
+            }
+          }
+        }
+      ]
+  })
+
+  tags                     = local.tags
+  lifecycle_prefix         = var.log_prefix
+  standard_transition_days = var.log_standard_transition_days
+  glacier_transition_days  = var.log_glacier_transition_days
+  expiration_days          = var.log_expiration_days
+  force_destroy            = var.origin_force_destroy
 }
 
 resource "aws_s3_bucket_public_access_block" "default" {

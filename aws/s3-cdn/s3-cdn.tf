@@ -114,6 +114,27 @@ variable "log_expiration_days" {
   default     = 90
 }
 
+variable "s3_bucket_versioning" {
+  description = "S3 bucket versioning enabled?"
+  default     = false
+}
+
+variable "s3_bucket_access_logging" {
+  type        = bool
+  default     = true
+  description = "Access logging of S3 buckets enabled?"
+}
+
+variable "s3_bucket_ssl_requests_only" {
+  description = "S3 bucket ssl requests only?"
+  default     = false
+}
+
+variable "access_log_bucket_name" {
+  description = "Access log bucket name"
+  default     = ""
+}
+
 variable "forward_query_string" {
   type        = bool
   default     = false
@@ -367,6 +388,28 @@ data "aws_iam_policy_document" "origin" {
       identifiers = [aws_cloudfront_origin_access_identity.default.iam_arn]
     }
   }
+
+  dynamic "statement" {
+    for_each = var.s3_bucket_ssl_requests_only ? [] : [1]
+
+    content {
+      actions   = ["s3:*"]
+      resources = ["arn:aws:s3:::${local.module_prefix}/*", "arn:aws:s3:::${local.module_prefix}"]
+
+      principals {
+        type        = "AWS"
+        identifiers = ["*"]
+      }
+
+      effect = "Deny"
+
+      condition {
+        test     = "Bool"
+        variable = "aws:SecureTransport"
+        values   = ["false"]
+      }
+    }
+  }
 }
 
 data "template_file" "default" {
@@ -404,6 +447,18 @@ resource "aws_s3_bucket" "origin" {
     max_age_seconds = var.cors_max_age_seconds
   }
 
+  versioning {
+    enabled = var.s3_bucket_versioning ? true : false
+  }
+
+  dynamic "logging" {
+    for_each = var.s3_bucket_access_logging ? [1] : []
+    content {
+      target_bucket = module.logs.bucket_id
+      target_prefix = "access-logs/"
+    }
+  }
+
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
@@ -415,12 +470,41 @@ resource "aws_s3_bucket" "origin" {
 }
 
 module "logs" {
-  source                   = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.5.0"
-  namespace                = ""
-  stage                    = ""
-  name                     = local.module_prefix
-  delimiter                = var.delimiter
-  attributes               = compact(concat(var.attributes, ["logs"]))
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  namespace  = ""
+  stage      = ""
+  name       = local.module_prefix
+  delimiter  = var.delimiter
+  attributes = compact(concat(var.attributes, ["logs"]))
+
+  versioning_enabled     = var.s3_bucket_versioning ? true : false
+  access_log_bucket_name = var.s3_bucket_access_logging ? join(var.delimiter, [local.module_prefix, "logs"]) : ""
+
+  policy = var.s3_bucket_ssl_requests_only == false ? "" : jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Principal" : {
+            "AWS" : "*"
+          },
+          "Action" : [
+            "s3:*"
+          ],
+          "Resource" : [
+            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}/*",
+            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}"
+          ],
+          "Effect" : "Deny",
+          "Condition" : {
+            "Bool" : {
+              "aws:SecureTransport" : "false"
+            }
+          }
+        }
+      ]
+  })
+
   tags                     = local.tags
   lifecycle_prefix         = var.log_prefix
   standard_transition_days = var.log_standard_transition_days
@@ -428,7 +512,6 @@ module "logs" {
   expiration_days          = var.log_expiration_days
   force_destroy            = var.origin_force_destroy
 }
-
 
 data "aws_s3_bucket" "selected" {
   bucket = local.bucket == "" ? var.static_s3_bucket : local.bucket
