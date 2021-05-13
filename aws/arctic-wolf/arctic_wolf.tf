@@ -42,7 +42,7 @@ variable s3_bucket_versioning {
 
 variable "s3_bucket_access_logging" {
   type        = bool
-  default     = true
+  default     = false
   description = "Access logging of S3 buckets"
 }
 
