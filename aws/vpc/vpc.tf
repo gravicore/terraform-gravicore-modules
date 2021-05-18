@@ -160,7 +160,7 @@ locals {
 }
 
 module "vpc" {
-  source     = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc?ref=v2.33.0"
+  source     = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc?ref=v2.78.0"
   create_vpc = var.create
   name       = local.module_prefix
   tags       = local.tags
@@ -229,7 +229,7 @@ module "vpc" {
   enable_sagemaker_notebook_endpoint       = var.enable_sagemaker_notebook_endpoint
   enable_sagemaker_api_endpoint            = var.enable_sagemaker_api_endpoint
   enable_sagemaker_runtime_endpoint        = var.enable_sagemaker_runtime_endpoint
-  enable_appstream_endpoint                = var.enable_appstream_endpoint
+  enable_appstream_api_endpoint            = var.enable_appstream_endpoint
   enable_appmesh_envoy_management_endpoint = var.enable_appmesh_envoy_management_endpoint
   enable_athena_endpoint                   = var.enable_athena_endpoint
   enable_rekognition_endpoint              = var.enable_rekognition_endpoint
@@ -270,7 +270,7 @@ module "vpc" {
   sagemaker_notebook_endpoint_security_group_ids       = coalescelist(var.sagemaker_notebook_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   sagemaker_api_endpoint_security_group_ids            = coalescelist(var.sagemaker_api_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   sagemaker_runtime_endpoint_security_group_ids        = coalescelist(var.sagemaker_runtime_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
-  appstream_endpoint_security_group_ids                = coalescelist(var.appstream_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
+  appstream_api_endpoint_security_group_ids            = coalescelist(var.appstream_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   appmesh_envoy_management_endpoint_security_group_ids = coalescelist(var.appmesh_envoy_management_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   athena_endpoint_security_group_ids                   = coalescelist(var.athena_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   rekognition_endpoint_security_group_ids              = coalescelist(var.rekognition_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
@@ -311,7 +311,7 @@ module "vpc" {
   sagemaker_notebook_endpoint_private_dns_enabled       = var.sagemaker_notebook_endpoint_private_dns_enabled
   sagemaker_api_endpoint_private_dns_enabled            = var.sagemaker_api_endpoint_private_dns_enabled
   sagemaker_runtime_endpoint_private_dns_enabled        = var.sagemaker_runtime_endpoint_private_dns_enabled
-  appstream_endpoint_private_dns_enabled                = var.appstream_endpoint_private_dns_enabled
+  appstream_api_endpoint_private_dns_enabled            = var.appstream_endpoint_private_dns_enabled
   appmesh_envoy_management_endpoint_private_dns_enabled = var.appmesh_envoy_management_endpoint_private_dns_enabled
   athena_endpoint_private_dns_enabled                   = var.athena_endpoint_private_dns_enabled
   rekognition_endpoint_private_dns_enabled              = var.rekognition_endpoint_private_dns_enabled
