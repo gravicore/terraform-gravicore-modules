@@ -75,9 +75,9 @@ output "vpc_azs_available" {
   }]
 }
 
-resource "aws_ssm_parameter" "parameter_azs-available" {
+resource "aws_ssm_parameter" "parameter_azs_available" {
   count       = var.create && local.az_zone_ids_available != "" ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}_azs-available"
+  name        = "/${local.stage_prefix}/${var.name}-azs-available"
   description = format("%s %s", var.desc_prefix, "List of the available Availability Zones for the VPC")
   tags        = var.tags
 
