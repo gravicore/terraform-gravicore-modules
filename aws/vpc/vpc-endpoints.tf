@@ -1042,9 +1042,9 @@ locals {
   } } : {}
 
   vpc_endpoint_appstream = var.enable_appstream_endpoint ? { "appstream" = {
-    id                    = module.vpc.vpc_endpoint_appstream_id
-    dns_entry             = module.vpc.vpc_endpoint_appstream_dns_entry
-    network_interface_ids = module.vpc.vpc_endpoint_appstream_network_interface_ids
+    id                    = module.vpc.vpc_endpoint_appstream_api_id
+    dns_entry             = module.vpc.vpc_endpoint_appstream_api_dns_entry
+    network_interface_ids = module.vpc.vpc_endpoint_appstream_api_network_interface_ids
     security_group_ids    = coalescelist(var.appstream_endpoint_security_group_ids, local.default_endpoint_security_group_ids)
   } } : {}
 
