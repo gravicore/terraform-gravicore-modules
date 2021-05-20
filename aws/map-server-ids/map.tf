@@ -241,13 +241,13 @@ resource "aws_cloudformation_stack" "map35" {
 
   capabilities = ["CAPABILITY_IAM"]
 
-  count        = var.create ? 1 : 0
-  name         = join(var.delimiter, [local.module_prefix])
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix])
 
   template_body = data.template_file.server_ids.rendered
 
   parameters = {
-    MPE = var.mpe_id
+    MPE      = var.mpe_id
     S3Region = var.aws_region
   }
 }
