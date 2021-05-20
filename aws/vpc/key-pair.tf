@@ -48,9 +48,9 @@ output "vpc_key_pair_private_pem" {
   sensitive   = true
 }
 
-resource "aws_ssm_parameter" "parameter_key-pair-private-pem" {
+resource "aws_ssm_parameter" "parameter_key_pair_private_pem" {
   count       = var.create ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}_key-pair-private-pem"
+  name        = "/${local.stage_prefix}/${var.name}-key-pair-private-pem"
   description = format("%s %s", var.desc_prefix, "Private SSH Key for EC2 Instances in private VPC Subnets")
   tags        = var.tags
 
