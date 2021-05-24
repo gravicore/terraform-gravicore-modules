@@ -96,7 +96,7 @@ resource "aviatrix_vpn_profile" "profiles" {
 # SSM Parameters
 
 module "parameters_vpn_profiles" {
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
   # source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=GRVDEV-81-Create-Aviatrix-modules"
   providers   = { aws = aws }
   create      = var.create && var.create_parameters

@@ -31,7 +31,7 @@ resource "aviatrix_account" "accounts" {
 # SSM Parameters
 
 module "parameters_accounts" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
   providers   = { aws = "aws" }
   create      = var.create && var.create_parameters
   namespace   = var.namespace
