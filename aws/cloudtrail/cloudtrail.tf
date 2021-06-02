@@ -192,7 +192,7 @@ module "logs" {
       "Version" : "2012-10-17",
       "Statement" : [
         {
-          "Sid": "AllowSSLRequestsOnly",
+          "Sid" : "AllowSSLRequestsOnly",
           "Principal" : {
             "AWS" : "*"
           },

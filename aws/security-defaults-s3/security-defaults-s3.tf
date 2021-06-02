@@ -130,10 +130,10 @@ resource "null_resource" "update_s3_buckets" {
   count = length(var.s3_bucket_names)
 
   triggers = {
-    s3_bucket_versioning = var.s3_bucket_versioning
-    s3_bucket_access_logging = var.s3_bucket_access_logging
+    s3_bucket_versioning        = var.s3_bucket_versioning
+    s3_bucket_access_logging    = var.s3_bucket_access_logging
     s3_bucket_ssl_requests_only = var.s3_bucket_ssl_requests_only
-    script_hash = "${sha256(file("${path.module}/scripts/update-s3-buckets.py"))}"
+    script_hash                 = "${sha256(file("${path.module}/scripts/update-s3-buckets.py"))}"
   }
 
   provisioner "local-exec" {
