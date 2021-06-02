@@ -36,17 +36,19 @@ variable "log_expiration_days" {
 }
 
 variable "s3_bucket_versioning" {
+  type        = bool
   description = "S3 bucket versioning enabled?"
   default     = false
 }
 
 variable "s3_bucket_access_logging" {
   type        = bool
-  default     = false
   description = "Access logging of S3 buckets"
+  default     = false
 }
 
 variable "s3_bucket_ssl_requests_only" {
+  type        = bool
   description = "S3 bucket ssl requests only?"
   default     = false
 }
@@ -190,6 +192,7 @@ module "logs" {
       "Version" : "2012-10-17",
       "Statement" : [
         {
+          "Sid": "AllowSSLRequestsOnly",
           "Principal" : {
             "AWS" : "*"
           },
