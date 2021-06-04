@@ -123,7 +123,7 @@ variable on_failure {
 }
 
 variable notification_arns {
-  type        = string
+  type        = list
   default     = null
   description = "(Optional) A list of SNS topic ARNs to publish stack related events"
 }
@@ -146,7 +146,7 @@ variable timeout_in_minutes {
 
 resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
   count        = var.create ? 1 : 0
-  name         = join(var.delimiter, [local.module_prefix, "workspace-cost-optimizer"])
+  name         = local.module_prefix
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"]
   tags         = local.tags
 
@@ -179,7 +179,7 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
 
   disable_rollback   = var.disable_rollback
   on_failure         = var.on_failure
-  notification_arns  = var.notification_arnsterragrunt
+  notification_arns  = var.notification_arns
   iam_role_arn       = var.iam_role_arn
   timeout_in_minutes = var.timeout_in_minutes
 }
