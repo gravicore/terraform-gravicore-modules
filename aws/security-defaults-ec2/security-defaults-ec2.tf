@@ -22,8 +22,8 @@ resource "null_resource" "update_ec2_instances" {
   count = length(var.instance_ids)
 
   triggers = {
-    enable_http_tokens        = var.enable_http_tokens
-    script_hash                 = "${sha256(file("${path.module}/scripts/update-ec2-instances.py"))}"
+    enable_http_tokens = var.enable_http_tokens
+    script_hash        = "${sha256(file("${path.module}/scripts/update-ec2-instances.py"))}"
   }
 
   provisioner "local-exec" {
