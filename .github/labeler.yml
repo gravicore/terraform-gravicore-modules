@@ -77,6 +77,8 @@ aws/s3-cdn:
  - aws/s3-cdn/**/*
 aws/security-defaults:
  - aws/security-defaults/**/*
+aws/security-defaults-ec2:
+ - aws/security-defaults-ec2/**/*
 aws/security-defaults-lambda:
  - aws/security-defaults-lambda/**/*
 aws/terraform-backend:
