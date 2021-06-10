@@ -168,9 +168,9 @@ resource "aws_s3_bucket" "default" {
 
 resource "aws_s3_bucket_inventory" "default" {
   for_each = var.bucekt_inventory
-  bucket = aws_s3_bucket.default[0].id
-  name   = each.key
-  enabled = lookup(each.value, "enabled", true)
+  bucket   = aws_s3_bucket.default[0].id
+  name     = each.key
+  enabled  = lookup(each.value, "enabled", true)
 
   included_object_versions = lookup(each.value, "included_object_versions", "All")
 
@@ -191,7 +191,7 @@ resource "aws_s3_bucket_inventory" "default" {
       bucket_arn = each.value.destination_bucekt_bucket_arn
       prefix     = lookup(each.value, "destination_bucekt_prefix", null)
       account_id = lookup(each.value, "destination_account_id", null)
-      dynamic "encryption"{
+      dynamic "encryption" {
         for_each = lookup(each.value, "destination_bucekt_sse_kms", null) != null ? list(lookup(each.value, "destination_bucekt_sse_kms", "")) : []
         content {
           sse_kms {
@@ -199,12 +199,12 @@ resource "aws_s3_bucket_inventory" "default" {
           }
         }
       }
-      dynamic "encryption"{
+      dynamic "encryption" {
         for_each = lookup(each.value, "destination_bucekt_sse_s3", null) ? list(lookup(each.value, "destination_bucekt_sse_s3", "")) : []
         content {
           sse_s3 {}
         }
-      } 
+      }
     }
   }
   optional_fields = lookup(each.value, "optional_fields", null)
