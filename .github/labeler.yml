@@ -87,4 +87,6 @@ aws/vpc-dhcp:
  - aws/vpc-dhcp/**/*
 aws/vpc-dns:
  - aws/vpc-dns/**/*
- 
+aws/workspace-cost-optimizer:
+ - aws/workspace-cost-optimizer/**/*
+  
