@@ -4,6 +4,30 @@ variable "s3_bucket_versioning" {
   default     = true
 }
 
+variable "s3_bucket_access_logging" {
+  type        = bool
+  description = "Access logging of S3 buckets"
+  default     = false
+}
+
+variable "s3_logging_bucket" {
+  type        = string
+  description = "S3 logging bucket name for logs"
+  default     = ""
+}
+
+variable "s3_bucket_ssl_requests_only" {
+  type        = bool
+  description = "S3 bucket ssl requests only?"
+  default     = false
+}
+
+variable "s3_bucket_acl" {
+  type        = string
+  description = "S3 bucket acl"
+  default     = "private"
+}
+
 variable "sse_algorithm" {
   type        = string
   default     = "AES256"
@@ -72,11 +96,45 @@ resource "aws_s3_bucket" "default" {
   count  = var.create ? 1 : 0
   bucket = local.module_prefix
   region = var.aws_region
-  acl    = "private"
+  acl    = var.s3_bucket_acl
 
   versioning {
     enabled = var.s3_bucket_versioning
   }
+
+  dynamic "logging" {
+    for_each = var.s3_bucket_access_logging ? [1] : []
+    content {
+      target_bucket = var.s3_bucket_access_logging && var.s3_logging_bucket != "" ? var.s3_logging_bucket : ""
+      target_prefix = join(var.delimiter, [var.s3_logging_bucket, "access-logs/"])
+    }
+  }
+
+  policy = var.s3_bucket_ssl_requests_only == false ? "" : jsonencode(
+    {
+      "Version" : "2012-10-17",
+      "Statement" : [
+        {
+          "Sid" : "AllowSSLRequestsOnly",
+          "Principal" : {
+            "AWS" : "*"
+          },
+          "Action" : [
+            "s3:*"
+          ],
+          "Resource" : [
+            "arn:aws:s3:::${local.module_prefix}/*",
+            "arn:aws:s3:::${local.module_prefix}"
+          ],
+          "Effect" : "Deny",
+          "Condition" : {
+            "Bool" : {
+              "aws:SecureTransport" : "false"
+            }
+          }
+        }
+      ]
+  })
 
   server_side_encryption_configuration {
     rule {
@@ -156,7 +214,7 @@ resource "aws_s3_bucket_public_access_block" "default" {
 
 resource "aws_iam_user" "default" {
   count = var.create && var.create_s3_service_user ? 1 : 0
-  name  = "${local.module_prefix}-access"
+  name  = join(var.delimiter, [local.module_prefix, "access"])
   tags  = local.tags
 }
 
@@ -167,7 +225,7 @@ resource "aws_iam_access_key" "default" {
 
 resource "aws_iam_user_policy" "default" {
   count = var.create && var.create_s3_service_user ? 1 : 0
-  name  = "${local.module_prefix}-read-write"
+  name  = join(var.delimiter, [local.module_prefix, "read", "write"])
   user  = aws_iam_user.default[0].name
 
   policy = <<EOF
