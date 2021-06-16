@@ -188,7 +188,7 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-output workspace_cost_optimizer_stack_outputs {
+output wco_stack_outputs {
   value     = aws_cloudformation_stack.workspace_cost_optimizer[0].outputs
   sensitive = false
 }
