@@ -14,7 +14,7 @@ variable "name" {
 
 variable terraform_module {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/workspace-cost-optimizer"
+  default     = "gravicore/terraform-gravicore-modules/aws/wco"
   description = "The owner and name of the Terraform module"
 }
 
