@@ -182,7 +182,6 @@ resource "aws_s3_bucket" "default" {
   bucket = "${local.module_prefix}-cloudtrail-events"
   tags   = local.tags
 
-  region = var.aws_region
   acl    = "private"
 
   dynamic "logging" {

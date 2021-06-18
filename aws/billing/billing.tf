@@ -8,7 +8,6 @@ resource "aws_s3_bucket" "billing" {
   bucket = local.module_prefix
   tags   = var.tags
 
-  region = var.aws_region
   acl    = "private"
 
   versioning {
