@@ -95,7 +95,6 @@ variable "ssm_key_id" {
 resource "aws_s3_bucket" "default" {
   count  = var.create ? 1 : 0
   bucket = local.module_prefix
-  region = var.aws_region
   acl    = var.s3_bucket_acl
 
   versioning {
