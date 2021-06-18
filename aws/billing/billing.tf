@@ -8,7 +8,7 @@ resource "aws_s3_bucket" "billing" {
   bucket = local.module_prefix
   tags   = var.tags
 
-  acl    = "private"
+  acl = "private"
 
   versioning {
     enabled = var.s3_bucket_versioning

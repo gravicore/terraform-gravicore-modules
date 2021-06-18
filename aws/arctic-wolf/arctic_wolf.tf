@@ -182,7 +182,7 @@ resource "aws_s3_bucket" "default" {
   bucket = "${local.module_prefix}-cloudtrail-events"
   tags   = local.tags
 
-  acl    = "private"
+  acl = "private"
 
   dynamic "logging" {
     for_each = var.s3_bucket_access_logging ? [1] : []
