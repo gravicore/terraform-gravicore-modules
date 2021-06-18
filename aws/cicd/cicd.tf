@@ -92,7 +92,6 @@ resource "aws_iam_access_key" "elevated" {
 resource "aws_s3_bucket" "default" {
   count  = var.create && var.deploy_artifacts_bucket ? 1 : 0
   bucket = join(var.delimiter, [local.module_prefix, "artifacts"])
-  region = var.aws_region
   acl    = "private"
 
   versioning {

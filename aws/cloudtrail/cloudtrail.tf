@@ -100,7 +100,6 @@ variable "vpc_flow_log_group_name" {
 resource "aws_s3_bucket" "default" {
   count  = var.create ? 1 : 0
   bucket = join("-", [local.module_prefix, "events"])
-  region = var.aws_region
   acl    = "private"
 
   dynamic "logging" {

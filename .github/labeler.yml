@@ -89,4 +89,6 @@ aws/vpc-dhcp:
  - aws/vpc-dhcp/**/*
 aws/vpc-dns:
  - aws/vpc-dns/**/*
- 
+aws/wco:
+ - aws/wco/**/*
+  
