@@ -88,23 +88,23 @@ variable "ssm_key_id" {
   description = "The KMS key id or arn for encrypting a SecureString"
 }
 
-variable bucekt_inventory {
+variable bucket_inventory {
   type        = map(any)
   default     = {}
   description = <<EOF
-bucekt_inventory = {
-  <name> = {                      # string,       (Required) Unique identifier of the inventory configuration for the bucket 
+bucket_inventory = {
+  <id> = {                      # string,       (Required) Unique identifier of the inventory configuration for the bucket 
     enabled                       = bool,         (Optional, Default: true) Specifies whether the inventory is enabled or disabled
     frequency                     = string,       (Required, Default: Daily) Specifies how frequently inventory results are produced. Valid values: Daily, Weekly.
     filter                        = string,       (Optional) The prefix that an object must have to be included in the inventory results
     included_object_versions      = string,       (Required, Default: All) Object versions to include in the inventory list. Valid values: All, Current
     optional_fields               = list(string), (Optional) List of optional fields that are included in the inventory results. Valid values: Size, LastModifiedDate, StorageClass, ETag, IsMultipartUploaded, ReplicationStatus, EncryptionStatus, ObjectLockRetainUntilDate, ObjectLockMode, ObjectLockLegalHoldStatus, IntelligentTieringAccessTier
-    destination_bucekt_format     = string,       (Required) Specifies the output format of the inventory results. Can be CSV, ORC or Parquet
-    destination_bucekt_bucket_arn = string,       (Required) The Amazon S3 bucket ARN of the destination
-    destination_bucekt_prefix     = string,       (Optional) The prefix that is prepended to all inventory results
+    destination_bucket_format     = string,       (Required) Specifies the output format of the inventory results. Can be CSV, ORC or Parquet
+    destination_bucket_bucket_arn = string,       (Required) The Amazon S3 bucket ARN of the destination
+    destination_bucket_prefix     = string,       (Optional) The prefix that is prepended to all inventory results
     destination_account_id        = string        (Optional) The ID of the account that owns the destination bucket. Recommended to be set to prevent problems if the destination bucket ownership changes
-    destination_bucekt_sse_s3     = bool,         (Optional) Specifies to use server-side encryption with Amazon S3-managed keys (SSE-S3) to encrypt the inventory file
-    destination_bucekt_sse_kms    = string,       (Optional) The ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
+    destination_bucket_sse_s3     = bool,         (Optional) Specifies to use server-side encryption with Amazon S3-managed keys (SSE-S3) to encrypt the inventory file
+    destination_bucket_sse_kms    = string,       (Optional) The ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
   }
 }
 EOF
@@ -224,7 +224,7 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_s3_bucket_inventory" "default" {
-  for_each = var.bucekt_inventory
+  for_each = var.bucket_inventory
   bucket   = aws_s3_bucket.default[0].id
   name     = each.key
   enabled  = lookup(each.value, "enabled", true)
@@ -244,12 +244,12 @@ resource "aws_s3_bucket_inventory" "default" {
 
   destination {
     bucket {
-      format     = each.value.destination_bucekt_format
-      bucket_arn = each.value.destination_bucekt_bucket_arn
-      prefix     = lookup(each.value, "destination_bucekt_prefix", null)
+      format     = each.value.destination_bucket_format
+      bucket_arn = each.value.destination_bucket_bucket_arn
+      prefix     = lookup(each.value, "destination_bucket_prefix", null)
       account_id = lookup(each.value, "destination_account_id", null)
       dynamic "encryption" {
-        for_each = lookup(each.value, "destination_bucekt_sse_kms", null) != null ? list(lookup(each.value, "destination_bucekt_sse_kms", "")) : []
+        for_each = lookup(each.value, "destination_bucket_sse_kms", null) != null ? list(lookup(each.value, "destination_bucket_sse_kms", "")) : []
         content {
           sse_kms {
             key_id = encryption.value
@@ -257,7 +257,7 @@ resource "aws_s3_bucket_inventory" "default" {
         }
       }
       dynamic "encryption" {
-        for_each = lookup(each.value, "destination_bucekt_sse_s3", null) ? list(lookup(each.value, "destination_bucekt_sse_s3", "")) : []
+        for_each = lookup(each.value, "destination_bucket_sse_s3", null) ? list(lookup(each.value, "destination_bucket_sse_s3", "")) : []
         content {
           sse_s3 {}
         }
