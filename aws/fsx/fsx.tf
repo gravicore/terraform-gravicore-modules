@@ -244,8 +244,8 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp_3" {
   for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg3[0].id
   type              = "ingress"
-  from_port         = var.fsx_tcp_allowed_ports[count.index]
-  to_port           = var.fsx_tcp_allowed_ports[count.index]
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
   protocol          = "tcp"
   cidr_blocks       = var.ingress_cidrs_3
 }
