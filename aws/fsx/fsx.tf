@@ -43,8 +43,9 @@ variable "storage_capacity" {
 
 
 variable "throughput_capacity" {
-  type    = string
-  default = ""
+  type    = number
+  default = 1024
+  description = "(Required) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of 8 and maximum of 2048"
 }
 
 variable "storage_type" {
