@@ -84,10 +84,10 @@ resource "aws_fsx_windows_file_system" "default" {
   preferred_subnet_id              = element(var.vpc_private_subnets, 0)
   storage_type                     = var.storage_type
   security_group_ids               = [
-    aws_security_group.fsxsg1[0].id
-    aws_security_group.fsxsg2[0].id
-    aws_security_group.fsxsg3[0].id
-    aws_security_group.fsxsg4[0].id
+    aws_security_group.fsxsg1[0].id,
+    aws_security_group.fsxsg2[0].id,
+    aws_security_group.fsxsg3[0].id,
+    aws_security_group.fsxsg4[0].id,
   ]
   tags                             = local.tags
 }
