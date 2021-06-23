@@ -83,7 +83,12 @@ resource "aws_fsx_windows_file_system" "default" {
   deployment_type                  = var.deployment_type
   preferred_subnet_id              = element(var.vpc_private_subnets, 0)
   storage_type                     = var.storage_type
-  security_group_ids               = [ aws_security_group.fsxsg1.id ]
+  security_group_ids               = [
+    aws_security_group.fsxsg1[0].id
+    aws_security_group.fsxsg2[0].id
+    aws_security_group.fsxsg3[0].id
+    aws_security_group.fsxsg4[0].id
+  ]
   tags                             = local.tags
 }
 
@@ -139,7 +144,7 @@ variable "fsx_udp_allowed_ports" {
 # ----------------------------------------------
 resource "aws_security_group" "fsxsg1" {
   count = var.create ? 1 : 0
-  name  = join("-", [local.module_prefix, "fsx1"])
+  name  = join("-", [local.module_prefix, "1"])
   description = "common FSx ports"
   vpc_id      = var.vpc_id
   egress {
@@ -180,7 +185,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
 # ----------------------------------------------
 resource "aws_security_group" "fsxsg2" {
   count = var.create ? 1 : 0
-  name  = join("-", [local.module_prefix, "fsx2"])
+  name  = join("-", [local.module_prefix, "2"])
   description = "common FSx ports"
   vpc_id      = var.vpc_id
   egress {
@@ -220,7 +225,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
 # ----------------------------------------------
 resource "aws_security_group" "fsxsg3" {
   count = var.create ? 1 : 0
-  name  = join("-", [local.module_prefix, "fsx3"])
+  name  = join("-", [local.module_prefix, "3"])
   description = "common FSx ports"
   vpc_id      = var.vpc_id
   egress {
@@ -260,7 +265,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
 # ----------------------------------------------
 resource "aws_security_group" "fsxsg4" {
   count = var.create ? 1 : 0
-  name  = join("-", [local.module_prefix, "fsx4"])
+  name  = join("-", [local.module_prefix, "4"])
   description = "common FSx ports"
   vpc_id      = var.vpc_id
   egress {

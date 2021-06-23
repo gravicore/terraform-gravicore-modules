@@ -8,7 +8,7 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "ad"
+  default     = "fsx"
   description = "The name of the module"
 }
 
