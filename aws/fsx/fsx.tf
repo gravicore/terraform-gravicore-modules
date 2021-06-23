@@ -160,7 +160,7 @@ resource "aws_security_group" "fsxsg1" {
 }
 
  
-resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
+resource "aws_security_group_rule" "allow_ingress_cidr_tcp_1" {
   for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg1[0].id
   type              = "ingress"
@@ -170,7 +170,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
   cidr_blocks       = var.ingress_cidrs_1
 }
 
-resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
+resource "aws_security_group_rule" "allow_ingress_cidr_udp_1" {
   for_each = {for port in var.fsx_udp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg1[0].id
   type              = "ingress"
@@ -200,7 +200,7 @@ resource "aws_security_group" "fsxsg2" {
   ))
 }
 
-resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
+resource "aws_security_group_rule" "allow_ingress_cidr_tcp_2" {
   for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg2[0].id
   type              = "ingress"
@@ -210,7 +210,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
   cidr_blocks       = var.ingress_cidrs_2
 }
 
-resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
+resource "aws_security_group_rule" "allow_ingress_cidr_udp_2" {
   for_each = {for port in var.fsx_udp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg2[0].id
   type              = "ingress"
@@ -240,7 +240,7 @@ resource "aws_security_group" "fsxsg3" {
   ))
 }
 
-resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
+resource "aws_security_group_rule" "allow_ingress_cidr_tcp_3" {
   for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg3[0].id
   type              = "ingress"
@@ -250,7 +250,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
   cidr_blocks       = var.ingress_cidrs_3
 }
 
-resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
+resource "aws_security_group_rule" "allow_ingress_cidr_udp_3" {
   for_each = {for port in var.fsx_udp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg3[0].id
   type              = "ingress"
@@ -281,7 +281,7 @@ resource "aws_security_group" "fsxsg4" {
 }
 
 
-resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
+resource "aws_security_group_rule" "allow_ingress_cidr_tcp_4" {
   for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg4[0].id
   type              = "ingress"
@@ -291,7 +291,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
   cidr_blocks       = var.ingress_cidrs_4
 }
 
-resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
+resource "aws_security_group_rule" "allow_ingress_cidr_udp_4" {
   for_each = {for port in var.fsx_udp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg4[0].id
   type              = "ingress"
