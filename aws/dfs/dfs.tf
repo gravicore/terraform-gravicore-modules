@@ -349,10 +349,10 @@ resource "aws_instance" "default" {
   EOF
   get_password_data = var.get_password_data
   vpc_security_group_ids = [
-    "${aws_security_group.default[0].id}",
-    "${aws_security_group.secondary[0].id}"
+    aws_security_group.default[0].id,
+
   ]
-  iam_instance_profile        = "${aws_iam_instance_profile.ec2_ad_instance_profile.name}"
+  iam_instance_profile        = aws_iam_instance_profile.ec2_ad_instance_profile.name
   associate_public_ip_address = var.associate_public_ip_address
   private_ip                  = "${element(var.private_ips, count.index)}"
   ipv6_address_count          = var.ipv6_address_count

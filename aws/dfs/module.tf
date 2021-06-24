@@ -8,7 +8,7 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "dc"
+  default     = "dfs"
   description = "The name of the module"
 }
 
