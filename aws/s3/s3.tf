@@ -109,6 +109,7 @@ bucket_inventory = {
 }
 
 Each destination bucket will need a policy added as follows
+
 {
   "Version": "2008-10-17",
   "Id": "SegmentWritePolicy",
@@ -394,6 +395,7 @@ output "s3_bucket_inventory_policy" {
   value = var.bucket_inventory == {} ? "" : <<EOF
 
 Each destination bucket will need a policy added as follows
+
 {
   "Version": "2008-10-17",
   "Id": "SegmentWritePolicy",
