@@ -130,7 +130,7 @@ variable "private_ip" {
 variable "private_ips" {
   description = "A list of private IP address to associate with the instance in a VPC. Should match the number of instances."
   type    = list(string)
-  default = ["10.128.134.224", "10.128.139.178"]
+  default = null
 }
 
 variable "source_dest_check" {
@@ -354,7 +354,7 @@ resource "aws_instance" "default" {
   ]
   iam_instance_profile        = aws_iam_instance_profile.ec2_ad_instance_profile.name
   associate_public_ip_address = var.associate_public_ip_address
-  private_ip                  = "${element(var.private_ips, count.index)}"
+  private_ip                  = element(var.private_ips, count.index)
   ipv6_address_count          = var.ipv6_address_count
   ipv6_addresses              = var.ipv6_addresses
   ebs_optimized = var.ebs_optimized
