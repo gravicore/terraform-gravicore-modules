@@ -93,7 +93,7 @@ variable bucket_inventory {
   default     = {}
   description = <<EOF
 bucket_inventory = {
-  <id> = {                      # string,       (Required) Unique identifier of the inventory configuration for the bucket 
+  <id> = {                        # string,       (Required) Unique identifier of the inventory configuration for the bucket 
     enabled                       = bool,         (Optional, Default: true) Specifies whether the inventory is enabled or disabled
     frequency                     = string,       (Required, Default: Daily) Specifies how frequently inventory results are produced. Valid values: Daily, Weekly.
     filter                        = string,       (Optional) The prefix that an object must have to be included in the inventory results
@@ -106,6 +106,32 @@ bucket_inventory = {
     destination_bucket_sse_s3     = bool,         (Optional) Specifies to use server-side encryption with Amazon S3-managed keys (SSE-S3) to encrypt the inventory file
     destination_bucket_sse_kms    = string,       (Optional) The ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
   }
+}
+
+Each destination bucket will need a policy added as follows
+{
+  "Version": "2008-10-17",
+  "Id": "SegmentWritePolicy",
+  "Statement": [
+    {
+      "Sid": "InventoryPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "<destination_bucket_bucket_arn>/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control",
+          "aws:SourceAccount": "<source_bucket_account_id>"
+        },
+        "ArnLike": {
+          "aws:SourceArn": "<source_bucket_arn>"
+        }
+      }
+    }
+  ]
 }
 EOF
 }
@@ -362,4 +388,36 @@ output "s3_bucket_id" {
 output "s3_bucket_arn" {
   value       = aws_s3_bucket.default[0].arn
   description = "Arn of S3 bucket"
+}
+
+output "s3_bucket_inventory_policy" {
+  value = var.bucket_inventory == {} ? "" : <<EOF
+
+Each destination bucket will need a policy added as follows
+{
+  "Version": "2008-10-17",
+  "Id": "SegmentWritePolicy",
+  "Statement": [
+    {
+      "Sid": "InventoryPolicy",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Action": "s3:PutObject",
+      "Resource": "<destination_bucket_bucket_arn>/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control",
+          "aws:SourceAccount": "${var.account_id}"
+        },
+        "ArnLike": {
+          "aws:SourceArn": "${aws_s3_bucket.default[0].arn}"
+        }
+      }
+    }
+  ]
+}
+EOF
+  description = "Bucket policy required by destination bucket to receive logs"
 }
