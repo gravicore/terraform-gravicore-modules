@@ -354,7 +354,7 @@ resource "aws_instance" "default" {
   ]
   iam_instance_profile        = aws_iam_instance_profile.ec2_ad_instance_profile.name
   associate_public_ip_address = var.associate_public_ip_address
-  private_ip                  = element(var.private_ips, count.index)
+  private_ip                  = var.private_ips == null ? null : element(var.private_ips, count.index)
   ipv6_address_count          = var.ipv6_address_count
   ipv6_addresses              = var.ipv6_addresses
   ebs_optimized = var.ebs_optimized
