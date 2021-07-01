@@ -392,7 +392,7 @@ output "s3_bucket_arn" {
 }
 
 output "s3_bucket_inventory_policy" {
-  value = var.bucket_inventory == {} ? "" : <<EOF
+  value       = var.bucket_inventory == {} ? "" : <<EOF
 
 Each destination bucket will need a policy added as follows
 
