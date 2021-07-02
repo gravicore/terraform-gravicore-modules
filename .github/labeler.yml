@@ -75,8 +75,12 @@ aws/s3-bucket:
  - aws/s3-bucket/**/*
 aws/s3-cdn:
  - aws/s3-cdn/**/*
+aws/s3-log-storage:
+ - aws/s3-log-storage/**/*
 aws/security-defaults:
  - aws/security-defaults/**/*
+aws/security-defaults-ec2:
+ - aws/security-defaults-ec2/**/*
 aws/security-defaults-lambda:
  - aws/security-defaults-lambda/**/*
 aws/security-defaults-s3:
@@ -89,4 +93,6 @@ aws/vpc-dhcp:
  - aws/vpc-dhcp/**/*
 aws/vpc-dns:
  - aws/vpc-dns/**/*
- 
+aws/wco:
+ - aws/wco/**/*
+  

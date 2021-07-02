@@ -86,7 +86,6 @@ variable "kms_key_id" {
 resource "aws_s3_bucket" "rds_backup_restore" {
   count  = var.create ? 1 : 0
   bucket = "${var.module_prefix}-rds"
-  region = var.aws_region
   acl    = "private"
 
   versioning {

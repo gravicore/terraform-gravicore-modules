@@ -429,16 +429,12 @@ resource "aws_s3_bucket_policy" "default" {
   policy = data.template_file.default.rendered
 }
 
-data "aws_region" "current" {
-}
-
 resource "aws_s3_bucket" "origin" {
   count         = signum(length(var.origin_bucket)) == 1 ? 0 : 1
   bucket        = local.module_prefix
   acl           = "private"
   tags          = local.tags
   force_destroy = var.origin_force_destroy
-  region        = data.aws_region.current.name
 
   cors_rule {
     allowed_headers = var.cors_allowed_headers
