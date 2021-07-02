@@ -82,48 +82,16 @@ variable "origin_force_destroy" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-module "logs" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
-  namespace  = ""
-  stage      = ""
-  name       = local.module_prefix
-  delimiter  = var.delimiter
-  attributes = compact(concat(var.attributes, ["logs"]))
+module "s3_log_storage" {
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/s3-log-storage?ref=0.33.3"
+  providers = {
+    aws = aws
+  }
 
-  versioning_enabled     = var.s3_bucket_versioning ? true : false
-  access_log_bucket_name = var.s3_bucket_access_logging ? join(var.delimiter, [local.module_prefix, "logs"]) : ""
-
-  policy = var.s3_bucket_ssl_requests_only == false ? "" : jsonencode(
-    {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Principal" : {
-            "AWS" : "*"
-          },
-          "Action" : [
-            "s3:*"
-          ],
-          "Resource" : [
-            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}/*",
-            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}"
-          ],
-          "Effect" : "Deny",
-          "Condition" : {
-            "Bool" : {
-              "aws:SecureTransport" : "false"
-            }
-          }
-        }
-      ]
-  })
-
-  tags                     = local.tags
-  lifecycle_prefix         = var.log_prefix
-  standard_transition_days = var.log_standard_transition_days
-  glacier_transition_days  = var.log_glacier_transition_days
-  expiration_days          = var.log_expiration_days
-  force_destroy            = var.origin_force_destroy
+  namespace   = var.namespace
+  environment = var.environment
+  stage       = var.stage
+  tags        = local.tags
 }
 
 resource "null_resource" "update_s3_buckets" {
@@ -137,7 +105,7 @@ resource "null_resource" "update_s3_buckets" {
   }
 
   provisioner "local-exec" {
-    command = "python ./scripts/update-s3-buckets.py ${var.s3_bucket_names[count.index]} ${var.s3_bucket_versioning} ${var.s3_bucket_access_logging} ${var.s3_bucket_ssl_requests_only} ${module.logs.bucket_id}"
+    command = "python ./scripts/update-s3-buckets.py ${var.s3_bucket_names[count.index]} ${var.s3_bucket_versioning} ${var.s3_bucket_access_logging} ${var.s3_bucket_ssl_requests_only} ${module.s3_log_storage.bucket_id}"
   }
 }
 
