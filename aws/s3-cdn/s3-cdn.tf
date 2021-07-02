@@ -115,17 +115,19 @@ variable "log_expiration_days" {
 }
 
 variable "s3_bucket_versioning" {
+  type        = bool
   description = "S3 bucket versioning enabled?"
   default     = false
 }
 
 variable "s3_bucket_access_logging" {
   type        = bool
-  default     = false
   description = "Access logging of S3 buckets enabled?"
+  default     = false
 }
 
 variable "s3_bucket_ssl_requests_only" {
+  type        = bool
   description = "S3 bucket ssl requests only?"
   default     = false
 }
@@ -393,6 +395,7 @@ data "aws_iam_policy_document" "origin" {
     for_each = var.s3_bucket_ssl_requests_only ? [] : [1]
 
     content {
+      sid       = "AllowSSLRequestsOnly"
       actions   = ["s3:*"]
       resources = ["arn:aws:s3:::${local.module_prefix}/*", "arn:aws:s3:::${local.module_prefix}"]
 

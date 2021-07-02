@@ -83,6 +83,8 @@ aws/security-defaults-ec2:
  - aws/security-defaults-ec2/**/*
 aws/security-defaults-lambda:
  - aws/security-defaults-lambda/**/*
+aws/security-defaults-s3:
+ - aws/security-defaults-s3/**/*
 aws/terraform-backend:
  - aws/terraform-backend/**/*
 aws/vpc:
