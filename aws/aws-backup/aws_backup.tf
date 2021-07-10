@@ -53,21 +53,14 @@ variable "customer_master_key_spec" {
   description = "Specifies whether the key contains a symmetric key or an asymmetric key pair and the encryption algorithms or signing algorithms that the key supports. Valid values: `SYMMETRIC_DEFAULT`, `RSA_2048`, `RSA_3072`, `RSA_4096`, `ECC_NIST_P256`, `ECC_NIST_P384`, `ECC_NIST_P521`, or `ECC_SECG_P256K1`."
 }
 
-variable "name" {
-  type        = string
-  default     = "fsx"
-  description = "application name, e.g. 'app' or 'jenkins'"
-}
-
-
 variable "backup_resource_ids" {
-  type        = list
-  default     = null
+  type    = list
+  default = null
 }
 
 
 variable "kms_key_arn" {
-  type        = string
+  type = string
 }
 
 # Backup rules
@@ -95,8 +88,8 @@ variable "monthly_cold_storage_after" {
 
 
 variable "selection_tags" {
-  type        = list(any)
-  default     = null
+  type    = list(any)
+  default = null
 }
 
 variable "selection_tag_type" {
@@ -169,17 +162,17 @@ resource "aws_kms_alias" "default" {
 
 # AWS Backup vault
 resource "aws_backup_vault" "vault" {
-  name        = "${var.name}-vault"
+  name        = join("-", [local.module_prefix, "vault"])
   kms_key_arn = data.aws_arn.kms_arn
 }
 
 
 # AWS Backup plan
 resource "aws_backup_plan" "plan" {
-  name = "${var.name}-plan"
+  name = join("-", [local.module_prefix, "plan"])
 
   rule {
-    rule_name         = "${var.name}-daily"
+    rule_name         = join("-", [local.module_prefix, "daily"])
     target_vault_name = aws_backup_vault.vault.name
     schedule          = var.daily_cron
 
@@ -190,7 +183,7 @@ resource "aws_backup_plan" "plan" {
   }
 
   rule {
-    rule_name         = "${var.name}-weekly"
+    rule_name         = join("-", [local.module_prefix, "weekly"])
     target_vault_name = aws_backup_vault.vault.name
     schedule          = var.weekly_cron
 
@@ -201,7 +194,7 @@ resource "aws_backup_plan" "plan" {
   }
 
   rule {
-    rule_name         = "${var.name}-monthly"
+    rule_name         = join("-", [local.module_prefix, "monthly"])
     target_vault_name = aws_backup_vault.vault.name
     schedule          = var.monthly_cron
 
@@ -219,21 +212,20 @@ resource "aws_backup_plan" "plan" {
 # AWS Backup selection - resource arn
 resource "aws_backup_selection" "arn_resource_selection" {
   iam_role_arn = aws_iam_role.aws_backup_role.arn
-  name         = "${var.name}-resource"
+  name         = join("-", [local.module_prefix, "resource"])
   plan_id      = aws_backup_plan.plan.id
 
   resources = var.backup_resource_ids
 
-  dynamic "selection_tags"
-   for_each = var.selection_tags
-   content {
+  dynamic "selection_tags" {
+    for_each = var.selection_tags
+    content {
       type  = selection_tags.value.type
       key   = selection_tags.value.key
       value = selection_tags.value.value
-   }
+    }
+  }
 }
-
-
 
 
 # ----------------------------------------------------------------------------------------------------------------------
