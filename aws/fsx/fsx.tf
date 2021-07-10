@@ -319,3 +319,10 @@ output "fsx_id" {
   description = "List FSx id"
   value       = aws_fsx_windows_file_system.default.id
 }
+
+
+
+output "fsx_arn" {
+  description = "List FSx id"
+  value       = aws_fsx_windows_file_system.default.arn
+}
