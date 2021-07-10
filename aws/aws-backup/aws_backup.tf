@@ -66,7 +66,7 @@ variable "monthly_cold_storage_after" {
 
 variable "selection_tags" {
   type    = list(any)
-  default = null
+  default = []
 }
 
 
