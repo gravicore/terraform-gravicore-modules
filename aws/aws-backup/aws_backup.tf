@@ -123,7 +123,7 @@ resource "aws_kms_alias" "default" {
 # AWS Backup vault
 resource "aws_backup_vault" "vault" {
   name        = join("-", [local.module_prefix, "vault"])
-  kms_key_arn = data.aws_arn.kms_arn
+  kms_key_arn = join("", aws_kms_key.default.*.arn)
 }
 
 
