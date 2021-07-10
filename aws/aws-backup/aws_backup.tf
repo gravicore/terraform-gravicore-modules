@@ -177,7 +177,7 @@ resource "aws_backup_selection" "arn_resource_selection" {
 
   resources = var.backup_resource_ids
 
-  dynamic "selection_tags" {
+  dynamic "selection_tag" {
     for_each = var.selection_tags
     content {
       type  = selection_tags.value.type
