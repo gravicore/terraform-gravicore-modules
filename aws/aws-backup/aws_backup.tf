@@ -2,25 +2,6 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "map_migrated" {
-  type        = list
-  default     = [""]
-  description = ""
-}
-
-variable "map_migrated_app" {
-  type        = string
-  default     = ""
-  description = ""
-}
-
-variable "aws_migration_project_id" {
-  type        = string
-  default     = ""
-  description = ""
-}
-
-
 variable "deletion_window_in_days" {
   type        = number
   default     = 10
@@ -59,10 +40,6 @@ variable "backup_resource_ids" {
 }
 
 
-variable "kms_key_arn" {
-  type = string
-}
-
 # Backup rules
 variable "daily_cron" {
 }
@@ -92,23 +69,6 @@ variable "selection_tags" {
   default = null
 }
 
-variable "selection_tag_type" {
-  description = "An operation, such as StringEquals, that is applied to a key-value pair used to filter resources in a selection"
-  type        = string
-  default     = "STRINGEQUALS"
-}
-
-variable "selection_tag_key" {
-  description = "The key in a key-value pair"
-  type        = string
-  default     = "map_migrated_app"
-}
-
-variable "selection_tag_value" {
-  description = "The value in a key-value pair"
-  type        = string
-  default     = "File Share"
-}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM Policies
