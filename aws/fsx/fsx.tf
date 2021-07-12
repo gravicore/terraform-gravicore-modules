@@ -53,7 +53,6 @@ variable "storage_type" {
   default = ""
 }
 
-
 variable "copy_tags_to_backups" {
   type        = bool
   default     = true
@@ -94,7 +93,6 @@ resource "aws_fsx_windows_file_system" "default" {
 }
 
 
-
 ##################################################################################################################
 # Security group for Amazon FSx.
 ##################################################################################################################
@@ -123,7 +121,6 @@ variable ingress_cidrs_4 {
   description = "description"
 }
 
-
 variable "fsx_tcp_allowed_ports" {
   type = list(object({
     from_port = number
@@ -131,14 +128,12 @@ variable "fsx_tcp_allowed_ports" {
   }))
 }
 
-
 variable "fsx_udp_allowed_ports" {
   type = list(object({
     from_port = number
     to_port = number
   }))
 }
-
 
 # ----------------------------------------------
 ####### Security Group 1
@@ -160,7 +155,6 @@ resource "aws_security_group" "fsxsg1" {
   ))
 }
 
- 
 resource "aws_security_group_rule" "allow_ingress_cidr_tcp_1" {
   for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg1[0].id
@@ -281,7 +275,6 @@ resource "aws_security_group" "fsxsg4" {
   ))
 }
 
-
 resource "aws_security_group_rule" "allow_ingress_cidr_tcp_4" {
   for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
   security_group_id = aws_security_group.fsxsg4[0].id
@@ -301,9 +294,6 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp_4" {
   protocol          = "udp"
   cidr_blocks       = var.ingress_cidrs_4
 }
-
-
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS

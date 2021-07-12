@@ -14,7 +14,7 @@ variable "name" {
 
 variable terraform_module {
   type        = string
-  default     = ""
+  default     = "gravicore/terraform-gravicore-modules/aws/fsx"
   description = "The owner and name of the Terraform module"
 }
 
