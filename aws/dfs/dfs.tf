@@ -1,7 +1,6 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # VARIABLES / LOCALS / REMOTE STATE / AMI definition
 # ----------------------------------------------------------------------------------------------------------------------
-
 variable "map_migrated" {
   type        = list
   default     = [""]
@@ -51,7 +50,6 @@ variable "instance_count" {
   default     = 2
 }
 
-
 variable "placement_group" {
   description = "The Placement Group to start the instance in"
   type        = string
@@ -88,8 +86,6 @@ variable "instance_initiated_shutdown_behavior" {
   default     = ""
 }
 
-
-
 variable "key_name" {
   description = "The key name to use for the instance"
   type        = string
@@ -113,7 +109,6 @@ variable "subnet_id" {
   default     = ""
 }
 
-
 variable "associate_public_ip_address" {
   description = "If true, the EC2 instance will have associated public IP address"
   type        = bool
@@ -125,7 +120,6 @@ variable "private_ip" {
   type        = string
   default     = null
 }
-
 
 variable "private_ips" {
   description = "A list of private IP address to associate with the instance in a VPC. Should match the number of instances."
@@ -157,14 +151,11 @@ variable "ipv6_address_count" {
   default     = null
 }
 
-
-
 variable "ipv6_addresses" {
   description = "Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface"
   type        = list(string)
   default     = null
 }
-
 
 variable "root_block_device" {
   description = "Customize details about the root block device of the instance. See Block Devices below for details"
@@ -189,7 +180,6 @@ variable "network_interface" {
   type        = list(map(string))
   default     = []
 }
-
 
 variable "metadata_options" {
   description = "Customize the metadata options of the instance"
@@ -217,13 +207,11 @@ data "aws_ami" "windows" {
 #########################################################
 # Security group for DFS Namespace. All traffic from my IP.
 #########################################################
-
 variable ingress_cidrs {
   type        = list(string)
   default     = [""]
   description = "description"
 }
-
 
 variable "dfs_tcp_allowed_ports" {
   type = list(object({
@@ -232,15 +220,12 @@ variable "dfs_tcp_allowed_ports" {
   }))
 }
 
-
 variable "dfs_udp_allowed_ports" {
   type = list(object({
     from_port = number
     to_port = number
   }))
 }
-
-
 
 # ----------------------------------------------
 ####### Security Group 
@@ -294,12 +279,9 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
   cidr_blocks       = var.ingress_cidrs
 }
 
-
 #########################################################
 # IAM policies for SSM
 #########################################################
-
-
 resource "aws_iam_role" "ec2_role" {
   name               = join("-", [local.module_prefix, "ec2-ssm-attach"])
 
