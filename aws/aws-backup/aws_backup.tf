@@ -39,37 +39,52 @@ variable "backup_resource_ids" {
   default = null
 }
 
-
-# Backup rules
-variable "daily_cron" {
-}
-
-variable "daily_delete_after" {
-}
-
-variable "weekly_cron" {
-}
-
-variable "weekly_delete_after" {
-}
-
-variable "monthly_cron" {
-}
-
-variable "monthly_delete_after" {
-}
-
-variable "monthly_cold_storage_after" {
-}
-
-
-
 variable "selection_tags" {
   type    = list(any)
   default = []
 }
 
+variable "rules" {
+  description = "A list of rules mapping rule configurations for a backup plan"
+  type        = any
+  default     = []
+}
 
+variable "vault_name" {
+  description = "Name of the backup vault to create. If not given, AWS use default"
+  type        = string
+  default     = null
+}
+
+variable "rule_lifecycle_cold_storage_after" {
+  description = "Specifies the number of days after creation that a recovery point is moved to cold storage"
+  type        = number
+  default     = null
+}
+
+variable "rule_lifecycle_delete_after" {
+  description = "Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`"
+  type        = number
+  default     = null
+}
+
+variable "rule_copy_action_destination_vault_arn" {
+  description = "An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup."
+  type        = string
+  default     = null
+}
+
+variable "rule_name" {
+  description = "An display name for a backup rule"
+  type        = string
+  default     = null
+}
+
+variable "rule_schedule" {
+  description = "A CRON expression specifying when AWS Backup initiates a backup job"
+  type        = string
+  default     = null
+}
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM Policies
 # ----------------------------------------------------------------------------------------------------------------------
@@ -100,9 +115,9 @@ resource "aws_iam_role_policy_attachment" "aws_backup_policy" {
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
-
+###################
 # KMS key for fsx
-
+###################
 resource "aws_kms_key" "default" {
   count                    = var.create ? 1 : 0
   deletion_window_in_days  = var.deletion_window_in_days
@@ -121,59 +136,63 @@ resource "aws_kms_alias" "default" {
 }
 
 # AWS Backup vault
-resource "aws_backup_vault" "vault" {
+resource "aws_backup_vault" "default" {
   name        = join("-", [local.module_prefix, "vault"])
   kms_key_arn = join("", aws_kms_key.default.*.arn)
+  tags        = var.tags
 }
 
+####################
+# Backup Plan
+####################
 
-# AWS Backup plan
-resource "aws_backup_plan" "plan" {
+resource "aws_backup_plan" "default" {
   name = join("-", [local.module_prefix, "plan"])
 
-  rule {
-    rule_name         = join("-", [local.module_prefix, "daily"])
-    target_vault_name = aws_backup_vault.vault.name
-    schedule          = var.daily_cron
+  dynamic "rule" {
+    for_each = var.rules
+    content {
+      rule_name                = lookup(rule.value, "name")
+      target_vault_name        = var.vault_name != null ? aws_backup_vault.default[0].name : lookup(rule.value, "target_vault_name", "Default")
+      schedule                 = lookup(rule.value, "schedule", null)
+      enable_continuous_backup = lookup(rule.value, "enable_continuous_backup", false)
 
-    lifecycle {
-      // default = 5 weeks * 7 days = 35 days
-      delete_after = var.daily_delete_after
+      dynamic "lifecycle" {
+        for_each = length(lookup(rule.value, "lifecycle")) == 0 ? [] : [lookup(rule.value, "lifecycle", {})]
+        content {
+          cold_storage_after = lookup(lifecycle.value, "cold_storage_after", null)
+          delete_after       = lookup(lifecycle.value, "delete_after", null)
+        }
+      }
+
+      dynamic "copy_action" {
+        for_each = length(lookup(rule.value, "copy_action", {})) == 0 ? [] : [lookup(rule.value, "copy_action", {})]
+        content {
+          destination_vault_arn = lookup(copy_action.value, "destination_vault_arn", null)
+
+          dynamic "lifecycle" {
+            for_each = length(lookup(copy_action.value, "lifecycle", {})) == 0 ? [] : [lookup(copy_action.value, "lifecycle", {})]
+            content {
+              cold_storage_after = lookup(lifecycle.value, "copy_action_cold_storage_after", null)
+              delete_after       = lookup(lifecycle.value, "copy_action_delete_after", null)
+            }
+          }
+        }
+      }
     }
   }
 
-  rule {
-    rule_name         = join("-", [local.module_prefix, "weekly"])
-    target_vault_name = aws_backup_vault.vault.name
-    schedule          = var.weekly_cron
 
-    lifecycle {
-      // default = 3 months * 30 days = 90 days
-      delete_after = var.weekly_delete_after
-    }
-  }
-
-  rule {
-    rule_name         = join("-", [local.module_prefix, "monthly"])
-    target_vault_name = aws_backup_vault.vault.name
-    schedule          = var.monthly_cron
-
-    lifecycle {
-      // default = 3 months * 30 days = 90 days
-      cold_storage_after = var.monthly_cold_storage_after
-
-      // default = 3 years * 365 days = 1095 days
-      delete_after = var.monthly_delete_after
-    }
-  }
+  tags = var.tags
 }
+
 
 
 # AWS Backup selection - resource arn
 resource "aws_backup_selection" "arn_resource_selection" {
   iam_role_arn = aws_iam_role.aws_backup_role.arn
   name         = join("-", [local.module_prefix, "resource"])
-  plan_id      = aws_backup_plan.plan.id
+  plan_id      = aws_backup_plan.default.id
 
   resources = var.backup_resource_ids
 
@@ -211,15 +230,15 @@ output "backup_vault_recovery_points" {
 # Backup Plan
 output "plan_id" {
   description = "The id of the backup plan"
-  value       = join("", aws_backup_plan.plan.*.id)
+  value       = join("", aws_backup_plan.default.*.id)
 }
 
 output "plan_arn" {
   description = "The ARN of the backup plan"
-  value       = join("", aws_backup_plan.plan.*.arn)
+  value       = join("", aws_backup_plan.default.*.arn)
 }
 
 output "plan_version" {
   description = "Unique, randomly generated, Unicode, UTF-8 encoded string that serves as the version ID of the backup plan"
-  value       = join("", aws_backup_plan.plan.*.version)
+  value       = join("", aws_backup_plan.default.*.version)
 }
