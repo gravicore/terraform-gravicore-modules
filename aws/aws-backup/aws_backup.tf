@@ -45,7 +45,7 @@ variable "selection_tags" {
 }
 
 variable "rules" {
-  description = "A list of rules mapping rule configurations for a backup plan"
+  description = "A list of rule maps"
   type        = any
   default     = []
 }
@@ -84,6 +84,34 @@ variable "rule_schedule" {
   description = "A CRON expression specifying when AWS Backup initiates a backup job"
   type        = string
   default     = null
+}
+
+variable "rule_enable_continuous_backup" {
+  description = " Enable continuous backups for supported resources."
+  type        = bool
+  default     = false
+}
+
+
+locals {
+
+  # Rule
+  rule = var.rule_name == null ? [] : [
+    {
+      name              = var.rule_name
+      target_vault_name = var.vault_name != null ? var.vault_name : "Default"
+      schedule          = var.rule_schedule
+      lifecycle = var.rule_lifecycle_cold_storage_after == null ? {} : {
+        cold_storage_after = var.rule_lifecycle_cold_storage_after
+        delete_after       = var.rule_lifecycle_delete_after
+      }
+      enable_continuous_backup = var.rule_enable_continuous_backup
+    }
+  ]
+
+  # Rules
+  rules = concat(local.rule, var.rules)
+
 }
 # ----------------------------------------------------------------------------------------------------------------------
 # IAM Policies
@@ -152,14 +180,16 @@ resource "aws_backup_plan" "default" {
   count = var.create ? 1 : 0
   name  = join("-", [local.module_prefix, "plan"])
 
+  # Rules
   dynamic "rule" {
-    for_each = var.rules
+    for_each = local.rules
     content {
-      rule_name                = lookup(rule.value, "name")
-      target_vault_name        = var.vault_name != null ? aws_backup_vault.default[0].name : lookup(rule.value, "target_vault_name", "Default")
+      rule_name                = lookup(rule.value, "name", null)
+      target_vault_name        = lookup(rule.value, "target_vault_name", null) == null ? var.vault_name : lookup(rule.value, "target_vault_name", "Default")
       schedule                 = lookup(rule.value, "schedule", null)
-      enable_continuous_backup = lookup(rule.value, "enable_continuous_backup", false)
+      enable_continuous_backup = lookup(rule.value, "enable_continuous_backup", null)
 
+      # Lifecycle
       dynamic "lifecycle" {
         for_each = length(lookup(rule.value, "lifecycle")) == 0 ? [] : [lookup(rule.value, "lifecycle", {})]
         content {
@@ -168,26 +198,25 @@ resource "aws_backup_plan" "default" {
         }
       }
 
+      # Copy action
       dynamic "copy_action" {
         for_each = length(lookup(rule.value, "copy_action", {})) == 0 ? [] : [lookup(rule.value, "copy_action", {})]
         content {
           destination_vault_arn = lookup(copy_action.value, "destination_vault_arn", null)
 
+          # Copy Action Lifecycle
           dynamic "lifecycle" {
             for_each = length(lookup(copy_action.value, "lifecycle", {})) == 0 ? [] : [lookup(copy_action.value, "lifecycle", {})]
             content {
-              cold_storage_after = lookup(lifecycle.value, "copy_action_cold_storage_after", null)
-              delete_after       = lookup(lifecycle.value, "copy_action_delete_after", null)
+              cold_storage_after = lookup(lifecycle.value, "cold_storage_after", null)
+              delete_after       = lookup(lifecycle.value, "delete_after", null)
             }
           }
         }
       }
+
     }
   }
-
-
-  tags = var.tags
-}
 
 ############################################################
 # AWS Backup selection - resource arn
