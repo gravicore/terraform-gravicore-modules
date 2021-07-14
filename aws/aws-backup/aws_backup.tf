@@ -117,6 +117,7 @@ locals {
 # IAM Policies
 # ----------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role" "aws_backup_role" {
+  count              = var.create && var.iam_role_arn == null ? 1 : 0
   name               = join("-", [local.module_prefix, "backup-role"])
   assume_role_policy = <<POLICY
 {
@@ -132,13 +133,55 @@ resource "aws_iam_role" "aws_backup_role" {
   ]
 }
 POLICY
+
+  tags = var.tags
 }
 
-resource "aws_iam_role_policy_attachment" "aws_backup_policy" {
+resource "aws_iam_role_policy_attachment" "ab_policy_attach" {
+  count      = var.create && var.iam_role_arn == null ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForBackup"
-  role       = aws_iam_role.aws_backup_role.name
+  role       = aws_iam_role.aws_backup_role[0].name
 }
 
+# Tag policy in case it needed
+resource "aws_iam_policy" "ab_tag_policy" {
+
+  count       = var.create && var.iam_role_arn == null ? 1 : 0
+  description = "AWS Backup Tag policy"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+        "Effect": "Allow",
+        "Action": [
+            "backup:TagResource",
+            "backup:ListTags",
+            "backup:UntagResource",
+            "tag:GetResources"
+        ],
+        "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+
+resource "aws_iam_role_policy_attachment" "ab_tag_policy_attach" {
+  count      = var.create && var.iam_role_arn == null ? 1 : 0
+  policy_arn = aws_iam_policy.ab_tag_policy[0].arn
+  role       = aws_iam_role.aws_backup_role[0].name
+}
+
+
+# Restores policy
+resource "aws_iam_role_policy_attachment" "ab_restores_policy_attach" {
+  count      = var.enabled && var.iam_role_arn == null ? 1 : 0
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores"
+  role       = aws_iam_role.aws_backup_role[0].name
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
