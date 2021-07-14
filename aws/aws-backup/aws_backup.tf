@@ -197,7 +197,7 @@ resource "aws_backup_selection" "arn_resource_selection" {
   count        = var.create ? 1 : 0
   iam_role_arn = aws_iam_role.aws_backup_role.arn
   name         = join("-", [local.module_prefix, "resource"])
-  plan_id      = aws_backup_plan.default.id
+  plan_id      = aws_backup_plan.default[0].id
 
   resources = var.backup_resource_ids
 
