@@ -183,7 +183,7 @@ resource "aws_iam_role_policy_attachment" "ab_tag_policy_attach" {
 
 # Restores policy
 resource "aws_iam_role_policy_attachment" "ab_restores_policy_attach" {
-  count      = var.enabled && var.iam_role_arn == null ? 1 : 0
+  count      = var.create && var.iam_role_arn == null ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSBackupServiceRolePolicyForRestores"
   role       = aws_iam_role.aws_backup_role[0].name
 }
@@ -273,7 +273,7 @@ resource "aws_backup_plan" "default" {
 
 resource "aws_backup_selection" "arn_resource_selection" {
   count        = var.create ? 1 : 0
-  iam_role_arn = aws_iam_role.aws_backup_role.arn
+  iam_role_arn = aws_iam_role.aws_backup_role[0].arn
   name         = join("-", [local.module_prefix, "resource"])
   plan_id      = aws_backup_plan.default[0].id
 
