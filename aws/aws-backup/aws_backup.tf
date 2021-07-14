@@ -92,6 +92,11 @@ variable "rule_enable_continuous_backup" {
   default     = false
 }
 
+variable "iam_role_arn" {
+  description = "If configured, the module will attach this role to selections, instead of creating IAM resources by itself"
+  type        = string
+  default     = null
+}
 
 locals {
 
