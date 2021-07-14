@@ -166,7 +166,7 @@ resource "aws_kms_alias" "default" {
 
 # AWS Backup vault
 resource "aws_backup_vault" "default" {
-  count       = var.create ? 1 : 0
+  count       = var.create && var.vault_name != null ? 1 : 0
   name        = join("-", [local.module_prefix, "vault"])
   kms_key_arn = join("", aws_kms_key.default.*.arn)
   tags        = var.tags
@@ -185,7 +185,7 @@ resource "aws_backup_plan" "default" {
     for_each = local.rules
     content {
       rule_name                = lookup(rule.value, "name", null)
-      target_vault_name        = lookup(rule.value, "target_vault_name", null) == null ? var.vault_name : lookup(rule.value, "target_vault_name", "Default")
+      target_vault_name        = var.vault_name != null ? aws_backup_vault.default[0].name : lookup(rule.value, "target_vault_name", "Default")
       schedule                 = lookup(rule.value, "schedule", null)
       enable_continuous_backup = lookup(rule.value, "enable_continuous_backup", null)
 
