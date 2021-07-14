@@ -214,17 +214,17 @@ resource "aws_backup_selection" "arn_resource_selection" {
 # Backup Vault
 output "vault_id" {
   description = "The name of the vault"
-  value       = join("", aws_backup_vault.vault.*.id)
+  value       = join("", aws_backup_vault.default.*.id)
 }
 
 output "vault_arn" {
   description = "The ARN of the vault"
-  value       = join("", aws_backup_vault.vault.*.arn)
+  value       = join("", aws_backup_vault.default.*.arn)
 }
 
 output "backup_vault_recovery_points" {
   description = "Backup Vault recovery points"
-  value       = join("", aws_backup_vault.vault.*.recovery_points)
+  value       = join("", aws_backup_vault.default.*.recovery_points)
 }
 
 # Backup Plan
