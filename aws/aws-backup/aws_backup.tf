@@ -115,9 +115,10 @@ resource "aws_iam_role_policy_attachment" "aws_backup_policy" {
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
-###################
+
+############################################################
 # KMS key for fsx
-###################
+############################################################
 resource "aws_kms_key" "default" {
   count                    = var.create ? 1 : 0
   deletion_window_in_days  = var.deletion_window_in_days
@@ -137,17 +138,19 @@ resource "aws_kms_alias" "default" {
 
 # AWS Backup vault
 resource "aws_backup_vault" "default" {
+  count       = var.create ? 1 : 0
   name        = join("-", [local.module_prefix, "vault"])
   kms_key_arn = join("", aws_kms_key.default.*.arn)
   tags        = var.tags
 }
 
-####################
+############################################################
 # Backup Plan
-####################
+############################################################
 
 resource "aws_backup_plan" "default" {
-  name = join("-", [local.module_prefix, "plan"])
+  count = var.create ? 1 : 0
+  name  = join("-", [local.module_prefix, "plan"])
 
   dynamic "rule" {
     for_each = var.rules
@@ -186,10 +189,12 @@ resource "aws_backup_plan" "default" {
   tags = var.tags
 }
 
-
-
+############################################################
 # AWS Backup selection - resource arn
+############################################################
+
 resource "aws_backup_selection" "arn_resource_selection" {
+  count        = var.create ? 1 : 0
   iam_role_arn = aws_iam_role.aws_backup_role.arn
   name         = join("-", [local.module_prefix, "resource"])
   plan_id      = aws_backup_plan.default.id
