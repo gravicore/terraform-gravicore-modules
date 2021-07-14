@@ -217,6 +217,7 @@ resource "aws_backup_plan" "default" {
 
     }
   }
+}
 
 ############################################################
 # AWS Backup selection - resource arn
