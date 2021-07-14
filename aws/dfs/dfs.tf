@@ -1,23 +1,6 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # VARIABLES / LOCALS / REMOTE STATE / AMI definition
 # ----------------------------------------------------------------------------------------------------------------------
-variable "map_migrated" {
-  type        = list
-  default     = [""]
-  description = ""
-}
-
-variable "map_migrated_app" {
-  type        = string
-  default     = ""
-  description = ""
-}
-
-variable "aws_migration_project_id" {
-  type        = string
-  default     = ""
-  description = ""
-}
 
 variable "vpc_id" {
   type = string
@@ -123,8 +106,8 @@ variable "private_ip" {
 
 variable "private_ips" {
   description = "A list of private IP address to associate with the instance in a VPC. Should match the number of instances."
-  type    = list(string)
-  default = null
+  type        = list(string)
+  default     = null
 }
 
 variable "source_dest_check" {
@@ -207,6 +190,7 @@ data "aws_ami" "windows" {
 #########################################################
 # Security group for DFS Namespace. All traffic from my IP.
 #########################################################
+
 variable ingress_cidrs {
   type        = list(string)
   default     = [""]
@@ -216,23 +200,24 @@ variable ingress_cidrs {
 variable "dfs_tcp_allowed_ports" {
   type = list(object({
     from_port = number
-    to_port = number
+    to_port   = number
   }))
 }
 
 variable "dfs_udp_allowed_ports" {
   type = list(object({
     from_port = number
-    to_port = number
+    to_port   = number
   }))
 }
 
 # ----------------------------------------------
 ####### Security Group 
 # ----------------------------------------------
+
 resource "aws_security_group" "default" {
-  count = var.create ? 1 : 0
-  name  = local.module_prefix
+  count       = var.create ? 1 : 0
+  name        = local.module_prefix
   description = "common FSx ports"
   vpc_id      = var.vpc_id
   egress {
@@ -242,14 +227,11 @@ resource "aws_security_group" "default" {
     protocol    = "-1"
     to_port     = 0
   }
-  tags = merge(local.tags,map(
-    "map-migrated", "",
-  ))
+  tags = local.tags
 }
 
- 
 resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
-  for_each = {for port in var.dfs_tcp_allowed_ports:  port.from_port => port}
+  for_each          = { for port in var.dfs_tcp_allowed_ports : port.from_port => port }
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
@@ -268,9 +250,8 @@ resource "aws_security_group_rule" "allow_ingress_cidr_icmp" {
   cidr_blocks       = var.ingress_cidrs
 }
 
-
 resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
-  for_each = {for port in var.dfs_udp_allowed_ports:  port.from_port => port}
+  for_each          = { for port in var.dfs_udp_allowed_ports : port.from_port => port }
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
@@ -283,7 +264,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
 # IAM policies for SSM
 #########################################################
 resource "aws_iam_role" "ec2_role" {
-  name               = join("-", [local.module_prefix, "ec2-ssm-attach"])
+  name = join("-", [local.module_prefix, "ec2-ssm-attach"])
 
   assume_role_policy = <<EOF
 {
@@ -303,10 +284,9 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "ec2_ad_instance_profile" {
-  name               = join("-", [local.module_prefix, "ec2-instance-profile"])
+  name = join("-", [local.module_prefix, "ec2-instance-profile"])
   role = aws_iam_role.ec2_role.name
 }
-
 
 resource "aws_iam_role_policy_attachment" "ec2-ad-role-policy-attach" {
   role       = aws_iam_role.ec2_role.name
@@ -318,13 +298,13 @@ resource "aws_iam_role_policy_attachment" "ec2-ad-role-policy-attach" {
 #########################################################
 
 resource "aws_instance" "default" {
-  count         = var.create ? var.instance_count : 0
-  ami           = data.aws_ami.windows.id
-  instance_type = var.vm_dfs_instance_type
-  subnet_id     = element(var.vpc_subnet_ids, count.index)
-  key_name      = var.key_name
-  monitoring    = var.monitoring
-  user_data     = <<EOF
+  count             = var.create ? var.instance_count : 0
+  ami               = data.aws_ami.windows.id
+  instance_type     = var.vm_dfs_instance_type
+  subnet_id         = element(var.vpc_subnet_ids, count.index)
+  key_name          = var.key_name
+  monitoring        = var.monitoring
+  user_data         = <<EOF
   <powershell>
   Install-WindowsFeature "FS-DFS-Namespace", "FS-DFS-Replication", "RSAT-DFS-Mgmt-Con"
   </powershell>
@@ -339,7 +319,7 @@ resource "aws_instance" "default" {
   private_ip                  = var.private_ips == null ? null : element(var.private_ips, count.index)
   ipv6_address_count          = var.ipv6_address_count
   ipv6_addresses              = var.ipv6_addresses
-  ebs_optimized = var.ebs_optimized
+  ebs_optimized               = var.ebs_optimized
 
   dynamic "root_block_device" {
     for_each = var.root_block_device
@@ -403,8 +383,7 @@ resource "aws_instance" "default" {
   tags = merge(
     local.tags,
     map(
-      "Name", join("-", [local.module_prefix, count.index + 1]),
-      "map-migrated", element(var.map_migrated, count.index),
+      "Name", var.instance_count == 1 ? local.module_prefix : join("-", [local.module_prefix, count.index + 1]),
     )
   )
   lifecycle {
@@ -422,4 +401,3 @@ output "dfs_instances" {
   description = "List the info for dfs namespace instances"
   value       = aws_instance.default.*
 }
-
