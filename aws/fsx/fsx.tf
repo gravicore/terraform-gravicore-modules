@@ -68,8 +68,8 @@ variable "subnet_ids" {
 }
 
 variable ingress_cidrs {
-  type        = list(string)
-  default     = []
+  type    = list(string)
+  default = []
 }
 
 variable "tcp_allowed_ports" {
@@ -128,7 +128,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
 }
 
 resource "aws_fsx_windows_file_system" "default" {
-  count       = var.create ? 1 : 0
+  count = var.create ? 1 : 0
   # kms_key_id          = aws_kms_key.example.arn # Not running custom KMS at time of this writing.
   active_directory_id               = var.active_directory_id
   storage_capacity                  = var.storage_capacity
