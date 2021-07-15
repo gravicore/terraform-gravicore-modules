@@ -133,7 +133,7 @@ resource "aws_fsx_windows_file_system" "default" {
   storage_capacity                  = var.storage_capacity
   subnet_ids                        = var.subnet_ids
   throughput_capacity               = var.throughput_capacity
-  automatic_backup_retention_days   = var.backup_retention_days
+  automatic_backup_retention_days   = var.automatic_backup_retention_days
   daily_automatic_backup_start_time = var.daily_automatic_backup_start_time
   copy_tags_to_backups              = var.copy_tags_to_backups
   deployment_type                   = var.deployment_type
