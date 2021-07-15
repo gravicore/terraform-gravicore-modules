@@ -67,7 +67,7 @@ variable "subnet_ids" {
 }
 
 variable ingress_cidrs {
-  type        = string
+  type        = list(string)
   default     = null
 }
 
