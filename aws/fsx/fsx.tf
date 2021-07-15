@@ -2,297 +2,140 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "map_migrated" {
-  type        = string
-  default     = ""
-  description = ""
-}
-
-variable "map_migrated_app" {
-  type        = string
-  default     = ""
-  description = ""
-}
-
-variable "aws_migration_project_id" {
-  type        = string
-  default     = ""
-  description = ""
-}
-
 variable "active_directory_id" {
-  description = "The ID of the Active Directory"
   type        = string
+  default     = null
+  description = "(Optional) The ID for an existing Microsoft Active Directory instance that the file system should join when it's created. Cannot be specified with self_managed_active_directory"
 }
-
-variable "vpc_id" {
-  description = "The ID of the VPC"
-  type        = string
-}
-
-variable "vpc_private_subnets" {
-  description = "List of IDs of private subnets"
-  type        = list(string)
-}
-
 
 variable "storage_capacity" {
-  type    = string
-  default = ""
+  type        = number
+  default     = 2000
+  description = "(Required) Storage capacity (GiB) of the file system. Minimum of 32 and maximum of 65536. If the storage type is set to HDD the minimum value is 2000"
 }
 
-
 variable "throughput_capacity" {
-  type    = number
-  default = 1024
+  type        = number
+  default     = 1024
   description = "(Required) Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of 8 and maximum of 2048"
 }
 
 variable "storage_type" {
-  type    = string
-  default = ""
+  type        = string
+  default     = "SSD"
+  description = "(Optional) Specifies the storage type, Valid values are SSD and HDD. HDD is supported on SINGLE_AZ_2 and MULTI_AZ_1 Windows file system deployment types. Default value is SSD"
 }
 
 variable "copy_tags_to_backups" {
   type        = bool
   default     = true
+  description = "(Optional) A boolean flag indicating whether tags on the file system should be copied to backups"
 }
 
 variable "deployment_type" {
-  type    = string
-  default = ""
+  type        = string
+  default     = "SINGLE_AZ_1"
+  description = "(Optional) Specifies the file system deployment type, valid values are MULTI_AZ_1, SINGLE_AZ_1 and SINGLE_AZ_2. Default value is SINGLE_AZ_1"
 }
 
-variable "backup_retention_days" {
-  type    = string
-  default = ""
+variable "automatic_backup_retention_days" {
+  type        = number
+  default     = null
+  description = "(Optional) The number of days to retain automatic backups. Minimum of 0 and maximum of 90. Defaults to 7. Set to 0 to disable"
+}
+
+variable daily_automatic_backup_start_time {
+  type        = string
+  default     = null
+  description = "(Optional) The preferred time (in HH:MM format) to take daily automatic backups, in the UTC time zone"
+}
+
+variable security_group_ids {
+  type        = list
+  default     = []
+  description = "(Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces"
+}
+
+variable "vpc_id" {
+  type        = string
+  description = "The ID of the VPC"
+}
+
+variable "subnet_ids" {
+  type        = list(string)
+  description = "(Required) A list of IDs for the subnets that the file system will be accessible from. To specify more than a single subnet set deployment_type to MULTI_AZ_1"
+}
+
+variable "tcp_allowed_ports" {
+  type = list(object({
+    from_port = number
+    to_port   = number
+  }))
+}
+
+variable "udp_allowed_ports" {
+  type = list(object({
+    from_port = number
+    to_port   = number
+  }))
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
+resource "aws_security_group" "default" {
+  count       = var.create ? 1 : 0
+  name        = join("-", [local.module_prefix, "1"])
+  description = "common FSx ports"
+  vpc_id      = var.vpc_id
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Egress"
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }
+  tags = local.tags
+}
+
+resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
+  for_each          = { for port in var.tcp_allowed_ports : port.from_port => port }
+  security_group_id = aws_security_group.fsxsg1[0].id
+  type              = "ingress"
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
+  protocol          = "tcp"
+  cidr_blocks       = var.ingress_cidrs
+}
+
+resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
+  for_each          = { for port in var.udp_allowed_ports : port.from_port => port }
+  security_group_id = aws_security_group.fsxsg1[0].id
+  type              = "ingress"
+  from_port         = each.value.from_port
+  to_port           = each.value.to_port
+  protocol          = "udp"
+  cidr_blocks       = var.ingress_cidrs
+}
+
 resource "aws_fsx_windows_file_system" "default" {
   # kms_key_id          = aws_kms_key.example.arn # Not running custom KMS at time of this writing.
-  active_directory_id              = var.active_directory_id
-  storage_capacity                 = var.storage_capacity
-  subnet_ids                       = var.vpc_private_subnets
-  throughput_capacity              = var.throughput_capacity
-  automatic_backup_retention_days  = var.backup_retention_days
-  copy_tags_to_backups             = var.copy_tags_to_backups
-  deployment_type                  = var.deployment_type
-  preferred_subnet_id              = element(var.vpc_private_subnets, 0)
-  storage_type                     = var.storage_type
-  security_group_ids               = [
+  active_directory_id               = var.active_directory_id
+  storage_capacity                  = var.storage_capacity
+  subnet_ids                        = var.subnet_ids
+  throughput_capacity               = var.throughput_capacity
+  automatic_backup_retention_days   = var.backup_retention_days
+  daily_automatic_backup_start_time = var.daily_automatic_backup_start_time
+  copy_tags_to_backups              = var.copy_tags_to_backups
+  deployment_type                   = var.deployment_type
+  preferred_subnet_id               = element(var.vpc_private_subnets, 0)
+  storage_type                      = var.storage_type
+  security_group_ids = flatten([
     aws_security_group.fsxsg1[0].id,
-    aws_security_group.fsxsg2[0].id,
-    aws_security_group.fsxsg3[0].id,
-    aws_security_group.fsxsg4[0].id,
-  ]
-  tags                             = local.tags
-}
-
-
-##################################################################################################################
-# Security group for Amazon FSx.
-##################################################################################################################
-
-variable ingress_cidrs_1 {
-  type        = list(string)
-  default     = [""]
-  description = "description"
-}
-
-variable ingress_cidrs_2 {
-  type        = list(string)
-  default     = [""]
-  description = "description"
-}
-
-variable ingress_cidrs_3 {
-  type        = list(string)
-  default     = [""]
-  description = "description"
-}
-
-variable ingress_cidrs_4 {
-  type        = list(string)
-  default     = [""]
-  description = "description"
-}
-
-variable "fsx_tcp_allowed_ports" {
-  type = list(object({
-    from_port = number
-    to_port = number
-  }))
-}
-
-variable "fsx_udp_allowed_ports" {
-  type = list(object({
-    from_port = number
-    to_port = number
-  }))
-}
-
-# ----------------------------------------------
-####### Security Group 1
-# ----------------------------------------------
-resource "aws_security_group" "fsxsg1" {
-  count = var.create ? 1 : 0
-  name  = join("-", [local.module_prefix, "1"])
-  description = "common FSx ports"
-  vpc_id      = var.vpc_id
-  egress {
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Egress"
-    from_port   = 0
-    protocol    = "-1"
-    to_port     = 0
-  }
-  tags = merge(local.tags,map(
-    "map-migrated", "",
-  ))
-}
-
-resource "aws_security_group_rule" "allow_ingress_cidr_tcp_1" {
-  for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
-  security_group_id = aws_security_group.fsxsg1[0].id
-  type              = "ingress"
-  from_port         = each.value.from_port
-  to_port           = each.value.to_port
-  protocol          = "tcp"
-  cidr_blocks       = var.ingress_cidrs_1
-}
-
-resource "aws_security_group_rule" "allow_ingress_cidr_udp_1" {
-  for_each = {for port in var.fsx_udp_allowed_ports:  port.from_port => port}
-  security_group_id = aws_security_group.fsxsg1[0].id
-  type              = "ingress"
-  from_port         = each.value.from_port
-  to_port           = each.value.to_port
-  protocol          = "udp"
-  cidr_blocks       = var.ingress_cidrs_1
-}
-
-# ----------------------------------------------
-####### Security Group 2
-# ----------------------------------------------
-resource "aws_security_group" "fsxsg2" {
-  count = var.create ? 1 : 0
-  name  = join("-", [local.module_prefix, "2"])
-  description = "common FSx ports"
-  vpc_id      = var.vpc_id
-  egress {
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Egress"
-    from_port   = 0
-    protocol    = "-1"
-    to_port     = 0
-  }
-  tags = merge(local.tags,map(
-    "map-migrated", "",
-  ))
-}
-
-resource "aws_security_group_rule" "allow_ingress_cidr_tcp_2" {
-  for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
-  security_group_id = aws_security_group.fsxsg2[0].id
-  type              = "ingress"
-  from_port         = each.value.from_port
-  to_port           = each.value.to_port
-  protocol          = "tcp"
-  cidr_blocks       = var.ingress_cidrs_2
-}
-
-resource "aws_security_group_rule" "allow_ingress_cidr_udp_2" {
-  for_each = {for port in var.fsx_udp_allowed_ports:  port.from_port => port}
-  security_group_id = aws_security_group.fsxsg2[0].id
-  type              = "ingress"
-  from_port         = each.value.from_port
-  to_port           = each.value.to_port
-  protocol          = "udp"
-  cidr_blocks       = var.ingress_cidrs_2
-}
-
-# ----------------------------------------------
-####### Security Group 3
-# ----------------------------------------------
-resource "aws_security_group" "fsxsg3" {
-  count = var.create ? 1 : 0
-  name  = join("-", [local.module_prefix, "3"])
-  description = "common FSx ports"
-  vpc_id      = var.vpc_id
-  egress {
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Egress"
-    from_port   = 0
-    protocol    = "-1"
-    to_port     = 0
-  }
-  tags = merge(local.tags,map(
-    "map-migrated", "",
-  ))
-}
-
-resource "aws_security_group_rule" "allow_ingress_cidr_tcp_3" {
-  for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
-  security_group_id = aws_security_group.fsxsg3[0].id
-  type              = "ingress"
-  from_port         = each.value.from_port
-  to_port           = each.value.to_port
-  protocol          = "tcp"
-  cidr_blocks       = var.ingress_cidrs_3
-}
-
-resource "aws_security_group_rule" "allow_ingress_cidr_udp_3" {
-  for_each = {for port in var.fsx_udp_allowed_ports:  port.from_port => port}
-  security_group_id = aws_security_group.fsxsg3[0].id
-  type              = "ingress"
-  from_port         = each.value.from_port
-  to_port           = each.value.to_port
-  protocol          = "udp"
-  cidr_blocks       = var.ingress_cidrs_3
-}
-
-# ----------------------------------------------
-####### Security Group 4
-# ----------------------------------------------
-resource "aws_security_group" "fsxsg4" {
-  count = var.create ? 1 : 0
-  name  = join("-", [local.module_prefix, "4"])
-  description = "common FSx ports"
-  vpc_id      = var.vpc_id
-  egress {
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Egress"
-    from_port   = 0
-    protocol    = "-1"
-    to_port     = 0
-  }
-  tags = merge(local.tags,map(
-    "map-migrated", "",
-  ))
-}
-
-resource "aws_security_group_rule" "allow_ingress_cidr_tcp_4" {
-  for_each = {for port in var.fsx_tcp_allowed_ports:  port.from_port => port}
-  security_group_id = aws_security_group.fsxsg4[0].id
-  type              = "ingress"
-  from_port         = each.value.from_port
-  to_port           = each.value.to_port
-  protocol          = "tcp"
-  cidr_blocks       = var.ingress_cidrs_4
-}
-
-resource "aws_security_group_rule" "allow_ingress_cidr_udp_4" {
-  for_each = {for port in var.fsx_udp_allowed_ports:  port.from_port => port}
-  security_group_id = aws_security_group.fsxsg4[0].id
-  type              = "ingress"
-  from_port         = each.value.from_port
-  to_port           = each.value.to_port
-  protocol          = "udp"
-  cidr_blocks       = var.ingress_cidrs_4
+    var.security_group_ids
+  ])
+  tags = local.tags
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -304,13 +147,10 @@ output "fsx" {
   value       = aws_fsx_windows_file_system.default.*
 }
 
-
 output "fsx_id" {
   description = "List FSx id"
   value       = aws_fsx_windows_file_system.default.id
 }
-
-
 
 output "fsx_arn" {
   description = "List FSx id"

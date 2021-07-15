@@ -139,8 +139,8 @@ locals {
   }
   automation_tags = {
     # terraform_module = var.terraform_module
-    stage_prefix     = local.stage_prefix
-    module_prefix    = local.module_prefix
+    stage_prefix  = local.stage_prefix
+    module_prefix = local.module_prefix
   }
   security_tags = {}
 
