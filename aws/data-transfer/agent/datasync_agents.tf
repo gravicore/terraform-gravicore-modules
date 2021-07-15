@@ -96,7 +96,7 @@ resource "aws_datasync_agent" "default" {
 
   ip_address            = module.datasync_ec2.private_ip[0]
   security_group_arns   = ["arn:aws:ec2:${var.aws_region}:${var.account_id}:security-group/${aws_security_group.datasync[0].id}"]
-  subnet_arns           = [for s in var.vpc_private_subnets : "arn:aws:ec2:${var.aws_region}:${var.account_id}:subnet/${s}"]
+  subnet_arns           = ["arn:aws:ec2:${var.aws_region}:${var.account_id}:subnet/${module.datasync_ec2.subnet_id[0]}"] # [for s in var.vpc_private_subnets : "arn:aws:ec2:${var.aws_region}:${var.account_id}:subnet/${s}"]
   vpc_endpoint_id       = var.vpc_endpoint_id
   private_link_endpoint = data.aws_network_interface.datasync.private_ip
 }
