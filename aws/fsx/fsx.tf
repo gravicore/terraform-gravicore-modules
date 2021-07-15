@@ -58,6 +58,7 @@ variable security_group_ids {
 
 variable "vpc_id" {
   type        = string
+  default     = ""
   description = "The ID of the VPC"
 }
 
@@ -68,7 +69,7 @@ variable "subnet_ids" {
 
 variable ingress_cidrs {
   type        = list(string)
-  default     = null
+  default     = []
 }
 
 variable "tcp_allowed_ports" {
@@ -76,7 +77,7 @@ variable "tcp_allowed_ports" {
     from_port = number
     to_port   = number
   }))
-  default = null
+  default = []
 }
 
 variable "udp_allowed_ports" {
@@ -84,7 +85,7 @@ variable "udp_allowed_ports" {
     from_port = number
     to_port   = number
   }))
-  default = null
+  default = []
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -92,7 +93,7 @@ variable "udp_allowed_ports" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "default" {
-  count       = var.create && var.vpc_id != null ? 1 : 0
+  count       = var.create && var.vpc_id != "" ? 1 : 0
   name        = local.module_prefix
   description = "common FSx ports"
   vpc_id      = var.vpc_id
@@ -107,7 +108,7 @@ resource "aws_security_group" "default" {
 }
 
 resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
-  for_each          = var.create && var.tcp_allowed_ports != null && var.vpc_id != null ? { for port in var.tcp_allowed_ports : port.from_port => port } : []
+  for_each          = var.create && var.tcp_allowed_ports != [] && var.vpc_id != "" ? { for port in var.tcp_allowed_ports : port.from_port => port } : []
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
@@ -117,7 +118,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
 }
 
 resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
-  for_each          = var.create && var.udp_allowed_ports != null && var.vpc_id != null ? { for port in var.udp_allowed_ports : port.from_port => port } : []
+  for_each          = var.create && var.udp_allowed_ports != [] && var.vpc_id != "" ? { for port in var.udp_allowed_ports : port.from_port => port } : []
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
