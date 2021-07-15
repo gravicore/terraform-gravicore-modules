@@ -141,7 +141,7 @@ resource "aws_fsx_windows_file_system" "default" {
   preferred_subnet_id               = element(var.subnet_ids, 0)
   storage_type                      = var.storage_type
   security_group_ids = flatten([
-    listconcat(aws_security_group.default.*.id, "")[0]),
+    list(concat(aws_security_group.default.*.id, "")[0]),
     var.security_group_ids
   ])
   tags = local.tags
