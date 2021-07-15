@@ -129,7 +129,7 @@ resource "aws_fsx_windows_file_system" "default" {
   daily_automatic_backup_start_time = var.daily_automatic_backup_start_time
   copy_tags_to_backups              = var.copy_tags_to_backups
   deployment_type                   = var.deployment_type
-  preferred_subnet_id               = element(var.vpc_private_subnets, 0)
+  preferred_subnet_id               = element(var.subnet_ids, 0)
   storage_type                      = var.storage_type
   security_group_ids = flatten([
     aws_security_group.fsxsg1[0].id,
