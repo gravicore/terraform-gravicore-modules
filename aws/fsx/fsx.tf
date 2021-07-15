@@ -108,7 +108,7 @@ resource "aws_security_group" "default" {
 }
 
 resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
-  for_each          = var.create && var.tcp_allowed_ports != [] && var.vpc_id != "" ? { for port in var.tcp_allowed_ports : port.from_port => port } : []
+  for_each          = var.create && var.tcp_allowed_ports != [] && var.vpc_id != "" ? { for port in var.tcp_allowed_ports : port.from_port => port } : {}
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
@@ -118,7 +118,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
 }
 
 resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
-  for_each          = var.create && var.udp_allowed_ports != [] && var.vpc_id != "" ? { for port in var.udp_allowed_ports : port.from_port => port } : []
+  for_each          = var.create && var.udp_allowed_ports != [] && var.vpc_id != "" ? { for port in var.udp_allowed_ports : port.from_port => port } : {}
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
@@ -141,7 +141,7 @@ resource "aws_fsx_windows_file_system" "default" {
   preferred_subnet_id               = element(var.subnet_ids, 0)
   storage_type                      = var.storage_type
   security_group_ids = flatten([
-    concat(aws_security_group.default.*.id, "")[0],
+    listconcat(aws_security_group.default.*.id, "")[0]),
     var.security_group_ids
   ])
   tags = local.tags
