@@ -66,11 +66,17 @@ variable "subnet_ids" {
   description = "(Required) A list of IDs for the subnets that the file system will be accessible from. To specify more than a single subnet set deployment_type to MULTI_AZ_1"
 }
 
+variable ingress_cidrs {
+  type        = string
+  default     = null
+}
+
 variable "tcp_allowed_ports" {
   type = list(object({
     from_port = number
     to_port   = number
   }))
+  default = null
 }
 
 variable "udp_allowed_ports" {
@@ -78,6 +84,7 @@ variable "udp_allowed_ports" {
     from_port = number
     to_port   = number
   }))
+  default = null
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -85,8 +92,8 @@ variable "udp_allowed_ports" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "default" {
-  count       = var.create ? 1 : 0
-  name        = join("-", [local.module_prefix, "1"])
+  count       = var.create && var.vpc_id != null ? 1 : 0
+  name        = local.module_prefix
   description = "common FSx ports"
   vpc_id      = var.vpc_id
   egress {
@@ -100,7 +107,7 @@ resource "aws_security_group" "default" {
 }
 
 resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
-  for_each          = { for port in var.tcp_allowed_ports : port.from_port => port }
+  for_each          = var.count && var.tcp_allowed_ports != null && var.vpc_id != null ? { for port in var.tcp_allowed_ports : port.from_port => port } : []
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
@@ -110,7 +117,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
 }
 
 resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
-  for_each          = { for port in var.udp_allowed_ports : port.from_port => port }
+  for_each          = var.count && var.udp_allowed_ports != null && var.vpc_id != null ? { for port in var.udp_allowed_ports : port.from_port => port } : []
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
@@ -120,6 +127,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
 }
 
 resource "aws_fsx_windows_file_system" "default" {
+  count       = var.create ? 1 : 0
   # kms_key_id          = aws_kms_key.example.arn # Not running custom KMS at time of this writing.
   active_directory_id               = var.active_directory_id
   storage_capacity                  = var.storage_capacity
@@ -132,7 +140,7 @@ resource "aws_fsx_windows_file_system" "default" {
   preferred_subnet_id               = element(var.subnet_ids, 0)
   storage_type                      = var.storage_type
   security_group_ids = flatten([
-    aws_security_group.default[0].id,
+    concat(aws_security_group.default.*.id, "")[0],
     var.security_group_ids
   ])
   tags = local.tags
@@ -149,10 +157,10 @@ output "fsx" {
 
 output "fsx_id" {
   description = "List FSx id"
-  value       = aws_fsx_windows_file_system.default.id
+  value       = aws_fsx_windows_file_system.default.*.id
 }
 
 output "fsx_arn" {
   description = "List FSx id"
-  value       = aws_fsx_windows_file_system.default.arn
+  value       = aws_fsx_windows_file_system.default.*.arn
 }
