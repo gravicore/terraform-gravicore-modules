@@ -144,18 +144,11 @@ locals {
   }
   security_tags = {}
 
-  map_tags = {
-    map-migrated             = var.map_migrated
-    map-migrated-app         = var.map_migrated_app
-    aws-migration-project-id = var.aws_migration_project_id
-  }
-
   tags = merge(
     local.business_tags,
     local.technical_tags,
     local.automation_tags,
     local.security_tags,
-    local.map_tags,
     var.tags
   )
 }
