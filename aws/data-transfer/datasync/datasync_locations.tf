@@ -132,9 +132,9 @@ resource "aws_datasync_location_fsx_windows_file_system" "datasync" {
   fsx_filesystem_arn = each.value.fsx_filesystem_arn
   subdirectory       = lookup(each.value, "subdirectory", null)
 
-  domain              = split("/", each.value.user)[0]
-  user                = split("/", each.value.user)[1]
-  password            = each.value.password
+  domain   = split("/", each.value.user)[0]
+  user     = split("/", each.value.user)[1]
+  password = each.value.password
 
   security_group_arns = lookup(each.value, "security_group_arns", null)
 }
