@@ -401,3 +401,13 @@ output "dfs_instances" {
   description = "List the info for dfs namespace instances"
   value       = aws_instance.default.*
 }
+
+output "dfs_security_group" {
+  description = "List the info for dfs security group"
+  value       = aws_security_group.default.*
+}
+
+output "dfs_iam_instance_role" {
+  description = "List the info for dfs iam instance role"
+  value       = aws_iam_role.ec2_role.*
+}
