@@ -37,6 +37,8 @@ aws/data-transfer:
  - aws/data-transfer/**/*
 aws/datadog-agent:
  - aws/datadog-agent/**/*
+aws/dfs:
+ - aws/dfs/**/*
 aws/dns:
  - aws/dns/**/*
 aws/ds-msad:
@@ -49,6 +51,8 @@ aws/ecs:
  - aws/ecs/**/*
 aws/elasticache-redis:
  - aws/elasticache-redis/**/*
+aws/fsx:
+ - aws/fsx/**/*
 aws/instance-scheduler:
  - aws/instance-scheduler/**/*
 aws/kms:
