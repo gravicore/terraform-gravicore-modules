@@ -197,14 +197,14 @@ variable ingress_cidrs {
   description = "description"
 }
 
-variable "dfs_tcp_allowed_ports" {
+variable "tcp_allowed_ports" {
   type = list(object({
     from_port = number
     to_port   = number
   }))
 }
 
-variable "dfs_udp_allowed_ports" {
+variable "udp_allowed_ports" {
   type = list(object({
     from_port = number
     to_port   = number
@@ -231,7 +231,7 @@ resource "aws_security_group" "default" {
 }
 
 resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
-  for_each          = { for port in var.dfs_tcp_allowed_ports : port.from_port => port }
+  for_each          = { for port in var.tcp_allowed_ports : port.from_port => port }
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
@@ -251,7 +251,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_icmp" {
 }
 
 resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
-  for_each          = { for port in var.dfs_udp_allowed_ports : port.from_port => port }
+  for_each          = { for port in var.udp_allowed_ports : port.from_port => port }
   security_group_id = aws_security_group.default[0].id
   type              = "ingress"
   from_port         = each.value.from_port
