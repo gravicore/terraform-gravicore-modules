@@ -165,3 +165,8 @@ output "fsx_arn" {
   description = "List FSx id"
   value       = aws_fsx_windows_file_system.default.*.arn
 }
+
+output fsx_security_group {
+  description = "Map of fsx security group apptributes"
+  value       = aws_security_group.default.*
+}
