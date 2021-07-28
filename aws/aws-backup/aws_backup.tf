@@ -98,6 +98,12 @@ variable "iam_role_arn" {
   default     = null
 }
 
+variable kms_key_arn {
+  type        = string
+  default     = null
+  description = "(Optional) The server-side encryption key that is used to protect your backups"
+}
+
 locals {
 
   # Rule
@@ -116,14 +122,21 @@ locals {
 
   # Rules
   rules = concat(local.rule, var.rules)
-
 }
+
 # ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
+
+############################################################
 # IAM Policies
-# ----------------------------------------------------------------------------------------------------------------------
+############################################################
+
 resource "aws_iam_role" "aws_backup_role" {
-  count              = var.create && var.iam_role_arn == null ? 1 : 0
-  name               = join("-", [local.module_prefix, "backup-role"])
+  count = var.create && var.iam_role_arn == null ? 1 : 0
+  name  = local.module_prefix
+  tags  = var.tags
+
   assume_role_policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -138,8 +151,6 @@ resource "aws_iam_role" "aws_backup_role" {
   ]
 }
 POLICY
-
-  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "ab_policy_attach" {
@@ -150,7 +161,6 @@ resource "aws_iam_role_policy_attachment" "ab_policy_attach" {
 
 # Tag policy in case it needed
 resource "aws_iam_policy" "ab_tag_policy" {
-
   count       = var.create && var.iam_role_arn == null ? 1 : 0
   description = "AWS Backup Tag policy"
 
@@ -173,7 +183,6 @@ resource "aws_iam_policy" "ab_tag_policy" {
 EOF
 }
 
-
 resource "aws_iam_role_policy_attachment" "ab_tag_policy_attach" {
   count      = var.create && var.iam_role_arn == null ? 1 : 0
   policy_arn = aws_iam_policy.ab_tag_policy[0].arn
@@ -188,15 +197,12 @@ resource "aws_iam_role_policy_attachment" "ab_restores_policy_attach" {
   role       = aws_iam_role.aws_backup_role[0].name
 }
 
-# ----------------------------------------------------------------------------------------------------------------------
-# MODULES / RESOURCES
-# ----------------------------------------------------------------------------------------------------------------------
-
 ############################################################
 # KMS key for fsx
 ############################################################
+
 resource "aws_kms_key" "default" {
-  count                    = var.create ? 1 : 0
+  count                    = var.create && var.kms_key_arn == null ? 1 : 0
   deletion_window_in_days  = var.deletion_window_in_days
   enable_key_rotation      = var.enable_key_rotation
   policy                   = var.policy
@@ -207,16 +213,19 @@ resource "aws_kms_key" "default" {
 }
 
 resource "aws_kms_alias" "default" {
-  count         = var.create ? 1 : 0
-  name          = "alias/${replace(local.stage_prefix, var.delimiter, "/")}/aws-backup"
+  count         = var.create && var.kms_key_arn == null ? 1 : 0
+  name          = join("/", "alias", replace(local.stage_prefix, var.delimiter, "/"), var.name)
   target_key_id = join("", aws_kms_key.default.*.id)
 }
 
+############################################################
 # AWS Backup vault
+############################################################
+
 resource "aws_backup_vault" "default" {
-  count       = var.create && var.vault_name != null ? 1 : 0
-  name        = join("-", [local.module_prefix, "vault"])
-  kms_key_arn = join("", aws_kms_key.default.*.arn)
+  count       = var.create && var.vault_name == null ? 1 : 0
+  name        = local.module_prefix
+  kms_key_arn = var.kms_key_arn == null ? join("", aws_kms_key.default.*.arn) : var.kms_key_arn
   tags        = var.tags
 }
 

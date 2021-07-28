@@ -17,6 +17,8 @@ aws/arctic-wolf:
  - aws/arctic-wolf/**/*
 aws/aviatrix:
  - aws/aviatrix/**/*
+aws/aws-backup:
+ - aws/aws-backup/**/*
 aws/billing:
  - aws/billing/**/*
 aws/camunda:
