@@ -214,7 +214,7 @@ resource "aws_kms_key" "default" {
 
 resource "aws_kms_alias" "default" {
   count         = var.create && var.kms_key_arn == null ? 1 : 0
-  name          = join("/", "alias", replace(local.stage_prefix, var.delimiter, "/"), var.name)
+  name          = join("/", ["alias", replace(local.stage_prefix, var.delimiter, "/"), var.name])
   target_key_id = join("", aws_kms_key.default.*.id)
 }
 
