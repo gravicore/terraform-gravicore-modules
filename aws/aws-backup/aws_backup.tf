@@ -242,7 +242,7 @@ resource "aws_backup_plan" "default" {
     for_each = local.rules
     content {
       rule_name                = lookup(rule.value, "name", null)
-      target_vault_name        = var.vault_name != null ? aws_backup_vault.default[0].name : lookup(rule.value, "target_vault_name", "Default")
+      target_vault_name        = var.vault_name == null ? aws_backup_vault.default[0].name : var.vault_name
       schedule                 = lookup(rule.value, "schedule", null)
       enable_continuous_backup = lookup(rule.value, "enable_continuous_backup", null)
 
