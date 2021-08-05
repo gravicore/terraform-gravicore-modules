@@ -8,7 +8,7 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "aws-backup"
+  default     = "backup"
   description = "The name of the module"
 }
 
