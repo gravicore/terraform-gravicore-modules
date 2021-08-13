@@ -156,6 +156,13 @@ resource "aws_instance" "datasync" {
   }
 }
 
+resource "time_sleep" "wait_180_seconds" {
+  count = var.create ? 1 : 0
+  depends_on = [aws_instance.datasync]
+  triggers = {id = join(",", aws_instance.datasync.*.id)}
+  create_duration = "180s"
+}
+
 resource "aws_datasync_agent" "default" {
   count = var.create ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "datasync"])
@@ -166,6 +173,8 @@ resource "aws_datasync_agent" "default" {
   subnet_arns           = ["arn:aws:ec2:${var.aws_region}:${var.account_id}:subnet/${aws_instance.datasync[0].subnet_id}"]
   vpc_endpoint_id       = var.vpc_endpoint_id
   private_link_endpoint = data.aws_network_interface.datasync.private_ip
+
+  depends_on = [time_sleep.wait_180_seconds]
 }
 
 data "aws_vpc_endpoint" "datasync" {
