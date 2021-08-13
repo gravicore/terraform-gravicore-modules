@@ -17,7 +17,7 @@ variable "acm_certificate_arn" {
 variable "minimum_protocol_version" {
   type        = string
   description = "Cloudfront TLS minimum protocol version"
-  default     = "TLSv1.1_2016"
+  default     = "TLSv1.2_2021"
 }
 
 variable "aliases" {
