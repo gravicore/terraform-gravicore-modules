@@ -201,7 +201,37 @@ variable write_attributes {
 variable refresh_token_validity {
   type        = number
   default     = 1
-  description = "(Optional) The time limit in days refresh tokens are valid for"
+  description = "(Optional) Time limit in days refresh tokens are valid for"
+}
+
+variable token_validity_units_refresh_token {
+  type        = string
+  default     = "days"
+  description = "(Optional) Time unit in for the value in refresh_token_validity, defaults to days: Valid values for the following arguments are: seconds, minutes, hours or days"
+}
+
+variable access_token_validity {
+  type        = number
+  default     = 1
+  description = "(Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. This value will be overridden if you have entered a value in token_validity_units"
+}
+
+variable token_validity_units_access_token {
+  type        = string
+  default     = "hours"
+  description = "(Optional) Time unit in for the value in access_token_validity, defaults to hours: Valid values for the following arguments are: seconds, minutes, hours or days"
+}
+
+variable id_token_validity {
+  type        = number
+  default     = 1
+  description = "(Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. This value will be overridden if you have entered a value in token_validity_units"
+}
+
+variable token_validity_units_id_token {
+  type        = string
+  default     = "hours"
+  description = "(Optional) Time unit in for the value in id_token_validity, defaults to hours: Valid values for the following arguments are: seconds, minutes, hours or days"
 }
 
 variable additional_app_clients {
@@ -374,7 +404,17 @@ resource "aws_cognito_user_pool_client" "pool" {
   user_pool_id                         = aws_cognito_user_pool.pool[0].id
   read_attributes                      = var.read_attributes
   write_attributes                     = var.write_attributes
-  refresh_token_validity               = var.refresh_token_validity
+
+  refresh_token_validity = var.refresh_token_validity
+  access_token_validity  = var.access_token_validity
+  id_token_validity      = var.id_token_validity
+
+  token_validity_units {
+    refresh_token = var.token_validity_units_refresh_token
+    access_token  = var.token_validity_units_access_token
+    id_token      = var.token_validity_units_id_token
+  }
+
   depends_on = [
     aws_cognito_identity_provider.pool,
   ]
@@ -397,7 +437,17 @@ resource "aws_cognito_user_pool_client" "additional_client" {
   user_pool_id                         = aws_cognito_user_pool.pool[0].id
   read_attributes                      = lookup(each.value, "read_attributes", null)
   write_attributes                     = lookup(each.value, "write_attributes", null)
-  refresh_token_validity               = lookup(each.value, "refresh_token_validity", 1)
+
+  refresh_token_validity = lookup(each.value, "refresh_token_validity", 1)
+  access_token_validity  = lookup(each.value, "access_token_validity", 1)
+  id_token_validity      = lookup(each.value, "id_token_validity", 1)
+
+  token_validity_units {
+    refresh_token = lookup(each.value, "token_validity_units_refresh_token", "days")
+    access_token  = lookup(each.value, "token_validity_units_access_token", "hours")
+    id_token      = lookup(each.value, "token_validity_units_id_token", "hours")
+  }
+
   depends_on = [
     aws_cognito_identity_provider.pool,
   ]
