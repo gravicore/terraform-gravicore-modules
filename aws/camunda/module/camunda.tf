@@ -477,7 +477,7 @@ module "alb" {
 }
 
 module "datadog" {
-  source                         = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/datadog/ecs?ref=0.31.0"
+  source                         = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/datadog/ecs?ref=0.35.3"
   container_datadog_api_key      = var.datadog_api_key
   container_datadog_service_name = var.name
   name                           = var.name

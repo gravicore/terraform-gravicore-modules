@@ -45,7 +45,13 @@ locals {
     image             = var.container_datadog_logging_image,
     name              = "${local.module_prefix}-logging",
     essential         = true,
+    cpu               = 0
+    mountPoints       = []
+    volumesFrom       = []
     memoryReservation = 64
+    portMappings      = []
+    environment       = []
+    user              = "0"
     firelensConfiguration = {
       type = "fluentbit",
       options = {
@@ -59,6 +65,8 @@ locals {
     name              = "${local.module_prefix}-metrics",
     essential         = true,
     cpu               = var.container_datadog_metrics_cpu,
+    mountPoints       = []
+    volumesFrom       = []
     memoryReservation = 256,
     portMappings = [{
       hostPort      = 8126,
