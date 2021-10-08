@@ -163,121 +163,121 @@ resource "aws_route53_record" "dns_public_soa" {
 
 resource "aws_route53_record" "dns_public_a" {
   for_each = var.create ? var.records_a : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "A"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "A"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_aaaa" {
   for_each = var.create ? var.records_aaaa : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "AAAA"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "AAAA"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_caa" {
   for_each = var.create ? var.records_caa : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "CAA"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "CAA"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_cname" {
   for_each = var.create ? var.records_cname : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "CNAME"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "CNAME"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_ds" {
   for_each = var.create ? var.records_ds : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "DS"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "DS"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_mx" {
   for_each = var.create ? var.records_mx : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "MX"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "MX"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_naptr" {
   for_each = var.create ? var.records_naptr : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "NAPTR"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "NAPTR"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_ptr" {
   for_each = var.create ? var.records_ptr : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "PTR"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "PTR"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_spf" {
   for_each = var.create ? var.records_spf : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "SPF"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "SPF"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_srv" {
   for_each = var.create ? var.records_srv : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "SRV"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "SRV"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
 resource "aws_route53_record" "dns_public_txt" {
   for_each = var.create ? var.records_txt : {}
-  name    = each.key
-  zone_id = aws_route53_zone.dns_public[0].zone_id
-  type    = "TXT"
-  ttl     = lookup(each.value, "ttl", 300)
-  records = each.value.records
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "TXT"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
