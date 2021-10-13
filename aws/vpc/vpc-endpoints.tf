@@ -724,7 +724,7 @@ variable "datasync_endpoint_private_dns_enabled" {
 # Default endpoint security group
 
 resource "aws_security_group" "vpc_endpoint_default" {
-  count       = length(var.default_endpoint_security_group_ids) < 1 ? 1 : 0
+  count       = var.create && length(var.default_endpoint_security_group_ids) < 1 ? 1 : 0
   name        = replace("${local.module_prefix}-endpoint-default", "-", var.delimiter)
   description = join(" ", [var.desc_prefix, "Allow all VPC traffic"])
 
@@ -772,7 +772,7 @@ resource "aws_vpc_endpoint" "datasync" {
 # -------
 
 locals {
-  default_endpoint_security_group_ids = length(var.default_endpoint_security_group_ids) < 1 ? [aws_security_group.vpc_endpoint_default[0].id] : var.default_endpoint_security_group_ids
+  default_endpoint_security_group_ids = var.create == 0 ? [""] : (length(var.default_endpoint_security_group_ids) < 1 ? [aws_security_group.vpc_endpoint_default[0].id] : var.default_endpoint_security_group_ids)
 
   # Gateways
 
