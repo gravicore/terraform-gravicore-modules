@@ -772,7 +772,7 @@ resource "aws_vpc_endpoint" "datasync" {
 # -------
 
 locals {
-  default_endpoint_security_group_ids = var.create == 0 ? [""] : (length(var.default_endpoint_security_group_ids) < 1 ? [aws_security_group.vpc_endpoint_default[0].id] : var.default_endpoint_security_group_ids)
+  default_endpoint_security_group_ids = var.create == false ? [""] : (length(var.default_endpoint_security_group_ids) < 1 ? [aws_security_group.vpc_endpoint_default[0].id] : var.default_endpoint_security_group_ids)
 
   # Gateways
 
