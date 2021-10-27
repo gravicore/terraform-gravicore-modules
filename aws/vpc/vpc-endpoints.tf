@@ -697,7 +697,7 @@ variable "rekognition_endpoint_private_dns_enabled" {
 
 variable "default_endpoint_security_group_ids" {
   description = "The ID of one or more security groups to associate with the network interface for any endpoints not defined"
-  default     = []
+  default     = [""]
 }
 
 variable "enable_datasync_endpoint" {
@@ -724,7 +724,7 @@ variable "datasync_endpoint_private_dns_enabled" {
 # Default endpoint security group
 
 resource "aws_security_group" "vpc_endpoint_default" {
-  count       = length(var.default_endpoint_security_group_ids) < 1 ? 1 : 0
+  count       = var.create && length(var.default_endpoint_security_group_ids) < 1 ? 1 : 0
   name        = replace("${local.module_prefix}-endpoint-default", "-", var.delimiter)
   description = join(" ", [var.desc_prefix, "Allow all VPC traffic"])
 
