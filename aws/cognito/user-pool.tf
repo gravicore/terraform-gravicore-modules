@@ -246,6 +246,11 @@ variable resource_servers {
   description = "description"
 }
 
+variable account_recovery_setting_recovery_mechanism {
+  type        = list(string)
+  default     = ["admin_only"]
+  description = "(Required) List of Account Recovery methods for a user. Priority is determined by list index. Accepted Values: verified_email, verified_phone_number, and admin_only"
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -262,6 +267,16 @@ resource "aws_cognito_user_pool" "pool" {
   alias_attributes         = var.alias_attributes
   auto_verified_attributes = var.auto_verified_attributes
   mfa_configuration        = var.mfa_configuration
+
+  account_recovery_setting {
+    dynamic "recovery_mechanism" {
+      for_each = var.account_recovery_setting_recovery_mechanism
+      content {
+        name     = recovery_mechanism.value
+        priority = recovery_mechanism.key + 1
+      }
+    }
+  }
 
   admin_create_user_config {
     allow_admin_create_user_only = var.admin_allow_admin_create_user_only
