@@ -9,7 +9,7 @@
     <spring-boot.version>2.3.4.RELEASE</spring-boot.version>
     <jaxb.version>2.2.3</jaxb.version>
     <ssm.version>1.5.0</ssm.version>
-    <lombok.version>1.18.12</lombok.version>
+    <lombok.version>1.18.22</lombok.version>
     <jwt.version>3.11.0</jwt.version>
     <jwks.version>0.15.0</jwks.version>
     <statsd.client.version>2.10.1</statsd.client.version>
@@ -91,11 +91,6 @@
       <artifactId>jwks-rsa</artifactId>
       <version>${jwks.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy-all</artifactId>
-      <version>2.4.13</version>
-    </dependency>    
   </dependencies>
   
    <build>

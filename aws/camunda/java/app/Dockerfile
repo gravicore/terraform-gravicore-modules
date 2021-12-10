@@ -3,6 +3,7 @@ RUN apk --no-cache add curl
 RUN apk --no-cache add jq
 COPY ./target/*jar /usr/app/app.jar
 RUN curl -L https://dtdg.co/latest-java-tracer --output /usr/app/dd-java-agent.jar
+RUN curl -L https://repo1.maven.org/maven2/org/codehaus/groovy/groovy-all/2.4.13/groovy-all-2.4.13.jar --output /usr/app/groovy-all-2.4.13.jar
 WORKDIR /usr/app
 EXPOSE 80
 ENTRYPOINT [ "/bin/sh", "-c" , "\

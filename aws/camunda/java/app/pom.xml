@@ -7,7 +7,7 @@
   <properties>
     <camunda.spring-boot.version>7.14.0</camunda.spring-boot.version>
     <spring-boot.version>2.3.6.RELEASE</spring-boot.version>
-    <lombok.version>1.18.12</lombok.version>
+    <lombok.version>1.18.22</lombok.version>
     <aws.version>2.15.34</aws.version>
     <jaxb.version>2.2.3</jaxb.version>
     <servlet.version>4.0.1</servlet.version>
@@ -107,11 +107,6 @@
       <artifactId>spring-boot-parameter-store-integration</artifactId>
       <version>${ssm.version}</version>
     </dependency>
-    <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy-all</artifactId>
-      <version>2.4.13</version>
-    </dependency>    
   </dependencies>
 
    <build>
