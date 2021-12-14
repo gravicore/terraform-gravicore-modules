@@ -111,6 +111,7 @@
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy-all</artifactId>
       <version>2.4.13</version>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
 
