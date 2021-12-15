@@ -102,6 +102,7 @@
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy-all</artifactId>
       <version>2.4.13</version>
+      <scope>import</scope>
     </dependency>
     <dependency>
       <groupId>org.camunda.spin</groupId>
