@@ -16,7 +16,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <groovy-all.version>2.4.21</groovy-all.version>
   </properties>
-​
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -31,7 +31,7 @@
         <artifactId>bom</artifactId>
         <version>${aws.version}</version>
         <type>pom</type>
-        <scope>import</scope>        
+        <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>org.camunda.bpm</groupId>
@@ -40,9 +40,9 @@
         <scope>import</scope>
         <type>pom</type>
       </dependency>
-    </dependencies>  
+    </dependencies>
   </dependencyManagement>
-​
+
   <dependencies>
     <dependency>
       <groupId>com.datadoghq</groupId>
@@ -129,7 +129,7 @@
       <artifactId>camunda-spin-dataformat-all</artifactId>
     </dependency>
   </dependencies>
-​
+
    <build>
     <plugins>
       <plugin>
@@ -149,5 +149,5 @@
       </plugin>
     </plugins>
   </build>
-​
+
 </project>
