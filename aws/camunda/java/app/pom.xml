@@ -3,7 +3,7 @@
   <groupId>io.gravicore</groupId>
   <artifactId>camunda-app</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-
+​
   <properties>
     <camunda.spring-boot.version>7.14.0</camunda.spring-boot.version>
     <spring-boot.version>2.3.6.RELEASE</spring-boot.version>
@@ -15,8 +15,9 @@
     <statsd.client.version>2.10.1</statsd.client.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <groovy-all.version>2.4.21</groovy-all.version>
   </properties>
-
+​
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -34,15 +35,15 @@
         <scope>import</scope>        
       </dependency>
       <dependency>
-        <groupId>org.camunda.spin</groupId>
-        <artifactId>camunda-spin-bom</artifactId>
+        <groupId>org.camunda.bpm</groupId>
+        <artifactId>camunda-bom</artifactId>
+        <version>${camunda.spring-boot.version}</version>
         <scope>import</scope>
         <type>pom</type>
-        <version>1.13.0</version>
       </dependency>
     </dependencies>  
   </dependencyManagement>
-
+​
   <dependencies>
     <dependency>
       <groupId>com.datadoghq</groupId>
@@ -117,19 +118,19 @@
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy-all</artifactId>
-      <version>2.4.13</version>
-      <scope>import</scope>
+      <version>${groovy-all.version}</version>
+      <scope>runtime</scope>
     </dependency>
-   <dependency>
-      <groupId>org.camunda.spin</groupId>
-      <artifactId>camunda-spin-core</artifactId>
+    <dependency>
+      <groupId>org.camunda.bpm</groupId>
+      <artifactId>camunda-engine-plugin-spin</artifactId>
     </dependency>
     <dependency>
       <groupId>org.camunda.spin</groupId>
       <artifactId>camunda-spin-dataformat-all</artifactId>
     </dependency>
   </dependencies>
-
+​
    <build>
     <plugins>
       <plugin>
@@ -149,5 +150,5 @@
       </plugin>
     </plugins>
   </build>
-
+​
 </project>
