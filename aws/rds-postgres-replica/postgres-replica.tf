@@ -367,6 +367,24 @@ variable "lambda_layers" {
   description = "List of ARNs of lambda layers to be used by target group registration lambda"
 }
 
+variable "performance_insights_enabled" {
+  description = "(Optional) Specifies whether Performance Insights are enabled. Defaults to false"
+  default     = false
+  type        = bool
+}
+
+variable "performance_insights_kms_key_id" {
+  description = "(Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying performance_insights_kms_key_id, performance_insights_enabled needs to be set to true. Once KMS key is set, it can never be changed"
+  default     = ""
+  type        = string
+}
+
+variable "performance_insights_retention_period" {
+  description = "(Optional) The amount of time in days to retain Performance Insights data. Either 7 (7 days) or 731 (2 years). When specifying performance_insights_retention_period, performance_insights_enabled needs to be set to true. Defaults to '7'"
+  default     = 7
+  type        = number
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -401,6 +419,9 @@ resource "aws_db_instance" "default" {
   max_allocated_storage               = var.max_allocated_storage
   deletion_protection                 = var.deletion_protection
   enabled_cloudwatch_logs_exports     = var.enabled_cloudwatch_logs_exports
+  performance_insights_enabled          = var.performance_insights_enabled
+  performance_insights_kms_key_id       = var.performance_insights_enabled ? coalesce(var.performance_insights_kms_key_id, var.kms_key_id) : null
+  performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
 }
 
 # Security group
