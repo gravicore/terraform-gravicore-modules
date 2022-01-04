@@ -414,11 +414,11 @@ resource "aws_db_instance" "default" {
   monitoring_interval         = var.monitoring_interval
   replicate_source_db         = var.replicate_source_db[0]
 
-  parameter_group_name                = var.parameter_group_name != null || var.parameters != null ? coalesce(var.parameter_group_name, aws_db_parameter_group.replica[0].name) : null
-  iam_database_authentication_enabled = var.iam_database_authentication_enabled
-  max_allocated_storage               = var.max_allocated_storage
-  deletion_protection                 = var.deletion_protection
-  enabled_cloudwatch_logs_exports     = var.enabled_cloudwatch_logs_exports
+  parameter_group_name                  = var.parameter_group_name != null || var.parameters != null ? coalesce(var.parameter_group_name, aws_db_parameter_group.replica[0].name) : null
+  iam_database_authentication_enabled   = var.iam_database_authentication_enabled
+  max_allocated_storage                 = var.max_allocated_storage
+  deletion_protection                   = var.deletion_protection
+  enabled_cloudwatch_logs_exports       = var.enabled_cloudwatch_logs_exports
   performance_insights_enabled          = var.performance_insights_enabled
   performance_insights_kms_key_id       = var.performance_insights_enabled ? coalesce(var.performance_insights_kms_key_id, var.kms_key_id) : null
   performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
