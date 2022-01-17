@@ -237,7 +237,7 @@ resource "aws_cloudformation_stack" "datadog_forwarder" {
     DdApiKey          = "this_value_is_not_used"
     DdApiKeySecretArn = concat(aws_secretsmanager_secret.datadog_api_key.*.arn, [""])[0]
     # DdTags            = join(",", [for k, v in local.tags : format("%s:%s", k, v)])
-    # InstallAsLayer    = false
+    InstallAsLayer    = false
   }
 
   depends_on = [aws_cloudformation_stack.datadog_integration]
