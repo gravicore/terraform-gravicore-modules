@@ -37,8 +37,8 @@ aws/cognito:
  - aws/cognito/**/*
 aws/data-transfer:
  - aws/data-transfer/**/*
-aws/datadog-agent:
- - aws/datadog-agent/**/*
+aws/datadog:
+ - aws/datadog/**/*
 aws/dfs:
  - aws/dfs/**/*
 aws/dns:

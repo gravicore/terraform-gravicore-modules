@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Reset to normal
+cnorm=$'\e[0m'
+
+# White
+cbwht=$'\e[0;97m'
+cwht=$'\e[1;97m'
+cdwht=$'\e[2;97m'
+
+# Red
+cbred=$'\e[1;31m'
+cred=$'\e[0;31m'
+cdred=$'\e[2;31m'
+
+# Green
+cbgrn=$'\e[1;32m'
+cgrn=$'\e[0;32m'
+cdgrn=$'\e[2;32m'
+
+# Yellow
+cbyel=$'\e[1;33m'
+cyel=$'\e[0;33m'
+cdyel=$'\e[2;33m'
+
+# Blue
+cbblu=$'\e[1;34m'
+cblu=$'\e[0;34m'
+cdblu=$'\e[2;34m'
+
+# Magenta
+cbmag=$'\e[1;35m'
+cmag=$'\e[0;35m'
+cdmag=$'\e[2;35m'
+
+# Cyan
+cbcyn=$'\e[1;36m'
+ccyn=$'\e[0;36m'
+cdcyn=$'\e[2;36m'

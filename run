@@ -1,0 +1,53 @@
+#!/bin/bash
+PATH=./node_modules/.bin:$PATH
+
+# Colors
+source ./scripts/colors
+
+# Logging Emblem
+emblem=""
+emblem_info="$emblem$cwht[INFO]$cnorm"
+emblem_warning="$emblem$cbyel[WARNING]$cnorm"
+emblem_error="$emblem$cbred[ERROR]$cnorm"
+emblem_debug="$emblem$cdwht[DEBUG]$cnorm"
+
+# Info
+function info { echo "$emblem_info$cnorm $1$cnorm" ;}
+info_not_yet_implemented=$(info "Not yet implemented.")
+
+# Debug
+function debug { echo "$emblem_debug$cdwht $1$cnorm" ;}
+
+# Warning
+function warning { echo "$emblem_warning$cnorm $1$cnorm"; }
+
+# Error
+function error { echo "$emblem_error$cbwht $1$cnorm"; }
+
+# Tasks
+
+function task:fmt {
+    terragrunt hclfmt
+    terraform fmt -recursive
+}
+
+function task:envs {
+    printenv | grep '^USER'
+    printenv | grep '^HOME'
+    printenv | grep '^PWD'
+    printenv | grep '^AWS_' | grep -v -e 'SECRET' | grep -v -e 'TOKEN' | grep -v -e 'PASSWORD'
+    printenv | grep '^TF_'
+    printenv | grep '^TERRAGRUNT_'
+    printenv | grep '^NODE_'
+    printenv | grep '^NVM_'
+    printenv | grep '^GRV_'
+}
+
+function task:default {
+    echo "$ ./run <task> <args>"
+    echo "Tasks:"
+    compgen -A function | sed -En 's/task:(.*)/\1/p' | cat -n
+}
+
+TIMEFORMAT="⏱  Task completed in %3lR"
+time "task:${@:-default}"
