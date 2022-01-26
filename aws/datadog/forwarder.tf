@@ -236,6 +236,7 @@ resource "aws_cloudformation_stack" "datadog_forwarder" {
     FunctionName      = join("-", [local.module_prefix, "forwarder"])
     DdApiKey          = "this_value_is_not_used"
     DdApiKeySecretArn = concat(aws_secretsmanager_secret.datadog_api_key.*.arn, [""])[0]
+    DdTags            = join(",", local.datadog_aws_host_tags)
     # DdTags            = join(",", [for k, v in local.tags : format("%s:%s", k, v)])
     InstallAsLayer    = false
   }
@@ -253,7 +254,7 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
 
   # statement_id  = "${local.module_prefix}-allow-cloudwatch-${count.index}"
   action        = "lambda:InvokeFunction"
-  function_name = concat(aws_cloudformation_stack.datadog_forwarder.*.outputs.DatadogForwarderArn, [""])[0]
+  function_name = concat(aws_cloudformation_stack.datadog_forwarder.*.outputs.DatadogForwarderArn, [join("-", [local.module_prefix, "forwarder"])])[0]
   principal     = "logs.${var.aws_region}.amazonaws.com"
   source_arn    = "arn:aws:logs:${var.aws_region}:${local.account_id}:log-group:${element(var.datadog_cloudwatch_log_groups, count.index)}:*"
 }
