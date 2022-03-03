@@ -2,8 +2,8 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "repo_names" {
-  type        = list(string)
+variable "repos" {
+  type        = map(any)
   description = ""
 }
 
@@ -35,18 +35,18 @@ variable "kms_key" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-resource "aws_ecr_repository" "repo" {
-  for_each             = toset(var.repo_names)
+resource "aws_ecr_repository" "default" {
+  for_each             = var.repos
   name                 = each.key
-  image_tag_mutability = var.image_tag_mutability
+  image_tag_mutability = lookup(each.value, "image_tag_mutability", var.image_tag_mutability)
 
   image_scanning_configuration {
-    scan_on_push = var.scan_on_push
+    scan_on_push = lookup(each.value, "scan_on_push", var.scan_on_push)
   }
 
   encryption_configuration {
-    encryption_type = var.encryption_type
-    kms_key         = var.encryption_type == "KMS" ? var.kms_key : null
+    encryption_type = lookup(each.value, "encryption_type", var.encryption_type)
+    kms_key         = lookup(each.value, "kms_key", lookup(each.value, "encryption_type", var.encryption_type) == "KMS" ? var.kms_key : null)
   }
 }
 
