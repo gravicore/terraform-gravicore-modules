@@ -4,7 +4,17 @@
 
 variable "repos" {
   type        = map(any)
-  description = ""
+  description = <<EOF
+  A map of maps with the key being the repo name, and a sub map containing settings options in the following syntax:
+  repos = {
+    "rs6-was-ecr" = {
+      "image_tag_immutability" = "IMMUTABLE", (string, "IMMUTABLE" or "MUTABLE", defaults to "MUTABLE")
+      "scan_on_push" = true,                  (bool,   true or false,            defaults to true)
+      "encryption_type" = "AES256",           (string, "AES256" or "KMS",        defaults to "AES256")
+      "kms_key" = a KMS key ARN,              (string, any KMS key ARN,          defaults to null)
+      }
+  }
+  EOF
 }
 
 variable "image_tag_mutability" {
@@ -15,7 +25,7 @@ variable "image_tag_mutability" {
 
 variable "scan_on_push" {
   type        = bool
-  description = ""
+  description = "Indicates whether images are scanned after being pushed to the repository (true) or not scanned (false)"
   default     = true
 }
 
