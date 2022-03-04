@@ -8,8 +8,6 @@ aws/account-roles:
  - aws/account-roles/**/*
 aws/acm:
  - aws/acm/**/*
-aws/ecr:
- - aws/ecr/**/*
 aws/alb:
  - aws/alb/**/*
 aws/aurora-sls-pg:
@@ -52,6 +50,8 @@ aws/eb:
  - aws/eb/**/*
 aws/ecs:
  - aws/ecs/**/*
+aws/ecr:
+ - aws/ecr/**/*
 aws/elasticache-redis:
  - aws/elasticache-redis/**/*
 aws/fsx:
