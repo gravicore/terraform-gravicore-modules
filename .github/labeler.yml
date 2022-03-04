@@ -1,6 +1,5 @@
-
 github/action:
-  - .github/**/*
+ - .github/**/*
 aws:
  - aws/**/*
 aws/account:
@@ -51,6 +50,8 @@ aws/eb:
  - aws/eb/**/*
 aws/ecs:
  - aws/ecs/**/*
+aws/ecr:
+ - aws/ecr/**/*
 aws/elasticache-redis:
  - aws/elasticache-redis/**/*
 aws/fsx:
@@ -101,4 +102,3 @@ aws/vpc-dns:
  - aws/vpc-dns/**/*
 aws/wco:
  - aws/wco/**/*
-  
