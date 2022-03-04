@@ -65,5 +65,5 @@ resource "aws_ecr_repository" "default" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "ecr" {
-  value = aws_ecr_repository.repo
+  value = aws_ecr_repository.default
 }
