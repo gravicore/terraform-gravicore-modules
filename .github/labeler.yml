@@ -1,6 +1,5 @@
-
 github/action:
-  - .github/**/*
+ - .github/**/*
 aws:
  - aws/**/*
 aws/account:
@@ -9,6 +8,8 @@ aws/account-roles:
  - aws/account-roles/**/*
 aws/acm:
  - aws/acm/**/*
+aws/ecr:
+ - aws/ecr/**/*
 aws/alb:
  - aws/alb/**/*
 aws/aurora-sls-pg:
@@ -101,4 +102,3 @@ aws/vpc-dns:
  - aws/vpc-dns/**/*
 aws/wco:
  - aws/wco/**/*
-  
