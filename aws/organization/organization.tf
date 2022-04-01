@@ -34,8 +34,8 @@ variable "organization_feature_set" {
 }
 
 variable "organization_environments" {
-  type        = list(string)
-  default     = []
+  type        = map(any)
+  default     = {}
   description = "A list of environments to generate accounts from"
 }
 
@@ -76,10 +76,19 @@ variable "organization_default_stages" {
 }
 
 locals {
-  environment_accounts = length(var.organization_environments) < 1 ? {} : { for p in setproduct(var.organization_environments, var.organization_default_stages) :
-    join(var.delimiter, compact(concat([var.namespace], p))) =>
+  org_stages = [
+    for stages in var.organization_environments : contains(keys(stages), "stages") ? flatten(values(stages)) : var.organization_default_stages
+  ]
+  pre_proc_account_step_1 = [
+    for index, orgs in keys(var.organization_environments) : setproduct([orgs], element(local.org_stages, index))
+  ]
+  pre_proc_account_step_2 = [
+    for pre_proc in local.pre_proc_account_step_1 : [for accounts in pre_proc : join(var.delimiter, compact(concat([var.namespace], accounts)))]
+  ]
+  environment_accounts = {
+    for account in flatten(local.pre_proc_account_step_2) : account =>
     {
-      email                      = format(var.organization_environments_email_format, var.namespace, p[0], p[1])
+      email                      = format(var.organization_environments_email_format, var.namespace, split(var.delimiter, account)[1], split(var.delimiter, account)[2])
       iam_user_access_to_billing = var.organization_default_iam_user_access_to_billing
       parent_id                  = var.organization_default_parent_id
       role_name                  = var.organization_default_role_name
@@ -140,8 +149,6 @@ module "params" {
     description = "ARN of the organization" }
     "/${local.stage_prefix}/${var.name}-master-account-id" = { value = aws_organizations_organization.organization[0].master_account_id,
     description = "Identifier of the master account" }
-    "/${local.stage_prefix}/${var.name}-accounts" = { value = jsonencode(aws_organizations_organization.organization[0].accounts),
-    description = "List of organization accounts including the master account" }
     "/${local.stage_prefix}/${var.name}-account-ids" = { value = join(",", aws_organizations_organization.organization[0].accounts[*].id), type = "StringList",
     description = "A list of Organization account identifiers including the master account" }
     "/${local.stage_prefix}/${var.name}-non-master-accounts" = { value = jsonencode(aws_organizations_organization.organization[0].non_master_accounts),
