@@ -40,13 +40,13 @@ variable "subnet_ids" {
 variable "connect_settings_customer_username" {
   description = "(Required for ADConnector) The username corresponding to the password provided"
   type        = string
-  default = null
+  default     = null
 }
 
 variable "connect_settings_customer_dns_ips" {
   description = "(Required for ADConnector) The DNS IP addresses of the domain to connect to"
   type        = list(string)
-  default = null
+  default     = null
 }
 
 variable "alias" {
@@ -100,7 +100,7 @@ variable "edition" {
 
 data "aws_subnet" "default" {
   count = var.create && var.aws_subnet != null ? 1 : 0
-  id = var.subnet_ids[0]
+  id    = var.subnet_ids[0]
 }
 
 data "aws_ssm_parameter" "password" {
