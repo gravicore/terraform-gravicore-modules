@@ -137,8 +137,8 @@ resource "aws_directory_service_directory" "default" {
   dynamic "connect_settings" {
     for_each = var.type == "ADConnector" ? ["1"] : []
     content {
-      customer_dns_ips  = connect_settings.value.customer_dns_ips
-      customer_username = connect_settings.value.customer_username
+      customer_dns_ips  = var.connect_settings_customer_dns_ips
+      customer_username = var.username_parameter_key != null ? concat(data.aws_ssm_parameter.username.*.value, [""])[0] : var.connect_settings_customer_username
       subnet_ids        = var.subnet_ids
       vpc_id            = concat(data.aws_subnet.default.*.vpc_id, [""])[0]
     }
