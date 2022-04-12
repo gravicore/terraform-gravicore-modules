@@ -29,7 +29,7 @@ variable "username_parameter_key" {
 variable "size" {
   description = "(Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values)"
   type        = string
-  default     = null
+  default     = "Small"
 }
 
 variable "subnet_ids" {
@@ -76,22 +76,12 @@ variable "type" {
   description = "(Optional) - The directory type (SimpleAD, ADConnector or MicrosoftAD are accepted values). Defaults to SimpleAD"
   type        = string
   default     = "SimpleAD"
-
-  validation {
-    condition     = contains(["SimpleAD", "ADConnector", "MicrosoftAD"], var.type)
-    error_message = "`type` must be one of: \"SimpleAD\", \"ADConnector\", \"MicrosoftAD\"."
-  }
 }
 
 variable "edition" {
   description = "(Optional) The MicrosoftAD edition (Standard or Enterprise). Defaults to Enterprise (applies to MicrosoftAD type only)"
   type        = string
   default     = null
-
-  validation {
-    condition     = var.edition != null ? contains(["Standard", "Enterprise"], var.edition) : true
-    error_message = "`type` must be one of: \"Standard\", \"Enterprise\"."
-  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -99,7 +89,7 @@ variable "edition" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 data "aws_subnet" "default" {
-  count = var.create && var.aws_subnet != null ? 1 : 0
+  count = var.create && var.subnet_ids != null ? 1 : 0
   id    = var.subnet_ids[0]
 }
 

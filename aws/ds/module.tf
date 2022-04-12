@@ -8,13 +8,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "directory-service"
+  default     = "ds"
   description = "The name of the module"
 }
 
 variable terraform_module {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/directory-service"
+  default     = "gravicore/terraform-gravicore-modules/aws/ds"
   description = "The owner and name of the Terraform module"
 }
 
