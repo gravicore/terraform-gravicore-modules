@@ -137,6 +137,7 @@ variable enable_cspm {
 
 module "logs" {
   source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  enabled    = var.create && var.cloudtrail_name == null ? true : false
   namespace  = ""
   stage      = ""
   name       = local.module_prefix
@@ -597,23 +598,22 @@ resource "aws_wafv2_web_acl_logging_configuration" "waf_logs" {
   resource_arn            = element(var.waf_arns, count.index)
 }
 
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  count  = var.create && var.waf_arns != null ? 1 : 0
-  bucket = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_id : aws_s3_bucket.default[0].id
+resource "aws_cloudformation_stack" "s3_log_forwarder" {
+  count        = var.create && var.waf_arns != null ? 1 : 0
+  name         = join(var.delimiter, [local.module_prefix, "s3-log-forwarder"])
+  capabilities = ["CAPABILITY_IAM"]
 
-  topic {
-    topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "AWSLogs/"
+  parameters = {
+    bucketName = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_id : aws_s3_bucket.default[0].id
+    kmsKey     = var.kinesis_kms_key == null ? aws_kms_key.default[0].arn : var.kinesis_kms_key
+    prefixPath = replace(local.waf_log_prefix, "/[/]$/", "")
   }
-  topic {
-    topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = local.waf_log_prefix
-  }
+
+
+  template_url = "https://arcticwolf-public.s3.us-west-2.amazonaws.com/install/aws-templates/us001/latest/awn_s3_template.json"
 
   depends_on = [
-    aws_cloudformation_stack.cloudtrail[0],
+    aws_kinesis_firehose_delivery_stream.waf_logs[0],
   ]
 }
 
