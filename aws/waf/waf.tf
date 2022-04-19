@@ -88,12 +88,12 @@ resource "aws_wafv2_web_acl" "waf_acl" {
 
       statement {
         dynamic "managed_rule_group_statement" {
-          for_each = [rule]
+          for_each = lookup(rule.value, "name", null) == null ? [] : [rule]
           content {
             name        = rule.value.name
             vendor_name = rule.value.vendor_name
             dynamic "excluded_rule" {
-              for_each = lookup(rule.value, "excluded_rule", null) != null ? [rule] : []
+              for_each = lookup(rule.value, "excluded_rule", null) == null ? [] : [rule]
               content {
                 name = lookup(rule.value, "excluded_rule", null)
               }
@@ -133,11 +133,11 @@ resource "aws_wafv2_web_acl" "waf_acl" {
 
       statement {
         dynamic "ip_set_reference_statement" {
-          for_each = [rule]
+          for_each = lookup(rule.value, "name", null) == null ? [] : [rule]
           content {
             arn = aws_wafv2_ip_set.default[rule.key].arn
             dynamic "ip_set_forwarded_ip_config" {
-              for_each = lookup(rule.value, "ip_set_forwarded_ip_config", null) == null ? [] : [rule]
+              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) == null ? [] : [ip_set_reference_statement]
               content {
                 fallback_behavior = lookup(rule.value.ip_set_forwarded_ip_config, "fallback_behavior", null)
                 header_name       = lookup(rule.value.ip_set_forwarded_ip_config, "header_name", null)
@@ -162,18 +162,18 @@ resource "aws_wafv2_ip_set" "default" {
   name  = join(var.delimiter, [local.module_prefix, var.ip_set_rules[count.index].name])
   tags = local.tags
 
-  scope              = lookup(var.ip_set_rules[count.index], "scope", "CLOUDFRONT")
+  scope              = var.scope
   ip_address_version = lookup(var.ip_set_rules[count.index], "ip_address_version", "IPV4")
   addresses          = var.ip_set_rules[count.index].addresses
 }
 
 
 output waf_id {
-  value       = aws_wafv2_web_acl.waf_acl[0].id
+  value       = concat(aws_wafv2_web_acl.waf_acl.*.id, [""])[0]
   description = "The ID of the WAF WebACL."
 }
 
 output waf_arn {
-  value       = aws_wafv2_web_acl.waf_acl[0].arn
+  value       = concat(aws_wafv2_web_acl.waf_acl.*.arn, [""])[0]
   description = "The ARN of the WAF WebACL"
 }
