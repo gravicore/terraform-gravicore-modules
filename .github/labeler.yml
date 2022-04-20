@@ -100,5 +100,7 @@ aws/vpc-dhcp:
  - aws/vpc-dhcp/**/*
 aws/vpc-dns:
  - aws/vpc-dns/**/*
+aws/waf:
+ - aws/waf/**/*
 aws/wco:
  - aws/wco/**/*
