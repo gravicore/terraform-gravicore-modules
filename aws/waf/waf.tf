@@ -1,3 +1,7 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# VARIABLES / LOCALS / REMOTE STATE
+# ----------------------------------------------------------------------------------------------------------------------
+
 variable scope {
   type        = string
   default     = "CLOUDFRONT"
@@ -44,6 +48,10 @@ variable visibility_config_metric_name {
   default     = null
   description = "description"
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_wafv2_web_acl" "waf_acl" {
   count       = var.create ? 1 : 0
@@ -165,8 +173,15 @@ resource "aws_wafv2_ip_set" "default" {
   scope              = var.scope
   ip_address_version = lookup(var.ip_set_rules[count.index], "ip_address_version", "IPV4")
   addresses          = var.ip_set_rules[count.index].addresses
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
 
 output waf_id {
   value       = concat(aws_wafv2_web_acl.waf_acl.*.id, [""])[0]
