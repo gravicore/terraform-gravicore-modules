@@ -16,19 +16,48 @@ variable default_action {
 variable managed_rules {
   type        = list(any)
   default     = []
-  description = "description"
-}
+  description = <<EOF
+  A rule statement used to run the rules that are defined in a managed rule group. A list of maps with the following syntax:
 
-variable custom_rules {
-  type        = list(any)
-  default     = []
-  description = "description"
+  managed_rules = [
+    {
+      name            = "AWSManagedRulesCommonRuleSet"    (string)                                            (Required) The name of the managed rule group
+      vendor_name     = "AWS"                             (string)                                            (Required) The name of the managed rule group vendor
+      priority        = 0                                 (number)                                            (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the rules in order based on the value of priority. AWS WAF processes rules with lower priority first
+      override_action = "none"                            (string, "none" or "count",     defaults to none)   (Optional) The override_action block supports the following arguments: count - Override the rule action setting to count (i.e., only count matches). none - Don't override the rule action setting
+      excluded_rule {                                                                                         (Optional) The rules whose actions are set to COUNT by the web ACL, regardless of the action that is set on the rule
+        name = "string"                                   (string,                        defaults to null)   (Required) The name of the rule to exclude. If the rule group is managed by AWS, see the documentation for a list of names in the appropriate rule group in use. https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html
+      }
+      cloudwatch_metrics_enabled = true                   (bool,   true or false,         defaults to true)   (Optional) A boolean indicating whether the associated resource sends metrics to CloudWatch
+      sampled_requests_enabled   = true                   (bool,   true or false,         defaults to true)   (Optional) A boolean indicating whether AWS WAF should store a sampling of the web requests that match the rules
+    }
+  ]
+EOF
 }
 
 variable ip_set_rules {
   type        = list(any)
   default     = []
-  description = "description"
+  description = <<EOF
+  A rule statement used to detect web requests coming from particular IP addresses or address ranges. A list of maps with the following syntax:
+
+  ip_set_rules = [
+    {
+      name = "default-endpoints"                (string)
+      priority = 0                              (number)                                                   (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the rules in order based on the value of priority. AWS WAF processes rules with lower priority first
+      action = "count"                          (string, "count", "allow" or "block", defaults to count)   (Optional) The action block supports the following arguments: allow - Instructs AWS WAF to allow the web request. block - Instructs AWS WAF to block the web request. count - Instructs AWS WAF to count the web request and allow it
+      ip_address_version = "IPV4"               (string, "IPV4" or "IPV6",            defaults to count)   (Required) Specify IPV4 or IPV6
+      addresses = ["0.0.0.0/0"]                 (list(string))                                             (Required) Contains an array of strings that specify one or more IP addresses or blocks of IP addresses in Classless Inter-Domain Routing (CIDR) notation. AWS WAF supports all address ranges for IP versions IPv4 and IPv6.
+      ip_set_forwarded_ip_config = {                                                                       (Optional) The configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin
+        fallback_behavior = "MATCH"             (string, "MATCH" or "NO_MATCH",       defaults to null)    (Optional) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position
+        header_name       = "Header"            (string,                              defaults to null)    (Optional) - The name of the HTTP header to use for the IP address
+        position          = "FIRST"             (string, "FIRST" or "LAST" or "ANY",  defaults to null)    (Optional) - The position in the header to search for the IP address. If ANY is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10
+      }
+      cloudwatch_metrics_enabled = true         (bool,   true or false,               defaults to true)    (Optional) A boolean indicating whether the associated resource sends metrics to CloudWatch
+      sampled_requests_enabled   = true         (bool,   true or false,               defaults to true)    (Optional) A boolean indicating whether AWS WAF should store a sampling of the web requests that match the rules
+    }
+  ]
+EOF
 }
 
 variable visibility_config_cloudwatch_metrics_enabled {
@@ -168,7 +197,7 @@ resource "aws_wafv2_web_acl" "waf_acl" {
 resource "aws_wafv2_ip_set" "default" {
   count = var.create && var.ip_set_rules != [] ? length(var.ip_set_rules) : 0
   name  = join(var.delimiter, [local.module_prefix, var.ip_set_rules[count.index].name])
-  tags = local.tags
+  tags  = local.tags
 
   scope              = var.scope
   ip_address_version = lookup(var.ip_set_rules[count.index], "ip_address_version", "IPV4")
