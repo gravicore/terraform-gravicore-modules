@@ -216,59 +216,140 @@ variable "ip_group_rules" {
   default     = null
 }
 
+variable "ws_root_volume_encryption_enabled" {
+  description = "(Optional) Indicates whether the data stored on the root volume is encrypted"
+  type        = bool
+  default     = false
+}
+
+variable "ws_user_volume_encryption_enabled" {
+  description = "(Optional) Indicates whether the data stored on the user volume is encrypted"
+  type        = bool
+  default     = false
+}
+
+variable "ws_volume_encryption_key" {
+  description = "(Optional) The symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs"
+  type        = string
+  default     = "alias/aws/workspaces"
+}
+
+variable "ws_compute_type_name" {
+  description = "(Optional) The compute type. For more information, see Amazon WorkSpaces Bundles. Valid values are VALUE, STANDARD, PERFORMANCE, POWER, GRAPHICS, POWERPRO and GRAPHICSPRO"
+  type        = string
+  default     = "VALUE"
+}
+
+variable "ws_user_volume_size_gib" {
+  description = "(Optional) The size of the user storage"
+  type        = number
+  default     = 10
+}
+
+variable "ws_root_volume_size_gib" {
+  description = "(Optional) The size of the root volume"
+  type        = number
+  default     = 80
+}
+
+variable "ws_running_mode" {
+  description = "(Optional) The running mode. For more information, see Manage the WorkSpace Running Mode. Valid values are AUTO_STOP and ALWAYS_ON"
+  type        = string
+  default     = "AUTO_STOP"
+}
+
+variable "ws_running_mode_auto_stop_timeout_in_minutes" {
+  description = "(Optional) The running mode. For more information, see Manage the WorkSpace Running Mode. Valid values are AUTO_STOP and ALWAYS_ON"
+  type        = number
+  default     = 60
+}
+
+variable "ws_email_domain" {
+  description = "The email domain to append to the username to generate the email address"
+  type        = string
+  default     = ""
+}
+
+variable "ws_user_names" {
+  description = "(Required) The user name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace"
+  type        = list(string)
+  default     = [""]
+}
+
+variable "ws_bundle_id" {
+  description = "(Required) The ID of the bundle for the WorkSpace"
+  type        = string
+  default     = ""
+}
+
+variable "ws_directory_id" {
+  description = "(Required) The ID of the directory for the WorkSpace"
+  type        = string
+  default     = ""
+}
+
+variable "ws_admin_control" {
+  description = "(Optional) If true no workspaces will be created by module, they would be left for admin creation"
+  type        = bool
+  default     = false
+}
+
+locals {
+  ws_admin_usernames = var.ws_admin_control ? [] : var.ws_user_names
+}
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "ds" {
-  source                   = "git::https://github.com/gravicore/terraform-gravicore-modules/aws/ds?ref="
-  create = var.create && var.directory_id == "" ? true : false
-  directory_dns_name           = var.ds_directory_dns_name
-  password          = var.ds_password
-  password_parameter_key         = var.ds_password_parameter_key
-  username_parameter_key            = var.ds_username_parameter_key
-  size            = var.ds_size
-  subnet_ids        = coalesce(var.ds_subnet_ids, var.subnet_ids)
-  connect_settings_customer_username                = var.ds_connect_settings_customer_username
-  connect_settings_customer_dns_ips = var.ds_connect_settings_customer_dns_ips
-  alias               = var.ds_alias
-  description = var.ds_description
-  short_name = var.ds_short_name
-  enable_sso = var.ds_enable_sso
-  type = var.ds_type
-  edition = var.ds_edition
-  name = var.name
-  terraform_module = var.terraform_module
-  aws_region = var.aws_region
-  namespace = var.namespace
-  environment = var.environment
-  stage = var.stage
-  repository = var.repository
-  tags = local.tags
+  source                             = "git::https://github.com/gravicore/terraform-gravicore-modules/aws/ds?ref=GDEV-230-create-directory-service-module"
+  create                             = var.create && var.directory_id == "" ? true : false
+  directory_dns_name                 = var.ds_directory_dns_name
+  password                           = var.ds_password
+  password_parameter_key             = var.ds_password_parameter_key
+  username_parameter_key             = var.ds_username_parameter_key
+  size                               = var.ds_size
+  subnet_ids                         = coalesce(var.ds_subnet_ids, var.subnet_ids)
+  connect_settings_customer_username = var.ds_connect_settings_customer_username
+  connect_settings_customer_dns_ips  = var.ds_connect_settings_customer_dns_ips
+  alias                              = var.ds_alias
+  description                        = var.ds_description
+  short_name                         = var.ds_short_name
+  enable_sso                         = var.ds_enable_sso
+  type                               = var.ds_type
+  edition                            = var.ds_edition
+  name                               = var.name
+  terraform_module                   = var.terraform_module
+  aws_region                         = var.aws_region
+  namespace                          = var.namespace
+  environment                        = var.environment
+  stage                              = var.stage
+  repository                         = var.repository
+  tags                               = local.tags
 }
 
 resource "aws_workspaces_ip_group" "default" {
-  count = var.create && var.ip_group_rules != null ? 1 : 0
+  count       = var.create && var.ip_group_rules != null ? 1 : 0
   name        = local.module_prefix
   description = join(" ", [var.desc_prefix, local.module_prefix, "IP access control group"])
   dynamic "rules" {
     for_each = var.ip_group_rules
     content {
-      source = rules.value["source"]
+      source      = rules.value["source"]
       description = lookup(rules.value, "description", null)
     }
   }
 }
 
 resource "aws_workspaces_directory" "default" {
-  count = var.create ? 1 : 0
+  count        = var.create ? 1 : 0
   directory_id = var.directory_id != "" ? var.directory_id : module.ds.id
-  subnet_ids = var.subnet_ids
+  subnet_ids   = var.subnet_ids
 
   tags = local.tags
 
   ip_group_ids = concat(var.ip_group_ids, aws_workspaces_ip_group.default.*.id)
-  
+
   self_service_permissions {
     change_compute_type  = var.change_compute_type
     increase_volume_size = var.increase_volume_size
@@ -326,7 +407,46 @@ resource "aws_iam_role_policy_attachment" "workspaces_default_self_service_acces
   policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
 }
 
+resource "aws_workspaces_workspace" "default" {
+  directory_id = var.ws_directory_id
+  bundle_id    = var.ws_bundle_id
+  for_each     = toset(local.ws_admin_usernames)
+  user_name    = each.key
+
+  root_volume_encryption_enabled = var.ws_root_volume_encryption_enabled
+  user_volume_encryption_enabled = var.ws_user_volume_encryption_enabled
+  volume_encryption_key          = var.ws_volume_encryption_key
+
+  workspace_properties {
+    compute_type_name                         = var.ws_compute_type_name
+    user_volume_size_gib                      = var.ws_user_volume_size_gib
+    root_volume_size_gib                      = var.ws_root_volume_size_gib
+    running_mode                              = var.ws_running_mode
+    running_mode_auto_stop_timeout_in_minutes = var.ws_running_mode_auto_stop_timeout_in_minutes
+  }
+
+  tags = concat(local.tags, { "user_email" = join("@", [each.key, var.ws_email_domain]) })
+}
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
+output "ws_id" {
+  description = "TThe workspaces ID"
+  value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
+}
+
+output "ws_ip_address" {
+  description = "The IP address of the WorkSpace"
+  value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
+}
+
+output "ws_computer_name" {
+  description = "The name of the WorkSpace, as seen by the operating system"
+  value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
+}
+
+output "ws_state" {
+  description = "The operational state of the WorkSpace"
+  value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
+}
