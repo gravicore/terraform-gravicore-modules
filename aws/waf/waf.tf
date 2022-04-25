@@ -218,7 +218,7 @@ resource "aws_wafv2_web_acl" "waf_acl" {
   dynamic "rule" {
     for_each = var.geo_match_rules
     content {
-      name     = join(var.delimiter, [local.module_prefix, "geo-match", lookup(rule.value, "action", "count")])
+      name     = join(var.delimiter, [local.module_prefix, "geo-match", rule.value.priority, lookup(rule.value, "action", "count")])
       priority = rule.value.priority
 
       action {
@@ -254,7 +254,7 @@ resource "aws_wafv2_web_acl" "waf_acl" {
 
       visibility_config {
         cloudwatch_metrics_enabled = lookup(rule.value, "cloudwatch_metrics_enabled", true)
-        metric_name                = join(var.delimiter, [local.module_prefix, "geo-match", lookup(rule.value, "action", "count")])
+        metric_name                = join(var.delimiter, [local.module_prefix, "geo-match", rule.value.priority, lookup(rule.value, "action", "count")])
         sampled_requests_enabled   = lookup(rule.value, "sampled_requests_enabled", true)
       }
     }
