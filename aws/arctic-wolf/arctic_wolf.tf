@@ -137,6 +137,7 @@ variable enable_cspm {
 
 module "logs" {
   source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  enabled    = var.create && var.cloudtrail_name == null ? true : false
   namespace  = ""
   stage      = ""
   name       = local.module_prefix
@@ -259,7 +260,7 @@ POLICY
 
 resource "aws_s3_bucket_public_access_block" "default" {
   count  = var.create && var.cloudtrail_name == null ? 1 : 0
-  bucket = aws_s3_bucket.default[0].id
+  bucket = concat(aws_s3_bucket.default.*.id, [""])[0]
 
   block_public_acls       = true
   block_public_policy     = true
@@ -270,7 +271,7 @@ resource "aws_s3_bucket_public_access_block" "default" {
 resource "aws_cloudtrail" "default" {
   count                 = var.create && var.cloudtrail_name == null ? 1 : 0
   name                  = join(var.delimiter, [local.module_prefix])
-  s3_bucket_name        = aws_s3_bucket.default[0].id
+  s3_bucket_name        = concat(aws_s3_bucket.default.*.id, [""])[0]
   is_multi_region_trail = true
 }
 
@@ -280,7 +281,7 @@ resource "aws_cloudformation_stack" "cloudtrail" {
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
-    cloudtrailTrail = var.cloudtrail_name == null ? aws_cloudtrail.default[0].name : var.cloudtrail_name
+    cloudtrailTrail = var.cloudtrail_name == null ? concat(aws_cloudtrail.default.*.name, [""])[0] : var.cloudtrail_name
   }
 
 
@@ -299,14 +300,14 @@ resource "aws_cloudformation_stack" "guardduty" {
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
-    GuardDutyDetectorID = coalesce(var.guardduty_detector_id, data.aws_guardduty_detector.default[0].id)
+    GuardDutyDetectorID = coalesce(var.guardduty_detector_id, concat(data.aws_guardduty_detector.default.*.id, [""])[0])
   }
 
 
   template_url = "https://s3.amazonaws.com/arcticwolf-public/install/aws-templates/latest/awn_guardduty_template.json"
 
   depends_on = [
-    aws_cloudformation_stack.cloudtrail[0],
+    aws_cloudformation_stack.cloudtrail,
   ]
 }
 
@@ -325,7 +326,7 @@ resource "aws_cloudformation_stack" "vpc_flow_log" {
   template_url = "https://s3.amazonaws.com/arcticwolf-public/install/aws-templates/latest/vpcflowlogs_template.json"
 
   depends_on = [
-    aws_cloudformation_stack.cloudtrail[0],
+    aws_cloudformation_stack.cloudtrail,
   ]
 }
 
@@ -343,7 +344,7 @@ resource "aws_cloudformation_stack" "vpc_flow_log_group" {
   template_url = "https://s3.amazonaws.com/arcticwolf-public/install/aws-templates/latest/cloudwatch_logs_template.json"
 
   depends_on = [
-    aws_cloudformation_stack.cloudtrail[0],
+    aws_cloudformation_stack.cloudtrail,
   ]
 }
 
@@ -425,7 +426,7 @@ resource "aws_kms_key" "default" {
           "kms:CallerAccount": "${var.account_id}"
         },
         "StringLike": {
-          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : concat(aws_s3_bucket.default.*.arn, [""])[0]}/*"
         }
       }
     }
@@ -437,7 +438,7 @@ EOF
 resource "aws_kms_alias" "default" {
   count         = var.create && var.waf_arns != null && var.kinesis_kms_key == null ? 1 : 0
   name          = "alias/${replace(local.stage_prefix, var.delimiter, "/")}/AWN"
-  target_key_id = aws_kms_key.default[0].id
+  target_key_id = concat(aws_kms_key.default.*.id, [""])[0]
 }
 
 resource "aws_iam_role" "kinesis" {
@@ -465,7 +466,7 @@ EOF
 resource "aws_iam_role_policy" "kinesis" {
   count = var.create && var.waf_arns != null ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "kinesis"])
-  role  = aws_iam_role.kinesis[0].id
+  role  = concat(aws_iam_role.kinesis.*.id, [""])[0]
 
   policy = <<EOF
 {
@@ -495,8 +496,8 @@ resource "aws_iam_role_policy" "kinesis" {
         "s3:PutObject"
       ],
       "Resource": [
-        "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}",
-        "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+        "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : concat(aws_s3_bucket.default.*.arn, [""])[0]}",
+        "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : concat(aws_s3_bucket.default.*.arn, [""])[0]}/*"
       ]
     },
     {
@@ -513,13 +514,13 @@ resource "aws_iam_role_policy" "kinesis" {
         "kms:GenerateDataKey",
         "kms:Decrypt"
       ],
-      "Resource": "${var.kinesis_kms_key == null ? aws_kms_key.default[0].arn : var.kinesis_kms_key}",
+      "Resource": "${var.kinesis_kms_key == null ? concat(aws_kms_key.default.*.arn, [""])[0] : var.kinesis_kms_key}",
       "Condition": {
         "StringEquals": {
           "kms:ViaService": "s3.${var.aws_region}.amazonaws.com"
         },
         "StringLike": {
-          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn}/*"
+          "kms:EncryptionContext:aws:s3:arn": "${var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : concat(aws_s3_bucket.default.*.arn, [""])[0]}/*"
         }
       }
     },
@@ -570,11 +571,11 @@ resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
   }
 
   extended_s3_configuration {
-    role_arn           = aws_iam_role.kinesis[0].arn
-    bucket_arn         = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : aws_s3_bucket.default[0].arn
+    role_arn           = concat(aws_iam_role.kinesis.*.arn, [""])[0]
+    bucket_arn         = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_arn : concat(aws_s3_bucket.default.*.arn, [""])[0]
     s3_backup_mode     = "Disabled"
     prefix             = local.waf_log_prefix
-    kms_key_arn        = var.kinesis_kms_key == null ? aws_kms_key.default[0].arn : var.kinesis_kms_key
+    kms_key_arn        = var.kinesis_kms_key == null ? concat(aws_kms_key.default.*.arn, [""])[0] : var.kinesis_kms_key
     compression_format = "GZIP"
     buffer_interval    = 300
     buffer_size        = 5
@@ -593,27 +594,26 @@ resource "aws_kinesis_firehose_delivery_stream" "waf_logs" {
 
 resource "aws_wafv2_web_acl_logging_configuration" "waf_logs" {
   count                   = var.create && var.waf_arns != null ? length(var.waf_arns) : 0
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.waf_logs[0].arn]
+  log_destination_configs = [concat(aws_kinesis_firehose_delivery_stream.waf_logs.*.arn, [""])[0]]
   resource_arn            = element(var.waf_arns, count.index)
 }
 
-resource "aws_s3_bucket_notification" "bucket_notification" {
-  count  = var.create && var.waf_arns != null ? 1 : 0
-  bucket = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_id : aws_s3_bucket.default[0].id
+resource "aws_cloudformation_stack" "s3_log_forwarder" {
+  count        = var.create && var.waf_arns != null ? 1 : 0
+  name         = join(var.delimiter, [local.module_prefix, "s3-log-forwarder"])
+  capabilities = ["CAPABILITY_IAM"]
 
-  topic {
-    topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "AWSLogs/"
+  parameters = {
+    bucketName = var.cloudtrail_name != null ? var.cloudtrail_log_bucket_id : concat(aws_s3_bucket.default.*.id, [""])[0]
+    kmsKey     = var.kinesis_kms_key == null ? concat(aws_kms_key.default.*.arn, [""])[0] : var.kinesis_kms_key
+    prefixPath = replace(local.waf_log_prefix, "/[/]$/", "")
   }
-  topic {
-    topic_arn     = "arn:aws:sns:${var.aws_region}:${var.account_id}:AWNSNSTopic"
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = local.waf_log_prefix
-  }
+
+
+  template_url = "https://arcticwolf-public.s3.us-west-2.amazonaws.com/install/aws-templates/us001/latest/awn_s3_template.json"
 
   depends_on = [
-    aws_cloudformation_stack.cloudtrail[0],
+    aws_kinesis_firehose_delivery_stream.waf_logs,
   ]
 }
 
@@ -648,7 +648,7 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "cspm" {
   count      = var.create && var.enable_cspm ? 1 : 0
-  role       = aws_iam_role.cspm[0].name
+  role       = concat(aws_iam_role.cspm.*.name, [""])[0]
   policy_arn = "arn:aws:iam::aws:policy/SecurityAudit"
 }
 
