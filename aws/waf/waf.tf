@@ -21,15 +21,13 @@ variable managed_rules {
 
   managed_rules = [
     {
-      name            = "AWSManagedRulesCommonRuleSet"    (string)                                            (Required) The name of the managed rule group
-      vendor_name     = "AWS"                             (string)                                            (Required) The name of the managed rule group vendor
-      priority        = 0                                 (number)                                            (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the rules in order based on the value of priority. AWS WAF processes rules with lower priority first
-      override_action = "none"                            (string, "none" or "count",     defaults to none)   (Optional) The override_action block supports the following arguments: count - Override the rule action setting to count (i.e., only count matches). none - Don't override the rule action setting
-      excluded_rule {                                                                                         (Optional) The rules whose actions are set to COUNT by the web ACL, regardless of the action that is set on the rule
-        name = "string"                                   (string,                        defaults to null)   (Required) The name of the rule to exclude. If the rule group is managed by AWS, see the documentation for a list of names in the appropriate rule group in use. https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html
-      }
-      cloudwatch_metrics_enabled = true                   (bool,   true or false,         defaults to true)   (Optional) A boolean indicating whether the associated resource sends metrics to CloudWatch
-      sampled_requests_enabled   = true                   (bool,   true or false,         defaults to true)   (Optional) A boolean indicating whether AWS WAF should store a sampling of the web requests that match the rules
+      name                       = "AWSManagedRulesCommonRuleSet"    (string)                                                       (Required) The name of the managed rule group
+      vendor_name                = "AWS"                             (string)                                                       (Required) The name of the managed rule group vendor
+      priority                   = 0                                 (number)                                                       (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the rules in order based on the value of priority. AWS WAF processes rules with lower priority first
+      override_action            = "none"                            (string, "none" or "count",                defaults to none)   (Optional) The override_action block supports the following arguments: count - Override the rule action setting to count (i.e., only count matches). none - Don't override the rule action setting
+      excluded_rule              = "first_rule second_rule"          (string, list of space seperated values    defaults to null)   (Optional) The names of the rule to exclude whose actions are set to COUNT by the web ACL, regardless of the action that is set on the rule. If the rule group is managed by AWS, see the documentation for a list of names in the appropriate rule group in use. https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html
+      cloudwatch_metrics_enabled = true                              (bool,   true or false,                    defaults to true)   (Optional) A boolean indicating whether the associated resource sends metrics to CloudWatch
+      sampled_requests_enabled   = true                              (bool,   true or false,                    defaults to true)   (Optional) A boolean indicating whether AWS WAF should store a sampling of the web requests that match the rules
     }
   ]
 EOF
@@ -152,9 +150,9 @@ resource "aws_wafv2_web_acl" "waf_acl" {
             name        = rule.value.name
             vendor_name = rule.value.vendor_name
             dynamic "excluded_rule" {
-              for_each = lookup(rule.value, "excluded_rule", null) == null ? [] : [rule]
+              for_each = lookup(rule.value, "excluded_rule", null) == null ? [] : toset(split(" ", rule.value.excluded_rule))
               content {
-                name = lookup(rule.value, "excluded_rule", null)
+                name = excluded_rule.key
               }
             }
           }
@@ -196,11 +194,11 @@ resource "aws_wafv2_web_acl" "waf_acl" {
           content {
             arn = aws_wafv2_ip_set.default[rule.key].arn
             dynamic "ip_set_forwarded_ip_config" {
-              for_each = lookup(ip_set_reference_statement.value, "ip_set_forwarded_ip_config", null) == null ? [] : [ip_set_reference_statement]
+              for_each = lookup(rule.value, "ip_set_forwarded_ip_config", null) == null ? [] : [rule.value.ip_set_forwarded_ip_config]
               content {
-                fallback_behavior = lookup(rule.value.ip_set_forwarded_ip_config, "fallback_behavior", null)
-                header_name       = lookup(rule.value.ip_set_forwarded_ip_config, "header_name", null)
-                position          = lookup(rule.value.ip_set_forwarded_ip_config, "position", null)
+                fallback_behavior = lookup(ip_set_forwarded_ip_config.value, "fallback_behavior", null)
+                header_name       = lookup(ip_set_forwarded_ip_config.value, "header_name", null)
+                position          = lookup(ip_set_forwarded_ip_config.value, "position", null)
               }
             }
           }
