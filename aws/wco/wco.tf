@@ -2,6 +2,12 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable wco_version {
+  type        = string
+  default     = "v2.4.1"
+  description = "Version of AWS WorkSpaces Cost Optimizer solution"
+}
+
 variable create_new_vpc {
   type        = string
   default     = "No"
@@ -191,7 +197,7 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
     TerminateUnusedWorkspaces = var.terminate_unused_workspaces
   }
 
-  template_url = "https://s3.amazonaws.com/solutions-reference/workspaces-cost-optimizer/v2.4.1/workspaces-cost-optimizer.template"
+  template_url = "https://s3.amazonaws.com/solutions-reference/workspaces-cost-optimizer/${var.wco_version}/workspaces-cost-optimizer.template"
 
   disable_rollback   = var.disable_rollback
   on_failure         = var.on_failure
