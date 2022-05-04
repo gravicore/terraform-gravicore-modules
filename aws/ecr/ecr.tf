@@ -46,8 +46,10 @@ variable "kms_key" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_ecr_repository" "default" {
-  for_each             = var.repos
-  name                 = each.key
+  for_each = var.create ? var.repos : {}
+  name     = each.key
+  tags     = local.tags
+
   image_tag_mutability = lookup(each.value, "image_tag_mutability", var.image_tag_mutability)
 
   image_scanning_configuration {
