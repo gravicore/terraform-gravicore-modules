@@ -2,6 +2,12 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable wco_version {
+  type        = string
+  default     = "v2.4.1"
+  description = "Version of AWS WorkSpaces Cost Optimizer solution"
+}
+
 variable create_new_vpc {
   type        = string
   default     = "No"
@@ -66,6 +72,18 @@ variable test_end_of_month {
   type        = string
   default     = "No"
   description = "Overrides date and forces the solution to run as if it is the end of the month"
+}
+
+variable regions {
+  type        = list(string)
+  default     = [""]
+  description = "The list of AWS regions which the solution will scan. Example - us-east-1, us-west-2. Leave blank to scan all regions"
+}
+
+variable terminate_unused_workspaces {
+  type        = string
+  default     = "No"
+  description = "Select 'Yes' to terminate Workspaces not used for a month."
 }
 
 variable value_limit {
@@ -173,9 +191,13 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
     PowerProLimit    = var.power_pro_limit
     GraphicsLimit    = var.graphics_limit
     GraphicsProLimit = var.graphics_pro_limit
+    # List of AWS Regions
+    Regions = join(",", var.regions)
+    # Terminate unused workspaces
+    TerminateUnusedWorkspaces = var.terminate_unused_workspaces
   }
 
-  template_url = "https://s3.amazonaws.com/solutions-reference/workspaces-cost-optimizer/latest/workspaces-cost-optimizer.template"
+  template_url = "https://s3.amazonaws.com/solutions-reference/workspaces-cost-optimizer/${var.wco_version}/workspaces-cost-optimizer.template"
 
   disable_rollback   = var.disable_rollback
   on_failure         = var.on_failure
