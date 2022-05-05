@@ -217,67 +217,67 @@ variable "ip_group_rules" {
   default     = null
 }
 
-variable "ws_root_volume_encryption_enabled" {
+variable "root_volume_encryption_enabled_default" {
   description = "(Optional) Indicates whether the data stored on the root volume is encrypted"
   type        = bool
   default     = false
 }
 
-variable "ws_user_volume_encryption_enabled" {
+variable "user_volume_encryption_enabled_default" {
   description = "(Optional) Indicates whether the data stored on the user volume is encrypted"
   type        = bool
   default     = false
 }
 
-variable "ws_volume_encryption_key" {
+variable "volume_encryption_key_default" {
   description = "(Optional) The symmetric AWS KMS customer master key (CMK) used to encrypt data stored on your WorkSpace. Amazon WorkSpaces does not support asymmetric CMKs"
   type        = string
   default     = "alias/aws/workspaces"
 }
 
-variable "ws_compute_type_name" {
+variable "compute_type_name_default" {
   description = "(Optional) The compute type. For more information, see Amazon WorkSpaces Bundles. Valid values are VALUE, STANDARD, PERFORMANCE, POWER, GRAPHICS, POWERPRO and GRAPHICSPRO"
   type        = string
   default     = "VALUE"
 }
 
-variable "ws_user_volume_size_gib" {
+variable "user_volume_size_gib_default" {
   description = "(Optional) The size of the user storage"
   type        = number
   default     = 10
 }
 
-variable "ws_root_volume_size_gib" {
+variable "root_volume_size_gib_default" {
   description = "(Optional) The size of the root volume"
   type        = number
   default     = 80
 }
 
-variable "ws_running_mode" {
+variable "running_mode_default" {
   description = "(Optional) The running mode. For more information, see Manage the WorkSpace Running Mode. Valid values are AUTO_STOP and ALWAYS_ON"
   type        = string
   default     = "AUTO_STOP"
 }
 
-variable "ws_running_mode_auto_stop_timeout_in_minutes" {
+variable "running_mode_auto_stop_timeout_in_minutes_default" {
   description = "(Optional) The running mode. For more information, see Manage the WorkSpace Running Mode. Valid values are AUTO_STOP and ALWAYS_ON"
   type        = number
   default     = 60
 }
 
-variable "ws_email_domain" {
+variable "email_domain_default" {
   description = "The email domain to append to the username to generate the email address"
   type        = string
   default     = ""
 }
 
-variable "ws_user_names" {
+variable "ws_users" {
   description = "(Required) The user name of the user for the WorkSpace. This user name must exist in the directory for the WorkSpace"
-  type        = list(string)
-  default     = [""]
+  type        = map(any)
+  default     = {}
 }
 
-variable "ws_bundle_id" {
+variable "bundle_id_default" {
   description = "(Required) The ID of the bundle for the WorkSpace"
   type        = string
   default     = ""
@@ -425,7 +425,6 @@ resource "aws_workspaces_ip_group" "default" {
 
 resource "aws_workspaces_directory" "default" {
   count        = var.create ? 1 : 0
-  name        = local.module_prefix
   tags                               = local.tags
 
   directory_id = var.directory_id != "" ? var.directory_id : module.ds.id
@@ -483,34 +482,34 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "workspaces_default_service_access" {
   count       = var.create && var.create_ws_default_role ? 1 : 0
-  role       = aws_iam_role.workspaces_default.name
+  role       = concat(aws_iam_role.workspaces_default.*.name, [""])[0]
   policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "workspaces_default_self_service_access" {
   count       = var.create && var.create_ws_default_role ? 1 : 0
-  role       = aws_iam_role.workspaces_default.name
+  role       = concat(aws_iam_role.workspaces_default.*.name, [""])[0]
   policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
 }
 
 resource "aws_workspaces_workspace" "default" {
-  for_each     = var.create ? toset(local.ws_user_names) : {}
-  tags = merge(local.tags, { "user_email" = join("@", [each.key, var.ws_email_domain]) })
+  for_each     = var.create ? var.ws_users : {}
+  tags = merge(local.tags, { "user_email" = join("@", [each.key, lookup(each.value, "email_domain", var.email_domain_default)]) })
 
   directory_id = var.directory_id != "" ? var.directory_id : module.ds.id
-  bundle_id    = var.ws_bundle_id
-  user_name    = each.value.user_name
+  bundle_id    = lookup(each.value, "bundle_id", var.bundle_id_default)
+  user_name    = each.key
 
-  root_volume_encryption_enabled = var.ws_root_volume_encryption_enabled
-  user_volume_encryption_enabled = var.ws_user_volume_encryption_enabled
-  volume_encryption_key          = var.ws_volume_encryption_key
+  root_volume_encryption_enabled = lookup(each.value, "root_volume_encryption_enabled", var.root_volume_encryption_enabled_default)
+  user_volume_encryption_enabled = lookup(each.value, "user_volume_encryption_enabled", var.user_volume_encryption_enabled_default)
+  volume_encryption_key          = lookup(each.value, "volume_encryption_key", var.volume_encryption_key_default)
 
   workspace_properties {
-    compute_type_name                         = var.ws_compute_type_name
-    user_volume_size_gib                      = var.ws_user_volume_size_gib
-    root_volume_size_gib                      = var.ws_root_volume_size_gib
-    running_mode                              = var.ws_running_mode
-    running_mode_auto_stop_timeout_in_minutes = var.ws_running_mode_auto_stop_timeout_in_minutes
+    compute_type_name                         = lookup(each.value, "compute_type_name", var.compute_type_name_default)
+    user_volume_size_gib                      = lookup(each.value, "user_volume_size_gib", var.user_volume_size_gib_default)
+    root_volume_size_gib                      = lookup(each.value, "root_volume_size_gib", var.root_volume_size_gib_default)
+    running_mode                              = lookup(each.value, "running_mode", var.running_mode_default)
+    running_mode_auto_stop_timeout_in_minutes = lookup(each.value, "running_mode_auto_stop_timeout_in_minutes", var.running_mode_auto_stop_timeout_in_minutes_default)
   }
 
 }
