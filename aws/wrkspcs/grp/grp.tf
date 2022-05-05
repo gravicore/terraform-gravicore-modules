@@ -52,49 +52,49 @@ variable switch_running_mode {
 
 variable device_type_android {
   type        = string
-  default     = ""
+  default     = "ALLOW"
   description = "(Optional) Indicates whether users can use Android devices to access their WorkSpaces. Accepted values: ALLOW, DENY"
 }
 
 variable device_type_chromeos {
   type        = string
-  default     = ""
+  default     = "ALLOW"
   description = "(Optional) Indicates whether users can use Chromebooks to access their WorkSpaces. Accepted values: ALLOW, DENY"
 }
 
 variable device_type_ios {
   type        = string
-  default     = ""
+  default     = "ALLOW"
   description = "(Optional) Indicates whether users can use iOS devices to access their WorkSpaces. Accepted values: ALLOW, DENY"
 }
 
 variable device_type_linux {
   type        = string
-  default     = ""
+  default     = "ALLOW"
   description = "(Optional) Indicates whether users can use Linux clients to access their WorkSpaces. Accepted values: ALLOW, DENY"
 }
 
 variable device_type_osx {
   type        = string
-  default     = ""
+  default     = "ALLOW"
   description = "(Optional) Indicates whether users can use macOS clients to access their WorkSpaces. Accepted values: ALLOW, DENY"
 }
 
 variable device_type_web {
   type        = string
-  default     = ""
+  default     = "ALLOW"
   description = "(Optional) Indicates whether users can access their WorkSpaces through a web browser. Accepted values: ALLOW, DENY"
 }
 
 variable device_type_windows {
   type        = string
-  default     = ""
+  default     = "ALLOW"
   description = "(Optional) Indicates whether users can use Windows clients to access their WorkSpaces. Accepted values: ALLOW, DENY"
 }
 
 variable device_type_zeroclient {
   type        = string
-  default     = ""
+  default     = "ALLOW"
   description = "(Optional) Indicates whether users can use zero client devices to access their WorkSpaces. Accepted values: ALLOW, DENY"
 }
 
@@ -129,13 +129,13 @@ variable user_enabled_as_local_administrator {
 }
 
 variable "ds_directory_dns_name" {
-  description = "(Required) The fully qualified name for the directory, such as corp.example.com"
+  description = "(Required if not using existing ds) The fully qualified name for the directory, such as corp.example.com"
   default     = null
   type        = string
 }
 
 variable "ds_password" {
-  description = "(Required) The password for the directory administrator or connector user"
+  description = "(Required if not using existing ds) The password for the directory administrator or connector user"
   default     = null
   type        = string
 }
@@ -153,24 +153,25 @@ variable "ds_username_parameter_key" {
 }
 
 variable "ds_size" {
-  description = "(Required for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values)"
+  description = "(Required if not using existing ds for SimpleAD and ADConnector) The size of the directory (Small or Large are accepted values)"
   type        = string
   default     = null
 }
 
 variable "ds_subnet_ids" {
-  description = "(Required) The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs)"
+  description = "(Optional) If blank, defaults to var.subnet_ids. The identifiers of the subnets for the directory servers (2 subnets in 2 different AZs)"
   type        = list(string)
+  default     = null
 }
 
 variable "ds_connect_settings_customer_username" {
-  description = "(Required for ADConnector) The username corresponding to the password provided"
+  description = "(Required if not using existing ds for ADConnector) The username corresponding to the password provided"
   type        = string
   default     = null
 }
 
 variable "ds_connect_settings_customer_dns_ips" {
-  description = "(Required for ADConnector) The DNS IP addresses of the domain to connect to"
+  description = "(Required if not using existing ds for ADConnector) The DNS IP addresses of the domain to connect to"
   type        = list(string)
   default     = null
 }
@@ -212,7 +213,7 @@ variable "ds_edition" {
 
 variable "ip_group_rules" {
   description = "(Optional) One or more pairs specifying the IP group rule (in CIDR format) from which web requests originate"
-  type        = list(map)
+  type        = list(map(any))
   default     = null
 }
 
@@ -288,22 +289,50 @@ variable "ws_directory_id" {
   default     = ""
 }
 
-variable "ws_admin_control" {
-  description = "(Optional) If true no workspaces will be created by module, they would be left for admin creation"
+variable "create_ws_default_role" {
+  description = "(Optional) If true create default IAM role"
   type        = bool
-  default     = false
+  default     = true
 }
 
-locals {
-  ws_admin_usernames = var.ws_admin_control ? [] : var.ws_user_names
+variable "ingress_cidrs_icmp" {
+  description = "(Optional) Security Group ingress CIDRS for ICMP"
+  type        = list
+  default     = null
 }
+
+variable "egress_rules" {
+  description = "(Optional) Security Group egress CIDRS. Protocol, From Port, To Port"
+  type        = list(any)
+  default     = [
+      ["all", 0, 0, ["0.0.0.0/0"]],
+    ]
+}
+
+variable "ingress_rules" {
+  description = "(Optional) Security Group ingress CIDRS. Protocol, From Port, To Port"
+  type        = list(any)
+  default     = []
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "ds" {
-  source                             = "git::https://github.com/gravicore/terraform-gravicore-modules/aws/ds?ref=GDEV-230-create-directory-service-module"
   create                             = var.create && var.directory_id == "" ? true : false
+  name                               = var.name
+  tags                               = local.tags
+  aws_region                         = var.aws_region
+  terraform_module                   = var.terraform_module
+  description                        = var.ds_description
+
+  namespace                          = var.namespace
+  environment                        = var.environment
+  stage                              = var.stage
+  repository                         = var.repository
+
+  source                             = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/ds?ref=GDEV-230-create-directory-service-module"
   directory_dns_name                 = var.ds_directory_dns_name
   password                           = var.ds_password
   password_parameter_key             = var.ds_password_parameter_key
@@ -313,25 +342,78 @@ module "ds" {
   connect_settings_customer_username = var.ds_connect_settings_customer_username
   connect_settings_customer_dns_ips  = var.ds_connect_settings_customer_dns_ips
   alias                              = var.ds_alias
-  description                        = var.ds_description
   short_name                         = var.ds_short_name
   enable_sso                         = var.ds_enable_sso
   type                               = var.ds_type
   edition                            = var.ds_edition
-  name                               = var.name
-  terraform_module                   = var.terraform_module
-  aws_region                         = var.aws_region
-  namespace                          = var.namespace
-  environment                        = var.environment
-  stage                              = var.stage
-  repository                         = var.repository
-  tags                               = local.tags
+}
+
+data "aws_directory_service_directory" "default" {
+  count = var.create ? 1 : 0
+  directory_id = var.directory_id != "" ? var.directory_id : module.ds.id
+}
+
+data "aws_subnet" "default" {
+  count = var.create ? 1 : 0
+  id    = var.subnet_ids[0]
+}
+
+resource "aws_security_group" "default" {
+  count = var.create ? 1 : 0
+  name  = local.module_prefix
+  tags  = local.tags
+  description = join(" ", [var.desc_prefix, local.module_prefix, "security group"])
+
+  vpc_id = concat(data.aws_subnet.default.*.vpc_id, [""])[0]
+
+}
+
+resource "aws_security_group_rule" "ds_ingress" {
+  count             = var.create ? 1 : 0
+  security_group_id = concat(aws_security_group.default.*.id, [""])[0]
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "all"
+  source_security_group_id       = concat(data.aws_directory_service_directory.default.*.security_group_id, [""])[0]
+}
+
+resource "aws_security_group_rule" "allow_icmp" {
+  count             = var.create && var.ingress_cidrs_icmp != null ? 1 : 0
+  security_group_id = concat(aws_security_group.default.*.id, [""])[0]
+  type              = "ingress"
+  from_port         = "-1"
+  to_port           = "-1"
+  protocol          = "icmp"
+  cidr_blocks       = var.ingress_cidrs_icmp
+}
+
+resource "aws_security_group_rule" "allow_ingress" {
+  count             = var.create ? length(var.ingress_rules) : 0
+  security_group_id = concat(aws_security_group.default.*.id, [""])[0]
+  type              = "ingress"
+  from_port         = element(var.ingress_rules[count.index], 1)
+  to_port           = element(var.ingress_rules[count.index], 2)
+  protocol          = element(var.ingress_rules[count.index], 0)
+  cidr_blocks       = element(var.ingress_rules[count.index], 3)
+}
+
+resource "aws_security_group_rule" "allow_egress" {
+  count             = var.create ? length(var.egress_rules) : 0
+  security_group_id = concat(aws_security_group.default.*.id, [""])[0]
+  type              = "egress"
+  from_port         = element(var.egress_rules[count.index], 1)
+  to_port           = element(var.egress_rules[count.index], 2)
+  protocol          = element(var.egress_rules[count.index], 0)
+  cidr_blocks       = element(var.egress_rules[count.index], 3)
 }
 
 resource "aws_workspaces_ip_group" "default" {
   count       = var.create && var.ip_group_rules != null ? 1 : 0
   name        = local.module_prefix
+  tags        = local.tags
   description = join(" ", [var.desc_prefix, local.module_prefix, "IP access control group"])
+
   dynamic "rules" {
     for_each = var.ip_group_rules
     content {
@@ -343,11 +425,11 @@ resource "aws_workspaces_ip_group" "default" {
 
 resource "aws_workspaces_directory" "default" {
   count        = var.create ? 1 : 0
+  name        = local.module_prefix
+  tags                               = local.tags
+
   directory_id = var.directory_id != "" ? var.directory_id : module.ds.id
   subnet_ids   = var.subnet_ids
-
-  tags = local.tags
-
   ip_group_ids = concat(var.ip_group_ids, aws_workspaces_ip_group.default.*.id)
 
   self_service_permissions {
@@ -377,41 +459,47 @@ resource "aws_workspaces_directory" "default" {
     user_enabled_as_local_administrator = var.user_enabled_as_local_administrator
   }
 
-  depends_on = [
-  ]
-}
-
-data "aws_iam_policy_document" "workspaces" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["workspaces.amazonaws.com"]
-    }
-  }
 }
 
 resource "aws_iam_role" "workspaces_default" {
+  count       = var.create && var.create_ws_default_role ? 1 : 0
   name               = "workspaces_DefaultRole"
-  assume_role_policy = data.aws_iam_policy_document.workspaces.json
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "workspaces.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
 }
 
 resource "aws_iam_role_policy_attachment" "workspaces_default_service_access" {
+  count       = var.create && var.create_ws_default_role ? 1 : 0
   role       = aws_iam_role.workspaces_default.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess"
 }
 
 resource "aws_iam_role_policy_attachment" "workspaces_default_self_service_access" {
+  count       = var.create && var.create_ws_default_role ? 1 : 0
   role       = aws_iam_role.workspaces_default.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
 }
 
 resource "aws_workspaces_workspace" "default" {
-  directory_id = var.ws_directory_id
+  for_each     = var.create ? toset(local.ws_user_names) : {}
+  tags = merge(local.tags, { "user_email" = join("@", [each.key, var.ws_email_domain]) })
+
+  directory_id = var.directory_id != "" ? var.directory_id : module.ds.id
   bundle_id    = var.ws_bundle_id
-  for_each     = toset(local.ws_admin_usernames)
-  user_name    = each.key
+  user_name    = each.value.user_name
 
   root_volume_encryption_enabled = var.ws_root_volume_encryption_enabled
   user_volume_encryption_enabled = var.ws_user_volume_encryption_enabled
@@ -425,28 +513,27 @@ resource "aws_workspaces_workspace" "default" {
     running_mode_auto_stop_timeout_in_minutes = var.ws_running_mode_auto_stop_timeout_in_minutes
   }
 
-  tags = concat(local.tags, { "user_email" = join("@", [each.key, var.ws_email_domain]) })
 }
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "ws_id" {
-  description = "TThe workspaces ID"
-  value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
-}
+# output "ws_id" {
+#   description = "TThe workspaces ID"
+#   value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
+# }
 
-output "ws_ip_address" {
-  description = "The IP address of the WorkSpace"
-  value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
-}
+# output "ws_ip_address" {
+#   description = "The IP address of the WorkSpace"
+#   value       = concat(aws_workspaces_workspace.default.*.ip_address, [""])[0]
+# }
 
-output "ws_computer_name" {
-  description = "The name of the WorkSpace, as seen by the operating system"
-  value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
-}
+# output "ws_computer_name" {
+#   description = "The name of the WorkSpace, as seen by the operating system"
+#   value       = concat(aws_workspaces_workspace.default.*.computer_name, [""])[0]
+# }
 
-output "ws_state" {
-  description = "The operational state of the WorkSpace"
-  value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
-}
+# output "ws_state" {
+#   description = "The operational state of the WorkSpace"
+#   value       = concat(aws_workspaces_workspace.default.*.state, [""])[0]
+# }
