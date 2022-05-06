@@ -502,7 +502,7 @@ resource "aws_workspaces_workspace" "default" {
 
   root_volume_encryption_enabled = lookup(each.value, "root_volume_encryption_enabled", var.root_volume_encryption_enabled_default)
   user_volume_encryption_enabled = lookup(each.value, "user_volume_encryption_enabled", var.user_volume_encryption_enabled_default)
-  volume_encryption_key          = lookup(each.value, "volume_encryption_key", var.Administrator)
+  volume_encryption_key          = lookup(each.value, "volume_encryption_key", var.volume_encryption_key_default)
 
   workspace_properties {
     compute_type_name                         = lookup(each.value, "compute_type_name", var.compute_type_name_default)
