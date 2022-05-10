@@ -162,6 +162,11 @@ resource "random_string" "default" {
   min_upper        = var.min_upper
 }
 
+data "aws_kms_key" "default" {
+  count = var.key_id == null ? 1 : 0
+  key_id = "aws/ssm"
+}
+
 resource "aws_ssm_parameter" "default" {
   count       = var.create && var.password_parameter_key == null && var.password == null? 1 : 0
   name        = "/${local.stage_prefix}/${var.name}-password"
@@ -170,7 +175,7 @@ resource "aws_ssm_parameter" "default" {
 
   type   = "SecureString"
   value  = concat(random_string.default.*.id, [""])[0]
-  key_id = var.key_id
+  key_id = var.key_id != null ? var.key_id : concat(data.aws_kms_key.default.*.arn, [""])[0]
 
 }
 
