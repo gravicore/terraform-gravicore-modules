@@ -129,7 +129,7 @@ variable "min_upper" {
 variable "key_id" {
   description = "(Optional) The KMS key id or arn for encrypting a SecureString"
   type        = string
-  default     = "aws/ssm"
+  default     = null
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -164,7 +164,7 @@ resource "random_string" "default" {
 
 data "aws_kms_key" "default" {
   count = var.key_id == null ? 1 : 0
-  key_id = "aws/ssm"
+  key_id = "alias/aws/ssm"
 }
 
 resource "aws_ssm_parameter" "default" {
