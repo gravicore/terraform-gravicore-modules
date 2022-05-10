@@ -58,7 +58,7 @@ variable "alias" {
 variable "description" {
   description = "(Optional) A textual description for the directory"
   type        = string
-  default     = null
+  default     = "Directory Service"
 }
 
 variable "short_name" {
@@ -152,7 +152,7 @@ data "aws_ssm_parameter" "username" {
 }
 
 resource "random_string" "default" {
-  count       = var.create && var.password_parameter_key == null && var.password == null? 1 : 0
+  count            = var.create && var.password_parameter_key == null && var.password == null ? 1 : 0
   length           = var.length
   special          = var.special
   override_special = var.override_special
@@ -163,12 +163,12 @@ resource "random_string" "default" {
 }
 
 data "aws_kms_key" "default" {
-  count = var.key_id == null ? 1 : 0
+  count  = var.key_id == null ? 1 : 0
   key_id = "alias/aws/ssm"
 }
 
 resource "aws_ssm_parameter" "default" {
-  count       = var.create && var.password_parameter_key == null && var.password == null? 1 : 0
+  count       = var.create && var.password_parameter_key == null && var.password == null ? 1 : 0
   name        = "/${local.stage_prefix}/${var.name}-password"
   description = format("%s %s", var.desc_prefix, "Password for directory service")
   tags        = var.tags
@@ -182,15 +182,16 @@ resource "aws_ssm_parameter" "default" {
 resource "aws_directory_service_directory" "default" {
   count       = var.create ? 1 : 0
   name        = var.directory_dns_name
-  short_name  = var.short_name
-  password    = var.password_parameter_key != null ? concat(data.aws_ssm_parameter.password.*.value, [""])[0] : var.password != null ? var.password : concat(random_string.default.*.id, [""])[0]
-  size        = var.size
-  type        = var.type
-  alias       = var.alias
-  description = var.description
-  enable_sso  = var.enable_sso
-  edition     = var.edition
+  description = format("%s %s", var.desc_prefix, var.description)
   tags        = var.tags
+
+  short_name = var.short_name
+  password   = var.password_parameter_key != null ? concat(data.aws_ssm_parameter.password.*.value, [""])[0] : var.password != null ? var.password : concat(random_string.default.*.id, [""])[0]
+  size       = var.size
+  type       = var.type
+  alias      = var.alias
+  enable_sso = var.enable_sso
+  edition    = var.edition
 
   dynamic "vpc_settings" {
     for_each = var.type != "ADConnector" ? ["1"] : []
