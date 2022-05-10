@@ -84,6 +84,54 @@ variable "edition" {
   default     = null
 }
 
+variable "length" {
+  description = "(Number) The length of the string desired. The minimum value for length is 1 and, length must also be >= (min_upper + min_lower + min_numeric + min_special"
+  type        = number
+  default     = 24
+}
+
+variable "special" {
+  description = "(Optional) argument must still be set to true for any overwritten characters to be used in generation"
+  type        = bool
+  default     = true
+}
+
+variable "override_special" {
+  description = "(String) Supply your own list of special characters to use for string generation. This overrides the default character list in the special argument. The special argument must still be set to true for any overwritten characters to be used in generation"
+  type        = string
+  default     = "$#%"
+}
+
+variable "min_lower" {
+  description = "(Number) Minimum number of lowercase alphabet characters in the result. Default value is 0"
+  type        = number
+  default     = 1
+}
+
+variable "min_numeric" {
+  description = "(Number) Minimum number of numeric characters in the result. Default value is 0"
+  type        = number
+  default     = 1
+}
+
+variable "min_special" {
+  description = "(Number) Minimum number of special characters in the result. Default value is 0"
+  type        = number
+  default     = 1
+}
+
+variable "min_upper" {
+  description = "(Number) Minimum number of uppercase alphabet characters in the result. Default value is 0"
+  type        = number
+  default     = 1
+}
+
+variable "key_id" {
+  description = "(Optional) The KMS key id or arn for encrypting a SecureString"
+  type        = string
+  default     = "aws/ssm"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -103,11 +151,34 @@ data "aws_ssm_parameter" "username" {
   name  = var.username_parameter_key
 }
 
+resource "random_string" "default" {
+  count       = var.create && var.password_parameter_key == null && var.password == null? 1 : 0
+  length           = var.length
+  special          = var.special
+  override_special = var.override_special
+  min_lower        = var.min_lower
+  min_numeric      = var.min_numeric
+  min_special      = var.min_special
+  min_upper        = var.min_upper
+}
+
+resource "aws_ssm_parameter" "default" {
+  count       = var.create && var.password_parameter_key == null && var.password == null? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}-password"
+  description = format("%s %s", var.desc_prefix, "Password for directory service")
+  tags        = var.tags
+
+  type   = "SecureString"
+  value  = concat(random_string.default.*.id, [""])[0]
+  key_id = var.key_id
+
+}
+
 resource "aws_directory_service_directory" "default" {
   count       = var.create ? 1 : 0
   name        = var.directory_dns_name
   short_name  = var.short_name
-  password    = var.password_parameter_key != null ? concat(data.aws_ssm_parameter.password.*.value, [""])[0] : var.password
+  password    = var.password_parameter_key != null ? concat(data.aws_ssm_parameter.password.*.value, [""])[0] : var.password != null ? var.password : concat(random_string.default.*.id, [""])[0]
   size        = var.size
   type        = var.type
   alias       = var.alias
