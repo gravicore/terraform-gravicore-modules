@@ -332,7 +332,7 @@ module "ds" {
   stage                              = var.stage
   repository                         = var.repository
 
-  source                             = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/ds?ref=GDEV-230-create-directory-service-module"
+  source                             = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/ds?ref=0.38.0"
   directory_dns_name                 = var.ds_directory_dns_name
   password                           = var.ds_password
   password_parameter_key             = var.ds_password_parameter_key
@@ -492,12 +492,18 @@ resource "aws_iam_role_policy_attachment" "workspaces_default_self_service_acces
   policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
 }
 
+data "aws_workspaces_bundle" "default" {
+  count = var.create && var.bundle_id_default == "" ? 1 : 0
+  owner = "AMAZON"
+  name  = "Standard with Windows 10 (Server 2019 based)"
+}
+
 resource "aws_workspaces_workspace" "default" {
   for_each     = var.create ? var.ws_users : {}
   tags = merge(local.tags, { "user_email" = join("@", [each.key, lookup(each.value, "email_domain", var.email_domain_default)]) })
 
   directory_id = var.directory_id != "" ? var.directory_id : module.ds.id
-  bundle_id    = lookup(each.value, "bundle_id", var.bundle_id_default)
+  bundle_id    = lookup(each.value, "bundle_id", var.bundle_id_default == "" ? concat(data.aws_workspaces_bundle.default.*.bundle_id, [""])[0] : var.bundle_id_default)
   user_name    = each.key
 
   root_volume_encryption_enabled = lookup(each.value, "root_volume_encryption_enabled", var.root_volume_encryption_enabled_default)
@@ -517,10 +523,10 @@ resource "aws_workspaces_workspace" "default" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-# output "ws_id" {
-#   description = "TThe workspaces ID"
-#   value       = concat(aws_workspaces_workspace.default.*.id, [""])[0]
-# }
+output "directory_id" {
+  description = "The directory ID"
+  value       = concat(aws_workspaces_directory.default.*.directory_id, [""])[0]
+}
 
 # output "ws_ip_address" {
 #   description = "The IP address of the WorkSpace"
