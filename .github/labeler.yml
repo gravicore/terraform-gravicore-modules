@@ -42,6 +42,8 @@ aws/dfs:
  - aws/dfs/**/*
 aws/dns:
  - aws/dns/**/*
+aws/ds:
+ - aws/ds/**/*
 aws/ds-msad:
  - aws/ds-msad/**/*
 aws/ds-simplead:
@@ -100,5 +102,8 @@ aws/vpc-dhcp:
  - aws/vpc-dhcp/**/*
 aws/vpc-dns:
  - aws/vpc-dns/**/*
+aws/waf:
+ - aws/waf/**/*
 aws/wco:
  - aws/wco/**/*
+ 
