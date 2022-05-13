@@ -281,7 +281,7 @@ locals {
 }
 
 resource "aws_security_group_rule" "allow_sccm" {
-  count             = var.create && var.allow_ingress_sccm ? 1 : 0
+  count             = var.create && var.allow_ingress_sccm ? length(local.ingress_sccm) : 0
   security_group_id = concat(aws_security_group.default.*.id, [""])[0]
   type              = "ingress"
   from_port         = element(local.ingress_sccm[count.index], 1)
