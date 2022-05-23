@@ -106,4 +106,5 @@ aws/waf:
  - aws/waf/**/*
 aws/wco:
  - aws/wco/**/*
- 
+aws/wrkspcs: 
+ - aws/wrkspcs/**/*
