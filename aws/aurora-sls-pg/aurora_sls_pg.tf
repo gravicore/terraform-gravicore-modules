@@ -409,7 +409,7 @@ resource "aws_rds_cluster" "default" {
   deletion_protection             = var.deletion_protection
 
   lifecycle {
-    ignore_changes =[
+    ignore_changes = [
       engine_version,
     ]
   }
