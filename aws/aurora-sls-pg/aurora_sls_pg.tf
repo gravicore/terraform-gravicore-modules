@@ -338,7 +338,7 @@ resource "aws_db_parameter_group" "default" {
 }
 
 module "rds_creds" {
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
   providers = {
     aws = aws
   }
@@ -407,6 +407,12 @@ resource "aws_rds_cluster" "default" {
   replication_source_identifier   = var.replication_source_identifier
   enabled_cloudwatch_logs_exports = var.enabled_cloudwatch_logs_exports
   deletion_protection             = var.deletion_protection
+
+  lifecycle {
+    ignore_changes =[
+      engine_version,
+    ]
+  }
 }
 
 locals {

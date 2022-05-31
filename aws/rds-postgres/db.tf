@@ -211,11 +211,6 @@ variable "parameters" {
 }
 
 # DB parameter group
-variable "major_engine_version" {
-  description = "Specifies the major version of the engine"
-  default     = ""
-}
-
 variable "ingress_sg_cidr" {
   description = "List of the ingress cidr's to create the security group."
   default     = []
@@ -368,7 +363,7 @@ module "db_subnet_group" {
 module "db_parameter_group" {
   source        = "./modules/db-parameter-group"
   create        = local.enable_create_db_parameter_group
-  module_prefix = "${local.module_prefix}-${var.engine}-${replace(var.major_engine_version, ".", "-")}"
+  module_prefix = "${local.module_prefix}-${var.family}"
   family        = var.family
   parameters    = var.parameters
   tags          = local.tags

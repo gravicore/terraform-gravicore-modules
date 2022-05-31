@@ -350,6 +350,7 @@ resource "aws_db_instance" "this" {
       tags.Schedule,
       tags.ScheduleStatus,
       tags.ScheduleTimestamp,
+      engine_version,
     ]
   }
 }
