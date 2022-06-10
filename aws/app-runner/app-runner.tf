@@ -234,7 +234,6 @@ resource "aws_apprunner_service" "default" {
 
     auto_deployments_enabled = var.auto_deployments_enabled
 
-
     dynamic image_repository {
       for_each = toset(var.image_identifier)
       content {
@@ -254,7 +253,6 @@ resource "aws_apprunner_service" "default" {
       content {
         code_configuration {
           code_configuration_values {
-            for_each                      = var.repository_url
             build_command                 = var.build_command
             runtime                       = var.runtime
             runtime_environment_variables = var.runtime_environment_variables
@@ -266,7 +264,6 @@ resource "aws_apprunner_service" "default" {
         repository_url = var.repository_url
 
         source_code_version {
-          for_each = var.repository_url
           # ? Hard coded because only 1 possible value? see documentation
           type = "BRANCH"
           # ? ***********************************************************
