@@ -272,9 +272,9 @@ resource "aws_apprunner_service" "default" {
 
   # TODO: Fix this block
   dynamic encryption_configuration {
-    for_each = tolist([var.kms_key])
+    for_each = toset(var.kms_key)
     content {
-      kms_key = lookup(each.value)
+      kms_key = each.key
     }
   }
 
