@@ -242,7 +242,7 @@ resource "aws_apprunner_service" "default" {
           runtime_environment_variables = var.runtime_environment_variables
           start_command                 = var.start_command
         }
-        image_identifier      = var.image_identifier
+        image_identifier      = element(var.image_identifier, count.index)
         image_repository_type = var.image_repository_type
       }
     }
@@ -261,7 +261,7 @@ resource "aws_apprunner_service" "default" {
           configuration_source = var.configuration_source
         }
 
-        repository_url = var.repository_url
+        repository_url = element(var.repository_url, count.index)
 
         source_code_version {
           # ? Hard coded because only 1 possible value? see documentation
