@@ -18,7 +18,7 @@ variable "auto_scaling_configuration_arn" {
 variable "kms_key" {
   description = "(Required) The ARN of the KMS key used for encryption."
   default     = null
-  type        = string
+  type        = list(string)
 }
 
 variable "healthy_threshold" {
