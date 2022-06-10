@@ -228,7 +228,7 @@ resource "aws_apprunner_service" "default" {
 
   source_configuration {
     authentication_configuration {
-      access_role_arn = aws_iam_role.access_role[0].arn
+      access_role_arn = var.access_role_arn == "" ? aws_iam_role.access_role[0].arn : var.access_role_arn
       connection_arn  = var.connection_arn
     }
 
@@ -326,7 +326,7 @@ resource "aws_apprunner_auto_scaling_configuration_version" "default" {
 }
 
 resource "aws_security_group" "apprunner_sg" {
-  count       = var.create ? 1 : 0
+  count       = var.create && var.security_groups == null ? 1 : 0
   name        = join(var.delimiter, [local.module_prefix, "apprunner-sg"])
   description = "controls access to the ${local.module_prefix} Apprunner service"
   vpc_id      = var.sg_vpc_id
@@ -347,7 +347,7 @@ resource "aws_security_group" "apprunner_sg" {
 }
 
 resource "aws_iam_role" "instance_role" {
-  count              = var.create ? 1 : 0
+  count              = var.create && var. ? 1 : 0
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -372,7 +372,7 @@ resource "aws_iam_role" "instance_role" {
 
 # ?WHY NO ASSUME PROPERLY?
 resource "aws_iam_role" "access_role" {
-  count              = var.create ? 1 : 0
+  count              = var.create && var.instance_role_arn == "" ? 1 : 0
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
