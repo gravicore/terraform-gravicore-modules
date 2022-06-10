@@ -247,7 +247,6 @@ resource "aws_apprunner_service" "default" {
       }
     }
 
-    # TODO: Update to choose dynamically
     dynamic code_repository {
       for_each = tolist(var.repository_url)
       content {
@@ -264,7 +263,7 @@ resource "aws_apprunner_service" "default" {
         repository_url = element(var.repository_url, count.index)
 
         source_code_version {
-          # ? Hard coded because only 1 possible value? see documentation
+          # ? Hard coded because only 1 possible value? see https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/apprunner_service#source-code-version
           type = "BRANCH"
           # ? ***********************************************************
           value = var.source_code_version_value
@@ -273,7 +272,6 @@ resource "aws_apprunner_service" "default" {
     }
   }
 
-  # TODO: Fix this block
   dynamic encryption_configuration {
     for_each = toset(var.kms_key)
     content {
