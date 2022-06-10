@@ -137,8 +137,8 @@ variable "configuration_source" {
 
 variable "repository_url" {
   description = "(Required) The location of the repository that contains the source code."
-  default     = null
-  type        = string
+  default     = []
+  type        = list(string)
 }
 
 variable "type" {
@@ -161,8 +161,8 @@ variable "image_port" {
 
 variable "image_identifier" {
   description = "(Required) The identifier of an image. For an image in Amazon Elastic Container Registry (Amazon ECR), this is an image name."
-  default     = null
-  type        = string
+  default     = []
+  type        = list(string)
 }
 
 variable "image_repository_type" {
@@ -235,39 +235,45 @@ resource "aws_apprunner_service" "default" {
     auto_deployments_enabled = var.auto_deployments_enabled
 
 
-    image_repository {
-      image_configuration {
-        port                          = var.image_port
-        runtime_environment_variables = var.runtime_environment_variables
-        start_command                 = var.start_command
+    dynamic image_repository {
+      for_each = toset(var.image_identifier)
+      content {
+        image_configuration {
+          port                          = var.image_port
+          runtime_environment_variables = var.runtime_environment_variables
+          start_command                 = var.start_command
+        }
+        image_identifier      = var.image_identifier
+        image_repository_type = var.image_repository_type
       }
-      image_identifier      = var.image_identifier
-      image_repository_type = var.image_repository_type
     }
 
     # TODO: Update to choose dynamically
-    # dynamic code_repository {
-    #   for_each = var.repository_url
-    #   code_configuration {
-    #     code_configuration_values {
-    #       for_each                      = var.repository_url
-    #       build_command                 = var.build_command
-    #       runtime                       = var.runtime
-    #       runtime_environment_variables = var.runtime_environment_variables
-    #       start_command                 = var.start_command
-    #     }
-    #     configuration_source = var.configuration_source
-    #   }
+    dynamic code_repository {
+      for_each = tolist(var.repository_url)
+      content {
+        code_configuration {
+          code_configuration_values {
+            for_each                      = var.repository_url
+            build_command                 = var.build_command
+            runtime                       = var.runtime
+            runtime_environment_variables = var.runtime_environment_variables
+            start_command                 = var.start_command
+          }
+          configuration_source = var.configuration_source
+        }
 
-    #   repository_url = var.repository_url
+        repository_url = var.repository_url
 
-    #   source_code_version {
-    #     for_each = var.repository_url
-    #     * Hard coded because only 1 possible value? see documentation
-    #     type  = "BRANCH"
-    #     value = var.source_code_version_value
-    #   }
-    # }
+        source_code_version {
+          for_each = var.repository_url
+          # ? Hard coded because only 1 possible value? see documentation
+          type = "BRANCH"
+          # ? ***********************************************************
+          value = var.source_code_version_value
+        }
+      }
+    }
   }
 
   # TODO: Fix this block
