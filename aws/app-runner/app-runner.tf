@@ -347,7 +347,7 @@ resource "aws_security_group" "apprunner_sg" {
 }
 
 resource "aws_iam_role" "instance_role" {
-  count              = var.create && var. ? 1 : 0
+  count              = var.create && var.instance_role_arn ? 1 : 0
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -372,7 +372,7 @@ resource "aws_iam_role" "instance_role" {
 
 # ?WHY NO ASSUME PROPERLY?
 resource "aws_iam_role" "access_role" {
-  count              = var.create && var.instance_role_arn == "" ? 1 : 0
+  count              = var.create && var.access_role_arn == "" ? 1 : 0
   assume_role_policy = <<EOF
 {
     "Version": "2012-10-17",
