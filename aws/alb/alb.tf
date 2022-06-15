@@ -148,6 +148,12 @@ variable "deletion_protection_enabled" {
   description = "A bool flag to enable/disable deletion protection for ALB"
 }
 
+variable "task_definition" {
+  description = "(Optional) Family and revision (family:revision) or full ARN of the task definition that you want to run in your service. Required unless using the EXTERNAL deployment controller. If a revision is not specified, the latest ACTIVE revision is used"
+  type        = string
+  default     = null
+}
+
 # variable "deregistration_delay" {
 #   type        = number
 #   default     = 15
@@ -287,6 +293,7 @@ resource "aws_lb" "alb" {
   security_groups = compact(
     concat(var.security_group_ids, [aws_security_group.alb[0].id]),
   )
+  task_definition                  = var.task_definition
   subnets                          = var.subnet_ids
   enable_cross_zone_load_balancing = var.cross_zone_load_balancing_enabled
   enable_http2                     = var.http2_enabled
