@@ -111,6 +111,35 @@ variable "container_definitions" {
   default     = ""
 }
 
+variable "volume_name" {
+  description = ""
+  type        = string
+  default     = "data-volume"
+}
+
+variable "file_system_id" {
+  description = ""
+  type        = string
+  default     = ""
+}
+
+variable "volume_root_directory" {
+  description = ""
+  type        = string
+}
+
+variable "volume_credentials_parameter" {
+  description = ""
+  type        = string
+  default     = ""
+}
+
+variable "volume_domain" {
+  description = ""
+  type        = string
+  default     = ""
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -132,6 +161,20 @@ resource "aws_ecs_task_definition" "default" {
   execution_role_arn       = var.container_execution_role_arn
   tags                     = local.tags
   container_definitions    = var.container_definitions
+
+  volume {
+    name = var.volume_name
+
+    fsx_windows_file_server_volume_configuration {
+      file_system_id = var.volume_file_system_id
+      root_directory = var.volume_root_directory
+
+      authorization_config {
+        credentials_parameter = var.volume_credentials_parameter
+        domain                = var.volume_domain
+      }
+    }
+  }
 }
 
 resource "aws_ecs_service" "default" {
