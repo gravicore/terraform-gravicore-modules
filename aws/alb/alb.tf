@@ -266,7 +266,7 @@ resource "aws_security_group_rule" "alb_https_ingress" {
 }
 
 module "access_logs" {
-  source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.2.0"
+  source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.15.0"
   enabled   = var.create
   name      = "${local.module_prefix}-access-logs"
   namespace = ""
