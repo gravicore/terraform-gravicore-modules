@@ -8,13 +8,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "s3"
+  default     = ""
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/s3"
+  default     = "gravicore/terraform-gravicore-modules/github/teams"
   description = "The owner and name of the Terraform module"
 }
 
@@ -38,13 +38,13 @@ variable "create" {
 
 variable "namespace" {
   type        = string
-  default     = "sf"
+  default     = ""
   description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 
 variable "environment" {
   type        = string
-  default     = "test"
+  default     = ""
   description = "The isolated environment the module is associated with (e.g. Shared Services `shared`, Application `app`)"
 }
 
