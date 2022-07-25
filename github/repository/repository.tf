@@ -8,6 +8,12 @@ variable "project_type" {
   description = "(Optional) The Type of repository used (i.e. infra, services, security, etc.)"
 }
 
+variable "repo_name" {
+  type        = string
+  default     = ""
+  descirption = ""
+}
+
 variable "repository_description" {
   type        = string
   default     = ""
@@ -169,7 +175,7 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "github_repository" "default" {
-  name = var.project_type == "" ? join(var.delimiter, [var.namespace, var.environment]) : join(var.delimiter, [var.namespace, var.environment, var.project_type])
+  name = var.project_type == "" ? join(var.delimiter, [var.namespace, var.repo_name]) : join(var.delimiter, [var.namespace, var.repo_name, var.project_type])
 
   description                             = var.repository_description
   homepage_url                            = var.homepage_url
