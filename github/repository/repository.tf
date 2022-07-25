@@ -11,7 +11,7 @@ variable "project_type" {
 variable "repo_name" {
   type        = string
   default     = ""
-  descirption = ""
+  description = ""
 }
 
 variable "repository_description" {
