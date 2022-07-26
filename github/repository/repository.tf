@@ -94,7 +94,7 @@ variable "has_downloads" {
 
 variable "auto_init" {
   type        = bool
-  default     = false
+  default     = true
   description = "(Optional) Set to true to produce an initial commit in the repository."
 }
 
