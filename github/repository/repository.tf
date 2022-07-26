@@ -215,8 +215,8 @@ resource "github_repository_environment" "default" {
   environment = each.key
   repository  = github_repository.default.name
   reviewers {
-    users = [for user in lookup(each.value, "reviewers_users", null) : data.github_user.default[user].id]
-    teams = [for team in lookup(each.value, "reviewers_teams", null) : data.github_team.default[team].id]
+    users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
+    teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
   }
   deployment_branch_policy {
     protected_branches     = lookup(each.value, "protected_branches", false)
