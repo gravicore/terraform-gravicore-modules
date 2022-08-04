@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "tgw_vpcs" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "A map of VPCs to attach to the TGW"
 }

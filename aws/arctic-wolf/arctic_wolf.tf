@@ -53,82 +53,88 @@ variable "s3_bucket_ssl_requests_only" {
   default     = false
 }
 
-variable sse_algorithm {
+variable "sse_algorithm" {
   type        = string
   default     = "AES256"
   description = "The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`"
 }
 
-variable kms_master_key_arn {
+variable "kms_master_key_arn" {
   type        = string
   default     = ""
   description = "The AWS KMS master key ARN used for the `SSE-KMS` encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default aws/s3 AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`"
 }
 
-variable enable_guardduty_logging {
+variable "enable_guardduty_logging" {
   type        = bool
   default     = false
   description = "Enable GaurdDuty Logging?"
 }
 
-variable vpc_id {
+variable "vpc_id" {
   type        = string
   default     = null
   description = ""
 }
 
-variable guardduty_detector_id {
+variable "guardduty_detector_id" {
   type        = string
   default     = null
   description = ""
 }
 
-variable flow_log_filter_pattern {
+variable "flow_log_filter_pattern" {
   type        = string
   default     = null
   description = ""
 }
 
-variable vpc_flow_log_group_name {
+variable "vpc_flow_log_group_name" {
   type        = string
   default     = null
   description = ""
 }
 
-variable cloudtrail_name {
+variable "cloudtrail_name" {
   type        = string
   default     = null
   description = ""
 }
 
 variable "waf_arns" {
-  type        = list
+  type        = list(any)
   default     = null
   description = ""
 }
 
-variable cloudtrail_log_bucket_id {
+variable "cloudtrail_log_bucket_id" {
   type        = string
   default     = null
   description = ""
 }
 
-variable cloudtrail_log_bucket_arn {
+variable "cloudtrail_log_bucket_arn" {
   type        = string
   default     = null
   description = ""
 }
 
-variable kinesis_kms_key {
+variable "kinesis_kms_key" {
   type        = string
   default     = null
   description = ""
 }
 
-variable enable_cspm {
+variable "enable_cspm" {
   type        = bool
   default     = false
   description = "Enable Cloud Security Posture Management?"
+}
+
+variable "enable_glacier_transition" {
+  type        = bool
+  default     = false
+  description = "Enables the transition to AWS Glacier which can cause unnecessary costs for huge amount of small files"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -173,12 +179,13 @@ module "logs" {
       ]
   })
 
-  tags                     = local.tags
-  lifecycle_prefix         = var.log_prefix
-  standard_transition_days = var.log_standard_transition_days
-  glacier_transition_days  = var.log_glacier_transition_days
-  expiration_days          = var.log_expiration_days
-  force_destroy            = var.origin_force_destroy
+  tags                      = local.tags
+  lifecycle_prefix          = var.log_prefix
+  standard_transition_days  = var.log_standard_transition_days
+  glacier_transition_days   = var.log_glacier_transition_days
+  expiration_days           = var.log_expiration_days
+  force_destroy             = var.origin_force_destroy
+  enable_glacier_transition = var.enable_glacier_transition
 }
 
 resource "aws_s3_bucket" "default" {
@@ -656,77 +663,77 @@ resource "aws_iam_role_policy_attachment" "cspm" {
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
-output cloudtrail_name {
+output "cloudtrail_name" {
   value       = aws_cloudtrail.default.*.name
   description = ""
 }
 
-output cloudtrail_stack_outputs {
+output "cloudtrail_stack_outputs" {
   value       = aws_cloudformation_stack.cloudtrail.*.outputs
   description = ""
 }
 
-output guardduty_stack_outputs {
+output "guardduty_stack_outputs" {
   value       = aws_cloudformation_stack.guardduty.*.outputs
   description = ""
 }
 
-output vpc_flow_log_stack_outputs {
+output "vpc_flow_log_stack_outputs" {
   value       = coalesce(aws_cloudformation_stack.vpc_flow_log.*.outputs, aws_cloudformation_stack.vpc_flow_log_group.*.outputs)
   description = ""
 }
 
-output kenisis_kms_key_arn {
+output "kenisis_kms_key_arn" {
   value       = aws_kms_key.default.*.arn
   description = ""
 }
 
-output kenisis_kms_key_alias_arn {
+output "kenisis_kms_key_alias_arn" {
   value       = aws_kms_alias.default.*.arn
   description = ""
 }
 
-output kenisis_kms_key_alias_name {
+output "kenisis_kms_key_alias_name" {
   value       = aws_kms_alias.default.*.name
   description = ""
 }
 
-output kenisis_aws_iam_role_arn {
+output "kenisis_aws_iam_role_arn" {
   value       = aws_iam_role.kinesis.*.arn
   description = ""
 }
 
-output kenisis_aws_iam_role_name {
+output "kenisis_aws_iam_role_name" {
   value       = aws_iam_role.kinesis.*.name
   description = ""
 }
 
-output kenisis_aws_iam_role_policy_id {
+output "kenisis_aws_iam_role_policy_id" {
   value       = aws_iam_role_policy.kinesis.*.id
   description = ""
 }
 
-output kenisis_aws_iam_role_policy_name {
+output "kenisis_aws_iam_role_policy_name" {
   value       = aws_iam_role_policy.kinesis.*.name
   description = ""
 }
 
-output cspm_aws_iam_role_arn {
+output "cspm_aws_iam_role_arn" {
   value       = aws_iam_role.cspm.*.arn
   description = ""
 }
 
-output cspm_aws_iam_role_name {
+output "cspm_aws_iam_role_name" {
   value       = aws_iam_role.cspm.*.name
   description = ""
 }
 
-output kenisis_firehose_delivery_stream_arn {
+output "kenisis_firehose_delivery_stream_arn" {
   value       = aws_kinesis_firehose_delivery_stream.waf_logs.*.arn
   description = ""
 }
 
-output kenisis_firehose_delivery_stream_name {
+output "kenisis_firehose_delivery_stream_name" {
   value       = aws_kinesis_firehose_delivery_stream.waf_logs.*.name
   description = ""
 }

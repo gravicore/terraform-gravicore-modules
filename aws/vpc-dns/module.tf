@@ -12,7 +12,7 @@ variable "name" {
   description = "The name of the module"
 }
 
-variable terraform_module {
+variable "terraform_module" {
   type        = string
   default     = "gravicore/terraform-gravicore-modules/aws/vpc-dns"
   description = "The owner and name of the Terraform module"

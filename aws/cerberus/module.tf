@@ -90,7 +90,7 @@ variable "desc_prefix" {
 }
 
 variable "tags" {
-  type    = map
+  type    = map(any)
   default = {}
 }
 

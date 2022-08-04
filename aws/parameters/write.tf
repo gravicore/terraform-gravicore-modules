@@ -13,7 +13,7 @@ Map of parameters to write to the SSM Parameter store. Example:
         allowed_pattern = "" // Optional - A regular expression used to validate the parameter value
     } }
 DESC
-  type        = map
+  type        = map(any)
   default     = {}
 }
 

@@ -3,13 +3,13 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "vpn_profiles" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "Map of VPN profiles {'name'={base_rule, users=[], policies=[{action, proto, port, target}]}}"
 }
 
 variable "aviatrix_accounts" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "Map of Aviatrix Accounts to build VPN profiles from"
 }

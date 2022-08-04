@@ -2,7 +2,7 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable mpe_id {
+variable "mpe_id" {
   type        = string
   default     = ""
   description = "MPE ID used for the map35 cloudformation stack"
@@ -256,7 +256,7 @@ resource "aws_cloudformation_stack" "map35" {
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
-output cloudtrail_stack_outputs {
+output "cloudtrail_stack_outputs" {
   value       = aws_cloudformation_stack.map35.*.outputs
   description = ""
 }

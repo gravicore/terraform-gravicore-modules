@@ -2,18 +2,18 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable scope {
+variable "scope" {
   type        = string
   default     = "CLOUDFRONT"
   description = "(Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are CLOUDFRONT or REGIONAL. To work with CloudFront, you must also specify the region us-east-1 (N. Virginia) on the AWS provider."
 }
-variable default_action {
+variable "default_action" {
   type        = string
   default     = "allow"
   description = "(Required) The action to perform if none of the rules contained in the WebACL match."
 }
 
-variable managed_rules {
+variable "managed_rules" {
   type        = list(any)
   default     = []
   description = <<EOF
@@ -33,7 +33,7 @@ variable managed_rules {
 EOF
 }
 
-variable ip_set_rules {
+variable "ip_set_rules" {
   type        = list(any)
   default     = []
   description = <<EOF
@@ -58,7 +58,7 @@ variable ip_set_rules {
 EOF
 }
 
-variable geo_match_rules {
+variable "geo_match_rules" {
   type        = list(any)
   default     = []
   description = <<EOF
@@ -80,19 +80,19 @@ variable geo_match_rules {
 EOF
 }
 
-variable visibility_config_cloudwatch_metrics_enabled {
+variable "visibility_config_cloudwatch_metrics_enabled" {
   type        = bool
   default     = true
   description = "description"
 }
 
-variable visibility_config_sampled_requests_enabled {
+variable "visibility_config_sampled_requests_enabled" {
   type        = bool
   default     = true
   description = "description"
 }
 
-variable visibility_config_metric_name {
+variable "visibility_config_metric_name" {
   type        = string
   default     = null
   description = "description"
@@ -277,12 +277,12 @@ resource "aws_wafv2_ip_set" "default" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-output waf_id {
+output "waf_id" {
   value       = concat(aws_wafv2_web_acl.waf_acl.*.id, [""])[0]
   description = "The ID of the WAF WebACL."
 }
 
-output waf_arn {
+output "waf_arn" {
   value       = concat(aws_wafv2_web_acl.waf_acl.*.arn, [""])[0]
   description = "The ARN of the WAF WebACL"
 }

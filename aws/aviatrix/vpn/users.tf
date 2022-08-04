@@ -3,13 +3,13 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "vpn_user_names" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "A list of VPN user names and associated VPN profiles"
 }
 
 variable "vpn_users" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "A map of VPN users {user_name={user_email, profiles=[]}}"
 }
