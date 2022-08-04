@@ -4,7 +4,7 @@
 
 variable "datasync_locations" {
   description = "Map of DataSync Locations"
-  type        = map
+  type        = map(any)
   default     = {}
 }
 

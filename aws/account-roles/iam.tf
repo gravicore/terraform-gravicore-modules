@@ -2,7 +2,7 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable allow_gravicore_access {
+variable "allow_gravicore_access" {
   description = "Flag to establish SAML connectivity for Gravicore managed services"
   default     = false
 }

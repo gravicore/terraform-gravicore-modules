@@ -21,7 +21,7 @@ variable "manage_vpc_attachment" {
 }
 
 variable "security_domains" {
-  type = map
+  type = map(any)
   default = {
     "Default_Domain" = { connected_domains = [
       "Aviatrix_Firewall_Domain",

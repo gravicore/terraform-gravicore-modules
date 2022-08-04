@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "aviatrix_accounts" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "A list of AWS Account IDs to add to the Aviatrix Controller"
 }

@@ -331,7 +331,7 @@ variable "enable_security_headers" {
   description = "Enables creation and attachment of origin-responce edge lambda to add security headers"
 }
 
-variable nodejs_security_header_code {
+variable "nodejs_security_header_code" {
   type        = string
   default     = <<EOF
 'use strict';
@@ -360,6 +360,12 @@ exports.handler = (event, context, callback) => {
 };
 EOF
   description = "Additional code to be injected into the origin-responce edge lambda"
+}
+
+variable "enable_glacier_transition" {
+  type        = bool
+  default     = false
+  description = "Enables the transition to AWS Glacier which can cause unnecessary costs for huge amount of small files"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -504,12 +510,13 @@ module "logs" {
       ]
   })
 
-  tags                     = local.tags
-  lifecycle_prefix         = var.log_prefix
-  standard_transition_days = var.log_standard_transition_days
-  glacier_transition_days  = var.log_glacier_transition_days
-  expiration_days          = var.log_expiration_days
-  force_destroy            = var.origin_force_destroy
+  tags                      = local.tags
+  lifecycle_prefix          = var.log_prefix
+  standard_transition_days  = var.log_standard_transition_days
+  glacier_transition_days   = var.log_glacier_transition_days
+  expiration_days           = var.log_expiration_days
+  force_destroy             = var.origin_force_destroy
+  enable_glacier_transition = var.enable_glacier_transition
 }
 
 data "aws_s3_bucket" "selected" {

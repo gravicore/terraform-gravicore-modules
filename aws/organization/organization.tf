@@ -46,7 +46,7 @@ variable "organization_environments_email_format" {
 }
 
 variable "organization_accounts" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "A map of member accounts to create in the organization. Use this to manage a custom list of accounts, otherwise use `organization_environments` to dynamically generate accoutns from environments and stages."
 }

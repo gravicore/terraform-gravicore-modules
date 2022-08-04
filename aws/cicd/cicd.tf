@@ -18,7 +18,7 @@ variable "cicd_elevated_policy_deny" {
   default = []
 }
 
-variable deploy_artifacts_bucket {
+variable "deploy_artifacts_bucket" {
   type        = bool
   default     = true
   description = ""

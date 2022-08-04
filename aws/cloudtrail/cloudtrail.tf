@@ -95,6 +95,12 @@ variable "vpc_flow_log_group_name" {
   description = ""
 }
 
+variable "enable_glacier_transition" {
+  type        = bool
+  default     = false
+  description = "Enables the transition to AWS Glacier which can cause unnecessary costs for huge amount of small files"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -212,12 +218,13 @@ module "logs" {
       ]
   })
 
-  tags                     = local.tags
-  lifecycle_prefix         = var.log_prefix
-  standard_transition_days = var.log_standard_transition_days
-  glacier_transition_days  = var.log_glacier_transition_days
-  expiration_days          = var.log_expiration_days
-  force_destroy            = var.origin_force_destroy
+  tags                      = local.tags
+  lifecycle_prefix          = var.log_prefix
+  standard_transition_days  = var.log_standard_transition_days
+  glacier_transition_days   = var.log_glacier_transition_days
+  expiration_days           = var.log_expiration_days
+  force_destroy             = var.origin_force_destroy
+  enable_glacier_transition = var.enable_glacier_transition
 }
 
 resource "aws_s3_bucket_public_access_block" "default" {

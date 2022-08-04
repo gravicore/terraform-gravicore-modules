@@ -30,14 +30,14 @@ locals {
 # Public DNS
 
 resource "aws_route53_zone" "dns_public" {
-  count   = "${var.create ? 1 : 0}"
+  count   = var.create ? 1 : 0
   name    = local.sub_domain_name
   tags    = local.tags
   comment = join(" ", list(var.desc_prefix, format("VPC Public DNS zone for %s", local.stage_prefix)))
 }
 
 resource "aws_route53_record" "dns_public_ns" {
-  count = "${var.create ? 1 : 0}"
+  count = var.create ? 1 : 0
   name  = aws_route53_zone.dns_public[count.index].name
 
   allow_overwrite = true
@@ -49,7 +49,7 @@ resource "aws_route53_record" "dns_public_ns" {
 }
 
 resource "aws_route53_record" "dns_public_soa" {
-  count = "${var.create ? 1 : 0}"
+  count = var.create ? 1 : 0
   name  = aws_route53_zone.dns_public[0].name
 
   allow_overwrite = true
@@ -65,7 +65,7 @@ resource "aws_route53_record" "dns_public_soa" {
 # Private DNS
 
 resource "aws_route53_zone" "dns_private" {
-  count = "${var.create ? 1 : 0}"
+  count = var.create ? 1 : 0
   tags  = local.tags
 
   name    = local.sub_domain_name

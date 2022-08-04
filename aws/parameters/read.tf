@@ -4,7 +4,7 @@
 
 variable "parameters" {
   description = "A list of SSM Parameters to fetch"
-  type        = list
+  type        = list(any)
   default     = []
 }
 

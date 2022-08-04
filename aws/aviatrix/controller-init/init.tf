@@ -2,50 +2,50 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable aviatrix_controller_admin_username {
+variable "aviatrix_controller_admin_username" {
   description = "The administrator's username for the Aviatrix Controller"
   type        = string
   default     = "admin"
 }
 
-variable aviatrix_controller_admin_email {
+variable "aviatrix_controller_admin_email" {
   description = "The administrator's email address that will be used for password recovery as well as for notifications from the Controller"
   type        = string
 }
 
-variable aviatrix_controller_admin_password {
+variable "aviatrix_controller_admin_password" {
   description = "The administrator's password for the Aviatrix Controller"
   type        = string
 }
 
-variable aviatrix_controller_private_ip {
+variable "aviatrix_controller_private_ip" {
   description = "The Controller's private IP address"
   type        = string
 }
 
-variable aviatrix_controller_public_ip {
+variable "aviatrix_controller_public_ip" {
   description = "The Controller's public IP address"
   type        = string
 }
 
-variable aviatrix_controller_access_account_name {
+variable "aviatrix_controller_access_account_name" {
   description = "A friendly name mapping to your AWS account ID"
   type        = string
   default     = ""
 }
 
-variable aviatrix_controller_customer_license_id {
+variable "aviatrix_controller_customer_license_id" {
   description = "The customer license ID is required if using a BYOL controller"
   type        = string
   default     = ""
 }
 
-variable aviatrix_controller_vpc_id {
+variable "aviatrix_controller_vpc_id" {
   type        = string
   description = "VPC in which you want launch Aviatrix controller"
 }
 
-variable aviatrix_controller_subnet_id {
+variable "aviatrix_controller_subnet_id" {
   type        = string
   description = "Subnet in which you want launch Aviatrix controller"
 }
