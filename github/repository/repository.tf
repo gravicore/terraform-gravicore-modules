@@ -178,10 +178,118 @@ variable "access_teams" {
   description = "Map of teams to be given access to the repository and their permission level"
 }
 
-variable "repo_permission" {
+variable "pattern" {
   type        = string
-  default     = "read"
-  description = " (Optional) The permissions of team members regarding the repository. Must be one of pull, triage, push, maintain, admin or the name of an existing custom repository role within the organisation. Defaults to pull"
+  default     = "main"
+  description = "(Required) Identifies the protection rule pattern. Branch name that rules apply to."
+}
+
+variable "enforce_admins" {
+  type        = bool
+  default     = true
+  description = "(Optional) Boolean, setting this to true enforces status checks for repository administrators."
+}
+
+variable "require_signed_commits" {
+  type        = bool
+  default     = false
+  description = "(Optional) - Set to true to not call the vulnerability alerts endpoint so the resource can also be used without admin permissions during read."
+}
+
+variable "required_linear_history" {
+  type        = bool
+  default     = false
+  description = "(Optional) Boolean, setting this to true enforces a linear commit Git history, which prevents anyone from pushing merge commits to a branch"
+}
+
+variable "require_conversation_resolution" {
+  type        = bool
+  default     = true
+  description = "(Optional) Boolean, setting this to true requires all conversations on code must be resolved before a pull request can be merged."
+}
+
+variable "required_status_checks" {
+  type        = bool
+  default     = false
+  description = "(Optional) Enforce restrictions for required status checks."
+}
+
+variable "required_pull_request_reviews" {
+  type        = bool
+  default     = true
+  description = "(Optional) Enforce restrictions for pull request reviews."
+}
+
+variable "push_restrictions" {
+  type        = list(any)
+  default     = null
+  description = "(Optional) The list of actor IDs that may push to the branch."
+}
+
+variable "allows_deletions" {
+  type        = bool
+  default     = false
+  description = "(Optional) Boolean, setting this to true to allow the branch to be deleted."
+}
+
+variable "allows_force_pushes" {
+  type        = bool
+  default     = false
+  description = "(Optional) Boolean, setting this to true to allow force pushes on the branch."
+}
+
+variable "blocks_creations" {
+  type        = bool
+  default     = true
+  description = "(Optional) Boolean, setting this to true to block creating the branch."
+}
+
+variable "strict" {
+  type        = bool
+  default     = true
+  description = "(Optional) Require branches to be up to date before merging. Defaults to false."
+}
+
+variable "contexts" {
+  type        = list(any)
+  default     = null
+  description = "(Optional) The list of status checks to require in order to merge into this branch. No status checks are required by default."
+}
+
+variable "dismiss_stale_reviews" {
+  type        = bool
+  default     = true
+  description = "(Optional) Dismiss approved reviews automatically when a new commit is pushed. Defaults to false."
+}
+
+variable "restrict_dismissals" {
+  type        = bool
+  default     = false
+  description = "(Optional) Restrict pull request review dismissals."
+}
+
+variable "dismissal_restrictions" {
+  type        = list(any)
+  default     = null
+  description = "(Optional) The list of actor IDs with dismissal access. If not empty, restrict_dismissals is ignored."
+}
+
+variable "pull_request_bypassers" {
+  type        = list(any)
+  default     = null
+  description = "(Optional) The list of actor IDs that are allowed to bypass pull request requirements."
+}
+
+variable "require_code_owner_reviews" {
+  type        = bool
+  default     = true
+  description = "(Optional) Require an approved review in pull requests including files with a designated code owner. Defaults to false."
+}
+
+variable "required_approving_review_count" {
+  type        = number
+  default     = 1
+  description = "(Optional) Require x number of approvals to satisfy branch protection requirements. If this is specified it must be a number between 0-6. This requirement matches GitHub's API, see https://developer.github.com/v3/repos/branches/#parameters-1 for more information."
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -243,6 +351,31 @@ resource "github_team_repository" "default" {
   team_id    = each.key
   repository = github_repository.default.name
   permission = each.value
+}
+
+resource "github_branch_protection" "default" {
+  repository_id                   = github_repository.default.name
+  pattern                         = var.pattern
+  enforce_admins                  = var.enforce_admins
+  require_signed_commits          = var.require_signed_commits
+  required_linear_history         = var.required_linear_history
+  require_conversation_resolution = var.require_conversation_resolution
+  required_status_checks {
+    strict   = var.strict
+    contexts = var.contexts
+  }
+  required_pull_request_reviews {
+    dismiss_stale_reviews           = var.dismiss_stale_reviews
+    restrict_dismissals             = var.restrict_dismissals
+    dismissal_restrictions          = var.dismissal_restrictions
+    pull_request_bypassers          = var.pull_request_bypassers
+    require_code_owner_reviews      = var.require_code_owner_reviews
+    required_approving_review_count = var.required_approving_review_count
+  }
+  push_restrictions   = var.push_restrictions
+  allows_deletions    = var.allows_deletions
+  allows_force_pushes = var.allows_force_pushes
+  blocks_creations    = var.blocks_creations
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
