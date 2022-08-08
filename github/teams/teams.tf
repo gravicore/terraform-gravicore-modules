@@ -25,9 +25,9 @@ variable "teams" {
 resource "github_team" "default" {
   for_each       = var.teams
   name           = each.key
-  description    = each.value.description
-  privacy        = each.value.privacy
-  parent_team_id = each.value.parent_team_id
+  description    = lookup(each.value, "description", null)
+  privacy        = lookup(each.value, "privacy", null)
+  parent_team_id = lookup(each.value, "parent_team_id", null)
 }
 
 resource "github_team_members" "default" {
