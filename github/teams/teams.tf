@@ -30,18 +30,10 @@ resource "github_team" "default" {
   parent_team_id = each.value.parent_team_id
 }
 
-data "github_team" "default" {
-  for_each = var.teams
-  slug     = each.key
-  depends_on = [
-    github_team.default
-  ]
-}
-
 resource "github_team_members" "default" {
   for_each = var.teams
 
-  team_id = data.github_team.default[each.key].id
+  team_id = github_team.default[each.key].id
 
   dynamic "members" {
     for_each = lookup(each.value, "members", null)

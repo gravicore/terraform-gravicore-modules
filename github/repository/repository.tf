@@ -170,6 +170,20 @@ locals {
   teams_list  = flatten([for env in var.environments : lookup(env, "reviewers_teams", [""])])
 }
 
+variable "access_teams" {
+  type = map(any)
+  default = {
+    reviewers-devops = "admin"
+  }
+  description = "Map of teams to be given access to the repository and their permission level"
+}
+
+variable "repo_permission" {
+  type        = string
+  default     = "read"
+  description = " (Optional) The permissions of team members regarding the repository. Must be one of pull, triage, push, maintain, admin or the name of an existing custom repository role within the organisation. Defaults to pull"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -222,6 +236,13 @@ resource "github_repository_environment" "default" {
     protected_branches     = lookup(each.value, "protected_branches", true)
     custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
   }
+}
+
+resource "github_team_repository" "default" {
+  for_each   = var.access_teams
+  team_id    = each.key
+  repository = github_repository.default.name
+  permission = each.value
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
