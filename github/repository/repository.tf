@@ -375,7 +375,7 @@ resource "github_branch_protection" "default" {
   push_restrictions   = var.push_restrictions
   allows_deletions    = var.allows_deletions
   allows_force_pushes = var.allows_force_pushes
-  blocks_creations    = var.blocks_creations
+  # blocks_creations    = var.blocks_creations
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
