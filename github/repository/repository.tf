@@ -292,12 +292,20 @@ variable "required_approving_review_count" {
   description = "(Optional) Require x number of approvals to satisfy branch protection requirements. If this is specified it must be a number between 0-6. This requirement matches GitHub's API, see https://developer.github.com/v3/repos/branches/#parameters-1 for more information."
 }
 
+variable "enable_main_branch_protection" {
+  type        = bool
+  default     = true
+  description = "(Optional) Boolean, setting this to true enables branch protection for the main branch."
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "github_repository" "default" {
-  name = var.project_type == "" ? join(var.delimiter, [var.namespace, var.repo_name]) : join(var.delimiter, [var.namespace, var.repo_name, var.project_type])
+  # TODO: Try using an import
+  count = var.create ? 1 : 0
+  name  = var.project_type == "" ? join(var.delimiter, [var.namespace, var.repo_name]) : join(var.delimiter, [var.namespace, var.repo_name, var.project_type])
 
   description                             = var.repository_description
   homepage_url                            = var.homepage_url
@@ -333,9 +341,10 @@ data "github_team" "default" {
 }
 
 resource "github_repository_environment" "default" {
-  for_each    = var.environments
+  for_each = var.create ? var.environments : {}
+
   environment = each.key
-  repository  = github_repository.default.name
+  repository  = github_repository.default[0].name
   reviewers {
     users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
     teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
@@ -347,14 +356,15 @@ resource "github_repository_environment" "default" {
 }
 
 resource "github_team_repository" "default" {
-  for_each   = var.access_teams
+  for_each   = var.create ? var.access_teams : {}
   team_id    = each.key
-  repository = github_repository.default.name
+  repository = github_repository.default[0].name
   permission = each.value
 }
 
 resource "github_branch_protection" "default" {
-  repository_id                   = github_repository.default.name
+  count                           = var.create && var.enable_main_branch_protection ? 1 : 0
+  repository_id                   = github_repository.default[0].name
   pattern                         = var.pattern
   enforce_admins                  = var.enforce_admins
   require_signed_commits          = var.require_signed_commits
@@ -375,7 +385,6 @@ resource "github_branch_protection" "default" {
   push_restrictions   = var.push_restrictions
   allows_deletions    = var.allows_deletions
   allows_force_pushes = var.allows_force_pushes
-  # blocks_creations    = var.blocks_creations
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

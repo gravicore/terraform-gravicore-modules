@@ -18,12 +18,19 @@ variable "teams" {
   EOF
 }
 
+variable "externally_managed_teams" {
+  type        = bool
+  default     = false
+  description = "A flag to set that will determine wether teams are managed through an external source (such as Okta)."
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "github_team" "default" {
-  for_each       = var.teams
+  for_each = var.create && var.externally_managed_teams ? var.teams : {}
+  # TODO: Add variable driven names
   name           = each.key
   description    = lookup(each.value, "description", null)
   privacy        = lookup(each.value, "privacy", null)
@@ -31,10 +38,10 @@ resource "github_team" "default" {
 }
 
 resource "github_team_members" "default" {
-  for_each = var.teams
+  for_each = var.create && var.externally_managed_teams ? var.teams : {}
 
   team_id = github_team.default[each.key].id
-
+  # TODO: Test adding/removing users manually, maybe lifecycle ignore change
   dynamic "members" {
     for_each = lookup(each.value, "members", null)
 
