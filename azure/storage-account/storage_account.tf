@@ -59,7 +59,7 @@ variable "allow_nested_items_to_be_public" {
 variable "shared_access_key_enabled" {
   type        = bool
   default     = true
-  description = " Indicates whether the storage account permits requests to be authorized with the account access key via Shared Key. If false, then all requests, including shared access signatures, must be authorized with Azure Active Directory (Azure AD). The default value is true."
+  description = "Indicates whether the storage account permits requests to be authorized with the account access key via Shared Key. If false, then all requests, including shared access signatures, must be authorized with Azure Active Directory (Azure AD). The default value is true."
 }
 
 variable "is_hns_enabled" {
@@ -100,7 +100,7 @@ variable "infrastructure_encryption_enabled" {
 
 variable "customer_managed_key" {
   type        = map(any)
-  default     = {}
+  default     = {} # TODO: Add description involving example
   description = "value"
 }
 
@@ -128,21 +128,12 @@ resource "azurerm_storage_account" "default" {
   is_hns_enabled                   = var.is_hns_enabled
   nfsv3_enabled                    = var.nfsv3_enabled
 
-  # dynamic "customer_managed_key" {
-  #   for_each = toset(var.customer_managed_key)
-  #   content {
-  #     key_vault_key_id          = lookup(var.customer_managed_key, "key_vault_id", "")
-  #     user_assigned_identity_id = lookup(var.customer_managed_key, "user_assigned_identity_id", "")
-  #   }
-  # }
-
   customer_managed_key {
     key_vault_key_id          = lookup(var.customer_managed_key, "key_vault_id", "")
     user_assigned_identity_id = lookup(var.customer_managed_key, "user_assigned_identity_id", "")
   }
 
-  large_file_share_enabled = var.large_file_share_enabled
-
+  large_file_share_enabled          = var.large_file_share_enabled
   queue_encryption_key_type         = var.queue_encryption_key_type
   table_encryption_key_type         = var.table_encryption_key_type
   infrastructure_encryption_enabled = var.infrastructure_encryption_enabled
