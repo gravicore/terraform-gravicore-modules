@@ -5,7 +5,7 @@
 variable "resource_group_name" {
   type        = string
   default     = ""
-  description = "The name of the Resource Group"
+  description = "The Name which should be used for this Resource Group. Changing this forces a new Resource Group to be created."
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -14,8 +14,11 @@ variable "resource_group_name" {
 
 resource "azurerm_resource_group" "default" {
   count    = var.create ? 1 : 0
-  name     = var.resource_group_name == "" ? join(var.delimiter, [local.stage_prefix, "resource-group"]) : var.resource_group_name
   location = var.az_location
+  tags     = local.tags
+
+  name = var.resource_group_name == "" ? join(var.delimiter, [local.stage_prefix, "resource-group"]) : var.resource_group_name
+  # name     = var.resource_group_name == "" ? local.stage_prefix : var.resource_group_name
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
