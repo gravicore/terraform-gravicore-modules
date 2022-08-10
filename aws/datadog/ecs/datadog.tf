@@ -36,6 +36,18 @@ variable "container_datadog_env_tag" {
   default     = "env:none"
 }
 
+variable "datadog_ec2_private_ip" {
+  type        = string
+  description = "value"
+  default     = "10.136.7.238"
+}
+
+variable "ecs_fargate" {
+  type        = string
+  description = "Whether to use fargate"
+  default     = "false"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -85,7 +97,7 @@ locals {
       value = "${var.container_datadog_api_key}"
       }, {
       name  = "ECS_FARGATE",
-      value = "true"
+      value = "${var.ecs_fargate}"
       }, {
       name  = "DD_PROCESS_AGENT_ENABLED",
       value = "true"
@@ -101,8 +113,30 @@ locals {
       }, {
       name  = "DD_DOGSTATSD_TAGS",
       value = "${var.container_datadog_env_tag}"
+      },
+      {
+        name  = "DD_SITE"
+        value = "datadoghq.com"
+      },
+      {
+        name  = "DD_AGENT_HOST"
+        value = "${var.datadog_ec2_private_ip}"
     }]
+    log_configuration = {
+      logDriver = "awslogs",
+      "options" : {
+        "awslogs-group" : "${concat(aws_cloudwatch_log_group.datadog.*.name, [""])[0]}",
+        "awslogs-region" : "${var.aws_region}",
+        "awslogs-stream-prefix" : "ecs"
+      }
+    }
   }
+}
+
+resource "aws_cloudwatch_log_group" "datadog" {
+  count             = var.create ? 1 : 0
+  name              = join(var.delimiter, ["DD-container-logs", local.module_prefix])
+  retention_in_days = 7
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
