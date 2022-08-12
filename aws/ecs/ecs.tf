@@ -121,8 +121,6 @@ variable "container_cluster_name" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-data "aws_region" "current" {}
-
 resource "aws_ecs_cluster" "default" {
   count = var.create && var.container_cluster_name == "" ? 1 : 0
   name  = local.module_prefix
@@ -145,7 +143,7 @@ resource "aws_ecs_task_definition" "default" {
 resource "aws_ecs_service" "default" {
   count           = var.create ? 1 : 0
   name            = local.module_prefix
-  cluster         = var.container_cluster_name == "" ? aws_ecs_cluster.default[0].id : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.container_cluster_name}"
+  cluster         = var.container_cluster_name == "" ? aws_ecs_cluster.default[0].id : "arn:aws:ecs:${var.aws_region}:${local.account_id}:cluster/${var.container_cluster_name}"
   task_definition = aws_ecs_task_definition.default[0].arn
   desired_count   = var.container_desired_count
   launch_type     = "FARGATE"
