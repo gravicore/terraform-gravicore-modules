@@ -10,7 +10,7 @@ variable "vpc_id" {
 variable "alb_target_group_arn" {
   type        = list(string)
   description = "The ARN of the ALB target group"
-  default     = ""
+  default     = []
 }
 
 variable "container_subnet_ids" {
