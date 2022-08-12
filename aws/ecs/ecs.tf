@@ -110,13 +110,23 @@ variable "container_definitions" {
   type        = string
   default     = ""
 }
+ 
+variable "container_cluster_name" {
+  description = "The container cluster name"
+  type        = string
+  default     = ""
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
+
 resource "aws_ecs_cluster" "default" {
-  count = var.create ? 1 : 0
+  count = var.create && var.container_cluster_name == "" ? 1 : 0
   name  = local.module_prefix
   tags  = local.tags
 }
@@ -137,7 +147,7 @@ resource "aws_ecs_task_definition" "default" {
 resource "aws_ecs_service" "default" {
   count           = var.create ? 1 : 0
   name            = local.module_prefix
-  cluster         = aws_ecs_cluster.default[0].id
+  cluster         = var.container_cluster_name == "" ? aws_ecs_cluster.default[0].id : "arn:aws:ecs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:cluster/${var.container_cluster_name}"
   task_definition = aws_ecs_task_definition.default[0].arn
   desired_count   = var.container_desired_count
   launch_type     = "FARGATE"
@@ -161,7 +171,7 @@ resource "aws_appautoscaling_target" "default" {
   count              = var.create && var.container_create_autoscaling ? 1 : 0
   max_capacity       = var.container_autoscaling_max_capacity
   min_capacity       = var.container_autoscaling_min_capacity
-  resource_id        = "service/${aws_ecs_cluster.default[0].name}/${aws_ecs_service.default[0].name}"
+  resource_id        = "service/${var.container_cluster_name == "" ? aws_ecs_cluster.default[0].name : var.container_cluster_name}/${aws_ecs_service.default[0].name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
   role_arn           = var.container_autoscaling_role_arn
