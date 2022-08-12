@@ -439,5 +439,5 @@ output "access_logs_bucket_id" {
 
 output "route53_dns_name" {
   description = "DNS name of Route53"
-  value       = aws_route53_record.alb[0].name
+  value       = length(aws_route53_record.alb) == 1 ? aws_route53_record.alb[0].name : ""
 }
