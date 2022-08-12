@@ -123,8 +123,6 @@ variable "container_cluster_name" {
 
 data "aws_region" "current" {}
 
-data "aws_caller_identity" "current" {}
-
 resource "aws_ecs_cluster" "default" {
   count = var.create && var.container_cluster_name == "" ? 1 : 0
   name  = local.module_prefix
