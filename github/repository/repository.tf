@@ -88,7 +88,7 @@ variable "delete_branch_on_merge" {
 
 variable "has_downloads" {
   type        = bool
-  default     = false
+  default     = true
   description = "(Optional) Set to true to enable the (deprecated) downloads features on the repository."
 }
 
