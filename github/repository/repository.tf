@@ -303,7 +303,6 @@ variable "enable_main_branch_protection" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "github_repository" "default" {
-  # TODO: Try using an import
   count = var.create ? 1 : 0
   name  = var.project_type == "" ? join(var.delimiter, [var.namespace, var.repo_name]) : join(var.delimiter, [var.namespace, var.repo_name, var.project_type])
 
