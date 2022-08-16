@@ -39,10 +39,10 @@ variable "container_cpu" {
   type        = string
 }
 
-variable "container_port" {
+variable "container_ports" {
   description = "The amount of CPU used by the Task"
-  default     = "80"
-  type        = string
+  default     = ["80"]
+  type        = list(string)
 }
 
 variable "container_memory_reservation" {
@@ -158,7 +158,7 @@ resource "aws_ecs_service" "default" {
     content {
       target_group_arn = load_balancer.value
       container_name   = local.module_prefix
-      container_port   = var.container_port
+      container_port   = var.container_ports[load_balancer.key]
     }
   }
 }
