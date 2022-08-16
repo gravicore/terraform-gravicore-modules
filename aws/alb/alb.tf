@@ -351,10 +351,10 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_lb_listener" "https" {
-  count             = var.create && var.https_enabled ? length(var.https_ports) : 0
+  count             = var.create && var.https_enabled ? length(var.target_groups) : 0
   load_balancer_arn = aws_lb.alb[0].arn
 
-  port            = var.https_ports[count.index]
+  port            = var.https_ports[0] // TODO: review the best way to do this
   protocol        = "HTTPS"
   ssl_policy      = var.https_ssl_policy
   certificate_arn = var.certificate_arn
