@@ -347,7 +347,7 @@ resource "github_repository_environment" "default" {
     teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
   }
   deployment_branch_policy {
-    protected_branches     = lookup(each.value, "protected_branches", true)
+    protected_branches     = lookup(each.value, "protected_branches", false)
     custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
   }
 }
