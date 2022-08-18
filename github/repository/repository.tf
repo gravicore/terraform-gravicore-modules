@@ -172,9 +172,7 @@ locals {
 
 variable "access_teams" {
   type = map(any)
-  default = {
-    reviewers-devops = "admin"
-  }
+  default = {}
   description = "Map of teams to be given access to the repository and their permission level"
 }
 
