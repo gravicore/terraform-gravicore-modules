@@ -143,7 +143,7 @@ variable "ignore_vulnerability_alerts_during_read" {
 variable "environments" {
   type = map(any)
   default = {
-    test = {
+    dev = {
       reviewers_teams        = []
       reviewers_users        = []
       protected_branches     = false
@@ -166,13 +166,13 @@ variable "environments" {
 }
 
 locals {
-  users_lists = flatten([for env in var.environments : lookup(env, "reviewers_users", [""])])
-  teams_list  = flatten([for env in var.environments : lookup(env, "reviewers_teams", [""])])
+  users_lists = flatten([for env in var.environments : lookup(env, "reviewers_users", [])])
+  teams_list  = flatten([for env in var.environments : lookup(env, "reviewers_teams", [])])
 }
 
 variable "access_teams" {
-  type = map(any)
-  default = {}
+  type        = map(any)
+  default     = {}
   description = "Map of teams to be given access to the repository and their permission level"
 }
 
