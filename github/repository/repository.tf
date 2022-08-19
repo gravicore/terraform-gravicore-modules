@@ -352,13 +352,13 @@ resource "github_repository_environment" "default" {
     users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
     teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
   }
-  dynamic "deployment_branch_policy" {
-    for_each = var.enable_protections ? [""] : []
-    content {
-      protected_branches     = lookup(github_repository_environment.each.value, "protected_branches", false)
-      custom_branch_policies = lookup(github_repository_environment.each.value, "custom_branch_policies", false)
-    }
-  }
+  # dynamic "deployment_branch_policy" {
+  #   for_each = var.enable_protections ? [""] : []
+  #   content {
+  #     protected_branches     = lookup(github_repository_environment.each.value, "protected_branches", false)
+  #     custom_branch_policies = lookup(github_repository_environment.each.value, "custom_branch_policies", false)
+  #   }
+  # }
 }
 
 resource "github_team_repository" "default" {
