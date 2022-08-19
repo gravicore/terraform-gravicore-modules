@@ -348,17 +348,14 @@ resource "github_repository_environment" "default" {
 
   environment = each.key
   repository  = github_repository.default[0].name
-  # reviewers {
-  #   users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
-  #   teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
-  # }
-  # dynamic "deployment_branch_policy" {
-  #   for_each = var.enable_protections ? [""] : []
-  #   content {
-  #     protected_branches     = lookup(github_repository_environment.each.value, "protected_branches", false)
-  #     custom_branch_policies = lookup(github_repository_environment.each.value, "custom_branch_policies", false)
-  #   }
-  # }
+  reviewers {
+    users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
+    teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
+  }
+  deployment_branch_policy {
+    protected_branches     = lookup(github_repository_environment.each.value, "protected_branches", true)
+    custom_branch_policies = lookup(github_repository_environment.each.value, "custom_branch_policies", false)
+  }
 }
 
 resource "github_team_repository" "default" {
