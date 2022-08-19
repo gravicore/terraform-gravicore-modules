@@ -296,6 +296,12 @@ variable "enable_main_branch_protection" {
   description = "(Optional) Boolean, setting this to true enables branch protection for the main branch."
 }
 
+variable "enable_protections" {
+  type        = bool
+  default     = true
+  description = "(Optional) Boolean, setting this to true enables protections for the repository."
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -346,9 +352,12 @@ resource "github_repository_environment" "default" {
     users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
     teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
   }
-  deployment_branch_policy {
-    protected_branches     = lookup(each.value, "protected_branches", false)
-    custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
+  dynamic "deployment_branch_policy" {
+    for_each = var.enable_protections ? [""] : []
+    content {
+      protected_branches     = lookup(github_repository_environment.each.value, "protected_branches", false)
+      custom_branch_policies = lookup(github_repository_environment.each.value, "custom_branch_policies", false)
+    }
   }
 }
 
