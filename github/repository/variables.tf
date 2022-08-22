@@ -1,6 +1,98 @@
+
 # ----------------------------------------------------------------------------------------------------------------------
-# VARIABLES / LOCALS / REMOTE STATE
+# Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
+
+variable "name" {
+  type        = string
+  default     = ""
+  description = "The name of the module"
+}
+
+variable "terraform_module" {
+  type        = string
+  default     = "gravicore/terraform-gravicore-modules/github/repository"
+  description = "The owner and name of the Terraform module"
+}
+
+variable "create" {
+  type        = bool
+  default     = true
+  description = "Set to false to prevent the module from creating any resources"
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Platform Standard Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
+# Recommended
+
+variable "namespace" {
+  type        = string
+  default     = ""
+  description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
+}
+
+variable "environment" {
+  type        = string
+  default     = ""
+  description = "The isolated environment the module is associated with (e.g. Shared Services `shared`, Application `app`)"
+}
+
+variable "stage" {
+  type        = string
+  default     = ""
+  description = "The development stage (i.e. `dev`, `stg`, `prd`)"
+}
+
+variable "repository" {
+  type        = string
+  default     = ""
+  description = "The repository where the code referencing the module is stored"
+}
+
+# Optional
+
+variable "tags" {
+  type        = map(string)
+  default     = {}
+  description = "Additional map of tags (e.g. business_unit, cost_center)"
+}
+
+variable "desc_prefix" {
+  type        = string
+  default     = "Gravicore:"
+  description = "The prefix to add to any descriptions attached to resources"
+}
+
+variable "environment_prefix" {
+  type        = string
+  default     = ""
+  description = "Concatenation of `namespace` and `environment`"
+}
+
+variable "stage_prefix" {
+  type        = string
+  default     = ""
+  description = "Concatenation of `namespace`, `environment` and `stage`"
+}
+
+variable "module_prefix" {
+  type        = string
+  default     = ""
+  description = "Concatenation of `namespace`, `environment`, `stage` and `name`"
+}
+
+variable "delimiter" {
+  type        = string
+  default     = "-"
+  description = "Delimiter to be used between `namespace`, `environment`, `stage`, `name`"
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Module Variables
+# ----------------------------------------------------------------------------------------------------------------------
+
 
 variable "project_type" {
   type        = string
@@ -301,95 +393,3 @@ variable "enable_protections" {
   default     = true
   description = "(Optional) Boolean, setting this to true enables protections for the repository."
 }
-
-# ----------------------------------------------------------------------------------------------------------------------
-# MODULES / RESOURCES
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "github_repository" "default" {
-  count = var.create ? 1 : 0
-  name  = var.project_type == "" ? join(var.delimiter, [var.namespace, var.repo_name]) : join(var.delimiter, [var.namespace, var.repo_name, var.project_type])
-
-  description                             = var.repository_description
-  homepage_url                            = var.homepage_url
-  visibility                              = var.visibility
-  has_issues                              = var.has_issues
-  has_projects                            = var.has_projects
-  has_wiki                                = var.has_wiki
-  is_template                             = var.is_template
-  allow_merge_commit                      = var.allow_merge_commit
-  allow_squash_merge                      = var.allow_squash_merge
-  allow_rebase_merge                      = var.allow_rebase_merge
-  allow_auto_merge                        = var.allow_auto_merge
-  delete_branch_on_merge                  = var.delete_branch_on_merge
-  has_downloads                           = var.has_downloads
-  auto_init                               = var.auto_init
-  gitignore_template                      = var.gitignore_template
-  license_template                        = var.license_template
-  archived                                = var.archived
-  archive_on_destroy                      = var.archive_on_destroy
-  topics                                  = var.topics
-  vulnerability_alerts                    = var.vulnerability_alerts
-  ignore_vulnerability_alerts_during_read = var.ignore_vulnerability_alerts_during_read
-}
-
-data "github_user" "default" {
-  for_each = toset(local.users_lists)
-  username = each.key
-}
-
-data "github_team" "default" {
-  for_each = toset(local.teams_list)
-  slug     = each.key
-}
-
-resource "github_repository_environment" "default" {
-  for_each = var.create ? var.environments : {}
-
-  environment = each.key
-  repository  = github_repository.default[0].name
-  reviewers {
-    users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
-    teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
-  }
-  deployment_branch_policy {
-    protected_branches     = lookup(each.value, "protected_branches", true)
-    custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
-  }
-}
-
-resource "github_team_repository" "default" {
-  for_each   = var.create ? var.access_teams : {}
-  team_id    = each.key
-  repository = github_repository.default[0].name
-  permission = each.value
-}
-
-resource "github_branch_protection" "default" {
-  count                           = var.create && var.enable_main_branch_protection ? 1 : 0
-  repository_id                   = github_repository.default[0].name
-  pattern                         = var.pattern
-  enforce_admins                  = var.enforce_admins
-  require_signed_commits          = var.require_signed_commits
-  required_linear_history         = var.required_linear_history
-  require_conversation_resolution = var.require_conversation_resolution
-  required_status_checks {
-    strict   = var.strict
-    contexts = var.contexts
-  }
-  required_pull_request_reviews {
-    dismiss_stale_reviews           = var.dismiss_stale_reviews
-    restrict_dismissals             = var.restrict_dismissals
-    dismissal_restrictions          = var.dismissal_restrictions
-    pull_request_bypassers          = var.pull_request_bypassers
-    require_code_owner_reviews      = var.require_code_owner_reviews
-    required_approving_review_count = var.required_approving_review_count
-  }
-  push_restrictions   = var.push_restrictions
-  allows_deletions    = var.allows_deletions
-  allows_force_pushes = var.allows_force_pushes
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Outputs
-# ----------------------------------------------------------------------------------------------------------------------
