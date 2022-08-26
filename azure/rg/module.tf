@@ -14,7 +14,7 @@ variable "name" {
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/resource-group"
+  default     = "gravicore/terraform-gravicore-modules/azure/rg"
   description = "The owner and name of the Terraform module"
 }
 
@@ -62,7 +62,7 @@ variable "stage" {
 
 variable "repository" {
   type        = string
-  default     = ""
+  default     = "sf-dm-infra"
   description = "The repository where the code referencing the module is stored"
 }
 
@@ -116,15 +116,7 @@ variable "delimiter" {
   description = "Delimiter to be used between `namespace`, `environment`, `stage`, `name`"
 }
 
-# Derived
-
-# data "az_caller_identity" "current" {
-#   count = var.account_id == "" ? 1 : 0
-# }
-
 locals {
-  # account_id = var.account_id == "" ? data.az_caller_identity.current[0].account_id : var.account_id
-
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
   module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.name])))
@@ -135,11 +127,9 @@ locals {
     environment_prefix = local.environment_prefix
   }
   technical_tags = {
-    stage             = var.stage
-    module            = var.name
-    repository        = var.repository
-    master_account_id = var.master_account_id
-    # account_id        = local.account_id
+    stage       = var.stage
+    module      = var.name
+    repository  = var.repository
     az_location = var.az_location
   }
   automation_tags = {
