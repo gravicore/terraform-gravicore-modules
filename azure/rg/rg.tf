@@ -2,11 +2,11 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "resource_group_name" {
-  type        = string
-  default     = ""
-  description = "The Name which should be used for this Resource Group. Changing this forces a new Resource Group to be created."
-}
+# variable "resource_group_name" {
+#   type        = string
+#   default     = ""
+#   description = "The Name which should be used for this Resource Group. Changing this forces a new Resource Group to be created."
+# }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -17,7 +17,7 @@ resource "azurerm_resource_group" "default" {
   location = var.az_location
   tags     = local.tags
 
-  name = var.resource_group_name == "" ? join(var.delimiter, [local.stage_prefix, "resource-group"]) : var.resource_group_name
+  name = var.resource_group_name == "" ? local.stage_prefix : var.name
   # name     = var.resource_group_name == "" ? local.stage_prefix : var.resource_group_name
 }
 
@@ -27,5 +27,5 @@ resource "azurerm_resource_group" "default" {
 
 output "resource_group_name" {
   description = "The name of the Resource Group"
-  value       = concat(azurerm_resource_group.default[0].name, [])
+  value       = concat(azurerm_resource_group.default.*.name, [])[0]
 }

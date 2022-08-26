@@ -20,7 +20,7 @@ variable "terraform_module" {
 
 variable "az_location" {
   type        = string
-  default     = "us-east-1"
+  default     = ""
   description = "The Azure region to deploy module into"
 }
 
@@ -32,7 +32,7 @@ variable "create" {
 
 variable "resource_group_name" {
   type        = string
-  default     = "dm-sandbox"
+  default     = ""
   description = ""
 }
 
@@ -44,13 +44,13 @@ variable "resource_group_name" {
 
 variable "namespace" {
   type        = string
-  default     = "sf"
+  default     = ""
   description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 
 variable "environment" {
   type        = string
-  default     = "dm"
+  default     = ""
   description = "The isolated environment the module is associated with (e.g. Shared Services `shared`, Application `app`)"
 }
 
