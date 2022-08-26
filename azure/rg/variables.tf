@@ -62,18 +62,6 @@ variable "repository" {
   description = "The repository where the code referencing the module is stored"
 }
 
-variable "account_id" {
-  type        = string
-  default     = ""
-  description = "The Azure Account ID that contains the calling entity"
-}
-
-variable "master_account_id" {
-  type        = string
-  default     = ""
-  description = "The Master Azure Account ID that owns the associate Azure account"
-}
-
 # Optional
 
 variable "tags" {
