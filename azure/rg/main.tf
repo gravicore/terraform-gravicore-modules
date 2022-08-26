@@ -3,6 +3,5 @@ resource "azurerm_resource_group" "default" {
   location = var.az_location
   tags     = local.tags
 
-  name = var.resource_group_name == "" ? local.stage_prefix : var.name
-  # name     = var.resource_group_name == "" ? local.stage_prefix : var.resource_group_name
+  name = local.stage_prefix
 }
