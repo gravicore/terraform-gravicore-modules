@@ -24,7 +24,7 @@ resource "azurerm_storage_account" "cicd" {
 
 resource "azurerm_storage_container" "cicd" {
   count                 = var.create ? 1 : 0
-  name                  = join("", [var.namespace, var.environment, var.stage, "cicd", "artifacts"])
+  name                  = join("-", [var.namespace, var.environment, var.stage, "cicd", "artifacts"])
   storage_account_name  = concat(azurerm_storage_account.cicd.*.name, [""])[0]
   container_access_type = "blob"
 }
