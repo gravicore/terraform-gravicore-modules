@@ -6,7 +6,7 @@ resource "azurerm_key_vault" "default" {
   tags                = local.tags
 
   sku_name                        = var.sku_name
-  tenant_id                       = var.tenant_id
+  tenant_id                       = data.azurerm_client_config.current.tenant_id
   access_policy                   = []
   enabled_for_deployment          = var.enabled_for_deployment
   enabled_for_disk_encryption     = var.enabled_for_disk_encryption
