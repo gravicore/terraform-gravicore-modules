@@ -1,6 +1,6 @@
 resource "azurerm_key_vault" "default" {
   count               = var.create ? 1 : 0
-  name                = join(var.delimiter, [])
+  name                = join(var.delimiter, [local.stage_prefix, "kv"])
   location            = var.az_location
   resource_group_name = var.resource_group_name
   tags                = local.tags
