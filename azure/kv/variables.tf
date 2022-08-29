@@ -4,13 +4,13 @@
 
 variable "name" {
   type        = string
-  default     = "resource-group"
+  default     = "key-vault"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/rg"
+  default     = "gravicore/terraform-gravicore-modules/azure/kv"
   description = "The owner and name of the Terraform module"
 }
 
@@ -40,19 +40,19 @@ variable "resource_group_name" {
 
 variable "namespace" {
   type        = string
-  default     = "sf"
+  default     = ""
   description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 
 variable "environment" {
   type        = string
-  default     = "dm"
+  default     = ""
   description = "The isolated environment the module is associated with (e.g. Shared Services `shared`, Application `app`)"
 }
 
 variable "stage" {
   type        = string
-  default     = "dev"
+  default     = ""
   description = "The development stage (i.e. `dev`, `stg`, `prd`)"
 }
 
@@ -192,6 +192,18 @@ variable "contact_email" {
   description = "(Required) E-mail address of the contact."
 }
 
+variable "contact_name" {
+  type        = string
+  default     = ""
+  description = "(Optional) Name of the contact."
+}
+
+variable "contact_phone" {
+  type        = string
+  default     = ""
+  description = "(Optional) Phone number of the contact."
+}
+
 variable "key_type" {
   type        = string
   default     = "RSA"
@@ -208,4 +220,22 @@ variable "key_opts" {
   type        = list(string)
   default     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
   description = "(Required) A list of JSON web key operations. Possible values include: decrypt, encrypt, sign, unwrapKey, verify and wrapKey. Please note these values are case sensitive."
+}
+
+variable "certificate_permissions" {
+  type        = list(string)
+  default     = ["Create", "Delete", "DeleteIssuers", "Get", "GetIssuers", "Import", "List", "ListIssuers", "ManageContacts", "ManageIssuers", "Purge", "SetIssuers", "Update"]
+  description = "(Optional) List of certificate permissions, must be one or more from the following: Backup, Create, Delete, DeleteIssuers, Get, GetIssuers, Import, List, ListIssuers, ManageContacts, ManageIssuers, Purge, Recover, Restore, SetIssuers and Update."
+}
+
+variable "key_permissions" {
+  type        = list(string)
+  default     = ["Backup", "Create", "Decrypt", "Delete", "Encrypt", "Get", "Import", "List", "Purge", "Recover", "Restore", "Sign", "UnwrapKey", "Update", "Verify", "WrapKey"]
+  description = "(Optional) List of key permissions, must be one or more from the following: Backup, Create, Decrypt, Delete, Encrypt, Get, Import, List, Purge, Recover, Restore, Sign, UnwrapKey, Update, Verify and WrapKey."
+}
+
+variable "secret_permissions" {
+  type        = list(string)
+  default     = ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
+  description = "(Optional) List of secret permissions, must be one or more from the following: Backup, Delete, Get, List, Purge, Recover, Restore and Set."
 }

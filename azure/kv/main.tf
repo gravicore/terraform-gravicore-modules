@@ -5,9 +5,16 @@ resource "azurerm_key_vault" "default" {
   resource_group_name = var.resource_group_name
   tags                = local.tags
 
-  sku_name                        = var.sku_name
-  tenant_id                       = data.azurerm_client_config.current.tenant_id
-  access_policy                   = []
+  sku_name  = var.sku_name
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    certificate_permissions = var.certificate_permissions
+    key_permissions         = var.key_permissions
+    secret_permissions      = var.secret_permissions
+  }
   enabled_for_deployment          = var.enabled_for_deployment
   enabled_for_disk_encryption     = var.enabled_for_disk_encryption
   enabled_for_template_deployment = var.enabled_for_template_deployment
@@ -17,16 +24,7 @@ resource "azurerm_key_vault" "default" {
   soft_delete_retention_days      = var.soft_delete_retention_days
   contact {
     email = var.contact_email
+    name  = var.contact_name
+    phone = var.contact_phone
   }
-}
-
-resource "azurerm_key_vault_key" "vm-key" {
-  count        = var.create ? 1 : 0
-  name         = join(var.delimiter, [local.stage_prefix, "vm"])
-  key_vault_id = concat(azurerm_key_vault.default.*.id, [""])[0]
-  tags         = local.tags
-
-  key_type = var.key_type
-  key_size = var.key_size
-  key_opts = var.key_opts
 }
