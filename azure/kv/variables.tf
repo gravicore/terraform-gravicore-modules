@@ -142,6 +142,11 @@ variable "sku_name" {
   description = "(Required) The Name of the SKU used for this Key Vault. Possible values are standard and premium."
 }
 
+variable "tenant_id" {
+  type        = any
+  description = "(Required) The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault."
+}
+
 variable "enabled_for_deployment" {
   type        = bool
   default     = false
@@ -167,19 +172,19 @@ variable "enable_rbac_authorization" {
 }
 
 variable "purge_protection_enabled" {
-  type = bool
-  default = false
+  type        = bool
+  default     = false
   description = "(Optional) Is Purge Protection enabled for this Key Vault? Defaults to false."
 }
 
 variable "public_network_access_enabled" {
-  type = bool
-  default = true
+  type        = bool
+  default     = true
   description = "(Optional) Whether public network access is allowed for this Key Vault. Defaults to true."
 }
 
 variable "soft_delete_retention_days" {
-  type = number
-  default = 14
+  type        = number
+  default     = 14
   description = "(Optional) The number of days that items should be retained for once soft-deleted. This value can be between 7 and 90 (the default) days."
 }
