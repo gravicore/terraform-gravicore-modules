@@ -193,13 +193,19 @@ variable "contact_email" {
 }
 
 variable "key_type" {
-  type = string
-  default = "RSA"
+  type        = string
+  default     = "RSA"
   description = "(Required) Specifies the Key Type to use for this Key Vault Key. Possible values are EC (Elliptic Curve), EC-HSM, Oct (Octet), RSA and RSA-HSM. Changing this forces a new resource to be created."
 }
 
 variable "key_size" {
-  type = number
-  default = 2048
+  type        = number
+  default     = 2048
   description = "(Optional) Specifies the Size of the RSA key to create in bytes. For example, 1024 or 2048. Note: This field is required if key_type is RSA or RSA-HSM. Changing this forces a new resource to be created."
+}
+
+variable "key_opts" {
+  type        = list(string)
+  default     = ["decrypt", "encrypt", "sign", "unwrapKey", "verify", "wrapKey"]
+  description = "(Required) A list of JSON web key operations. Possible values include: decrypt, encrypt, sign, unwrapKey, verify and wrapKey. Please note these values are case sensitive."
 }

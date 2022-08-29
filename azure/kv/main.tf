@@ -11,6 +11,7 @@ resource "azurerm_key_vault" "default" {
   enabled_for_deployment          = var.enabled_for_deployment
   enabled_for_disk_encryption     = var.enabled_for_disk_encryption
   enabled_for_template_deployment = var.enabled_for_template_deployment
+  public_network_access_enabled   = var.public_network_access_enabled
   enable_rbac_authorization       = var.enable_rbac_authorization
   purge_protection_enabled        = var.purge_protection_enabled
   soft_delete_retention_days      = var.soft_delete_retention_days
@@ -27,4 +28,5 @@ resource "azurerm_key_vault_key" "vm-key" {
 
   key_type = var.key_type
   key_size = var.key_size
+  key_opts = var.key_opts
 }
