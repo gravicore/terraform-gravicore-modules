@@ -191,3 +191,15 @@ variable "contact_email" {
   default     = ""
   description = "(Required) E-mail address of the contact."
 }
+
+variable "key_type" {
+  type = string
+  default = "RSA"
+  description = "(Required) Specifies the Key Type to use for this Key Vault Key. Possible values are EC (Elliptic Curve), EC-HSM, Oct (Octet), RSA and RSA-HSM. Changing this forces a new resource to be created."
+}
+
+variable "key_size" {
+  type = number
+  default = 2048
+  description = "(Optional) Specifies the Size of the RSA key to create in bytes. For example, 1024 or 2048. Note: This field is required if key_type is RSA or RSA-HSM. Changing this forces a new resource to be created."
+}
