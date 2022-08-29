@@ -14,7 +14,7 @@ resource "azurerm_role_definition" "elevated" {
 resource "azurerm_storage_account" "cicd" {
   count                    = var.create ? 1 : 0
   name                     = join("", [var.namespace, var.environment, var.stage, "cicd", "artifacts"])
-  resource_group_name      = concat(var.resource_group_name, [""])[0]
+  resource_group_name      = var.resource_group_name
   location                 = var.az_location
   account_tier             = "Standard"
   account_replication_type = "LRS"
