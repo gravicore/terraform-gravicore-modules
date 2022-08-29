@@ -144,11 +144,6 @@ variable "sku_name" {
   description = "(Required) The Name of the SKU used for this Key Vault. Possible values are standard and premium."
 }
 
-variable "tenant_id" {
-  type        = any
-  description = "(Required) The Azure Active Directory tenant ID that should be used for authenticating requests to the key vault."
-}
-
 variable "enabled_for_deployment" {
   type        = bool
   default     = false
