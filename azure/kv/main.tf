@@ -20,6 +20,5 @@ resource "azurerm_key_vault" "default" {
   soft_delete_retention_days    = var.soft_delete_retention_days
   contact {
     email = var.contact_email
-    name  = var.contact_name
   }
 }

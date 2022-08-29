@@ -190,3 +190,9 @@ variable "soft_delete_retention_days" {
   default     = 14
   description = "(Optional) The number of days that items should be retained for once soft-deleted. This value can be between 7 and 90 (the default) days."
 }
+
+variable "contact_email" {
+  type        = string
+  default     = ""
+  description = "(Required) E-mail address of the contact."
+}
