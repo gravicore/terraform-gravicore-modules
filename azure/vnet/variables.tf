@@ -215,8 +215,8 @@ locals {
     var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 4, 3) : "",
   ])) : []
   vpc_internal_subnets = var.vpc_internal_subnets != null ? coalescelist(var.vpc_internal_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 3, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 3, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 3, 3) : "",
+    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 2, 1) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 2, 2) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 2, 3) : "",
   ])) : []
 }
