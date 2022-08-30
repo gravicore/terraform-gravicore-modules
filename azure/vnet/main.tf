@@ -1,21 +1,3 @@
-locals {
-  vpc_public_subnets = var.vpc_public_subnets != null ? coalescelist(var.vpc_public_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 6, 0) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 6, 1) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 6, 2) : "",
-  ])) : []
-  vpc_private_subnets = var.vpc_private_subnets != null ? coalescelist(var.vpc_private_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 4, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 4, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 4, 3) : "",
-  ])) : []
-  vpc_internal_subnets = var.vpc_internal_subnets != null ? coalescelist(var.vpc_internal_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 3, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 3, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 3, 3) : "",
-  ])) : []
-}
-
 resource "azurerm_virtual_network" "default" {
   count               = var.create ? 1 : 0
   name                = join(var.delimiter, [local.stage_prefix, "vpc"])
