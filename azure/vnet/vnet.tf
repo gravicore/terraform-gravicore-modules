@@ -37,18 +37,6 @@ variable "bgp_community" {
   description = "(Optional) The BGP community attribute in format <as-number>:<community-value>."
 }
 
-# variable "ddos_protection_plan" {
-#   type        = map(any)
-#   default     = {}
-#   description = <<EOD
-#   (Optional) A ddos_protection_plan block of the format:
-#     {
-#       id = (Required) The ID of DDoS Protection Plan.
-#       enable = (Required) Enable/disable DDoS Protection Plan on Virtual Network.
-#     }
-#   EOD
-# }
-
 variable "vpc_public_subnets" {
   type        = list(string)
   default     = []
@@ -91,7 +79,6 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_virtual_network" "default" {
-  #  TODO: Add key-pairs
   count               = var.create ? 1 : 0
   name                = join(var.delimiter, [local.stage_prefix, "vpc-1"])
   location            = var.az_location
@@ -131,11 +118,32 @@ resource "azurerm_virtual_network" "default" {
   }
 }
 
+resource "azurerm_network_security_group" "block-public-access" {
+  count               = var.create ? 1 : 0
+  name                = join(var.delimiter, [local.stage_prefix, "nsg"])
+  location            = local.az_location
+  resource_group_name = local.resource_group_name
+  tags                = local.tags
+
+  security_rule {
+    name                        = "BlockPublicInbound"
+    priority                    = 100
+    direction                   = "Inbound"
+    access                      = "Deny"
+    protocol                    = "*"
+    source_port_range           = "*"
+    destination_port_range      = "*"
+    source_address_prefix       = "*"
+    destination_address_prefixs = local.vpc_private_subnets
+  }
+
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
 
 output "test" {
-  value = local.vpc_public_subnets
+  value = concat(azurerm_virtual_network.default.*, [""])
 }
