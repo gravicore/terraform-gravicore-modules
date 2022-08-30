@@ -121,8 +121,8 @@ resource "azurerm_virtual_network" "default" {
 resource "azurerm_network_security_group" "block-public-access" {
   count               = var.create ? 1 : 0
   name                = join(var.delimiter, [local.stage_prefix, "nsg"])
-  location            = local.az_location
-  resource_group_name = local.resource_group_name
+  location            = var.az_location
+  resource_group_name = var.resource_group_name
   tags                = local.tags
 
   security_rule {
