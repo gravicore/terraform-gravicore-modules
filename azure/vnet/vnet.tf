@@ -99,7 +99,7 @@ resource "azurerm_virtual_network" "default" {
   tags                = local.tags
 
   bgp_community           = var.bgp_community == null ? null : join(":", ["12076", var.bgp_community])
-  address_space           = var.vnet_cidr_block
+  address_space           = toset(var.vnet_cidr_block)
   dns_servers             = var.dns_servers
   edge_zone               = var.edge_zone
   flow_timeout_in_minutes = var.flow_timeout_in_minutes
@@ -107,7 +107,7 @@ resource "azurerm_virtual_network" "default" {
   dynamic "subnet" {
     for_each = local.vpc_public_subnets
     content {
-      name           = join(var.delimiter, [local.module_prefix, "public", index(local.vpc_private_subnets, subnet.value)])
+      name           = join(var.delimiter, [local.module_prefix, "public", index(local.vpc_public_subnets, subnet.value)])
       address_prefix = subnet.value
     }
   }
@@ -125,7 +125,7 @@ resource "azurerm_virtual_network" "default" {
     for_each = local.vpc_internal_subnets
 
     content {
-      name           = join(var.delimiter, [local.module_prefix, "intra", index(local.vpc_private_subnets, subnet.value)])
+      name           = join(var.delimiter, [local.module_prefix, "intra", index(local.vpc_internal_subnets, subnet.value)])
       address_prefix = subnet.value
     }
   }
