@@ -20,6 +20,12 @@ variable "az_location" {
   description = "The Azure region to deploy module into"
 }
 
+variable "resource_group_name" {
+  type        = string
+  default     = ""
+  description = "The name of the Azure resource group"
+}
+
 variable "create" {
   type        = bool
   default     = true
