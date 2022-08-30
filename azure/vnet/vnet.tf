@@ -91,31 +91,55 @@ resource "azurerm_virtual_network" "default" {
   edge_zone               = var.edge_zone
   flow_timeout_in_minutes = var.flow_timeout_in_minutes
 
-  dynamic "subnet" {
-    for_each = local.vpc_public_subnets
-    content {
-      name           = join(var.delimiter, [local.module_prefix, "public", index(local.vpc_public_subnets, subnet.value) + 1])
-      address_prefix = subnet.value
-    }
-  }
+  # dynamic "subnet" {
+  #   for_each = local.vpc_public_subnets
+  #   content {
+  #     name           = join(var.delimiter, [local.module_prefix, "public", index(local.vpc_public_subnets, subnet.value) + 1])
+  #     address_prefix = subnet.value
+  #   }
+  # }
 
-  dynamic "subnet" {
-    for_each = local.vpc_private_subnets
+  # dynamic "subnet" {
+  #   for_each = local.vpc_private_subnets
 
-    content {
-      name           = join(var.delimiter, [local.module_prefix, "private", index(local.vpc_private_subnets, subnet.value) + 1])
-      address_prefix = subnet.value
-    }
-  }
+  #   content {
+  #     name           = join(var.delimiter, [local.module_prefix, "private", index(local.vpc_private_subnets, subnet.value) + 1])
+  #     address_prefix = subnet.value
+  #   }
+  # }
 
-  dynamic "subnet" {
-    for_each = local.vpc_internal_subnets
+  # dynamic "subnet" {
+  #   for_each = local.vpc_internal_subnets
 
-    content {
-      name           = join(var.delimiter, [local.module_prefix, "intra", index(local.vpc_internal_subnets, subnet.value) + 1])
-      address_prefix = subnet.value
-    }
-  }
+  #   content {
+  #     name           = join(var.delimiter, [local.module_prefix, "intra", index(local.vpc_internal_subnets, subnet.value) + 1])
+  #     address_prefix = subnet.value
+  #   }
+  # }
+}
+
+resource "azurerm_subnet" "public" {
+  for_each = var.create ? local.vpc_public_subnets : []
+  name  = join(var.delimiter, [local.module_prefix, "public", index(local.vpc_public_subnets, each.value) + 1])
+  resource_group_name = var.resource_group_name
+  virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
+  address_prefix = each.key
+}
+
+resource "azurerm_subnet" "private" {
+  for_each = var.create ? local.vpc_private_subnets : []
+  name  = join(var.delimiter, [local.module_prefix, "private", index(local.vpc_public_subnets, each.value) + 1])
+  resource_group_name = var.resource_group_name
+  virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
+  address_prefix = each.key
+}
+
+resource "azurerm_subnet" "internal" {
+  for_each = var.create ? local.vpc_internal_subnets : []
+  name  = join(var.delimiter, [local.module_prefix, "intra", index(local.vpc_public_subnets, each.value) + 1])
+  resource_group_name = var.resource_group_name
+  virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
+  address_prefix = each.key
 }
 
 resource "azurerm_network_security_group" "block-public-access" {
@@ -136,7 +160,6 @@ resource "azurerm_network_security_group" "block-public-access" {
     source_address_prefix        = "*"
     destination_address_prefixes = local.vpc_private_subnets
   }
-
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
