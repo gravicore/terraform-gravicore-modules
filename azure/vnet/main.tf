@@ -1,18 +1,18 @@
 locals {
   vpc_public_subnets = var.vpc_public_subnets != null ? coalescelist(var.vpc_public_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 6, 0) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 6, 1) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 6, 2) : "",
+    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 5, 0) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 5, 1) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 5, 2) : "",
   ])) : []
   vpc_private_subnets = var.vpc_private_subnets != null ? coalescelist(var.vpc_private_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 4, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 4, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 4, 3) : "",
+    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 3, 1) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 3, 2) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 3, 3) : "",
   ])) : []
   vpc_internal_subnets = var.vpc_internal_subnets != null ? coalescelist(var.vpc_internal_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 2, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 2, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 2, 3) : "",
+    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 1, 1) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 1, 2) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 1, 3) : "",
   ])) : []
 }
 
@@ -54,28 +54,28 @@ resource "azurerm_subnet" "internal" {
   address_prefixes     = [each.key]
 }
 
-resource "azurerm_network_security_group" "block-public-access" {
-  count               = var.create ? 1 : 0
-  name                = join(var.delimiter, [local.stage_prefix, "nsg"])
-  location            = var.az_location
-  resource_group_name = var.resource_group_name
-  tags                = local.tags
+# resource "azurerm_network_security_group" "block-public-access" {
+#   count               = var.create ? 1 : 0
+#   name                = join(var.delimiter, [local.stage_prefix, "nsg"])
+#   location            = var.az_location
+#   resource_group_name = var.resource_group_name
+#   tags                = local.tags
 
-  security_rule {
-    name                         = "BlockPublicInbound"
-    priority                     = 100
-    direction                    = "Inbound"
-    access                       = "Deny"
-    protocol                     = "*"
-    source_port_range            = "*"
-    destination_port_range       = "*"
-    source_address_prefix        = "*"
-    destination_address_prefixes = local.vpc_private_subnets
-  }
-}
+#   security_rule {
+#     name                         = "BlockPublicInbound"
+#     priority                     = 100
+#     direction                    = "Inbound"
+#     access                       = "Deny"
+#     protocol                     = "*"
+#     source_port_range            = "*"
+#     destination_port_range       = "*"
+#     source_address_prefix        = "*"
+#     destination_address_prefixes = local.vpc_private_subnets
+#   }
+# }
 
-resource "azurerm_subnet_network_security_group_association" "default" {
-  for_each                  = var.create ? toset(local.vpc_private_subnets) : []
-  subnet_id                 = azurerm_subnet.private[each.key].id
-  network_security_group_id = concat(azurerm_network_security_group.block-public-access.*.id, [""])[0]
-}
+# resource "azurerm_subnet_network_security_group_association" "default" {
+#   for_each                  = var.create ? toset(local.vpc_private_subnets) : []
+#   subnet_id                 = azurerm_subnet.private[each.key].id
+#   network_security_group_id = concat(azurerm_network_security_group.block-public-access.*.id, [""])[0]
+# }
