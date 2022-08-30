@@ -90,59 +90,55 @@ locals {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-resource "azurerm_virtual_network" "default" {
-  #  TODO: Add key-pairs
-  count               = var.create ? 1 : 0
-  name                = join(var.delimiter, [local.stage_prefix, "vpc-1"])
-  location            = var.az_location
-  resource_group_name = var.resource_group_name
-  tags                = local.tags
+# resource "azurerm_virtual_network" "default" {
+#   #  TODO: Add key-pairs
+#   count               = var.create ? 1 : 0
+#   name                = join(var.delimiter, [local.stage_prefix, "vpc-1"])
+#   location            = var.az_location
+#   resource_group_name = var.resource_group_name
+#   tags                = local.tags
 
-  bgp_community           = var.bgp_community == null ? null : join(":", ["12076", var.bgp_community])
-  address_space           = var.vnet_cidr_block
-  dns_servers             = var.dns_servers
-  edge_zone               = var.edge_zone
-  flow_timeout_in_minutes = var.flow_timeout_in_minutes
+#   bgp_community           = var.bgp_community == null ? null : join(":", ["12076", var.bgp_community])
+#   address_space           = var.vnet_cidr_block
+#   dns_servers             = var.dns_servers
+#   edge_zone               = var.edge_zone
+#   flow_timeout_in_minutes = var.flow_timeout_in_minutes
 
-  # dynamic "ddos_protection_plan" {
-  #   for_each = toset(var.ddos_protection_plan)
+#   dynamic "subnet" {
+#     for_each = local.vpc_public_subnets
+#     content {
+#       # TODO: insert number value on name
+#       name           = join(var.delimiter, [local.module_prefix, "public", index(local.vvpc_private_subnets, each.key)])
+#       address_prefix = each.value
+#     }
+#   }
 
-  #   content {
-  #     id     = each.value.id
-  #     enable = each.value.enable
-  #   }
-  # }
+#   dynamic "subnet" {
+#     for_each = local.vpc_private_subnets
 
-  dynamic "subnet" {
-    for_each = local.vpc_public_subnets
-    content {
-      # TODO: insert number value on name
-      name           = join(var.delimiter, [local.module_prefix, "public", ])
-      address_prefix = each.value
-    }
-  }
+#     content {
+#       # TODO: insert number value on name
+#       name           = join(var.delimiter, [local.module_prefix, "private", ])
+#       address_prefix = each.value
+#     }
+#   }
 
-  dynamic "subnet" {
-    for_each = local.vpc_private_subnets
+#   dynamic "subnet" {
+#     for_each = local.vpc_internal_subnets
 
-    content {
-      # TODO: insert number value on name
-      name           = join(var.delimiter, [local.module_prefix, "private", ])
-      address_prefix = each.value
-    }
-  }
-
-  dynamic "subnet" {
-    for_each = local.vpc_internal_subnets
-
-    content {
-      # TODO: insert number value on name
-      name           = join(var.delimiter, [local.module_prefix, "intra", ])
-      address_prefix = each.value
-    }
-  }
-}
+#     content {
+#       # TODO: insert number value on name
+#       name           = join(var.delimiter, [local.module_prefix, "intra", ])
+#       address_prefix = each.value
+#     }
+#   }
+# }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
+
+
+output "test" {
+  value = local.vpc_public_subnets
+}
