@@ -2,8 +2,8 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "vnet_cidr_block" {
-  default     = "10.0.0.0/16"
+variable "vnet_cidr_block[0]" {
+  default     = ["10.0.0.0/16"]
   description = "(Required) The address space that is used the virtual network. You can supply more than one address space."
 }
 
@@ -69,19 +69,19 @@ variable "vpc_internal_subnets" {
 
 locals {
   vpc_public_subnets = var.vpc_public_subnets != null ? coalescelist(var.vpc_public_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block, 6, 0) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block, 6, 1) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block, 6, 2) : "",
+    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 6, 0) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 6, 1) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 6, 2) : "",
   ])) : []
   vpc_private_subnets = var.vpc_private_subnets != null ? coalescelist(var.vpc_private_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block, 4, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block, 4, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block, 4, 3) : "",
+    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 4, 1) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 4, 2) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 4, 3) : "",
   ])) : []
   vpc_internal_subnets = var.vpc_internal_subnets != null ? coalescelist(var.vpc_internal_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block, 2, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block, 2, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block, 2, 3) : "",
+    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 2, 1) : "",
+    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 2, 2) : "",
+    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 2, 3) : "",
   ])) : []
 }
 
@@ -99,7 +99,7 @@ resource "azurerm_virtual_network" "default" {
   tags                = local.tags
 
   bgp_community           = var.bgp_community == null ? null : join(":", ["12076", var.bgp_community])
-  address_space           = concat(var.vnet_cidr_block, [])
+  address_space           = var.vnet_cidr_block
   dns_servers             = var.dns_servers
   edge_zone               = var.edge_zone
   flow_timeout_in_minutes = var.flow_timeout_in_minutes
