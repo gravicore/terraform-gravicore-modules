@@ -26,12 +26,6 @@ variable "create" {
   description = "Set to false to prevent the module from creating any resources"
 }
 
-variable "resource_group_name" {
-  type        = string
-  default     = ""
-  description = ""
-}
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
