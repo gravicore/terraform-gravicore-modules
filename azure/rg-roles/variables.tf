@@ -4,26 +4,32 @@
 
 variable "name" {
   type        = string
-  default     = "vpc"
+  default     = "key-vault"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/vpc"
+  default     = "gravicore/terraform-gravicore-modules/azure/kv"
   description = "The owner and name of the Terraform module"
 }
 
-variable "aws_region" {
+variable "az_location" {
   type        = string
-  default     = "us-east-1"
-  description = "The AWS region to deploy module into"
+  default     = "westus"
+  description = "The Azure region to deploy module into"
 }
 
 variable "create" {
   type        = bool
   default     = true
   description = "Set to false to prevent the module from creating any resources"
+}
+
+variable "resource_group_name" {
+  type        = string
+  default     = ""
+  description = ""
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -52,20 +58,8 @@ variable "stage" {
 
 variable "repository" {
   type        = string
-  default     = ""
+  default     = "sf-dm-infra"
   description = "The repository where the code referencing the module is stored"
-}
-
-variable "account_id" {
-  type        = string
-  default     = ""
-  description = "The AWS Account ID that contains the calling entity"
-}
-
-variable "master_account_id" {
-  type        = string
-  default     = ""
-  description = "The Master AWS Account ID that owns the associate AWS account"
 }
 
 # Optional
@@ -106,15 +100,7 @@ variable "delimiter" {
   description = "Delimiter to be used between `namespace`, `environment`, `stage`, `name`"
 }
 
-# Derived
-
-data "aws_caller_identity" "current" {
-  count = var.account_id == "" ? 1 : 0
-}
-
 locals {
-  account_id = var.account_id == "" ? data.aws_caller_identity.current[0].account_id : var.account_id
-
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
   module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.name])))
@@ -125,12 +111,10 @@ locals {
     environment_prefix = local.environment_prefix
   }
   technical_tags = {
-    stage             = var.stage
-    module            = var.name
-    repository        = var.repository
-    master_account_id = var.master_account_id
-    account_id        = local.account_id
-    aws_region        = var.aws_region
+    stage       = var.stage
+    module      = var.name
+    repository  = var.repository
+    az_location = var.az_location
   }
   automation_tags = {
     terraform_module = var.terraform_module
@@ -148,12 +132,11 @@ locals {
   )
 }
 
-data "azurerm_subscription" "current" {}
+data "azurerm_client_config" "current" {}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
-
 
 # devop variables
 
