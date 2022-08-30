@@ -108,7 +108,7 @@ resource "azurerm_virtual_network" "default" {
     for_each = local.vpc_public_subnets
     content {
       # TODO: insert number value on name
-      name           = join(var.delimiter, [local.module_prefix, "public", index(local.vvpc_private_subnets, subnet.key)])
+      name           = join(var.delimiter, [local.module_prefix, "public", index(local.vpc_private_subnets, subnet.key)])
       address_prefix = subnet.key
     }
   }
@@ -118,7 +118,7 @@ resource "azurerm_virtual_network" "default" {
 
     content {
       # TODO: insert number value on name
-      name           = join(var.delimiter, [local.module_prefix, "private", index(local.vvpc_private_subnets, subnet.key)])
+      name           = join(var.delimiter, [local.module_prefix, "private", index(local.vpc_private_subnets, subnet.key)])
       address_prefix = subnet.key
     }
   }
@@ -128,7 +128,7 @@ resource "azurerm_virtual_network" "default" {
 
     content {
       # TODO: insert number value on name
-      name           = join(var.delimiter, [local.module_prefix, "intra", index(local.vvpc_private_subnets, subnet.key)])
+      name           = join(var.delimiter, [local.module_prefix, "intra", index(local.vpc_private_subnets, subnet.key)])
       address_prefix = subnet.key
     }
   }
