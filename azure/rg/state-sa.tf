@@ -15,7 +15,7 @@ resource "azurerm_storage_account" "tfstate" {
 
 resource "azurerm_storage_container" "tfstate" {
   count                 = var.create ? 1 : 0
-  name                  = join("", [var.namespace, var.environment, var.stage, "tf", "state"])
-  storage_account_name  = azurerm_storage_account.tfstate.name
+  name                  = join(var.delimiter, [var.namespace, var.environment, var.stage, "tf", "state"])
+  storage_account_name  = concat(azurerm_storage_account.tfstate.*.name, [""])[0]
   container_access_type = "blob"
 }
