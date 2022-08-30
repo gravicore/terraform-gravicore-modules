@@ -22,7 +22,7 @@ variable "az_location" {
 
 variable "resource_group_name" {
   type        = string
-  default     = "dm-sandbox"
+  default     = ""
   description = "The name of the Azure resource group"
 }
 
