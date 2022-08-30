@@ -1,6 +1,6 @@
 resource "azurerm_role_definition" "elevated" {
   count = var.create ? 1 : 0
-  name  = join(var.delimiter, [var.stage_prefix, "elevated", "access"])
+  name  = join(var.delimiter, [local.stage_prefix, "elevated", "access"])
   scope = data.azurerm_subscription.current.id
 
   permissions {
