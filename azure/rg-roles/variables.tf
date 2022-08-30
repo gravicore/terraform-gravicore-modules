@@ -4,13 +4,13 @@
 
 variable "name" {
   type        = string
-  default     = "key-vault"
+  default     = "rg-roles"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/kv"
+  default     = "gravicore/terraform-gravicore-modules/azure/rg-roles"
   description = "The owner and name of the Terraform module"
 }
 
