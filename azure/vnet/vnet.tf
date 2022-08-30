@@ -126,15 +126,15 @@ resource "azurerm_network_security_group" "block-public-access" {
   tags                = local.tags
 
   security_rule {
-    name                        = "BlockPublicInbound"
-    priority                    = 100
-    direction                   = "Inbound"
-    access                      = "Deny"
-    protocol                    = "*"
-    source_port_range           = "*"
-    destination_port_range      = "*"
-    source_address_prefix       = "*"
-    destination_address_prefixs = local.vpc_private_subnets
+    name                         = "BlockPublicInbound"
+    priority                     = 100
+    direction                    = "Inbound"
+    access                       = "Deny"
+    protocol                     = "*"
+    source_port_range            = "*"
+    destination_port_range       = "*"
+    source_address_prefix        = "*"
+    destination_address_prefixes = local.vpc_private_subnets
   }
 
 }
