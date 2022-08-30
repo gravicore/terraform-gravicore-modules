@@ -2,7 +2,7 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "vnet_cidr_block[0]" {
+variable "vnet_cidr_block" {
   default     = ["10.0.0.0/16"]
   description = "(Required) The address space that is used the virtual network. You can supply more than one address space."
 }
