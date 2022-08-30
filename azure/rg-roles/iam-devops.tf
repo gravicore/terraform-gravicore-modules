@@ -1,6 +1,6 @@
 resource "azurerm_role_definition" "devops" {
   count = var.create ? 1 : 0
-  name  = join(var.delimiter, [var.namespace, "devops", "access"])
+  name  = join(var.delimiter, [var.namespace, var.environment, "devops"])
   scope = data.azurerm_subscription.current.id
 
   permissions {
