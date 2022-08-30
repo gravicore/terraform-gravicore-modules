@@ -162,11 +162,17 @@ resource "azurerm_network_security_group" "block-public-access" {
   }
 }
 
+resource "azurerm_subnet_network_security_group_association" "default" {
+  for_each = var.create ? toset(local.vpc_private_subnets) : []
+  subnet_id = azurerm_subnet.private[each.key].id
+  network_security_group_id = azurerm_network_security_group.block-public-access.id
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-output "test" {
-  value = concat(azurerm_virtual_network.default.*, [""])
-}
+# output "test" {
+#   value = concat(azurerm_virtual_network.default.*, [""])
+# }
