@@ -203,20 +203,26 @@ variable "vpc_internal_subnets" {
   description = "The internal subnets (no NAT access) of the VPC to use"
 }
 
+variable "vnet_public_subnet_extension" {
+  type        = number
+  default     = 6
+  description = ""
+}
+
+variable "vnet_private_subnet_extension" {
+  type        = number
+  default     = 4
+  description = ""
+}
+
+variable "vnet_internal_subnet_extension" {
+  type        = number
+  default     = 2
+  description = ""
+}
+
 locals {
-  vpc_public_subnets = var.vpc_public_subnets != null ? coalescelist(var.vpc_public_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 6, 0) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 6, 1) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 6, 2) : "",
-  ])) : []
-  vpc_private_subnets = var.vpc_private_subnets != null ? coalescelist(var.vpc_private_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 4, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 4, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 4, 3) : "",
-  ])) : []
-  vpc_internal_subnets = var.vpc_internal_subnets != null ? coalescelist(var.vpc_internal_subnets, compact([
-    var.az_max_count >= 1 ? cidrsubnet(var.vnet_cidr_block[0], 2, 1) : "",
-    var.az_max_count >= 2 ? cidrsubnet(var.vnet_cidr_block[0], 2, 2) : "",
-    var.az_max_count >= 3 ? cidrsubnet(var.vnet_cidr_block[0], 2, 3) : "",
-  ])) : []
+  vpc_public_subnets   = var.vpc_public_subnets != null ? coalescelist(var.vpc_public_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_public_subnet_extension, 0)])) : []
+  vpc_private_subnets  = var.vpc_private_subnets != null ? coalescelist(var.vpc_private_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_private_subnet_extension, 0)])) : []
+  vpc_internal_subnets = var.vpc_internal_subnets != null ? coalescelist(var.vpc_internal_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_internal_subnet_extension, 0), ])) : []
 }
