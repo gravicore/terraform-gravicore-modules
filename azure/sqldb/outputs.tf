@@ -10,6 +10,6 @@ output "sql_database_id" {
   value = concat(azurerm_mssql_database.default.*.id)[0]
 }
 
-output "sql_database_id" {
+output "sql_database_name" {
   value = concat(azurerm_mssql_database.default.*.name)[0]
 }
