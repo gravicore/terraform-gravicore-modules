@@ -1,14 +1,14 @@
-output "key-vault-id" {
+output "key_vault_id" {
   value = concat(azurerm_key_vault.default.*.id, [""])[0]
 }
 
 # Key outputs
 
-output "vm-key-id" {
+output "vm_key_id" {
   value = concat(azurerm_key_vault_key.vm-key.*.id, [""])[0]
 }
 
-output "sa-key-id" {
+output "sa_key_id" {
   value = concat(azurerm_key_vault_key.sa-key.*.id, [""])[0]
 }
 
