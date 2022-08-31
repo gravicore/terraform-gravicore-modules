@@ -22,6 +22,9 @@ resource "azurerm_storage_account" "default" {
   queue_encryption_key_type         = var.queue_encryption_key_type
   table_encryption_key_type         = var.table_encryption_key_type
   infrastructure_encryption_enabled = var.infrastructure_encryption_enabled
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
 resource "azurerm_storage_container" "default" {
