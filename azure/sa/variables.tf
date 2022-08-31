@@ -247,3 +247,15 @@ variable "key_name" {
   default     = ""
   description = "(Required) The name of Key Vault Key."
 }
+
+variable "key_permissions" {
+  type        = list(any)
+  default     = ["Get", "Create", "List", "Restore", "Recover", "UnwrapKey", "WrapKey", "Purge", "Encrypt", "Decrypt", "Sign", "Verify"]
+  description = ""
+}
+
+variable "secret_permissions" {
+  type        = list(any)
+  default     = ["Get"]
+  description = ""
+}
