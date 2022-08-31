@@ -1,6 +1,6 @@
 resource "azurerm_storage_account" "default" {
   count               = var.create ? 1 : 0
-  name                = local.module_prefix
+  name                = join("", [local.namespace, local.environment, local.stage, var.name])
   resource_group_name = var.resource_group_name
   location            = var.az_location
   tags                = local.tags
