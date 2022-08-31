@@ -28,12 +28,3 @@ resource "azurerm_key_vault" "default" {
     phone = var.contact_phone
   }
 }
-
-resource "azurerm_key_vault_access_policy" "default" {
-  key_vault_id = concat(azurerm_key_vault.default.*.id, [""])[0]
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azurerm_client_config.current.object_id
-
-  key_permissions    = ["Get", "Create", "Delete", "List", "Restore", "Recover", "UnwrapKey", "WrapKey", "Purge", "Encrypt", "Decrypt", "Sign", "Verify"]
-  secret_permissions = ["Get"]
-}
