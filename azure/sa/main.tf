@@ -46,6 +46,6 @@ resource "azurerm_key_vault_access_policy" "storage" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = azurerm_storage_account.default[0].identity.0.principal_id
 
-  key_permissions    = ["get", "create", "list", "restore", "recover", "unwrapkey", "wrapkey", "purge", "encrypt", "decrypt", "sign", "verify"]
-  secret_permissions = ["get"]
+  key_permissions    = ["Get", "Create", "List", "Restore", "Recover", "UnwrapKey", "WrapKey", "Purge", "Encrypt", "Decrypt", "Sign", "Verify"]
+  secret_permissions = ["Get"]
 }
