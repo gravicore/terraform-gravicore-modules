@@ -1,8 +1,8 @@
 resource "azurerm_mssql_server" "default" {
   count               = var.create ? 1 : 0
   name                = join(var.delimiter, [local.stage_prefix, "sql"])
-  resource_group_name = local.resource_group_name
-  location            = local.az_location
+  resource_group_name = var.resource_group_name
+  location            = var.az_location
   tags                = local.tags
 
   version                      = var.sql_server_version
