@@ -20,7 +20,7 @@ resource "azurerm_storage_account" "default" {
 
   customer_managed_key {
     key_vault_key_id          = var.key_vault_key_id
-    # user_assigned_identity_id = var.user_assigned_identity_id
+    user_assigned_identity_id = data.azurerm_client_config.current.client_id
   }
 
   large_file_share_enabled          = var.large_file_share_enabled
