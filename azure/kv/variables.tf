@@ -170,7 +170,7 @@ variable "enable_rbac_authorization" {
 
 variable "purge_protection_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "(Optional) Is Purge Protection enabled for this Key Vault? Defaults to false."
 }
 
