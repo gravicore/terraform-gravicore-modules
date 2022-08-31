@@ -5,11 +5,11 @@ output "key_vault_id" {
 # Key outputs
 
 output "vm_key_id" {
-  value = concat(azurerm_key_vault_key.vm-key.*.id, [""])[0]
+  value = concat(azurerm_key_vault_key.vm_key.*.id, [""])[0]
 }
 
 output "sa_key_id" {
-  value = concat(azurerm_key_vault_key.sa-key.*.id, [""])[0]
+  value = concat(azurerm_key_vault_key.sa_key.*.id, [""])[0]
 }
 
 # Certificate outputs

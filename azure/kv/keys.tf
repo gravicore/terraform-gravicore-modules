@@ -1,4 +1,4 @@
-resource "azurerm_key_vault_key" "vm-key" {
+resource "azurerm_key_vault_key" "vm_key" {
   count        = var.create ? 1 : 0
   name         = join(var.delimiter, [local.stage_prefix, "vm"])
   key_vault_id = concat(azurerm_key_vault.default.*.id, [""])[0]
@@ -9,7 +9,7 @@ resource "azurerm_key_vault_key" "vm-key" {
   key_opts = var.key_opts
 }
 
-resource "azurerm_key_vault_key" "sa-key" {
+resource "azurerm_key_vault_key" "sa_key" {
   count        = var.create ? 1 : 0
   name         = join(var.delimiter, [local.stage_prefix, "sa"])
   key_vault_id = concat(azurerm_key_vault.default.*.id, [""])[0]
