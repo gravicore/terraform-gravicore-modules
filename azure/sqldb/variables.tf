@@ -164,13 +164,13 @@ variable "minimum_tls_version" {
 
 variable "auto_pause_delay_in_minutes" {
   type        = number
-  default     = 5
+  default     = 60
   description = "(Optional) Time in minutes after which database is automatically paused. A value of -1 means that automatic pause is disabled. This property is only settable for General Purpose Serverless databases."
 }
 
 variable "create_mode" {
   type        = string
-  default     = "DEFAULT"
+  default     = "Default"
   description = "(Optional) The create mode of the database. Possible values are Copy, Default, OnlineSecondary, PointInTimeRestore, Recovery, Restore, RestoreExternalBackup, RestoreExternalBackupSecondary, RestoreLongTermRetentionBackup and Secondary."
 }
 

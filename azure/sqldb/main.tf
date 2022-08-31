@@ -19,7 +19,7 @@ resource "azurerm_mssql_database" "default" {
   server_id                   = concat(azurerm_mssql_server.default.*.id, [""])[0]
   auto_pause_delay_in_minutes = var.auto_pause_delay_in_minutes
   create_mode                 = var.create_mode
-  creation_source_database_id = var.create_mode != "DEFAULT" ? var.creation_source_database_id : null
+  creation_source_database_id = var.create_mode != "Default" ? var.creation_source_database_id : null
   collation                   = var.collation
   geo_backup_enabled          = var.geo_backup_enabled
   ledger_enabled              = var.ledger_enabled
