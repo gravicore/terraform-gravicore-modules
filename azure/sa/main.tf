@@ -18,11 +18,6 @@ resource "azurerm_storage_account" "default" {
   is_hns_enabled                   = var.is_hns_enabled
   nfsv3_enabled                    = var.nfsv3_enabled
 
-  customer_managed_key {
-    key_vault_key_id          = var.key_vault_key_id
-    user_assigned_identity_id = data.azurerm_client_config.current.client_id
-  }
-
   large_file_share_enabled          = var.large_file_share_enabled
   queue_encryption_key_type         = var.queue_encryption_key_type
   table_encryption_key_type         = var.table_encryption_key_type
@@ -34,5 +29,11 @@ resource "azurerm_storage_container" "default" {
   name                  = local.module_prefix
   storage_account_name  = concat(azurerm_storage_account.default.*.name, [""])[0]
   container_access_type = "blob"
+}
+
+resource "azurerm_storage_account_customer_managed_key" "default" {
+  storage_account_id = concat(azurerm_storage_account.default.*.id, [""])[0]
+  key_vault_id       = var.key_vault_key_id
+  key_name           = var.key_name
 }
 

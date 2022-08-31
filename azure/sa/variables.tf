@@ -239,11 +239,11 @@ variable "infrastructure_encryption_enabled" {
 variable "key_vault_key_id" {
   type        = string
   default     = ""
-  description = "value"
+  description = "(Required) The ID of the Key Vault. Changing this forces a new resource to be created."
 }
 
-variable "user_assigned_identity_id" {
+variable "key_name" {
   type        = string
   default     = ""
-  description = "value"
+  description = "(Required) The name of Key Vault Key."
 }
