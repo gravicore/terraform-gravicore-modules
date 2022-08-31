@@ -26,7 +26,7 @@ resource "azurerm_storage_account" "default" {
 
 resource "azurerm_storage_container" "default" {
   count                 = var.create ? 1 : 0
-  name                  = local.module_prefix
+  name                  = join(var.delimiter, concat([local.stage_prefix], split(" ", var.name)))
   storage_account_name  = concat(azurerm_storage_account.default.*.name, [""])[0]
   container_access_type = "blob"
 }
