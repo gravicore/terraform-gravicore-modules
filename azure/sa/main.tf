@@ -1,6 +1,6 @@
 resource "azurerm_storage_account" "default" {
   count               = var.create ? 1 : 0
-  name                = join("", [var.namespace, var.environment, var.stage, var.name])
+  name                = join("", concat([var.namespace, var.environment, var.stage], split(" ", var.name)))
   resource_group_name = var.resource_group_name
   location            = var.az_location
   tags                = local.tags
@@ -20,7 +20,7 @@ resource "azurerm_storage_account" "default" {
 
   customer_managed_key {
     key_vault_key_id          = var.key_vault_key_id
-    user_assigned_identity_id = var.user_assigned_identity_id
+    # user_assigned_identity_id = var.user_assigned_identity_id
   }
 
   large_file_share_enabled          = var.large_file_share_enabled
