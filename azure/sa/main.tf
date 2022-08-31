@@ -40,3 +40,12 @@ resource "azurerm_storage_account_customer_managed_key" "default" {
   key_name           = var.key_name
 }
 
+
+resource "azurerm_key_vault_access_policy" "storage" {
+  key_vault_id = var.key_vault_key_id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = azurerm_storage_account.default[0].identity.0.principal_id
+
+  key_permissions    = ["get", "create", "list", "restore", "recover", "unwrapkey", "wrapkey", "purge", "encrypt", "decrypt", "sign", "verify"]
+  secret_permissions = ["get"]
+}
