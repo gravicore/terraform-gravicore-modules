@@ -5,19 +5,18 @@ resource "azurerm_storage_account" "default" {
   location            = var.az_location
   tags                = local.tags
 
-  account_kind                     = var.account_kind
-  account_tier                     = var.account_tier
-  account_replication_type         = var.account_replication_type
-  cross_tenant_replication_enabled = var.cross_tenant_replication_enabled
-  access_tier                      = var.access_tier
-  edge_zone                        = var.edge_zone
-  enable_https_traffic_only        = var.enable_https_traffic_only
-  min_tls_version                  = var.min_tls_version
-  allow_nested_items_to_be_public  = var.allow_nested_items_to_be_public
-  shared_access_key_enabled        = var.shared_access_key_enabled
-  is_hns_enabled                   = var.is_hns_enabled
-  nfsv3_enabled                    = var.nfsv3_enabled
-
+  account_kind                      = var.account_kind
+  account_tier                      = var.account_tier
+  account_replication_type          = var.account_replication_type
+  cross_tenant_replication_enabled  = var.cross_tenant_replication_enabled
+  access_tier                       = var.access_tier
+  edge_zone                         = var.edge_zone
+  enable_https_traffic_only         = var.enable_https_traffic_only
+  min_tls_version                   = var.min_tls_version
+  allow_nested_items_to_be_public   = var.allow_nested_items_to_be_public
+  shared_access_key_enabled         = var.shared_access_key_enabled
+  is_hns_enabled                    = var.is_hns_enabled
+  nfsv3_enabled                     = var.nfsv3_enabled
   large_file_share_enabled          = var.large_file_share_enabled
   queue_encryption_key_type         = var.queue_encryption_key_type
   table_encryption_key_type         = var.table_encryption_key_type
@@ -28,8 +27,9 @@ resource "azurerm_storage_account" "default" {
 }
 
 resource "azurerm_storage_container" "default" {
-  count                 = var.create ? 1 : 0
-  name                  = join(var.delimiter, concat([local.stage_prefix], split(" ", var.name)))
+  count = var.create ? 1 : 0
+  name  = join(var.delimiter, concat([local.stage_prefix], split(" ", var.name)))
+
   storage_account_name  = concat(azurerm_storage_account.default.*.name, [""])[0]
   container_access_type = "blob"
 }
