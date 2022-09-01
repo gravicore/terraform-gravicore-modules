@@ -102,9 +102,9 @@ locals {
     environment_prefix = local.environment_prefix
   }
   technical_tags = {
-    stage             = var.stage
-    module            = var.name
-    repository        = var.repository
+    stage      = var.stage
+    module     = var.name
+    repository = var.repository
   }
   automation_tags = {
     terraform_module = var.terraform_module
