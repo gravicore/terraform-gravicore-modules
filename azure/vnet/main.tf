@@ -1,6 +1,6 @@
 resource "azurerm_virtual_network" "default" {
   count               = var.create ? 1 : 0
-  name                = join(var.delimiter, [local.stage_prefix, "vnet", local.region])
+  name                = join(var.delimiter, [local.stage_prefix, "vnet", local.az_location])
   location            = var.az_location
   resource_group_name = var.resource_group_name
   tags                = local.tags
