@@ -127,8 +127,7 @@ locals {
     module            = var.name
     repository        = var.repository
     master_account_id = var.master_account_id
-    # account_id        = local.account_id
-    az_location = var.az_location
+    az_location       = var.az_location
   }
   automation_tags = {
     terraform_module = var.terraform_module
@@ -185,22 +184,22 @@ variable "bgp_community" {
   description = "(Optional) The BGP community attribute in format <as-number>:<community-value>."
 }
 
-variable "vpc_public_subnets" {
+variable "vnet_public_subnets" {
   type        = list(string)
   default     = []
-  description = "The public subnets of the VPC to use"
+  description = "The public subnets of the vnet to use"
 }
 
-variable "vpc_private_subnets" {
+variable "vnet_private_subnets" {
   type        = list(string)
   default     = []
-  description = "The private subnets of the VPC to use"
+  description = "The private subnets of the vnet to use"
 }
 
-variable "vpc_internal_subnets" {
+variable "vnet_internal_subnets" {
   type        = list(string)
   default     = null
-  description = "The internal subnets (no NAT access) of the VPC to use"
+  description = "The internal subnets (no NAT access) of the vnet to use"
 }
 
 variable "vnet_public_subnet_extension" {
@@ -222,7 +221,7 @@ variable "vnet_internal_subnet_extension" {
 }
 
 locals {
-  vpc_public_subnets   = var.vpc_public_subnets != null ? coalescelist(var.vpc_public_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_public_subnet_extension, 0)])) : []
-  vpc_private_subnets  = var.vpc_private_subnets != null ? coalescelist(var.vpc_private_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_private_subnet_extension, 0)])) : []
-  vpc_internal_subnets = var.vpc_internal_subnets != null ? coalescelist(var.vpc_internal_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_internal_subnet_extension, 0), ])) : []
+  vnet_public_subnets   = var.vnet_public_subnets != null ? coalescelist(var.vnet_public_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_public_subnet_extension, 0)])) : []
+  vnet_private_subnets  = var.vnet_private_subnets != null ? coalescelist(var.vnet_private_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_private_subnet_extension, 0)])) : []
+  vnet_internal_subnets = var.vnet_internal_subnets != null ? coalescelist(var.vnet_internal_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_internal_subnet_extension, 0), ])) : []
 }
