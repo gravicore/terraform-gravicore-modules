@@ -13,25 +13,28 @@ resource "azurerm_virtual_network" "default" {
 }
 
 resource "azurerm_subnet" "public" {
-  for_each             = var.create ? toset(local.vnet_public_subnets) : []
-  name                 = join(var.delimiter, [local.stage_prefix, "snet", "public", index(local.vnet_public_subnets, each.key) + 1])
-  resource_group_name  = var.resource_group_name
+  for_each            = var.create ? toset(local.vnet_public_subnets) : []
+  name                = join(var.delimiter, [local.stage_prefix, "snet", "public", index(local.vnet_public_subnets, each.key) + 1])
+  resource_group_name = var.resource_group_name
+
   virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
   address_prefixes     = [each.key]
 }
 
 resource "azurerm_subnet" "private" {
-  for_each             = var.create ? toset(local.vnet_private_subnets) : []
-  name                 = join(var.delimiter, [local.stage_prefix, "snet", "private", index(local.vnet_private_subnets, each.key) + 1])
-  resource_group_name  = var.resource_group_name
+  for_each            = var.create ? toset(local.vnet_private_subnets) : []
+  name                = join(var.delimiter, [local.stage_prefix, "snet", "private", index(local.vnet_private_subnets, each.key) + 1])
+  resource_group_name = var.resource_group_name
+
   virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
   address_prefixes     = [each.key]
 }
 
 resource "azurerm_subnet" "internal" {
-  for_each             = var.create ? toset(local.vnet_internal_subnets) : []
-  name                 = join(var.delimiter, [local.module_prefix, "intra", index(local.vnet_internal_subnets, each.key) + 1])
-  resource_group_name  = var.resource_group_name
+  for_each            = var.create ? toset(local.vnet_internal_subnets) : []
+  name                = join(var.delimiter, [local.module_prefix, "intra", index(local.vnet_internal_subnets, each.key) + 1])
+  resource_group_name = var.resource_group_name
+
   virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
   address_prefixes     = [each.key]
 }
