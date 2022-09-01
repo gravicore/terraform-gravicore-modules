@@ -1,6 +1,6 @@
 resource "azurerm_virtual_network" "default" {
   count               = var.create ? 1 : 0
-  name                = join(var.delimiter, [local.stage_prefix, "vnet", local.az_location])
+  name                = join(var.delimiter, [local.stage_prefix, "vnet", var.az_location])
   location            = var.az_location
   resource_group_name = var.resource_group_name
   tags                = local.tags
@@ -14,7 +14,7 @@ resource "azurerm_virtual_network" "default" {
 
 resource "azurerm_subnet" "public" {
   for_each            = var.create ? toset(local.vnet_public_subnets) : []
-  name                = join(var.delimiter, [local.stage_prefix, "snet", "public", local.az_location, index(local.vnet_public_subnets, each.key) + 1])
+  name                = join(var.delimiter, [local.stage_prefix, "snet", "public", var.az_location, index(local.vnet_public_subnets, each.key) + 1])
   resource_group_name = var.resource_group_name
 
   virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
@@ -23,7 +23,7 @@ resource "azurerm_subnet" "public" {
 
 resource "azurerm_subnet" "private" {
   for_each            = var.create ? toset(local.vnet_private_subnets) : []
-  name                = join(var.delimiter, [local.stage_prefix, "snet", "private", local.az_location, index(local.vnet_private_subnets, each.key) + 1])
+  name                = join(var.delimiter, [local.stage_prefix, "snet", "private", var.az_location, index(local.vnet_private_subnets, each.key) + 1])
   resource_group_name = var.resource_group_name
 
   virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
@@ -32,7 +32,7 @@ resource "azurerm_subnet" "private" {
 
 resource "azurerm_subnet" "internal" {
   for_each            = var.create ? toset(local.vnet_internal_subnets) : []
-  name                = join(var.delimiter, [local.stage_prefix, "snet", "intra", local.az_location, index(local.vnet_internal_subnets, each.key) + 1])
+  name                = join(var.delimiter, [local.stage_prefix, "snet", "intra", var.az_location, index(local.vnet_internal_subnets, each.key) + 1])
   resource_group_name = var.resource_group_name
 
   virtual_network_name = concat(azurerm_virtual_network.default.*.name, [""])[0]
