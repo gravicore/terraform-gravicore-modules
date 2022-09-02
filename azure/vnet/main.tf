@@ -39,28 +39,28 @@ resource "azurerm_subnet" "internal" {
   address_prefixes     = [each.key]
 }
 
-# resource "azurerm_network_security_group" "block-public-access" {
-#   count               = var.create ? 1 : 0
-#   name                = join(var.delimiter, [local.stage_prefix, "nsg"])
-#   location            = var.az_location
-#   resource_group_name = var.resource_group_name
-#   tags                = local.tags
+resource "azurerm_network_security_group" "block_internet_ingress" {
+  count               = var.create ? 1 : 0
+  name                = join(var.delimiter, [local.stage_prefix, "nsg"])
+  location            = var.az_location
+  resource_group_name = var.resource_group_name
+  tags                = local.tags
 
-#   security_rule {
-#     name                         = "BlockPublicInbound"
-#     priority                     = 100
-#     direction                    = "Inbound"
-#     access                       = "Deny"
-#     protocol                     = "*"
-#     source_port_range            = "*"
-#     destination_port_range       = "*"
-#     source_address_prefix        = "*"
-#     destination_address_prefixes = local.vnet_private_subnets
-#   }
-# }
+  security_rule {
+    name                         = "BlockInternetIngress"
+    priority                     = 500
+    protocol                     = "*"
+    direction                    = "Inbound"
+    access                       = "Deny"
+    source_address_prefixes      = "Internet"
+    source_port_range            = "*"
+    destination_port_range       = "*"
+    destination_address_prefixes = azurerm_subnet.private[0].address_prefixes
+  }
+}
 
-# resource "azurerm_subnet_network_security_group_association" "default" {
-#   for_each                  = var.create ? toset(local.vnet_private_subnets) : []
-#   subnet_id                 = azurerm_subnet.private[each.key].id
-#   network_security_group_id = concat(azurerm_network_security_group.block-public-access.*.id, [""])[0]
-# }
+resource "azurerm_subnet_network_security_group_association" "default" {
+  for_each                  = var.create ? toset(local.vnet_private_subnets) : []
+  subnet_id                 = azurerm_subnet.private[each.key].id
+  network_security_group_id = concat(azurerm_network_security_group.block_internet_ingress.*.id, [""])[0]
+}
