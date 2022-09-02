@@ -41,7 +41,7 @@ resource "azurerm_subnet" "internal" {
 
 resource "azurerm_network_security_group" "block_internet_ingress" {
   count               = var.create ? 1 : 0
-  name                = join(var.delimiter, [local.stage_prefix, "nsg"])
+  name                = join(var.delimiter, [local.stage_prefix, "vnet", "nsg"])
   location            = var.az_location
   resource_group_name = var.resource_group_name
   tags                = local.tags
