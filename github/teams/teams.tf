@@ -29,7 +29,7 @@ variable "externally_managed_teams" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "github_team" "default" {
-  for_each = var.create && var.externally_managed_teams ? var.teams : {}
+  for_each = var.create ? var.teams : {}
   # TODO: Add variable driven names
   name           = each.key
   description    = lookup(each.value, "description", null)
