@@ -41,7 +41,6 @@ resource "github_team_members" "default" {
   for_each = var.create && var.externally_managed_teams != true ? var.teams : {}
 
   team_id = github_team.default[each.key].id
-  # TODO: Test adding/removing users manually, maybe lifecycle ignore change
   dynamic "members" {
     for_each = lookup(each.value, "members", null)
 
