@@ -1,6 +1,6 @@
 resource "azurerm_mssql_server" "default" {
   count               = var.create ? 1 : 0
-  name                = join(var.delimiter, [local.stage_prefix, "sql"])
+  name                = join(var.delimiter, [local.stage_prefix, var.az_location, "sql", "server"])
   resource_group_name = var.resource_group_name
   location            = var.az_location
   tags                = local.tags
@@ -13,7 +13,7 @@ resource "azurerm_mssql_server" "default" {
 
 resource "azurerm_mssql_database" "default" {
   count = var.create ? 1 : 0
-  name  = join(var.delimiter, [local.stage_prefix, "sqldb"])
+  name  = join(var.delimiter, [local.stage_prefix, var.az_location, "sql", "database"])
   tags  = local.tags
 
   server_id                   = concat(azurerm_mssql_server.default.*.id, [""])[0]
