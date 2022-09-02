@@ -43,7 +43,7 @@ resource "github_team_members" "default" {
   team_id = github_team.default[each.key].id
   # TODO: Test adding/removing users manually, maybe lifecycle ignore change
   dynamic "members" {
-    for_each = lookup(each.value, "members", [])
+    for_each = lookup(each.value, "members", null)
 
     content {
       username = members.key
