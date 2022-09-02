@@ -55,7 +55,7 @@ resource "azurerm_network_security_group" "block_internet_ingress" {
     source_address_prefixes      = ["Internet"]
     source_port_range            = "*"
     destination_port_range       = "*"
-    destination_address_prefixes = azurerm_subnet.private.*.address_prefixes
+    destination_address_prefixes = local.vnet_private_subnets
   }
 }
 
