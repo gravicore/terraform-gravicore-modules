@@ -20,7 +20,7 @@ variable "teams" {
 
 variable "externally_managed_teams" {
   type        = bool
-  default     = false
+  default     = true
   description = "A flag to set that will determine wether teams are managed through an external source (such as Okta)."
 }
 
