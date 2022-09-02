@@ -62,18 +62,6 @@ variable "repository" {
   description = "The repository where the code referencing the module is stored"
 }
 
-variable "account_id" {
-  type        = string
-  default     = ""
-  description = "The Azure Account ID that contains the calling entity"
-}
-
-variable "master_account_id" {
-  type        = string
-  default     = ""
-  description = "The Master Azure Account ID that owns the associate Azure account"
-}
-
 # Optional
 
 variable "tags" {
@@ -123,11 +111,10 @@ locals {
     environment_prefix = local.environment_prefix
   }
   technical_tags = {
-    stage             = var.stage
-    module            = var.name
-    repository        = var.repository
-    master_account_id = var.master_account_id
-    az_location       = var.az_location
+    stage       = var.stage
+    module      = var.name
+    repository  = var.repository
+    az_location = var.az_location
   }
   automation_tags = {
     terraform_module = var.terraform_module
