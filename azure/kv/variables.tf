@@ -289,8 +289,8 @@ variable "certificate_content_type" {
 }
 
 variable "certifitcate_key_usage" {
-  type    = list(string)
-  default = ["cRLSign", "dataEncipherment", "digitalSignature", "keyAgreement", "keyCertSign", "keyEncipherment"]
+  type        = list(string)
+  default     = ["cRLSign", "dataEncipherment", "digitalSignature", "keyAgreement", "keyCertSign", "keyEncipherment"]
   description = "(Required) A list of uses associated with this Key. Possible values include cRLSign, dataEncipherment, decipherOnly, digitalSignature, encipherOnly, keyAgreement, keyCertSign, keyEncipherment and nonRepudiation and are case-sensitive. Changing this forces a new resource to be created."
 }
 
@@ -299,3 +299,8 @@ variable "certifitcate_key_usage" {
 
 # }
 
+variable "access_policy_users" {
+  type        = list(string)
+  default     = []
+  description = ""
+}

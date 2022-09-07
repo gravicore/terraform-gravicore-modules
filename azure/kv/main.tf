@@ -30,12 +30,12 @@ resource "azurerm_key_vault" "default" {
 }
 
 resource "azurerm_key_vault_access_policy" "default" {
-  count = var.create ? 1 : 0
+  for_each     = var.create ? toset(var.access_policy_users) : toset([])
   key_vault_id = concat(azurerm_key_vault.default.*.id, [""])[0]
-  tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = "f15320d3-824e-419e-8377-e9a28d304f46"
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id    = each.key
 
-  key_permissions = var.key_permissions
-  secret_permissions = var.secret_permissions
+  key_permissions         = var.key_permissions
+  secret_permissions      = var.secret_permissions
   certificate_permissions = var.certificate_permissions
 }
