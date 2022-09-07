@@ -239,3 +239,63 @@ variable "secret_permissions" {
   default     = ["Backup", "Delete", "Get", "List", "Purge", "Recover", "Restore", "Set"]
   description = "(Optional) List of secret permissions, must be one or more from the following: Backup, Delete, Get, List, Purge, Recover, Restore and Set."
 }
+
+variable "certificate_issuer" {
+  type        = string
+  default     = "Self"
+  description = "(Required) The name of the Certificate Issuer. Possible values include Self (for self-signed certificate), or Unknown (for a certificate issuing authority like Let's Encrypt and Azure direct supported ones). Changing this forces a new resource to be created."
+}
+
+variable "certificate_exportable" {
+  type        = bool
+  default     = true
+  desciprtion = "(Required) Is this certificate exportable? Changing this forces a new resource to be created."
+}
+
+variable "certificate_key_size" {
+  type        = number
+  default     = 2048
+  descritpion = "(Optional) The size of the key used in the certificate. Possible values include 2048, 3072, and 4096 for RSA keys, or 256, 384, and 521 for EC keys. This property is required when using RSA keys. Changing this forces a new resource to be created."
+}
+
+variable "certificate_key_type" {
+  type        = string
+  default     = "RSA"
+  description = "(Required) Specifies the type of key, such as RSA or EC. Changing this forces a new resource to be created."
+}
+
+variable "certificate_reuse_key" {
+  type        = bool
+  default     = true
+  description = "(Required) Is the key reusable? Changing this forces a new resource to be created."
+}
+
+variable "certificate_lifetime_action" {
+  type        = string
+  default     = "AutoRenew"
+  description = "(Required) The Type of action to be performed when the lifetime trigger is triggerec. Possible values include AutoRenew and EmailContacts. Changing this forces a new resource to be created."
+}
+
+variable "certificate_lifetime_trigger" {
+  type        = number
+  default     = 30
+  description = "(Required) The Type of action to be performed when the lifetime trigger is triggerec. Possible values include AutoRenew and EmailContacts. Changing this forces a new resource to be created."
+}
+
+variable "certificate_content_type" {
+  type        = string
+  default     = "application/x-pkcs12"
+  description = "(Required) The Content-Type of the Certificate, such as application/x-pkcs12 for a PFX or application/x-pem-file for a PEM. Changing this forces a new resource to be created."
+}
+
+variable "certifitcate_key_usage" {
+  type    = list(string)
+  default = ["cRLSign", "dataEncipherment", "digitalSignature", "keyAgreement", "keyCertSign", "keyEncipherment"]
+  description = "(Required) A list of uses associated with this Key. Possible values include cRLSign, dataEncipherment, decipherOnly, digitalSignature, encipherOnly, keyAgreement, keyCertSign, keyEncipherment and nonRepudiation and are case-sensitive. Changing this forces a new resource to be created."
+}
+
+# variable "certificate_subject_alternative_names" {
+#   type = list(string)
+
+# }
+
