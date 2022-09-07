@@ -249,13 +249,13 @@ variable "certificate_issuer" {
 variable "certificate_exportable" {
   type        = bool
   default     = true
-  desciprtion = "(Required) Is this certificate exportable? Changing this forces a new resource to be created."
+  description = "(Required) Is this certificate exportable? Changing this forces a new resource to be created."
 }
 
 variable "certificate_key_size" {
   type        = number
   default     = 2048
-  descritpion = "(Optional) The size of the key used in the certificate. Possible values include 2048, 3072, and 4096 for RSA keys, or 256, 384, and 521 for EC keys. This property is required when using RSA keys. Changing this forces a new resource to be created."
+  description = "(Optional) The size of the key used in the certificate. Possible values include 2048, 3072, and 4096 for RSA keys, or 256, 384, and 521 for EC keys. This property is required when using RSA keys. Changing this forces a new resource to be created."
 }
 
 variable "certificate_key_type" {
