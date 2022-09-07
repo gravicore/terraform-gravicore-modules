@@ -35,7 +35,7 @@ resource "azurerm_key_vault_access_policy" "default" {
   tenant_id = data.azurerm_client_config.current.tenant_id
   object_id = "f15320d3-824e-419e-8377-e9a28d304f46"
 
-  key_permissions = var.key_permissionsz
+  key_permissions = var.key_permissions
   secret_permissions = var.secret_permissions
   certificate_permissions = var.certificate_permissions
 }
