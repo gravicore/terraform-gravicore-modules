@@ -34,17 +34,18 @@ resource "azurerm_storage_container" "default" {
   container_access_type = "blob"
 }
 
-resource "azurerm_storage_account_customer_managed_key" "default" {
-  storage_account_id = concat(azurerm_storage_account.default.*.id, [""])[0]
-  key_vault_id       = var.key_vault_key_id
-  key_name           = var.key_name
-}
+#TODO: Make dynamic if a key is passed in (currently can be uncommented to use a CMK)
+# resource "azurerm_storage_account_customer_managed_key" "default" {
+#   storage_account_id = concat(azurerm_storage_account.default.*.id, [""])[0]
+#   key_vault_id       = var.key_vault_key_id
+#   key_name           = var.key_name
+# }
 
-resource "azurerm_key_vault_access_policy" "storage" {
-  key_vault_id = var.key_vault_key_id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = azurerm_storage_account.default[0].identity.0.principal_id
+# resource "azurerm_key_vault_access_policy" "storage" {
+#   key_vault_id = var.key_vault_key_id
+#   tenant_id    = data.azurerm_client_config.current.tenant_id
+#   object_id    = azurerm_storage_account.default[0].identity.0.principal_id
 
-  key_permissions    = var.key_permissions
-  secret_permissions = var.secret_permissions
-}
+#   key_permissions    = var.key_permissions
+#   secret_permissions = var.secret_permissions
+# }
