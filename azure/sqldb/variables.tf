@@ -198,12 +198,6 @@ variable "ledger_enabled" {
   description = "(Optional) A boolean that specifies if this is a ledger database. Defaults to false. Changing this forces a new resource to be created."
 }
 
-variable "license_type" {
-  type        = string
-  default     = "LicenseIncluded"
-  description = "(Optional) Specifies the license type applied to this database. Possible values are LicenseIncluded and BasePrice."
-}
-
 variable "max_size_gb" {
   type        = number
   default     = 100

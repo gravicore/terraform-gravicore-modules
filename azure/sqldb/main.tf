@@ -23,7 +23,6 @@ resource "azurerm_mssql_database" "default" {
   collation                   = var.collation
   geo_backup_enabled          = var.geo_backup_enabled
   ledger_enabled              = var.ledger_enabled
-  license_type                = var.license_type
   max_size_gb                 = var.max_size_gb
   min_capacity                = var.min_capacity
   restore_point_in_time       = var.create_mode == "PointInTimeRestore" ? var.restore_point_in_time : null
