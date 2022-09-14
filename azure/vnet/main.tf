@@ -52,7 +52,7 @@ resource "azurerm_network_security_group" "block_internet_ingress" {
     protocol                     = "*"
     direction                    = "Inbound"
     access                       = "Deny"
-    source_address_prefix        = ["Internet"]
+    source_address_prefix        = "Internet"
     source_port_range            = "*"
     destination_port_range       = "*"
     destination_address_prefixes = local.vnet_private_subnets
