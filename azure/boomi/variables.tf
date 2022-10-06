@@ -140,3 +140,73 @@ data "azurerm_subscription" "current" {}
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "subnet_id" {
+  type        = string
+  description = "(Required) The ID of the Subnet where this Network Interface should be located in."
+}
+
+variable "private_ip_address_version" {
+  type        = string
+  default     = "IPv4"
+  description = "(Optional) The IP Version to use. Possible values are IPv4 or IPv6. Defaults to IPv4."
+}
+
+variable "private_ip_address_allocation" {
+  type        = string
+  default     = "Dynamic"
+  description = "(Required) The allocation method used for the Private IP Address. Possible values are Dynamic and Static."
+}
+
+variable "private_ip_address" {
+  type        = string
+  default     = null
+  description = "(Optional) The Static IP Address which should be used. [Only used if private_ip_address_allocation is 'Static']"
+}
+
+variable "dns_servers" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) A list of IP Addresses defining the DNS Servers which should be used for this Network Interface."
+}
+
+variable "edge_zone" {
+  type        = string
+  default     = null
+  description = "(Optional) Specifies the Edge Zone within the Azure Region where this Network Interface should exist. Changing this forces a new Network Interface to be created."
+}
+
+variable "enable_ip_forwarding" {
+  type        = bool
+  default     = false
+  description = "(Optional) Should IP Forwarding be enabled? Defaults to false."
+}
+
+variable "enable_accelerated_networking" {
+  type        = bool
+  default     = false
+  description = "(Optional) Should Accelerated Networking be enabled? Defaults to false."
+}
+
+variable "internal_dns_name_label" {
+  type        = string
+  defult      = null
+  description = "(Optional) The (relative) DNS Name used for internal communications between Virtual Machines in the same Virtual Network."
+}
+
+variable "gateway_load_balancer_frontend_ip_configuration_id" {
+  type        = string
+  default     = null
+  description = "(Optional) The Frontend IP Configuration ID of a Gateway SKU Load Balancer."
+}
+
+variable "public_ip_address_id" {
+  type        = string
+  default     = null
+  description = "(Optional) Reference to a Public IP Address to associate with this NIC"
+}
+
+variable "primary" {
+  type        = bool
+  default     = true
+  description = "(Optional) Is this the Primary IP Configuration? Must be true for the first ip_configuration when multiple are specified. Defaults to false [overriden to true]."
+}
