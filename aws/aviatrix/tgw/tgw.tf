@@ -176,31 +176,31 @@ resource "aws_ssm_parameter" "tgw_attached_aviatrix_transit_gateways" {
 # Outputs
 
 output "aviatrix_tgw_name" {
-  value       = aviatrix_aws_tgw.tgw[0].tgw_name
+  value       = concat(aviatrix_aws_tgw.tgw.*.tgw_name, [""])[0]
   description = "Name of the AWS TGW which is going to be created"
 }
 
 output "aviatrix_tgw_account_name" {
-  value       = aviatrix_aws_tgw.tgw[0].account_name
+  value       = concat(aviatrix_aws_tgw.tgw.*.account_name, [""])[0]
   description = "This parameter represents the name of a Cloud-Account in Aviatrix controller"
 }
 
 output "aviatrix_tgw_region" {
-  value       = aviatrix_aws_tgw.tgw[0].region
+  value       = concat(aviatrix_aws_tgw.tgw.*.region, [""])[0]
   description = "The AWS region the TGW is located"
 }
 
 output "aviatrix_tgw_asn" {
-  value       = aviatrix_aws_tgw.tgw[0].aws_side_as_number
+  value       = concat(aviatrix_aws_tgw.tgw.*.aws_side_as_number, [""])[0]
   description = "BGP Local ASN (Autonomous System Number)"
 }
 
 output "aviatrix_tgw_attached_aviatrix_transit_gateways" {
-  value       = aviatrix_aws_tgw.tgw[0].attached_aviatrix_transit_gateway
+  value       = concat(aviatrix_aws_tgw.tgw.*.attached_aviatrix_transit_gateway, [""])[0]
   description = "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain"
 }
 
 output "aviatrix_tgw_security_domains" {
-  value       = aviatrix_aws_tgw.tgw[0].security_domains
+  value       = concat(aviatrix_aws_tgw.tgw.*.security_domains, [""])[0]
   description = "Security Domains created together with AWS TGW's creation"
 }

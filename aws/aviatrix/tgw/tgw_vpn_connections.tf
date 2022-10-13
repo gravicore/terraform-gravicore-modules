@@ -69,12 +69,7 @@ resource "aws_ssm_parameter" "tgw_vpn_connections" {
 
 # Outputs
 
-output "tgw_vpn_dynamic_connections" {
-  value       = aviatrix_aws_tgw_vpn_conn.tgw_vpn_dynamic_connections
-  description = "Map of provisioned Aviatrix AWS TGW dynamic VPN Connections"
-}
-
-output "tgw_vpn_static_connections" {
-  value       = aviatrix_aws_tgw_vpn_conn.tgw_vpn_static_connections
-  description = "Map of provisioned Aviatrix AWS TGW static VPN Connections"
+output "tgw_vpn_connections" {
+  value       = aviatrix_aws_tgw_vpn_conn.tgw_vpn_connections
+  description = "Map of provisioned Aviatrix AWS TGW VPN Connections"
 }
