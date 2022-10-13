@@ -160,19 +160,6 @@ resource "aws_ssm_parameter" "tgw_asn" {
   ]
 }
 
-resource "aws_ssm_parameter" "tgw_attached_aviatrix_transit_gateways" {
-  for_each    = var.create ? toset(["tgw_attached_aviatrix_transit_gateways"]) : []
-  name        = "/${local.stage_prefix}/${var.name}-attached-aviatrix-transit-gateways"
-  description = "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain"
-  tags = local.tags
-
-  type   = "StringList"
-  value  = join(",", concat(aviatrix_aws_tgw.tgw.*.attached_aviatrix_transit_gateway, ["null"])[0])
-  depends_on = [
-    aviatrix_aws_tgw.tgw,
-  ]
-}
-
 # Outputs
 
 output "aviatrix_tgw_name" {
