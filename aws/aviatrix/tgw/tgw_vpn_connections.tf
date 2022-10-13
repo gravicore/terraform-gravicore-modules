@@ -58,10 +58,10 @@ resource "aws_ssm_parameter" "tgw_vpn_connections" {
   for_each    = var.create ? aviatrix_aws_tgw_vpn_conn.tgw_vpn_connections : {}
   name        = "/${local.stage_prefix}/${var.name}-${replace(each.value["connection_name"], "${local.module_prefix}-", "")}-vpn-connection"
   description = format("%s %s", var.desc_prefix, "Map of provisioned ${replace(each.value["connection_name"], "${local.module_prefix}-", "")} Aviatrix AWS TGW VPN Connection")
-  tags = local.tags
+  tags        = local.tags
 
-  type   = "String"
-  value  = jsonencode(each.value)
+  type  = "String"
+  value = jsonencode(each.value)
   depends_on = [
     aviatrix_aws_tgw_vpn_conn.tgw_vpn_connections,
   ]

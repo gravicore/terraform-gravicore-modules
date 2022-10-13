@@ -112,10 +112,10 @@ resource "aws_ssm_parameter" "tgw_name" {
   for_each    = var.create ? toset(["tgw_name"]) : []
   name        = "/${local.stage_prefix}/${var.name}-name"
   description = "Name of the AWS TGW which is going to be created"
-  tags = local.tags
+  tags        = local.tags
 
-  type   = "String"
-  value  = concat(aviatrix_aws_tgw.tgw.*.tgw_name, [""])[0]
+  type  = "String"
+  value = concat(aviatrix_aws_tgw.tgw.*.tgw_name, [""])[0]
   depends_on = [
     aviatrix_aws_tgw.tgw,
   ]
@@ -125,10 +125,10 @@ resource "aws_ssm_parameter" "tgw_account_name" {
   for_each    = var.create ? toset(["tgw_account_name"]) : []
   name        = "/${local.stage_prefix}/${var.name}-account-name"
   description = "This parameter represents the name of a Cloud-Account in Aviatrix controller"
-  tags = local.tags
+  tags        = local.tags
 
-  type   = "String"
-  value  = concat(aviatrix_aws_tgw.tgw.*.account_name, [""])[0]
+  type  = "String"
+  value = concat(aviatrix_aws_tgw.tgw.*.account_name, [""])[0]
   depends_on = [
     aviatrix_aws_tgw.tgw,
   ]
@@ -138,10 +138,10 @@ resource "aws_ssm_parameter" "tgw_region" {
   for_each    = var.create ? toset(["tgw_region"]) : []
   name        = "/${local.stage_prefix}/${var.name}-region"
   description = "The AWS region the TGW is located"
-  tags = local.tags
+  tags        = local.tags
 
-  type   = "String"
-  value  = concat(aviatrix_aws_tgw.tgw.*.region, [""])[0]
+  type  = "String"
+  value = concat(aviatrix_aws_tgw.tgw.*.region, [""])[0]
   depends_on = [
     aviatrix_aws_tgw.tgw,
   ]
@@ -151,10 +151,10 @@ resource "aws_ssm_parameter" "tgw_asn" {
   for_each    = var.create ? toset(["tgw_asn"]) : []
   name        = "/${local.stage_prefix}/${var.name}-asn"
   description = "BGP Local ASN (Autonomous System Number"
-  tags = local.tags
+  tags        = local.tags
 
-  type   = "String"
-  value  = concat(aviatrix_aws_tgw.tgw.*.aws_side_as_number, [""])[0]
+  type  = "String"
+  value = concat(aviatrix_aws_tgw.tgw.*.aws_side_as_number, [""])[0]
   depends_on = [
     aviatrix_aws_tgw.tgw,
   ]
