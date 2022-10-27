@@ -266,25 +266,25 @@ variable "os_disk_account_type" {
 }
 
 variable "image_publisher" {
-  type = string
-  default = "Canonical"
+  type        = string
+  default     = "Canonical"
   description = "(Optional) Specifies the publisher of the image used to create the virtual machines."
 }
 
 variable "image_offer" {
-  type = string
-  default = "UbuntuServer"
+  type        = string
+  default     = "UbuntuServer"
   description = "(Optional) Specifies the offer of the image used to create the virtual machines."
 }
 
 variable "image_sku" {
-  type = string
-  default = "16.04-LTS"
+  type        = string
+  default     = "16.04-LTS"
   description = "(Optional) Specifies the SKU of the image used to create the virtual machines."
 }
 
 variable "image_version" {
-  type = string
-  default = "latest"
+  type        = string
+  default     = "latest"
   description = "(Optional) Specifies the version of the image used to create the virtual machines."
 }
