@@ -199,12 +199,6 @@ variable "gateway_load_balancer_frontend_ip_configuration_id" {
   description = "(Optional) The Frontend IP Configuration ID of a Gateway SKU Load Balancer."
 }
 
-variable "public_ip_address_id" {
-  type        = string
-  default     = null
-  description = "(Optional) Reference to a Public IP Address to associate with this NIC"
-}
-
 variable "primary" {
   type        = bool
   default     = true
