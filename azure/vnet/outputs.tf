@@ -1,7 +1,7 @@
 output "private_subnet_ids" {
-  value = azurerm_subnet.private.*
+  value = values(azurerm_subnet.private)[*].id
 }
 
 output "public_subnet_ids" {
-  value = azurerm_subnet.public.*
+  value = values(azurerm_subnet.public)[*].id
 }
