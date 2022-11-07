@@ -10,7 +10,6 @@ resource "azurerm_linux_virtual_machine" "default" {
   admin_username  = var.admin_username
   admin_password  = var.admin_password
   license_type    = var.license_type
-  source_image_id = var.source_image_id
 
   os_disk {
     caching              = var.os_disk_caching

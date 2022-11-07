@@ -4,13 +4,13 @@
 
 variable "name" {
   type        = string
-  default     = "storage account"
+  default     = "boomi"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/sa"
+  default     = "gravicore/terraform-gravicore-modules/azure/boomi"
   description = "The owner and name of the Terraform module"
 }
 
