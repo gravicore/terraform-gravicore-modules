@@ -44,7 +44,7 @@ resource "azurerm_network_interface" "default" {
     private_ip_address_version                         = var.private_ip_address_version
     private_ip_address_allocation                      = var.private_ip_address_allocation
     private_ip_address                                 = var.private_ip_address_allocation == "static" ? null : var.private_ip_address
-    public_ip_address_id                               = var.create_public_ip == null ? null : azurerm_public_ip.default[0].id
+    public_ip_address_id                               = var.create_public_ip == null ? null : concat(azurerm_public_ip.default.*.id, [""])[0]
     primary                                            = var.primary
   }
 }
