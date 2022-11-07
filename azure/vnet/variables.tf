@@ -191,24 +191,42 @@ variable "vnet_internal_subnets" {
 
 variable "vnet_public_subnet_extension" {
   type        = number
-  default     = 6
+  default     = 2
+  description = ""
+}
+
+variable "vnet_public_netnum" {
+  type        = number
+  default     = 0
   description = ""
 }
 
 variable "vnet_private_subnet_extension" {
   type        = number
-  default     = 4
+  default     = 2
+  description = ""
+}
+
+variable "vnet_private_netnum" {
+  type        = number
+  default     = 0
   description = ""
 }
 
 variable "vnet_internal_subnet_extension" {
   type        = number
-  default     = 2
+  default     = 0
+  description = ""
+}
+
+variable "vnet_internal_netnum" {
+  type        = number
+  default     = 0
   description = ""
 }
 
 locals {
-  vnet_public_subnets   = var.vnet_public_subnets != null ? coalescelist(var.vnet_public_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_public_subnet_extension, 0)])) : []
-  vnet_private_subnets  = var.vnet_private_subnets != null ? coalescelist(var.vnet_private_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_private_subnet_extension, 0)])) : []
-  vnet_internal_subnets = var.vnet_internal_subnets != null ? coalescelist(var.vnet_internal_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_internal_subnet_extension, 0), ])) : []
+  vnet_public_subnets   = var.vnet_public_subnets != null ? coalescelist(var.vnet_public_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_public_subnet_extension, var.vnet_public_netnum)])) : []
+  vnet_private_subnets  = var.vnet_private_subnets != null ? coalescelist(var.vnet_private_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_private_subnet_extension, var.vnet_private_netnum)])) : []
+  vnet_internal_subnets = var.vnet_internal_subnets != null ? coalescelist(var.vnet_internal_subnets, compact([cidrsubnet(var.vnet_cidr_block[0], var.vnet_internal_subnet_extension, var.vnet_internal_netnum), ])) : []
 }
