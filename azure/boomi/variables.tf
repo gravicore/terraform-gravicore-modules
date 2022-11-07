@@ -315,8 +315,8 @@ variable "ip_version" {
 
 variable "ip_tags" {
   type        = map(any)
-  default     = [""]
-  description = "value"
+  default     = null
+  description = "(Optional) A mapping of IP tags to assign to the public IP."
 }
 
 variable "sku_tier" {
