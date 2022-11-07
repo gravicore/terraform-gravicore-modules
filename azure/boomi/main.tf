@@ -22,6 +22,8 @@ resource "azurerm_linux_virtual_machine" "default" {
     sku       = var.image_sku
     version   = var.image_version
   }
+
+  user_data = var.user_data
 }
 
 resource "azurerm_network_interface" "default" {
