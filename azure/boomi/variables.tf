@@ -282,3 +282,51 @@ variable "image_version" {
   default     = "latest"
   description = "(Optional) Specifies the version of the image used to create the virtual machines."
 }
+
+variable "allocation_method" {
+  type        = string
+  default     = "Dynamic"
+  description = "(Required) Defines the allocation method for this IP address. Possible values are Static or Dynamic."
+}
+
+variable "zones" {
+  type        = list(string)
+  default     = null
+  description = "(Optional) A collection containing the availability zone to allocate the Public IP in."
+}
+
+variable "domain_name_label" {
+  type        = string
+  default     = null
+  description = "(Optional) Label for the Domain Name. Will be used to make up the FQDN. If a domain name label is specified, an A DNS record is created for the public IP in the Microsoft Azure DNS system."
+}
+
+variable "idle_timeout_in_minutes" {
+  type        = number
+  default     = 10
+  description = "(Optional) Specifies the timeout for the TCP idle connection. The value can be set between 4 and 30 minutes."
+}
+
+variable "ip_version" {
+  type = string
+  default = "IPv4"
+  description = "(Optional) The IP Version to use, IPv6 or IPv4."
+}
+
+variable "ip_tags" {
+  type = list(any)
+  default = null
+  description = "value"
+}
+
+variable "sku_tier" {
+  type = string
+  default = "Regional"
+  description = "(Optional) The SKU Tier that should be used for the Public IP. Possible values are Regional and Global. Defaults to Regional."
+}
+
+variable "sku" {
+  type = string
+  default = "Basic"
+  description = "(Optional) The SKU of the Public IP. Accepted values are Basic and Standard. Defaults to Basic."
+}
