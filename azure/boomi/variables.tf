@@ -189,7 +189,7 @@ variable "enable_accelerated_networking" {
 
 variable "internal_dns_name_label" {
   type        = string
-  defult      = null
+  default     = null
   description = "(Optional) The (relative) DNS Name used for internal communications between Virtual Machines in the same Virtual Network."
 }
 
@@ -226,7 +226,7 @@ variable "admin_password" {
 variable "admin_username" {
   type        = string
   default     = "admin"
-  desciprtion = "(Required) The username of the local administrator used for the Virtual Machine. Changing this forces a new resource to be created."
+  description = "(Required) The username of the local administrator used for the Virtual Machine. Changing this forces a new resource to be created."
 }
 
 variable "assign_public_ip" {
