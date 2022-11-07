@@ -43,13 +43,13 @@ resource "azurerm_network_interface" "default" {
     private_ip_address_version                         = var.private_ip_address_version
     private_ip_address_allocation                      = var.private_ip_address_allocation
     private_ip_address                                 = var.private_ip_address_allocation == "static" ? null : var.private_ip_address
-    public_ip_address_id                               = var.create_public_ip == null ? null : concat(azurerm_public_ip.default.*.id, [""])[0]
+    public_ip_address_id                               = var.assign_public_ip != true ? null : concat(azurerm_public_ip.default.*.id, [""])[0]
     primary                                            = var.primary
   }
 }
 
 resource "azurerm_public_ip" "default" {
-  count               = var.create && var.create_public_ip ? 1 : 0
+  count               = var.create && var.assign_public_ip ? 1 : 0
   name                = join(var.delimiter, [var.namespace, var.environment, var.stage, var.az_location, var.name, "vm", "public-ip"])
   resource_group_name = var.resource_group_name
   location            = var.az_location
