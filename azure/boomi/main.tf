@@ -6,10 +6,10 @@ resource "azurerm_linux_virtual_machine" "default" {
   tags                  = local.tags
   network_interface_ids = azurerm_network_interface.default.*.id
 
-  size            = var.size
-  admin_username  = var.admin_username
-  admin_password  = var.admin_password
-  license_type    = var.license_type
+  size           = var.size
+  admin_username = var.admin_username
+  admin_password = var.admin_password
+  license_type   = var.license_type
 
   os_disk {
     caching              = var.os_disk_caching
@@ -23,7 +23,7 @@ resource "azurerm_linux_virtual_machine" "default" {
     version   = var.image_version
   }
 
-  user_data = var.user_data
+  user_data = base64encode(var.user_data)
 }
 
 resource "azurerm_network_interface" "default" {
