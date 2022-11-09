@@ -343,4 +343,10 @@ variable "boomi_token" {
   description = "The boomi API token to be used for setting up the machine"
 }
 
+variable "disable_password_authentication" {
+  type        = bool
+  default     = true
+  description = "(Optional) Should Password Authentication be disabled on this Virtual Machine? Defaults to true. Changing this forces a new resource to be created."
+}
+
 
