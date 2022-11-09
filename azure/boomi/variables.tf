@@ -207,7 +207,7 @@ variable "primary" {
 
 variable "size" {
   type        = string
-  default     = "Standard_B2"
+  default     = "Standard_B2s"
   description = "(Required) The SKU which should be used for this Virtual Machine, such as Standard_F2."
 }
 
@@ -225,7 +225,7 @@ variable "admin_password" {
 
 variable "admin_username" {
   type        = string
-  default     = "admin"
+  default     = "boomi-atom-admin"
   description = "(Required) The username of the local administrator used for the Virtual Machine. Changing this forces a new resource to be created."
 }
 
