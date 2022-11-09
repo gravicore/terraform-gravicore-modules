@@ -1,3 +1,7 @@
+locals {
+  user_data = "apt-get curl && curl --user random@boomi_juanrodriguez-4A0ZZC.FV6IAN:d56d32d1-2a8a-4e5d-ae0e-94bf7baab011 \"https://c01-usa-east.integrate.boomi.com/ws/simple/getScript?token=${var.boomi_token}\" -o Boomi_Atom_Install.sh && chmod +x; ./Boomi_Atom_Install.sh && ./Boomi_Atom_Install.sh"
+}
+
 resource "azurerm_linux_virtual_machine" "default" {
   count                 = var.create ? 1 : 0
   name                  = join(var.delimiter, [var.namespace, var.environment, var.stage, var.az_location, var.name, "vm"])
@@ -23,7 +27,7 @@ resource "azurerm_linux_virtual_machine" "default" {
     version   = var.image_version
   }
 
-  user_data = base64encode(var.user_data)
+  user_data = base64encode(local.user_data)
 }
 
 resource "azurerm_network_interface" "default" {

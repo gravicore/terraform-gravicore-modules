@@ -337,13 +337,10 @@ variable "reverse_fqdn" {
   description = "(Optional) A fully qualified domain name that resolves to this public IP address. If the reverseFqdn is specified, then a PTR DNS record is created pointing from the IP address in the in-addr.arpa domain to the reverse FQDN."
 }
 
-variable "user_data" {
+variable "boomi_token" {
   type        = string
-  default     = <<DOC
-apt-get curl
-curl --user random@boomi_juanrodriguez-4A0ZZC.FV6IAN:d56d32d1-2a8a-4e5d-ae0e-94bf7baab011 "https://c01-usa-east.integrate.boomi.com/ws/simple/getScript?token=something" -o Boomi_Atom_Install.sh
-chmod +x ./Boomi_Atom_Install.sh
-./Boomi_Atom_Install.sh
-  DOC
-  description = "(Optional) The Base64-Encoded User Data which should be used for this Virtual Machine."
+  default     = ""
+  description = "The boomi API token to be used for setting up the machine"
 }
+
+
