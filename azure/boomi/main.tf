@@ -55,6 +55,31 @@ resource "azurerm_network_interface" "default" {
   }
 }
 
+resource "azurerm_network_security_group" "default" {
+  count               = var.create ? 1 : 0
+  location            = var.az_location
+  name                = join(var.delimiter, [var.namespace, var.environment, var.stage, var.az_location, var.name, "vm", "nsg"])
+  resource_group_name = var.resource_group_name
+  tags                = local.tags
+
+  security_rule {
+    name                       = "Inbound SSH Allowed"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = 22
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_network_interface_security_group_association" "default" {
+  network_interface_id      = concat(azurerm_network_interface.default.*.id, [""])[0]
+  network_security_group_id = concat(azurerm_network_security_group.default.*.id, [""])[0]
+}
+
 resource "azurerm_public_ip" "default" {
   count               = var.create && var.assign_public_ip ? 1 : 0
   name                = join(var.delimiter, [var.namespace, var.environment, var.stage, var.az_location, var.name, "vm", "public-ip"])
