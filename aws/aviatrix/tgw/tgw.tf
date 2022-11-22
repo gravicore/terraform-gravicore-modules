@@ -108,57 +108,86 @@ resource "aviatrix_aws_tgw" "tgw" {
 
 # SSM Parameters
 
-module "parameters_tgw" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
-  providers   = { aws = aws }
-  create      = var.create && var.create_parameters
-  namespace   = var.namespace
-  environment = var.environment
-  stage       = var.stage
+resource "aws_ssm_parameter" "tgw_name" {
+  for_each    = var.create ? toset(["tgw_name"]) : []
+  name        = "/${local.stage_prefix}/${var.name}-name"
+  description = "Name of the AWS TGW which is going to be created"
   tags        = local.tags
 
-  write_parameters = {
-    "/${local.stage_prefix}/${var.name}-name" = { value = aviatrix_aws_tgw.tgw[0].tgw_name,
-    description = "Name of the AWS TGW which is going to be created" }
-    "/${local.stage_prefix}/${var.name}-account-name" = { value = aviatrix_aws_tgw.tgw[0].account_name,
-    description = "This parameter represents the name of a Cloud-Account in Aviatrix controller" }
-    "/${local.stage_prefix}/${var.name}-region" = { value = aviatrix_aws_tgw.tgw[0].region,
-    description = "The AWS region the TGW is located" }
-    "/${local.stage_prefix}/${var.name}-asn" = { value = aviatrix_aws_tgw.tgw[0].aws_side_as_number,
-    description = "BGP Local ASN (Autonomous System Number" }
-    "/${local.stage_prefix}/${var.name}-attached-aviatrix-transit-gateways" = { value = join(",", aviatrix_aws_tgw.tgw[0].attached_aviatrix_transit_gateway), type = "StringList"
-    description = "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain" }
-  }
+  type  = "String"
+  value = concat(aviatrix_aws_tgw.tgw.*.tgw_name, [""])[0]
+  depends_on = [
+    aviatrix_aws_tgw.tgw,
+  ]
+}
+
+resource "aws_ssm_parameter" "tgw_account_name" {
+  for_each    = var.create ? toset(["tgw_account_name"]) : []
+  name        = "/${local.stage_prefix}/${var.name}-account-name"
+  description = "This parameter represents the name of a Cloud-Account in Aviatrix controller"
+  tags        = local.tags
+
+  type  = "String"
+  value = concat(aviatrix_aws_tgw.tgw.*.account_name, [""])[0]
+  depends_on = [
+    aviatrix_aws_tgw.tgw,
+  ]
+}
+
+resource "aws_ssm_parameter" "tgw_region" {
+  for_each    = var.create ? toset(["tgw_region"]) : []
+  name        = "/${local.stage_prefix}/${var.name}-region"
+  description = "The AWS region the TGW is located"
+  tags        = local.tags
+
+  type  = "String"
+  value = concat(aviatrix_aws_tgw.tgw.*.region, [""])[0]
+  depends_on = [
+    aviatrix_aws_tgw.tgw,
+  ]
+}
+
+resource "aws_ssm_parameter" "tgw_asn" {
+  for_each    = var.create ? toset(["tgw_asn"]) : []
+  name        = "/${local.stage_prefix}/${var.name}-asn"
+  description = "BGP Local ASN (Autonomous System Number"
+  tags        = local.tags
+
+  type  = "String"
+  value = concat(aviatrix_aws_tgw.tgw.*.aws_side_as_number, [""])[0]
+  depends_on = [
+    aviatrix_aws_tgw.tgw,
+  ]
 }
 
 # Outputs
 
 output "aviatrix_tgw_name" {
-  value       = aviatrix_aws_tgw.tgw[0].tgw_name
+  value       = concat(aviatrix_aws_tgw.tgw.*.tgw_name, [""])[0]
   description = "Name of the AWS TGW which is going to be created"
 }
 
 output "aviatrix_tgw_account_name" {
-  value       = aviatrix_aws_tgw.tgw[0].account_name
+  value       = concat(aviatrix_aws_tgw.tgw.*.account_name, [""])[0]
   description = "This parameter represents the name of a Cloud-Account in Aviatrix controller"
 }
 
 output "aviatrix_tgw_region" {
-  value       = aviatrix_aws_tgw.tgw[0].region
+  value       = concat(aviatrix_aws_tgw.tgw.*.region, [""])[0]
   description = "The AWS region the TGW is located"
 }
 
 output "aviatrix_tgw_asn" {
-  value       = aviatrix_aws_tgw.tgw[0].aws_side_as_number
+  value       = concat(aviatrix_aws_tgw.tgw.*.aws_side_as_number, [""])[0]
   description = "BGP Local ASN (Autonomous System Number)"
 }
 
 output "aviatrix_tgw_attached_aviatrix_transit_gateways" {
-  value       = aviatrix_aws_tgw.tgw[0].attached_aviatrix_transit_gateway
+  value       = concat(aviatrix_aws_tgw.tgw.*.attached_aviatrix_transit_gateway, [""])[0]
   description = "A list of Names of Aviatrix Transit Gateway to attach to one of the three default domains: Aviatrix_Edge_Domain"
 }
 
 output "aviatrix_tgw_security_domains" {
-  value       = aviatrix_aws_tgw.tgw[0].security_domains
+  value       = concat(aviatrix_aws_tgw.tgw.*.security_domains, [""])[0]
   description = "Security Domains created together with AWS TGW's creation"
 }
