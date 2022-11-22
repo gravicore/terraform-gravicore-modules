@@ -110,7 +110,7 @@ variable "container_definitions" {
   type        = string
   default     = ""
 }
- 
+
 variable "container_cluster_name" {
   description = "The container cluster name"
   type        = string

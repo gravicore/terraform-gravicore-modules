@@ -341,7 +341,7 @@ resource "aws_lb_listener" "http" {
   port              = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
   protocol          = "HTTP"
   default_action {
-    type = var.http_redirect_enabled ? "redirect" : "forward"
+    type             = var.http_redirect_enabled ? "redirect" : "forward"
     target_group_arn = var.http_redirect_enabled ? "" : aws_lb_target_group.alb[count.index].arn
     dynamic "redirect" {
       for_each = var.http_redirect_enabled ? [1] : []

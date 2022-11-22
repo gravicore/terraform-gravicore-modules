@@ -6,7 +6,6 @@ variable "vpc_id" {
   type        = string
   description = "VPC ID to associate with ALB"
 }
-
 variable "subnet_ids" {
   type        = list(string)
   description = "A list of subnet IDs to associate with ALB"
@@ -17,72 +16,104 @@ variable "internal" {
   default     = false
   description = "A bool flag to determine whether the ALB should be internal"
 }
-
+variable "http_redirect_enabled" {
+  type        = bool
+  default     = true
+  description = "A bool flag to enable/disable HTTP listener"
+}
+variable "http_ingress_cidr_blocks" {
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+  description = "List of CIDR blocks to allow in HTTP security group"
+}
+variable "http_ingress_prefix_list_ids" {
+  type        = list(string)
+  default     = []
+  description = "List of prefix list IDs for allowing access to HTTP ingress security group"
+}
 variable "domain_name" {
   type        = string
   default     = ""
   description = ""
 }
-
 variable "dns_zone_id" {
   type        = string
   default     = ""
   description = ""
 }
-
 variable "dns_zone_name" {
   type        = string
   default     = ""
   description = ""
 }
-
+variable "certificate_arn" {
+  type        = string
+  default     = ""
+  description = "The ARN of the default SSL certificate for HTTPS listener"
+}
+variable "https_ports" {
+  type        = list(number)
+  default     = [443]
+  description = "The port for the HTTPS listener"
+}
+variable "https_enabled" {
+  type        = bool
+  default     = false
+  description = "A bool flag to enable/disable HTTPS listener"
+}
 variable "https_ingress_cidr_blocks" {
   type        = list(string)
   default     = ["0.0.0.0/0"]
   description = "List of CIDR blocks to allow in HTTPS security group"
 }
-
 variable "https_ingress_prefix_list_ids" {
   type        = list(string)
   default     = []
   description = "List of prefix list IDs for allowing access to HTTPS ingress security group"
 }
-
 variable "https_ssl_policy" {
   description = "The name of the SSL Policy for the listener."
   default     = "ELBSecurityPolicy-2015-05"
 }
-
+variable "access_logs_prefix" {
+  type        = string
+  default     = ""
+  description = "The S3 bucket prefix"
+}
+variable "access_logs_enabled" {
+  type        = bool
+  default     = true
+  description = "A bool flag to enable/disable access_logs"
+}
+variable "access_logs_region" {
+  type        = string
+  default     = ""
+  description = "The region for the access_logs S3 bucket"
+}
+variable "alb_access_logs_s3_bucket_force_destroy" {
+  description = "A bool that indicates all objects should be deleted from the ALB access logs S3 bucket so that the bucket can be destroyed without error"
+  default     = false
+}
 variable "cross_zone_load_balancing_enabled" {
   type        = bool
   default     = true
   description = "A bool flag to enable/disable cross zone load balancing"
 }
-
-variable "http2_enabled" {
-  type        = bool
-  default     = true
-  description = "A bool flag to enable/disable HTTP/2"
-}
-
 variable "idle_timeout" {
   type        = number
   default     = 60
   description = "The time in seconds that the connection is allowed to be idle"
 }
-
 variable "ip_address_type" {
   type        = string
   default     = "ipv4"
   description = "The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`."
 }
-
 variable "deletion_protection_enabled" {
   type        = bool
   default     = false
   description = "A bool flag to enable/disable deletion protection for ALB"
 }
-
 variable "target_groups" {
   type = list(any)
   default = [{
@@ -133,7 +164,7 @@ resource "aws_security_group_rule" "nlb_http_ingress" {
   from_port         = var.target_groups[count.index].port
   to_port           = var.target_groups[count.index].port
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = var.http_ingress_cidr_blocks
   security_group_id = aws_security_group.nlb[0].id
 }
 
@@ -146,11 +177,21 @@ resource "aws_lb" "nlb" {
   internal                         = var.internal
   subnets                          = var.subnet_ids
   enable_cross_zone_load_balancing = var.cross_zone_load_balancing_enabled
-  enable_http2                     = var.http2_enabled
   idle_timeout                     = var.idle_timeout
   ip_address_type                  = var.ip_address_type
   enable_deletion_protection       = var.deletion_protection_enabled
 }
+# module "access_logs" {
+#   source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.2.0"
+#   enabled   = var.create
+#   name      = "${local.module_prefix}-access-logs"
+#   namespace = ""
+#   stage     = ""
+#   tags      = local.tags
+
+#   region        = coalesce(var.access_logs_region, var.aws_region)
+#   force_destroy = var.alb_access_logs_s3_bucket_force_destroy
+# }
 
 resource "aws_lb_target_group" "nlb" {
   count = var.create ? length(var.target_groups) : 0
@@ -182,7 +223,7 @@ resource "aws_lb_listener" "http" {
   port              = var.target_groups[count.index].port
   protocol          = "TCP"
   default_action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.nlb[count.index].arn
   }
 }
@@ -244,7 +285,7 @@ output "route53_dns_name" {
   value       = length(aws_route53_record.nlb) == 1 ? aws_route53_record.nlb[0].name : ""
 }
 
-output "security_group_ids" {
-  description = "The security group IDs of the ALB"
-  value       = aws_security_group.nlb.*.id
-}
+# output "access_logs_bucket_id" {
+#   description = "The S3 bucket ID for access logs"
+#   value       = module.access_logs.bucket_id
+# }
