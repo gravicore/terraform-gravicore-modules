@@ -4,32 +4,17 @@
 
 variable "vpc_id" {
   type        = string
-  description = "VPC ID to associate with ALB"
+  description = "VPC ID to associate with NLB"
 }
 variable "subnet_ids" {
   type        = list(string)
-  description = "A list of subnet IDs to associate with ALB"
+  description = "A list of subnet IDs to associate with NLB"
 }
 
 variable "internal" {
   type        = bool
   default     = false
-  description = "A bool flag to determine whether the ALB should be internal"
-}
-variable "http_redirect_enabled" {
-  type        = bool
-  default     = true
-  description = "A bool flag to enable/disable HTTP listener"
-}
-variable "http_ingress_cidr_blocks" {
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-  description = "List of CIDR blocks to allow in HTTP security group"
-}
-variable "http_ingress_prefix_list_ids" {
-  type        = list(string)
-  default     = []
-  description = "List of prefix list IDs for allowing access to HTTP ingress security group"
+  description = "A bool flag to determine whether the NLB should be internal"
 }
 variable "domain_name" {
   type        = string
@@ -45,54 +30,6 @@ variable "dns_zone_name" {
   type        = string
   default     = ""
   description = ""
-}
-variable "certificate_arn" {
-  type        = string
-  default     = ""
-  description = "The ARN of the default SSL certificate for HTTPS listener"
-}
-variable "https_ports" {
-  type        = list(number)
-  default     = [443]
-  description = "The port for the HTTPS listener"
-}
-variable "https_enabled" {
-  type        = bool
-  default     = false
-  description = "A bool flag to enable/disable HTTPS listener"
-}
-variable "https_ingress_cidr_blocks" {
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-  description = "List of CIDR blocks to allow in HTTPS security group"
-}
-variable "https_ingress_prefix_list_ids" {
-  type        = list(string)
-  default     = []
-  description = "List of prefix list IDs for allowing access to HTTPS ingress security group"
-}
-variable "https_ssl_policy" {
-  description = "The name of the SSL Policy for the listener."
-  default     = "ELBSecurityPolicy-2015-05"
-}
-variable "access_logs_prefix" {
-  type        = string
-  default     = ""
-  description = "The S3 bucket prefix"
-}
-variable "access_logs_enabled" {
-  type        = bool
-  default     = true
-  description = "A bool flag to enable/disable access_logs"
-}
-variable "access_logs_region" {
-  type        = string
-  default     = ""
-  description = "The region for the access_logs S3 bucket"
-}
-variable "alb_access_logs_s3_bucket_force_destroy" {
-  description = "A bool that indicates all objects should be deleted from the ALB access logs S3 bucket so that the bucket can be destroyed without error"
-  default     = false
 }
 variable "cross_zone_load_balancing_enabled" {
   type        = bool
@@ -112,61 +49,33 @@ variable "ip_address_type" {
 variable "deletion_protection_enabled" {
   type        = bool
   default     = false
-  description = "A bool flag to enable/disable deletion protection for ALB"
+  description = "A bool flag to enable/disable deletion protection for NLB"
 }
 variable "target_groups" {
-  type = list(any)
-  default = [{
-    target_type          = "instance"
-    protocol             = "TCP"
-    port                 = 80
-    deregistration_delay = 15
-    health_check = {
-      enabled             = true
-      protocol            = "TCP"
-      port                = 80
-      interval            = 10
-      healthy_threshold   = 2
-      unhealthy_threshold = 2
-    }
-  }]
-  description = "A list of target group resources"
+  type = map(any)
+  default = null
+  description = <<EOF
+  Map of NLB target group configurations
+target_groups = {
+  port = {                           = number,    (Required) Port on which targets receive traffic, unless overridden when registering a specific target. Required when target_type is instance, ip or alb. Does not apply when target_type is lambda.                           
+    target_type                      = string,    (Required) Type of target that you must specify when registering targets with this target group. See doc for supported values. The default is instance. Note that you can't specify targets for a target group using both instance IDs and IP addresses. If the target type is ip, specify IP addresses from the subnets of the virtual private cloud (VPC) for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses. Network Load Balancers do not support the lambda target type. Application Load Balancers do not support the alb target type.
+    protocol                         = string,    (Required) Protocol to use for routing traffic to the targets. Should be one of TCP, TCP_UDP, TLS, or UDP. Required when target_type is instance, ip or alb. Does not apply when target_type is lambda.
+    deregistration_delay             = number,    (Optional) Amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused. The range is 0-3600 seconds. The default value is 300 seconds.
+    health_check_enabled             = bool,      (Optional) Whether health checks are enabled. Defaults to true.
+    health_check_protocol            = string,    (Optional) Protocol to use to connect with the target. Defaults to HTTP. Not applicable when target_type is lambda.
+    health_check_port                = string,    (Optional) Port to use to connect with the target. Valid values are either ports 1-65535, or traffic-port. Defaults to traffic-port.
+    health_check_interval            = number,    (Optional) Approximate amount of time, in seconds, between health checks of an individual target. Minimum value 5 seconds, Maximum value 300 seconds. For lambda target groups, it needs to be greater as the timeout of the underlying lambda. Default 30 seconds.
+    health_check_healthy_threshold   = number,    (Optional) Number of consecutive health checks successes required before considering an unhealthy target healthy. Defaults to 3.
+    health_check_unhealthy_threshold = number,    (Optional) Number of consecutive health check failures required before considering the target unhealthy. For Network Load Balancers, this value must be the same as the healthy_threshold. Defaults to 3.
+    listener_protocol                = string,    (Optional) Protocol to use to connect with the listener. Defaults to HTTP. Not applicable when target_type is lambda.
+  }
+}
+EOF
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_security_group" "nlb" {
-  count       = var.create ? 1 : 0
-  name        = local.module_prefix
-  tags        = local.tags
-  description = "Controls access to the ALB (HTTP/HTTPS)"
-
-  vpc_id = var.vpc_id
-}
-
-resource "aws_security_group_rule" "egress" {
-  count = var.create ? 1 : 0
-
-  type              = "egress"
-  from_port         = "0"
-  to_port           = "0"
-  protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.nlb[0].id
-}
-
-resource "aws_security_group_rule" "nlb_http_ingress" {
-  count = var.create && length(var.target_groups) > 0 ? length(var.target_groups) : 0
-
-  type              = "ingress"
-  from_port         = var.target_groups[count.index].port
-  to_port           = var.target_groups[count.index].port
-  protocol          = "tcp"
-  cidr_blocks       = var.http_ingress_cidr_blocks
-  security_group_id = aws_security_group.nlb[0].id
-}
 
 resource "aws_lb" "nlb" {
   count = var.create ? 1 : 0
@@ -181,34 +90,25 @@ resource "aws_lb" "nlb" {
   ip_address_type                  = var.ip_address_type
   enable_deletion_protection       = var.deletion_protection_enabled
 }
-# module "access_logs" {
-#   source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.2.0"
-#   enabled   = var.create
-#   name      = "${local.module_prefix}-access-logs"
-#   namespace = ""
-#   stage     = ""
-#   tags      = local.tags
-
-#   region        = coalesce(var.access_logs_region, var.aws_region)
-#   force_destroy = var.alb_access_logs_s3_bucket_force_destroy
-# }
 
 resource "aws_lb_target_group" "nlb" {
-  count = var.create ? length(var.target_groups) : 0
-  name  = lower(join("-", [local.module_prefix, var.target_groups[count.index].protocol, var.target_groups[count.index].port]))
+  for_each = var.create && var.target_groups != null ? var.target_groups : {}
+  name  = lower(join("-", [local.module_prefix, lookup(each.value, "protocol", "TCP"), each.key]))
   tags  = local.tags
 
   vpc_id               = var.vpc_id
-  port                 = var.target_groups[count.index].port
-  protocol             = var.target_groups[count.index].protocol
-  target_type          = var.target_groups[count.index].target_type
-  deregistration_delay = var.target_groups[count.index].deregistration_delay
+  port                 = each.key
+  protocol             = lookup(each.value, "protocol", "TCP")
+  target_type          = lookup(each.value, "target_type", "instance")
+  deregistration_delay = lookup(each.value, "deregistration_delay", 15)
   health_check {
-    enabled             = var.target_groups[count.index].health_check.enabled
-    healthy_threshold   = var.target_groups[count.index].health_check.healthy_threshold
-    unhealthy_threshold = var.target_groups[count.index].health_check.unhealthy_threshold
-    interval            = var.target_groups[count.index].health_check.interval
-    protocol            = var.target_groups[count.index].health_check.protocol
+    enabled             = lookup(each.value, "health_check_enabled", true)
+    healthy_threshold   = lookup(each.value, "health_check_healthy_threshold", 2)
+    unhealthy_threshold = lookup(each.value, "health_check_unhealthy_threshold", 2)
+    interval            = lookup(each.value, "health_check_interval", 10)
+    protocol            = lookup(each.value, "health_check_protocol", "TCP")
+    port                = lookup(each.value, "health_check_port", "traffic-port")
+
   }
 
   lifecycle {
@@ -216,15 +116,15 @@ resource "aws_lb_target_group" "nlb" {
   }
 }
 
-resource "aws_lb_listener" "http" {
-  count = var.create && length(var.target_groups) > 0 ? length(var.target_groups) : 0
+resource "aws_lb_listener" "nlb" {
+  for_each    = var.create ? aws_lb_target_group.nlb : {}
 
   load_balancer_arn = aws_lb.nlb[0].arn
-  port              = var.target_groups[count.index].port
-  protocol          = "TCP"
+  port              = each.key
+  protocol          = each.value["protocol"]
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.nlb[count.index].arn
+    target_group_arn = each.value["arn"]
   }
 }
 
@@ -244,48 +144,45 @@ resource "aws_route53_record" "nlb" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "nlb_name" {
-  description = "The ARN suffix of the ALB"
+  description = "The ARN suffix of the NLB"
   value       = aws_lb.nlb[0].name
 }
 
 output "nlb_arn" {
-  description = "The ARN of the ALB"
+  description = "The ARN of the NLB"
   value       = aws_lb.nlb[0].arn
 }
 
 output "nlb_arn_suffix" {
-  description = "The ARN suffix of the ALB"
+  description = "The ARN suffix of the NLB"
   value       = aws_lb.nlb[0].arn_suffix
 }
 
 output "nlb_dns_name" {
-  description = "DNS name of ALB"
+  description = "DNS name of NLB"
   value       = aws_lb.nlb[0].dns_name
 }
 
 output "nlb_zone_id" {
-  description = "The ID of the zone which ALB is provisioned"
+  description = "The ID of the zone which NLB is provisioned"
   value       = aws_lb.nlb[0].zone_id
 }
 
 output "target_group_arns" {
   description = "The target group ARNs"
-  value       = aws_lb_target_group.nlb.*.arn
+  value       = [
+    for v in aws_lb_target_group.nlb : v.arn
+  ]
 }
 
 output "listener_arns" {
   description = "A list of all the listener ARNs"
-  value = compact(
-    concat(aws_lb_listener.http.*.arn),
-  )
+  value = [
+    for v in aws_lb_listener.nlb : v.arn
+  ]
 }
 
 output "route53_dns_name" {
   description = "DNS name of Route53"
   value       = length(aws_route53_record.nlb) == 1 ? aws_route53_record.nlb[0].name : ""
 }
-
-# output "access_logs_bucket_id" {
-#   description = "The S3 bucket ID for access logs"
-#   value       = module.access_logs.bucket_id
-# }

@@ -8,13 +8,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "alb"
+  default     = "nlb"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/alb"
+  default     = "gravicore/terraform-gravicore-modules/aws/nlb"
   description = "The owner and name of the Terraform module"
 }
 
