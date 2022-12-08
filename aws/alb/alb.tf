@@ -32,7 +32,7 @@ variable "http_redirect_enabled" {
 
 variable "http_ingress_cidr_blocks" {
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["10.0.0.0/8"]
   description = "List of CIDR blocks to allow in HTTP security group"
 }
 
@@ -242,11 +242,11 @@ resource "aws_security_group_rule" "egress" {
 }
 
 resource "aws_security_group_rule" "alb_http_ingress" {
-  count = var.create && var.http_redirect_enabled ? 1 : 0
+  count = var.create ? var.http_redirect_enabled ? 1 : length(var.target_groups) : 0
 
   type              = "ingress"
-  from_port         = 80
-  to_port           = 80
+  from_port         = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
+  to_port           = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
   protocol          = "tcp"
   cidr_blocks       = var.http_ingress_cidr_blocks
   prefix_list_ids   = var.http_ingress_prefix_list_ids
@@ -335,17 +335,21 @@ resource "aws_lb_target_group" "alb" {
 }
 
 resource "aws_lb_listener" "http" {
-  count = var.create && var.http_redirect_enabled ? 1 : 0
+  count = var.create ? var.http_redirect_enabled ? 1 : length(var.target_groups) : 0
 
   load_balancer_arn = aws_lb.alb[0].arn
-  port              = 80
+  port              = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
   protocol          = "HTTP"
   default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+    type             = var.http_redirect_enabled ? "redirect" : "forward"
+    target_group_arn = var.http_redirect_enabled ? "" : aws_lb_target_group.alb[count.index].arn
+    dynamic "redirect" {
+      for_each = var.http_redirect_enabled ? [1] : []
+      content {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
     }
   }
 }
@@ -439,5 +443,5 @@ output "access_logs_bucket_id" {
 
 output "route53_dns_name" {
   description = "DNS name of Route53"
-  value       = aws_route53_record.alb[0].name
+  value       = length(aws_route53_record.alb) == 1 ? aws_route53_record.alb[0].name : ""
 }

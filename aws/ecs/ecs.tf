@@ -8,9 +8,9 @@ variable "vpc_id" {
 }
 
 variable "alb_target_group_arn" {
-  type        = string
+  type        = list(string)
   description = "The ARN of the ALB target group"
-  default     = ""
+  default     = []
 }
 
 variable "container_subnet_ids" {
@@ -39,10 +39,10 @@ variable "container_cpu" {
   type        = string
 }
 
-variable "container_port" {
+variable "container_ports" {
   description = "The amount of CPU used by the Task"
-  default     = "80"
-  type        = string
+  default     = ["80"]
+  type        = list(string)
 }
 
 variable "container_memory_reservation" {
@@ -111,12 +111,18 @@ variable "container_definitions" {
   default     = ""
 }
 
+variable "container_cluster_name" {
+  description = "The container cluster name"
+  type        = string
+  default     = ""
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_ecs_cluster" "default" {
-  count = var.create ? 1 : 0
+  count = var.create && var.container_cluster_name == "" ? 1 : 0
   name  = local.module_prefix
   tags  = local.tags
 }
@@ -137,7 +143,7 @@ resource "aws_ecs_task_definition" "default" {
 resource "aws_ecs_service" "default" {
   count           = var.create ? 1 : 0
   name            = local.module_prefix
-  cluster         = aws_ecs_cluster.default[0].id
+  cluster         = var.container_cluster_name == "" ? aws_ecs_cluster.default[0].id : "arn:aws:ecs:${var.aws_region}:${local.account_id}:cluster/${var.container_cluster_name}"
   task_definition = aws_ecs_task_definition.default[0].arn
   desired_count   = var.container_desired_count
   launch_type     = "FARGATE"
@@ -148,11 +154,11 @@ resource "aws_ecs_service" "default" {
   }
 
   dynamic "load_balancer" {
-    for_each = var.alb_target_group_arn == "" ? [] : [1]
+    for_each = var.alb_target_group_arn
     content {
-      target_group_arn = var.alb_target_group_arn
+      target_group_arn = load_balancer.value
       container_name   = local.module_prefix
-      container_port   = var.container_port
+      container_port   = var.container_ports[load_balancer.key]
     }
   }
 }
@@ -161,7 +167,7 @@ resource "aws_appautoscaling_target" "default" {
   count              = var.create && var.container_create_autoscaling ? 1 : 0
   max_capacity       = var.container_autoscaling_max_capacity
   min_capacity       = var.container_autoscaling_min_capacity
-  resource_id        = "service/${aws_ecs_cluster.default[0].name}/${aws_ecs_service.default[0].name}"
+  resource_id        = "service/${var.container_cluster_name == "" ? aws_ecs_cluster.default[0].name : var.container_cluster_name}/${aws_ecs_service.default[0].name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
   role_arn           = var.container_autoscaling_role_arn
