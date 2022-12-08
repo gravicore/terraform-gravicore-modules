@@ -52,8 +52,8 @@ variable "deletion_protection_enabled" {
   description = "A bool flag to enable/disable deletion protection for NLB"
 }
 variable "target_groups" {
-  type = map(any)
-  default = null
+  type        = map(any)
+  default     = null
   description = <<EOF
   Map of NLB target group configurations
 target_groups = {
@@ -93,8 +93,8 @@ resource "aws_lb" "nlb" {
 
 resource "aws_lb_target_group" "nlb" {
   for_each = var.create && var.target_groups != null ? var.target_groups : {}
-  name  = lower(join("-", [local.module_prefix, lookup(each.value, "protocol", "TCP"), each.key]))
-  tags  = local.tags
+  name     = lower(join("-", [local.module_prefix, lookup(each.value, "protocol", "TCP"), each.key]))
+  tags     = local.tags
 
   vpc_id               = var.vpc_id
   port                 = each.key
@@ -117,7 +117,7 @@ resource "aws_lb_target_group" "nlb" {
 }
 
 resource "aws_lb_listener" "nlb" {
-  for_each    = var.create ? aws_lb_target_group.nlb : {}
+  for_each = var.create ? aws_lb_target_group.nlb : {}
 
   load_balancer_arn = aws_lb.nlb[0].arn
   port              = each.key
@@ -170,7 +170,7 @@ output "nlb_zone_id" {
 
 output "target_group_arns" {
   description = "The target group ARNs"
-  value       = [
+  value = [
     for v in aws_lb_target_group.nlb : v.arn
   ]
 }
