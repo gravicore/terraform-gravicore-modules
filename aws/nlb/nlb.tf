@@ -48,7 +48,7 @@ variable "ip_address_type" {
 }
 variable "deletion_protection_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "A bool flag to enable/disable deletion protection for NLB"
 }
 variable "target_groups" {

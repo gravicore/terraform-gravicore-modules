@@ -32,7 +32,7 @@ variable "http_redirect_enabled" {
 
 variable "http_ingress_cidr_blocks" {
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["10.0.0.0/8"]
   description = "List of CIDR blocks to allow in HTTP security group"
 }
 
