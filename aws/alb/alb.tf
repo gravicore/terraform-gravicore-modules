@@ -438,7 +438,7 @@ output "listener_arns" {
 
 output "access_logs_bucket_id" {
   description = "The S3 bucket ID for access logs"
-  value       = concat(module.access_logs.bucket_id, [""])[0]
+  value       = module.access_logs.bucket_id
 }
 
 output "route53_dns_name" {
