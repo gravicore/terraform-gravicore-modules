@@ -108,7 +108,6 @@ resource "aws_lb_target_group" "nlb" {
     interval            = lookup(each.value, "health_check_interval", 10)
     protocol            = lookup(each.value, "health_check_protocol", "TCP")
     port                = lookup(each.value, "health_check_port", "traffic-port")
-
   }
 
   lifecycle {
@@ -120,7 +119,7 @@ resource "aws_lb_listener" "nlb" {
   for_each = var.create ? aws_lb_target_group.nlb : {}
 
   load_balancer_arn = aws_lb.nlb[0].arn
-  port              = each.key
+  port              = each.value["port"]
   protocol          = each.value["protocol"]
   default_action {
     type             = "forward"
@@ -172,6 +171,13 @@ output "target_group_arns" {
   description = "The target group ARNs"
   value = [
     for v in aws_lb_target_group.nlb : v.arn
+  ]
+}
+
+output "target_group_ports" {
+  description = "The target group ports"
+  value = [
+    for v in aws_lb_target_group.nlb : v.port
   ]
 }
 

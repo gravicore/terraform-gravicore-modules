@@ -7,9 +7,12 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "alb_target_group_arn" {
-  type        = list(string)
-  description = "The ARN of the ALB target group"
+variable "lb_target_groups" {
+  type = list(object({
+    port = number
+    arn  = string
+  }))
+  description = "The target groups to associate the task with"
   default     = []
 }
 
@@ -37,12 +40,6 @@ variable "container_cpu" {
   description = "The amount of CPU used by the Task"
   default     = "1024"
   type        = string
-}
-
-variable "container_ports" {
-  description = "The amount of CPU used by the Task"
-  default     = ["80"]
-  type        = list(string)
 }
 
 variable "container_memory_reservation" {
@@ -154,11 +151,11 @@ resource "aws_ecs_service" "default" {
   }
 
   dynamic "load_balancer" {
-    for_each = var.alb_target_group_arn
+    for_each = var.lb_target_groups
     content {
-      target_group_arn = load_balancer.value
+      target_group_arn = load_balancer.value.arn
       container_name   = local.module_prefix
-      container_port   = var.container_ports[load_balancer.key]
+      container_port   = load_balancer.value.port
     }
   }
 }
