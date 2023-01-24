@@ -386,27 +386,27 @@ resource "aws_route53_record" "alb" {
 
 output "alb_name" {
   description = "The ARN suffix of the ALB"
-  value       = aws_lb.alb[0].name
+  value       = concat(aws_lb.alb.*.name, [""])[0]
 }
 
 output "alb_arn" {
   description = "The ARN of the ALB"
-  value       = aws_lb.alb[0].arn
+  value       = concat(aws_lb.alb.*.arn, [""])[0]
 }
 
 output "alb_arn_suffix" {
   description = "The ARN suffix of the ALB"
-  value       = aws_lb.alb[0].arn_suffix
+  value       = concat(aws_lb.alb.*.arn_suffix, [""])[0]
 }
 
 output "alb_dns_name" {
   description = "DNS name of ALB"
-  value       = aws_lb.alb[0].dns_name
+  value       = concat(aws_lb.alb.*.dns_name, [""])[0]
 }
 
 output "alb_zone_id" {
   description = "The ID of the zone which ALB is provisioned"
-  value       = aws_lb.alb[0].zone_id
+  value       = concat(aws_lb.alb.*.zone_id, [""])[0]
 }
 
 output "security_group_ids" {
