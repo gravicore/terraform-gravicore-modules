@@ -238,7 +238,7 @@ resource "aws_security_group_rule" "egress" {
   to_port           = "0"
   protocol          = "-1"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.alb[0].id
+  security_group_id = concat(aws_security_group.alb.*.id, [""])[0]
 }
 
 resource "aws_security_group_rule" "alb_http_ingress" {
@@ -250,7 +250,7 @@ resource "aws_security_group_rule" "alb_http_ingress" {
   protocol          = "tcp"
   cidr_blocks       = var.http_ingress_cidr_blocks
   prefix_list_ids   = var.http_ingress_prefix_list_ids
-  security_group_id = aws_security_group.alb[0].id
+  security_group_id = concat(aws_security_group.alb.*.id, [""])[0]
 }
 
 resource "aws_security_group_rule" "alb_https_ingress" {
@@ -262,7 +262,7 @@ resource "aws_security_group_rule" "alb_https_ingress" {
   protocol          = "tcp"
   cidr_blocks       = var.https_ingress_cidr_blocks
   prefix_list_ids   = var.https_ingress_prefix_list_ids
-  security_group_id = aws_security_group.alb[0].id
+  security_group_id = concat(aws_security_group.alb.*.id, [""])[0]
 }
 
 module "access_logs" {
@@ -285,7 +285,7 @@ resource "aws_lb" "alb" {
   load_balancer_type = "application"
   internal           = var.internal
   security_groups = compact(
-    concat(var.security_group_ids, [aws_security_group.alb[0].id]),
+    concat(var.security_group_ids, [concat(aws_security_group.alb.*.id, [""])[0]]),
   )
   subnets                          = var.subnet_ids
   enable_cross_zone_load_balancing = var.cross_zone_load_balancing_enabled
@@ -337,7 +337,7 @@ resource "aws_lb_target_group" "alb" {
 resource "aws_lb_listener" "http" {
   count = var.create ? var.http_redirect_enabled ? 1 : length(var.target_groups) : 0
 
-  load_balancer_arn = aws_lb.alb[0].arn
+  load_balancer_arn = concat(aws_lb.alb.*.arn, [""])[0]
   port              = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
   protocol          = "HTTP"
   default_action {
@@ -356,7 +356,7 @@ resource "aws_lb_listener" "http" {
 
 resource "aws_lb_listener" "https" {
   count             = var.create && var.https_enabled ? length(var.https_ports) : 0
-  load_balancer_arn = aws_lb.alb[0].arn
+  load_balancer_arn = concat(aws_lb.alb.*.arn, [""])[0]
 
   port            = var.https_ports[count.index]
   protocol        = "HTTPS"
@@ -376,7 +376,7 @@ resource "aws_route53_record" "alb" {
   name            = coalesce(var.domain_name, join(".", [var.name, var.dns_zone_name]))
   type            = "CNAME"
   ttl             = 30
-  records         = [aws_lb.alb[0].dns_name]
+  records         = [concat(aws_lb.alb.*.dns_name, [""])[0]]
   allow_overwrite = true
 }
 
@@ -438,7 +438,7 @@ output "listener_arns" {
 
 output "access_logs_bucket_id" {
   description = "The S3 bucket ID for access logs"
-  value       = module.access_logs.bucket_id
+  value       = var.create ? module.access_logs.bucket_id : ""
 }
 
 output "route53_dns_name" {
