@@ -313,6 +313,7 @@ resource "aws_lb_target_group" "alb" {
   health_check {
     enabled             = var.target_groups[count.index].health_check.enabled
     path                = var.target_groups[count.index].health_check.path
+    protocol            = var.target_groups[count.index].health_check.protocol
     timeout             = var.target_groups[count.index].health_check.timeout
     healthy_threshold   = var.target_groups[count.index].health_check.healthy_threshold
     unhealthy_threshold = var.target_groups[count.index].health_check.unhealthy_threshold
