@@ -211,6 +211,6 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "wco_stack_outputs" {
-  value     = aws_cloudformation_stack.workspace_cost_optimizer[0].outputs
+  value     = concat(aws_cloudformation_stack.workspace_cost_optimizer.*.outputs, [""])[0]
   sensitive = false
 }
