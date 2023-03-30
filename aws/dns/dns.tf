@@ -113,6 +113,12 @@ variable "records_txt" {
   description = "Provides a Route53 A record resource"
 }
 
+variable "records_cname_failover" {
+  type        = map(any)
+  default     = {}
+  description = "Provides a Route53 CNAME failover record resource"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -203,6 +209,21 @@ resource "aws_route53_record" "dns_public_cname" {
   records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
+}
+
+resource "aws_route53_record" "dns_public_cname_failover" {
+  for_each       = var.create ? var.records_cname_failover : {}
+  name           = each.key
+  zone_id        = aws_route53_zone.dns_public[0].zone_id
+  type           = "CNAME"
+  ttl            = lookup(each.value, "ttl", 300)
+  records        = each.value.records
+  set_identifier = each.value.identifier
+
+  allow_overwrite = lookup(each.value, "allow_overwrite", true)
+  failover_routing_policy {
+    type = each.value.type
+  }
 }
 
 resource "aws_route53_record" "dns_public_ds" {
