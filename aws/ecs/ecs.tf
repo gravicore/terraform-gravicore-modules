@@ -140,8 +140,8 @@ resource "aws_ecs_task_definition" "default" {
 resource "aws_ecs_service" "default" {
   count           = var.create ? 1 : 0
   name            = local.module_prefix
-  cluster         = var.container_cluster_name == "" ? aws_ecs_cluster.default[0].id : "arn:aws:ecs:${var.aws_region}:${local.account_id}:cluster/${var.container_cluster_name}"
-  task_definition = aws_ecs_task_definition.default[0].arn
+  cluster         = var.container_cluster_name == "" ? concat(aws_ecs_cluster.default.*.id, [""])[0] : "arn:aws:ecs:${var.aws_region}:${local.account_id}:cluster/${var.container_cluster_name}"
+  task_definition = concat(aws_ecs_task_definition.default.*.arn, [""])[0]
   desired_count   = var.container_desired_count
   launch_type     = "FARGATE"
 
@@ -164,7 +164,7 @@ resource "aws_appautoscaling_target" "default" {
   count              = var.create && var.container_create_autoscaling ? 1 : 0
   max_capacity       = var.container_autoscaling_max_capacity
   min_capacity       = var.container_autoscaling_min_capacity
-  resource_id        = "service/${var.container_cluster_name == "" ? aws_ecs_cluster.default[0].name : var.container_cluster_name}/${aws_ecs_service.default[0].name}"
+  resource_id        = "service/${var.container_cluster_name == "" ? concat(aws_ecs_cluster.default.*.name, [""])[0] : var.container_cluster_name}/${concat(aws_ecs_service.default.*.name, [""])[0]}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
   role_arn           = var.container_autoscaling_role_arn
@@ -174,9 +174,9 @@ resource "aws_appautoscaling_policy" "default" {
   count              = var.create && var.container_create_autoscaling ? 1 : 0
   name               = local.module_prefix
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.default[0].resource_id
-  scalable_dimension = aws_appautoscaling_target.default[0].scalable_dimension
-  service_namespace  = aws_appautoscaling_target.default[0].service_namespace
+  resource_id        = concat(aws_appautoscaling_target.default.*.resource_id, [""])[0]
+  scalable_dimension = concat(aws_appautoscaling_target.default.*.scalable_dimension, [""])[0]
+  service_namespace  = concat(aws_appautoscaling_target.default.*.service_namespace, [""])[0]
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
