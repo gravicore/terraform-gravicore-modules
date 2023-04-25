@@ -115,8 +115,8 @@ variable "records_txt" {
 
 locals {
   public_domain_name_servers = coalesce(var.parent_domain_name_servers, aws_route53_zone.dns_public[0].name_servers)
-  cname_failover_records     = [for record in var.records_cname : record if record.failover_type != null]
-  cname_records              = [for record in var.records_cname : record if record.failover_type == null]
+  cname_failover_records     = [for record in var.records_cname : record if lookup(record, "failover_type", null) != null]
+  cname_records              = [for record in var.records_cname : record if lookup(record, "failover_type", null) == null]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
