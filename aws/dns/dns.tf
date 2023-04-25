@@ -113,10 +113,10 @@ variable "records_txt" {
   description = "Provides a Route53 A record resource"
 }
 
-variable "records_cname_failover" {
-  type        = map(any)
-  default     = {}
-  description = "Provides a Route53 CNAME failover record resource"
+locals {
+  public_domain_name_servers = coalesce(var.parent_domain_name_servers, aws_route53_zone.dns_public[0].name_servers)
+  cname_failover_records     = [for record in var.records_cname : record if record.failover_type != null]
+  cname_records              = [for record in var.records_cname : record if record.failover_type == null]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -135,10 +135,6 @@ resource "aws_route53_zone" "dns_public" {
   comment = join(" ", list(var.desc_prefix, format("Public DNS zone for %s", local.domain_name)))
 
   force_destroy = var.zone_force_destroy
-}
-
-locals {
-  public_domain_name_servers = coalesce(var.parent_domain_name_servers, aws_route53_zone.dns_public[0].name_servers)
 }
 
 resource "aws_route53_record" "dns_public_ns" {
@@ -201,7 +197,7 @@ resource "aws_route53_record" "dns_public_caa" {
 }
 
 resource "aws_route53_record" "dns_public_cname" {
-  for_each = var.create ? var.records_cname : {}
+  for_each = var.create ? var.cname_records : {}
   name     = each.key
   zone_id  = aws_route53_zone.dns_public[0].zone_id
   type     = "CNAME"
@@ -212,17 +208,17 @@ resource "aws_route53_record" "dns_public_cname" {
 }
 
 resource "aws_route53_record" "dns_public_cname_failover" {
-  for_each       = var.create ? var.records_cname_failover : {}
-  name           = each.key
-  zone_id        = aws_route53_zone.dns_public[0].zone_id
-  type           = "CNAME"
-  ttl            = lookup(each.value, "ttl", 300)
-  records        = each.value.records
-  set_identifier = each.value.identifier
+  for_each = var.create ? var.cname_failover_records : {}
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "CNAME"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
+
   failover_routing_policy {
-    type = each.value.type
+    type = each.value.failover_type
   }
 }
 
