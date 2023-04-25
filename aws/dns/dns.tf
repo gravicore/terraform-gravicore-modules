@@ -197,7 +197,7 @@ resource "aws_route53_record" "dns_public_caa" {
 }
 
 resource "aws_route53_record" "dns_public_cname" {
-  for_each = var.create ? var.cname_records : {}
+  for_each = var.create ? local.cname_records : {}
   name     = each.key
   zone_id  = aws_route53_zone.dns_public[0].zone_id
   type     = "CNAME"
@@ -208,7 +208,7 @@ resource "aws_route53_record" "dns_public_cname" {
 }
 
 resource "aws_route53_record" "dns_public_cname_failover" {
-  for_each = var.create ? var.cname_failover_records : {}
+  for_each = var.create ? local.cname_failover_records : {}
   name     = each.key
   zone_id  = aws_route53_zone.dns_public[0].zone_id
   type     = "CNAME"
