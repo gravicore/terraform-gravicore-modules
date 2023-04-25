@@ -115,8 +115,8 @@ variable "records_txt" {
 
 locals {
   public_domain_name_servers = coalesce(var.parent_domain_name_servers, aws_route53_zone.dns_public[0].name_servers)
-  cname_failover_records     = map([for record in var.records_cname : merge(local.cname_failover_records, record) if lookup(record, "failover_type", null) != null])
-  cname_records              = map([for record in var.records_cname : merge(local.cname_records, record) if lookup(record, "failover_type", null) == null])
+  cname_failover_records     = { for key, val in var.records_cname : key => val if contains(var, "failover_type") }
+  cname_records              = { for key, val in var.records_cname : key => val if ! contains(var, "failover_type") }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
