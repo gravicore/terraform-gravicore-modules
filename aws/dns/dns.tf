@@ -66,7 +66,7 @@ variable "records_caa" {
 }
 
 variable "records_cname" {
-  type        = map(any)
+  type        = map(object(any))
   default     = {}
   description = "Provides a Route53 A record resource"
 }
