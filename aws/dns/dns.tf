@@ -386,6 +386,14 @@ output "dns_public_zone_name_servers" {
   value = flatten(aws_route53_zone.dns_public.*.name_servers)
 }
 
+output "test_failover_records" {
+  value = local.cname_failover_records
+}
+
+output "test_non_failover_records" {
+  value = local.cname_records
+}
+
 # Delegated Zones
 
 # output "dns_delegated_public_zone_id" {
