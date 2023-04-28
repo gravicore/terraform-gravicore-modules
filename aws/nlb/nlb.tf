@@ -144,27 +144,27 @@ resource "aws_route53_record" "nlb" {
 
 output "nlb_name" {
   description = "The ARN suffix of the NLB"
-  value       = aws_lb.nlb[0].name
+  value       = concat(aws_lb.nlb.*.name, [""])[0]
 }
 
 output "nlb_arn" {
   description = "The ARN of the NLB"
-  value       = aws_lb.nlb[0].arn
+  value       = concat(aws_lb.nlb.*.arn, [""])[0]
 }
 
 output "nlb_arn_suffix" {
   description = "The ARN suffix of the NLB"
-  value       = aws_lb.nlb[0].arn_suffix
+  value       = concat(aws_lb.nlb.*.arn_suffix, [""])[0]
 }
 
 output "nlb_dns_name" {
   description = "DNS name of NLB"
-  value       = aws_lb.nlb[0].dns_name
+  value       = concat(aws_lb.nlb.*.dns_name, [""])[0]
 }
 
 output "nlb_zone_id" {
   description = "The ID of the zone which NLB is provisioned"
-  value       = aws_lb.nlb[0].zone_id
+  value       = concat(aws_lb.nlb.*.zone_id, [""])[0]
 }
 
 output "target_group_arns" {
