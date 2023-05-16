@@ -266,15 +266,19 @@ resource "aws_security_group_rule" "alb_https_ingress" {
 }
 
 module "access_logs" {
-  source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.2.0"
+  source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.10.0"
   enabled   = var.create
   name      = "${local.module_prefix}-access-logs"
   namespace = ""
   stage     = ""
   tags      = local.tags
 
-  region        = coalesce(var.access_logs_region, var.aws_region)
-  force_destroy = var.alb_access_logs_s3_bucket_force_destroy
+  force_destroy             = var.alb_access_logs_s3_bucket_force_destroy
+  enable_glacier_transition = false
+  ignore_public_acls        = false
+  block_public_acls         = false
+  block_public_policy       = false
+
 }
 
 resource "aws_lb" "alb" {
