@@ -97,7 +97,7 @@ variable "https_ssl_policy" {
 
 variable "access_logs_prefix" {
   type        = string
-  default     = ""
+  default     = null
   description = "The S3 bucket prefix"
 }
 
@@ -109,7 +109,7 @@ variable "access_logs_enabled" {
 
 variable "access_logs_region" {
   type        = string
-  default     = ""
+  default     = null
   description = "The region for the access_logs S3 bucket"
 }
 
@@ -147,48 +147,6 @@ variable "deletion_protection_enabled" {
   default     = false
   description = "A bool flag to enable/disable deletion protection for ALB"
 }
-
-# variable "deregistration_delay" {
-#   type        = number
-#   default     = 15
-#   description = "The amount of time to wait in seconds before changing the state of a deregistering target to unused"
-# }
-
-# variable "health_check_paths" {
-#   type        = list(string)
-#   default     = ["/"]
-#   description = "The destination for the health check request"
-# }
-
-# variable "health_check_timeout" {
-#   type        = number
-#   default     = 10
-#   description = "The amount of time to wait in seconds before failing a health check request"
-# }
-
-# variable "health_check_healthy_threshold" {
-#   type        = number
-#   default     = 2
-#   description = "The number of consecutive health checks successes required before considering an unhealthy target healthy"
-# }
-
-# variable "health_check_unhealthy_threshold" {
-#   type        = number
-#   default     = 2
-#   description = "The number of consecutive health check failures required before considering the target unhealthy"
-# }
-
-# variable "health_check_interval" {
-#   type        = number
-#   default     = 15
-#   description = "The duration in seconds in between health checks"
-# }
-
-# variable "health_check_matcher" {
-#   type        = string
-#   default     = "200-399"
-#   description = "The HTTP response codes to indicate a healthy check"
-# }
 
 variable "target_groups" {
   type = list(any)
@@ -265,22 +223,6 @@ resource "aws_security_group_rule" "alb_https_ingress" {
   security_group_id = concat(aws_security_group.alb.*.id, [""])[0]
 }
 
-module "access_logs" {
-  source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.10.0"
-  enabled   = var.create
-  name      = "${local.module_prefix}-access-logs"
-  namespace = ""
-  stage     = ""
-  tags      = local.tags
-
-  force_destroy             = var.alb_access_logs_s3_bucket_force_destroy
-  enable_glacier_transition = false
-  ignore_public_acls        = false
-  block_public_acls         = false
-  block_public_policy       = false
-
-}
-
 resource "aws_lb" "alb" {
   count = var.create ? 1 : 0
   name  = local.module_prefix
@@ -298,7 +240,7 @@ resource "aws_lb" "alb" {
   ip_address_type                  = var.ip_address_type
   enable_deletion_protection       = var.deletion_protection_enabled
   access_logs {
-    bucket  = module.access_logs.bucket_id
+    bucket  = join("", aws_s3_bucket.default.*.id)
     prefix  = var.access_logs_prefix
     enabled = var.access_logs_enabled
   }
@@ -439,11 +381,6 @@ output "listener_arns" {
   value = compact(
     concat(aws_lb_listener.http.*.arn, aws_lb_listener.https.*.arn),
   )
-}
-
-output "access_logs_bucket_id" {
-  description = "The S3 bucket ID for access logs"
-  value       = var.create ? module.access_logs.bucket_id : ""
 }
 
 output "route53_dns_name" {
