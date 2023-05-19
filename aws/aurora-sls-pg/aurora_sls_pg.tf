@@ -337,29 +337,22 @@ resource "aws_db_parameter_group" "default" {
   tags = local.tags
 }
 
-module "rds_creds" {
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
-  providers = {
-    aws = aws
-  }
-  create = var.create && var.admin_password == "" ? true : false
+data "aws_ssm_parameter" "username" {
+  count = var.create && var.admin_user == "" ? 1 : 0
+  name  = "/${local.stage_prefix}/${var.name}-username"
+}
 
-  namespace   = var.namespace
-  environment = var.environment
-  stage       = var.stage
-  tags        = local.tags
-  parameters = [
-    "/${local.stage_prefix}/${var.name}-password",
-    "/${local.stage_prefix}/${var.name}-username",
-  ]
+data "aws_ssm_parameter" "password" {
+  count = var.create && var.admin_password == "" ? 1 : 0
+  name  = "/${local.stage_prefix}/${var.name}-password"
 }
 
 resource "aws_rds_cluster" "default" {
   count                               = var.create ? 1 : 0
   cluster_identifier                  = local.module_prefix
   database_name                       = var.db_name
-  master_username                     = coalesce(var.admin_user, lookup(lookup(module.rds_creds.parameters, "/${local.stage_prefix}/${var.name}-username", {}), "value", ""))
-  master_password                     = coalesce(var.admin_password, lookup(lookup(module.rds_creds.parameters, "/${local.stage_prefix}/${var.name}-password", {}), "value", ""))
+  master_username                     = var.admin_user == "" ? concat(data.aws_ssm_parameter.username.*.value, [""])[0] : var.admin_user
+  master_password                     = var.admin_password == "" ? concat(data.aws_ssm_parameter.password.*.value, [""])[0] : var.admin_password
   backup_retention_period             = var.retention_period
   preferred_backup_window             = var.backup_window
   copy_tags_to_snapshot               = var.copy_tags_to_snapshot
