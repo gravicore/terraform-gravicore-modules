@@ -7,6 +7,7 @@ resource "aws_imagebuilder_distribution_configuration" "ec2_ib_image_dist" {
         CostCenter = "IT"
       }
 
-    region = "us-east-1"
+      region = "us-east-1"
+    }
   }
 }
