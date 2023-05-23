@@ -14,7 +14,7 @@ variable "app_runner_ecr_arn" {
 
 
 resource "aws_iam_role" "app_runner_ecr_auth_role" {
-  name = "app-runner-service-role"
+  name = "${local.module_prefix}-ecr-auth-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -31,7 +31,7 @@ resource "aws_iam_role" "app_runner_ecr_auth_role" {
 
 resource "aws_iam_role_policy" "ecr_auth_policy" {
 
-  name = join("-", ["ecr-auth-policy", var.service_name])
+  name = "${local.module_prefix}-ecr-auth-policy"
   role = aws_iam_role.app_runner_ecr_auth_role.id
   policy = jsonencode({
     Version = "2012-10-17"
@@ -49,6 +49,11 @@ resource "aws_iam_role_policy" "ecr_auth_policy" {
     ]
   })
 }
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 output "ecr_auth_access_role_arn" {

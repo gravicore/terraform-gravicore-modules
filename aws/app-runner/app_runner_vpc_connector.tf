@@ -28,7 +28,7 @@ variable "security_group_ids" {
 
 resource "aws_apprunner_vpc_connector" "vpc_connector" {
 
-  vpc_connector_name = join("-", [var.vpc_id, "app-runner-vpc-connector", var.service_name])
+  vpc_connector_name = "${local.module_prefix}-vpc-connector"
   subnets            = var.subnet_ids
   security_groups    = var.security_group_ids
 
@@ -42,5 +42,4 @@ resource "aws_apprunner_vpc_connector" "vpc_connector" {
 output "vpc_connector_arn" {
   value = aws_apprunner_vpc_connector.vpc_connector.arn
 }
-
 

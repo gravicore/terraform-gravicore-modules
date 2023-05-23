@@ -75,13 +75,24 @@ variable "health_check" {
   }
 }
 
+variable "auto_scaling_configuration" {
+  type        = map(number)
+  description = "Map of Auto Scaling Configuration with min, max size and maximum concurrency capacity"
+  default = {
+    min_size       = 2
+    max_size       = 10
+    max_concurrent = 50
+  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
 
 resource "aws_apprunner_service" "app_runner_service" {
-  service_name = var.service_name
+
+  service_name = "${local.module_prefix}-${var.service_name}"
 
   source_configuration {
     auto_deployments_enabled = false
@@ -141,12 +152,30 @@ resource "aws_apprunner_auto_scaling_configuration_version" "auto_scaling_config
 
   depends_on = [aws_apprunner_service.app_runner_service]
 
-  auto_scaling_configuration_name = join("-", [var.service_name, "auto-scaling-configuration"])
+  auto_scaling_configuration_name = "${local.module_prefix}-auto-scaling-configuration"
 
-  max_concurrency = 50
-  max_size        = 10
-  min_size        = 2
+  max_concurrency = var.auto_scaling_configuration.max_concurrent
+  max_size        = var.auto_scaling_configuration.max_size
+  min_size        = var.auto_scaling_configuration.min_size
 
   tags = local.tags
 
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+output "app_runner_service_arn" {
+  value = aws_apprunner_service.app_runner_service.arn
+}
+
+output "app_runner_service_id" {
+  value = aws_apprunner_service.app_runner_service.service_id
+}
+
+output "app_runner_service_url" {
+  value = aws_apprunner_service.app_runner_service.service_url
 }
