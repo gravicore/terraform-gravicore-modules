@@ -8,7 +8,7 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "EC2 Image Builder Module"
+  default     = "EC2 Image Builder Container Module"
   description = "The name of the module"
 }
 

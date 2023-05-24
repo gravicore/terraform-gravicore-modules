@@ -76,7 +76,7 @@ variable "infra_http_put_response_hop_limit" {
 
 
 resource "aws_imagebuilder_infrastructure_configuration" "ec2_ib_image_infrastructure" {
-  name                  = local.module_prefix
+  name                  = "${local.module_prefix}-image-infra"
   instance_profile_name = var.infra_instance_profile_name
   instance_types        = var.infra_instance_types
   key_pair              = var.infra_key_pair
