@@ -1,5 +1,5 @@
 # Set the root folder where your Terraform projects are located
-$rootFolder = "C:\Users\Alison\Desktop\gravicore\celink\terraform-gravicore-modules\aws"
+$rootFolder = "C:\Users\Alison\Desktop\gravicore\celink\cel-srv-infra\terragrunt"
 
 # Get all subfolders within the root folder
 $subfolders = Get-ChildItem -Path $rootFolder -Directory -Recurse

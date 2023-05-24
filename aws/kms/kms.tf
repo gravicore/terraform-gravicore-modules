@@ -19,7 +19,7 @@ variable "default_enable_key_rotation" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "rds_kms_key" {
-  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace   = ""
   stage       = ""
   name        = join(var.delimiter, [local.stage_prefix, "rds"])
@@ -32,7 +32,7 @@ module "rds_kms_key" {
 }
 
 module "workspaces_kms_key" {
-  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace   = ""
   stage       = ""
   name        = "${local.stage_prefix}-workspaces"
@@ -45,7 +45,7 @@ module "workspaces_kms_key" {
 }
 
 module "lambda_kms_key" {
-  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace   = ""
   stage       = ""
   name        = "${local.stage_prefix}-lambda"
@@ -58,7 +58,7 @@ module "lambda_kms_key" {
 }
 
 module "ssm_kms_key" {
-  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace   = ""
   stage       = ""
   name        = "${local.stage_prefix}-ssm"
@@ -71,7 +71,7 @@ module "ssm_kms_key" {
 }
 
 module "ebs_kms_key" {
-  source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  source                  = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace               = ""
   stage                   = ""
   name                    = "${local.stage_prefix}-ebs"
@@ -83,7 +83,7 @@ module "ebs_kms_key" {
 }
 
 module "chamber_kms_key" {
-  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace   = ""
   stage       = ""
   name        = "${local.stage_prefix}-chamber"
@@ -96,7 +96,7 @@ module "chamber_kms_key" {
 }
 
 module "s3_kms_key" {
-  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.2.0"
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace   = ""
   stage       = ""
   name        = "${local.stage_prefix}-s3"
