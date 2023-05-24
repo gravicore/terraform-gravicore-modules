@@ -398,8 +398,8 @@ resource "aws_lb" "cerberus_alb" {
   internal           = "false"
   load_balancer_type = "application"
   security_groups    = [aws_security_group.cerberus_alb[0].id]
-  subnets      = data.terraform_remote_state.vpc.outputs.vpc_public_subnets
-  idle_timeout = "60"
+  subnets            = data.terraform_remote_state.vpc.outputs.vpc_public_subnets
+  idle_timeout       = "60"
 
   tags = local.tags
 }
@@ -490,8 +490,8 @@ resource "aws_lb" "cerberus_nlb" {
   internal                         = "false"
   load_balancer_type               = "network"
   enable_cross_zone_load_balancing = "true"
-  subnets      = data.terraform_remote_state.vpc.outputs.vpc_public_subnets
-  idle_timeout = "60"
+  subnets                          = data.terraform_remote_state.vpc.outputs.vpc_public_subnets
+  idle_timeout                     = "60"
 
   tags = local.tags
 }

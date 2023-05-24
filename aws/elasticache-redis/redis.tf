@@ -262,16 +262,16 @@ resource "aws_elasticache_replication_group" "default" {
   number_cache_clusters         = var.cluster_size
   port                          = var.port
   parameter_group_name          = aws_elasticache_parameter_group.default[0].name
-  availability_zones         = slice(local.availability_zones, 0, var.cluster_size)
-  automatic_failover_enabled = var.cluster_size == 1 ? false : var.automatic_failover
-  subnet_group_name          = aws_elasticache_subnet_group.default[0].name
-  security_group_ids         = [aws_security_group.default[0].id]
-  maintenance_window         = var.maintenance_window
-  notification_topic_arn     = var.notification_topic_arn
-  engine_version             = var.engine_version
-  at_rest_encryption_enabled = var.at_rest_encryption_enabled
-  transit_encryption_enabled = var.transit_encryption_enabled
-  auto_minor_version_upgrade = var.auto_minor_version_upgrade
+  availability_zones            = slice(local.availability_zones, 0, var.cluster_size)
+  automatic_failover_enabled    = var.cluster_size == 1 ? false : var.automatic_failover
+  subnet_group_name             = aws_elasticache_subnet_group.default[0].name
+  security_group_ids            = [aws_security_group.default[0].id]
+  maintenance_window            = var.maintenance_window
+  notification_topic_arn        = var.notification_topic_arn
+  engine_version                = var.engine_version
+  at_rest_encryption_enabled    = var.at_rest_encryption_enabled
+  transit_encryption_enabled    = var.transit_encryption_enabled
+  auto_minor_version_upgrade    = var.auto_minor_version_upgrade
 }
 
 #
