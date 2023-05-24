@@ -2,8 +2,14 @@ terraform {
   required_version = "~> 0.12"
 
   required_providers {
-    aws      = "~> 2.26"
-    aviatrix = ">= 2.14"
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 2.26"
+    }
+    aviatrix = {
+      source  = "terraform-providers/aviatrix"
+      version = ">= 2.14"
+    }
   }
 }
 

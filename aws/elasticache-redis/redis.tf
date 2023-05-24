@@ -227,14 +227,6 @@ resource "aws_elasticache_subnet_group" "default" {
   name        = local.module_prefix
   description = var.desc_prefix
 
-  # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
-  # force an interpolation expression to be interpreted as a list by wrapping it
-  # in an extra set of list brackets. That form was supported for compatibility in
-  # v0.11, but is no longer supported in Terraform v0.12.
-  #
-  # If the expression in the following list itself returns a list, remove the
-  # brackets to avoid interpretation as a list of lists. If the expression
-  # returns a single list item then leave it as-is and remove this TODO comment.
   subnet_ids = data.terraform_remote_state.vpc.outputs.vpc_private_subnets
 }
 
@@ -270,14 +262,6 @@ resource "aws_elasticache_replication_group" "default" {
   number_cache_clusters         = var.cluster_size
   port                          = var.port
   parameter_group_name          = aws_elasticache_parameter_group.default[0].name
-  # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
-  # force an interpolation expression to be interpreted as a list by wrapping it
-  # in an extra set of list brackets. That form was supported for compatibility in
-  # v0.11, but is no longer supported in Terraform v0.12.
-  #
-  # If the expression in the following list itself returns a list, remove the
-  # brackets to avoid interpretation as a list of lists. If the expression
-  # returns a single list item then leave it as-is and remove this TODO comment.
   availability_zones         = slice(local.availability_zones, 0, var.cluster_size)
   automatic_failover_enabled = var.cluster_size == 1 ? false : var.automatic_failover
   subnet_group_name          = aws_elasticache_subnet_group.default[0].name
