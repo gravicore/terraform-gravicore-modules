@@ -57,7 +57,7 @@ variable "aviatrix_controller_subnet_id" {
 # Initialize Controller
 
 module "controller_init" {
-  source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.12"
+  source = "git::https://github.com/AviatrixSystems/terraform-modules.git//aviatrix-controller-initialize?ref=terraform_0.13"
 
   admin_email    = var.aviatrix_controller_admin_email
   admin_password = var.aviatrix_controller_admin_password

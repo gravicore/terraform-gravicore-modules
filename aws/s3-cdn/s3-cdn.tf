@@ -475,7 +475,7 @@ resource "aws_s3_bucket" "origin" {
 }
 
 module "logs" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.26.0"
   namespace  = ""
   stage      = ""
   name       = local.module_prefix
