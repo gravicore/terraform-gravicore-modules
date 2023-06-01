@@ -14,6 +14,7 @@ locals {
   }) }
   datasync_locations_s3  = { for k, v in var.datasync_locations : k => v if v.type == "s3" }
   datasync_locations_smb = { for k, v in var.datasync_locations : k => v if v.type == "smb" }
+  datasync_locations_fsx = { for k, v in var.datasync_locations : k => v if v.type == "fsx" }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -104,11 +105,15 @@ resource "aws_datasync_location_s3" "datasync" {
 # DataSync locations (SMB)
 
 resource "aws_datasync_location_smb" "datasync" {
-  for_each = var.create && var.datasync_agent_id != null && length(local.datasync_locations_smb) > 0 ? local.datasync_locations_smb : {}
+  for_each = var.create && local.datasync_agent_arn != null && length(local.datasync_locations_smb) > 0 ? local.datasync_locations_smb : {}
   tags     = merge(local.tags, { Name = join("-", [local.module_prefix, each.key]) })
 
   server_hostname = each.value.server_hostname
   subdirectory    = each.value.subdirectory
+
+  mount_options {
+    version = lookup(each.value, "mount_options_version", "AUTOMATIC")
+  }
 
   domain   = split("/", each.value.user)[0]
   user     = split("/", each.value.user)[1]
@@ -122,6 +127,20 @@ locals {
     { for k, v in aws_datasync_location_s3.datasync : k => v.arn },
     { for k, v in aws_datasync_location_smb.datasync : k => v.arn },
   )
+}
+
+resource "aws_datasync_location_fsx_windows_file_system" "datasync" {
+  for_each = var.create && length(local.datasync_locations_fsx) > 0 ? local.datasync_locations_fsx : {}
+  tags     = merge(local.tags, { Name = join("-", [local.module_prefix, each.key]) })
+
+  fsx_filesystem_arn = format("arn:aws:fsx:%s:%s:%s", var.aws_region, var.account_id, each.value.fsx_filesystem_id)
+  subdirectory       = lookup(each.value, "subdirectory", null)
+
+  domain   = split("/", each.value.user)[0]
+  user     = split("/", each.value.user)[1]
+  password = each.value.password
+
+  security_group_arns = lookup(each.value, "security_group_ids", null) == null ? null : formatlist("arn:aws:ec2:%s:%s:security-group/%s", var.aws_region, var.account_id, split(",", each.value.security_group_ids))
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -138,8 +157,13 @@ output "datasync_locations_smb" {
   value       = var.create && var.datasync_agent_id != null && length(local.datasync_locations_smb) > 0 ? aws_datasync_location_smb.datasync : null
 }
 
+output "datasync_locations_fsx" {
+  description = "SMB Locations for DataSync"
+  value       = var.create && var.datasync_agent_id != null && length(local.datasync_locations_fsx) > 0 ? aws_datasync_location_fsx_windows_file_system.datasync : null
+}
+
 # module "parameters_vpc" {
-#   source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.20.0"
+#   source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
 #   providers   = { aws = "aws" }
 #   create      = var.create
 #   namespace   = var.namespace

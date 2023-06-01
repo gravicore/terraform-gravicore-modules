@@ -14,6 +14,12 @@ variable "datasync_agent_id" {
   default     = null
 }
 
+variable "datasync_agent_arn" {
+  description = "ARN of the DataSync Agent"
+  type        = string
+  default     = null
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -43,7 +49,7 @@ resource "aws_cloudwatch_log_group" "datasync" {
 # }
 
 locals {
-  datasync_agent_arn = var.create && var.datasync_agent_id != null ? "arn:aws:datasync:${var.aws_region}:${local.account_id}:agent/${var.datasync_agent_id}" : null
+  datasync_agent_arn = var.create && var.datasync_agent_id != null ? "arn:aws:datasync:${var.aws_region}:${local.account_id}:agent/${var.datasync_agent_id}" : var.datasync_agent_arn != null ? var.datasync_agent_arn : null
 }
 
 
@@ -64,5 +70,5 @@ output "datasync_agent_id" {
 
 output "datasync_agent_arn" {
   description = "ARN of the DataSync Agent"
-  value       = local.datasync_agent_arn
+  value       = coalesce(var.datasync_agent_arn, local.datasync_agent_arn, "")
 }
