@@ -18,6 +18,11 @@ variable "default_enable_key_rotation" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
+module "label" {
+  source  = "cloudposse/label/null"
+  version = "0.25.0"
+}
+
 module "rds_kms_key" {
   source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace   = ""
