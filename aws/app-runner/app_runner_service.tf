@@ -150,7 +150,7 @@ resource "aws_apprunner_service" "app_runner_service" {
 
 resource "aws_apprunner_auto_scaling_configuration_version" "auto_scaling_configuration" {
 
-  depends_on = [aws_apprunner_service.app_runner_service]
+  #depends_on = [aws_apprunner_service.app_runner_service]
 
   auto_scaling_configuration_name = "${local.module_prefix}-auto-scaling-configuration"
 
