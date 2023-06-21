@@ -61,7 +61,6 @@ target_groups = {
     target_type                      = string,    (Required) Type of target that you must specify when registering targets with this target group. See doc for supported values. The default is instance. Note that you can't specify targets for a target group using both instance IDs and IP addresses. If the target type is ip, specify IP addresses from the subnets of the virtual private cloud (VPC) for the target group, the RFC 1918 range (10.0.0.0/8, 172.16.0.0/12, and 192.168.0.0/16), and the RFC 6598 range (100.64.0.0/10). You can't specify publicly routable IP addresses. Network Load Balancers do not support the lambda target type. Application Load Balancers do not support the alb target type.
     protocol                         = string,    (Required) Protocol to use for routing traffic to the targets. Should be one of TCP, TCP_UDP, TLS, or UDP. Required when target_type is instance, ip or alb. Does not apply when target_type is lambda.
     deregistration_delay             = number,    (Optional) Amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused. The range is 0-3600 seconds. The default value is 300 seconds.
-    preserve_client_ip               = bool,      (Optional) Indicates whether client IP preservation is enabled. The value is true or false. The default is false.
     health_check_enabled             = bool,      (Optional) Whether health checks are enabled. Defaults to true.
     health_check_protocol            = string,    (Optional) Protocol to use to connect with the target. Defaults to HTTP. Not applicable when target_type is lambda.
     health_check_port                = string,    (Optional) Port to use to connect with the target. Valid values are either ports 1-65535, or traffic-port. Defaults to traffic-port.
@@ -102,7 +101,6 @@ resource "aws_lb_target_group" "nlb" {
   protocol             = lookup(each.value, "protocol", "TCP")
   target_type          = lookup(each.value, "target_type", "instance")
   deregistration_delay = lookup(each.value, "deregistration_delay", 15)
-  preserve_client_ip   = lookup(each.value, "preserve_client_ip", false)
   health_check {
     enabled             = lookup(each.value, "health_check_enabled", true)
     healthy_threshold   = lookup(each.value, "health_check_healthy_threshold", 2)
