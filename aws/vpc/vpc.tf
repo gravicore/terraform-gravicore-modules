@@ -160,7 +160,7 @@ locals {
 }
 
 module "vpc" {
-  source     = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc?ref=v2.78.0"
+  source     = "git::https://github.com/terraform-aws-modules/terraform-aws-vpc?ref=v3.3.0"
   create_vpc = var.create
   name       = local.module_prefix
   tags       = local.tags
