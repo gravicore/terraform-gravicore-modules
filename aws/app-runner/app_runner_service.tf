@@ -121,13 +121,12 @@ resource "aws_apprunner_service" "app_runner_service" {
       memory            = var.instance.configuration.memory
       instance_role_arn = var.instance_configuration.instance_role_arn
     }
+  }
 
-
-    network_configuration {
-      egress_configuration {
-        egress_type       = "VPC"
-        vpc_connector_arn = app_runner_vpc_connector.outputs.vpc_connector_arn
-      }
+  network_configuration {
+    egress_configuration {
+      egress_type       = "VPC"
+      vpc_connector_arn = app_runner_vpc_connector.outputs.vpc_connector_arn
     }
   }
 
