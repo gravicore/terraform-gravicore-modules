@@ -400,7 +400,7 @@ EOF
 }
 
 module "container" {
-  source                   = "git::https://github.com/cloudposse/terraform-aws-ecs-container-definition.git?ref=0.45.1"
+  source                   = "git::https://github.com/cloudposse/terraform-aws-ecs-container-definition.git?ref=DevOps-1118-Update-Terraform-To-v013"
   container_name           = local.module_prefix
   container_image          = var.camunda_image
   container_memory         = var.camunda_memory
@@ -453,7 +453,7 @@ module "container" {
 }
 
 module "alb" {
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/alb?ref=0.31.0"
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/alb?ref=DevOps-1118-Update-Terraform-To-v013"
 
   create                    = var.create
   vpc_id                    = var.vpc_id
@@ -477,7 +477,7 @@ module "alb" {
 }
 
 module "datadog" {
-  source                         = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/datadog/ecs?ref=0.35.3"
+  source                         = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/datadog/ecs?ref=DevOps-1118-Update-Terraform-To-v013"
   container_datadog_api_key      = var.datadog_api_key
   container_datadog_service_name = var.name
   name                           = var.name
@@ -488,7 +488,7 @@ module "datadog" {
 }
 
 module "ecs" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/ecs?ref=0.31.0"
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/ecs?ref=DevOps-1118-Update-Terraform-To-v013"
   name        = var.name
   namespace   = var.namespace
   environment = var.environment
