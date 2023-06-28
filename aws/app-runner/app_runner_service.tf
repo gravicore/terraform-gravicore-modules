@@ -126,7 +126,7 @@ resource "aws_apprunner_service" "app_runner_service" {
   network_configuration {
     egress_configuration {
       egress_type       = "VPC"
-      vpc_connector_arn = app_runner_vpc_connector.outputs.vpc_connector_arn
+      vpc_connector_arn = aws_apprunner_vpc_connector.vpc_connector.arn
     }
   }
 
