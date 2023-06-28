@@ -85,6 +85,11 @@ variable "auto_scaling_configuration" {
   }
 }
 
+variable "auto_deployments_enabled" {
+  type        = bool
+  description = "Enable or disable auto deployments"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -95,7 +100,7 @@ resource "aws_apprunner_service" "app_runner_service" {
   service_name = "${local.module_prefix}-${var.service_name}"
 
   source_configuration {
-    auto_deployments_enabled = false
+    auto_deployments_enabled = var.auto_deployments_enabled
 
     authentication_configuration {
       access_role_arn = var.aws_iam_role.app_runner_ecr_auth_role.arn # To authenticate with ECR
