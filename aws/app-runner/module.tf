@@ -110,6 +110,11 @@ variable "delimiter" {
   description = "Delimiter to be used between `namespace`, `environment`, `stage`, `name`"
 }
 
+# Derived
+
+data "aws_caller_identity" "current" {
+  count = var.account_id == "" ? 1 : 0
+}
 
 locals {
   account_id = var.account_id == "" ? data.aws_caller_identity.current[0].account_id : var.account_id
