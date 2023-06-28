@@ -103,7 +103,7 @@ resource "aws_apprunner_service" "app_runner_service" {
     auto_deployments_enabled = var.auto_deployments_enabled
 
     authentication_configuration {
-      access_role_arn = var.aws_iam_role.app_runner_ecr_auth_role.arn # To authenticate with ECR
+      access_role_arn = aws_iam_role.app_runner_ecr_auth_role.arn # To authenticate with ECR
     }
 
     image_repository {
