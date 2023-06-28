@@ -155,7 +155,7 @@ resource "aws_ecs_service" "default" {
     content {
       target_group_arn = load_balancer.value.arn
       container_name   = local.module_prefix
-      container_port   = load_balancer.value.port
+      container_port   = load_balancer.value.container_port
     }
   }
 }
