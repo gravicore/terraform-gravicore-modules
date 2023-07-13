@@ -6,7 +6,7 @@ terraform {
 }
 
 provider "aws" {
-  version = "~> 4.67.0.0"
+  version = "~> 2.26.0"
   region  = var.aws_region
 
   assume_role {
@@ -16,7 +16,7 @@ provider "aws" {
 
 provider "aws" {
   alias   = "master"
-  version = "~> 4.67.0.0"
+  version = "~> 2.26.0"
   region  = var.aws_region
 
   assume_role {

@@ -222,6 +222,12 @@ variable "cluster_dns_name" {
   default     = ""
 }
 
+variable "global_cluster_identifier" {
+  type        = string
+  description = "ID of the Aurora global cluster"
+  default     = ""
+}
+
 variable "source_region" {
   type        = string
   description = "Source Region of primary cluster, needed when using encrypted storage and region replicas"
@@ -366,6 +372,7 @@ resource "aws_rds_cluster" "default" {
   engine                              = var.engine
   engine_version                      = var.engine_version
   engine_mode                         = var.engine_mode
+  global_cluster_identifier           = var.global_cluster_identifier
   iam_roles                           = var.iam_roles
   backtrack_window                    = var.backtrack_window
   enable_http_endpoint                = var.engine_mode == "serverless" && var.enable_http_endpoint ? true : false
