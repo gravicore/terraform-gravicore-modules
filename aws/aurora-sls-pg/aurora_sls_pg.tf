@@ -44,7 +44,7 @@ variable "cluster_identifier" {
 
 variable "snapshot_identifier" {
   type        = string
-  default     = ""
+  default     = null
   description = "Specifies whether or not to create this cluster from a snapshot"
 }
 
