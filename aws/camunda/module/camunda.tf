@@ -400,7 +400,7 @@ EOF
 }
 
 module "container" {
-  source                   = "git::https://github.com/cloudposse/terraform-aws-ecs-container-definition.git?ref=DevOps-1118-Update-Terraform-To-v013"
+  source                   = "git::https://github.com/cloudposse/terraform-aws-ecs-container-definition.git?ref=0.57.0"
   container_name           = local.module_prefix
   container_image          = var.camunda_image
   container_memory         = var.camunda_memory
