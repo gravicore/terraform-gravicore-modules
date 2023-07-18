@@ -1,7 +1,7 @@
 variable "acl" {
   type        = string
   description = "Canned ACL to apply to the S3 bucket"
-  default     = ""
+  default     = "log-delivery-write"
 }
 
 variable "force_destroy" {
