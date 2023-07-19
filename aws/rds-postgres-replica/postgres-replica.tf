@@ -120,7 +120,7 @@ variable "backup_window" {
 variable "snapshot_identifier" {
   type        = string
   description = "Snapshot identifier e.g: rds:production-2015-06-26-06-05. If specified, the module create cluster from the snapshot"
-  default     = ""
+  default     = null
 }
 
 variable "parameter_group_name" {
