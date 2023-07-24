@@ -697,7 +697,7 @@ variable "rekognition_endpoint_private_dns_enabled" {
 
 variable "default_endpoint_security_group_ids" {
   description = "The ID of one or more security groups to associate with the network interface for any endpoints not defined"
-  default     = null
+  default     = []
 }
 
 variable "enable_datasync_endpoint" {
