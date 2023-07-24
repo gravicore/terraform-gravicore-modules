@@ -496,7 +496,7 @@ module "ecs" {
   tags        = local.tags
 
   create                             = var.create
-  vpc_id                             = var.vpc_id 
+  vpc_id                             = var.vpc_id
   container_subnet_ids               = var.camunda_subnet_ids
   container_security_group_id        = aws_security_group.container[0].id
   container_execution_role_arn       = aws_iam_role.execution[0].arn
