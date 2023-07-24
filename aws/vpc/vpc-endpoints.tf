@@ -697,7 +697,7 @@ variable "rekognition_endpoint_private_dns_enabled" {
 
 variable "default_endpoint_security_group_ids" {
   description = "The ID of one or more security groups to associate with the network interface for any endpoints not defined"
-  default     = [""]
+  default     = null
 }
 
 variable "enable_datasync_endpoint" {
@@ -772,7 +772,7 @@ resource "aws_vpc_endpoint" "datasync" {
 # -------
 
 locals {
-  default_endpoint_security_group_ids = length(var.default_endpoint_security_group_ids) < 1 ? [aws_security_group.vpc_endpoint_default[0].id] : var.default_endpoint_security_group_ids
+  default_endpoint_security_group_ids = length(var.default_endpoint_security_group_ids) < 1 ? aws_security_group.vpc_endpoint_default.*.id : var.default_endpoint_security_group_ids
 
   # Gateways
 
