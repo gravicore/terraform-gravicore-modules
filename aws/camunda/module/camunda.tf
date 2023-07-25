@@ -497,6 +497,7 @@ module "ecs" {
 
   create                             = var.create
   vpc_id                             = var.vpc_id
+  alb_target_group_arn               = module.alb.target_group_arns[0]  
   container_subnet_ids               = var.camunda_subnet_ids
   container_security_group_id        = aws_security_group.container[0].id
   container_execution_role_arn       = aws_iam_role.execution[0].arn
