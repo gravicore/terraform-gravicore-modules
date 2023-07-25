@@ -102,7 +102,7 @@ variable "restrict_public_buckets" {
 
 resource "aws_s3_bucket" "default" {
   count         = var.create ? 1 : 0
-  bucket        = local.module_prefix
+  bucket        = "${local.module_prefix}-access-logs"
   acl           = var.acl
   force_destroy = var.force_destroy
   policy        = <<policy
@@ -115,7 +115,7 @@ resource "aws_s3_bucket" "default" {
         "s3:PutObject"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::${local.module_prefix}/AWSLogs/*",
+      "Resource": "arn:aws:s3:::${local.module_prefix}-access-logs/AWSLogs/*",
       "Principal": {
         "AWS": [
           "arn:aws:iam::127311923021:root"
