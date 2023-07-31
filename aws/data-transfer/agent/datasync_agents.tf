@@ -49,12 +49,192 @@ resource "aws_security_group" "datasync" {
     protocol    = "tcp"
     cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
   }
+  ingress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 88
+    to_port     = 88
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 88
+    to_port     = 88
+    protocol    = "udp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 464
+    to_port     = 464
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 464
+    to_port     = 464
+    protocol    = "udp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 389
+    to_port     = 389
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 389
+    to_port     = 389
+    protocol    = "udp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 123
+    to_port     = 123
+    protocol    = "udp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 135
+    to_port     = 135
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 445
+    to_port     = 445
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 636
+    to_port     = 636
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 3268
+    to_port     = 3268
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 3269
+    to_port     = 3269
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 5985
+    to_port     = 5985
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 9389
+    to_port     = 9389
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+  ingress {
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "udp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 139
+    to_port     = 139
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 139
+    to_port     = 139
+    protocol    = "udp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 445
+    to_port     = 445
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 445
+    to_port     = 445
+    protocol    = "udp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 9600
+    to_port     = 9600
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
+
+  ingress {
+    from_port   = 88
+    to_port     = 88
+    protocol    = "tcp"
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
+  }
 
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = compact(distinct(concat([var.vpc_cidr_block], var.datasync_agent_allowed_inbound_cidr_blocks)))
   }
 }
 
