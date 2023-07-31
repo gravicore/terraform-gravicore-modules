@@ -286,3 +286,7 @@ output "datasync_agent_tags" {
   description = "Tags of the DataSync Agent"
   value       = var.create ? local.tags : null
 }
+
+output "datasync_security_group_id" {
+  value = aws_security_group.datasync[0].id
+}
