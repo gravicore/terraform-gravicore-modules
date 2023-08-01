@@ -351,54 +351,6 @@ EOF
   role   = aws_iam_role.task[0].id
 }
 
-resource "aws_iam_role" "autoscaling" {
-  count = var.create ? 1 : 0
-  name  = "${local.module_prefix}-autoscaling-role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "application-autoscaling.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-
-  tags = local.tags
-}
-
-resource "aws_iam_role_policy" "autoscaling" {
-  count  = var.create ? 1 : 0
-  name   = "${local.module_prefix}-autoscaling-policy"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-              "ecs:DescribeServices",
-              "ecs:UpdateService",
-              "cloudwatch:PutMetricAlarm",
-              "cloudwatch:DescribeAlarms",
-              "cloudwatch:DeleteAlarms"
-          ],
-          "Resource": [
-              "*"
-          ]
-      }
-  ]
-}
-EOF
-  role   = aws_iam_role.autoscaling[0].id
-}
-
 module "container" {
   source                   = "git::https://github.com/cloudposse/terraform-aws-ecs-container-definition.git?ref=0.57.0"
   container_name           = local.module_prefix
@@ -504,7 +456,7 @@ module "ecs" {
   container_cpu                      = var.camunda_cpu
   container_memory_reservation       = var.camunda_memory
   container_desired_count            = var.camunda_desired_count
-  container_autoscaling_role_arn     = aws_iam_role.autoscaling[0].arn
+  container_autoscaling_role_arn     = "arn:aws:iam::${var.account_id}:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService"
   container_autoscaling_min_capacity = var.camunda_autoscaling_min_capacity
   container_autoscaling_max_capacity = var.camunda_autoscaling_max_capacity
   container_create_autoscaling       = true
