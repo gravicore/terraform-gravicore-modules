@@ -514,6 +514,12 @@ module "ecs" {
     module.datadog.datadog_container_metrics_definition
   ]) : jsonencode([module.container.json_map_object, ])
 
+  lb_target_groups = [
+    {
+      port = 80
+      arn  = concat(module.alb.target_group_arns, [""])[0]
+    }
+  ]
 }
 
 resource "aws_ssm_parameter" "access_app_uri" {
