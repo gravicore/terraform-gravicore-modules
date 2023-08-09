@@ -93,8 +93,8 @@ resource "aws_iam_group" "elevated" {
 
 resource "aws_iam_group_policy_attachment" "elevated" {
   count      = var.create ? 1 : 0
-  group      = aws_iam_group.elevated[0].name
-  policy_arn = aws_iam_policy.elevated[0].arn
+  group      = concat(aws_iam_group.elevated.*.name, [""])[0]
+  policy_arn = concat(aws_iam_policy.elevated.*.arn, [""])[0]
 }
 
 resource "aws_iam_group_membership" "elevated" {
@@ -102,15 +102,15 @@ resource "aws_iam_group_membership" "elevated" {
   name  = join(var.delimiter, [local.module_prefix, "elevated", "access", "membership"])
 
   users = [
-    aws_iam_user.elevated[0].name
+    concat(aws_iam_user.elevated.*.name, [""])[0]
   ]
 
-  group = aws_iam_group.elevated[0].name
+  group = concat(aws_iam_group.elevated.*.name, [""])[0]
 }
 
 resource "aws_iam_access_key" "elevated" {
   count = var.create ? 1 : 0
-  user  = aws_iam_user.elevated[0].name
+  user  = concat(aws_iam_user.elevated.*.name, [""])[0]
 }
 
 resource "aws_s3_bucket" "default" {
@@ -135,7 +135,7 @@ resource "aws_s3_bucket" "default" {
 
 resource "aws_s3_bucket_public_access_block" "default" {
   count  = var.create && var.deploy_artifacts_bucket ? 1 : 0
-  bucket = aws_s3_bucket.default[0].id
+  bucket = concat(aws_s3_bucket.default.*.id, [""])[0]
 
   block_public_acls       = var.block_public_acls
   block_public_policy     = var.block_public_policy
@@ -153,7 +153,7 @@ resource "aws_ssm_parameter" "service_access_key_id" {
   description = format("%s %s", var.desc_prefix, "CICD Elevated service account Access Key ID")
 
   type      = "SecureString"
-  value     = aws_iam_access_key.elevated[0].id
+  value     = concat(aws_iam_access_key.elevated.*.id, [""])[0]
   overwrite = true
   tags      = local.tags
 }
@@ -164,7 +164,7 @@ resource "aws_ssm_parameter" "service_access_key_secret" {
   description = format("%s %s", var.desc_prefix, "CICD Elevated service account Secret Access Key")
 
   type      = "SecureString"
-  value     = aws_iam_access_key.elevated[0].secret
+  value     = concat(aws_iam_access_key.elevated.*.secret, [""])[0]
   overwrite = true
   tags      = local.tags
 }
@@ -175,7 +175,7 @@ resource "aws_ssm_parameter" "cicd_bucket_id" {
   description = format("%s %s", var.desc_prefix, "CICD arctifacts bucket ID")
 
   type      = "String"
-  value     = aws_s3_bucket.default[0].id
+  value     = concat(aws_s3_bucket.default.*.id, [""])[0]
   overwrite = true
   tags      = local.tags
 }
@@ -186,7 +186,7 @@ resource "aws_ssm_parameter" "cicd_bucket_arn" {
   description = format("%s %s", var.desc_prefix, "CICD arctifacts bucket ARN")
 
   type      = "String"
-  value     = aws_s3_bucket.default[0].arn
+  value     = concat(aws_s3_bucket.default.*.arn, [""])[0]
   overwrite = true
   tags      = local.tags
 }
