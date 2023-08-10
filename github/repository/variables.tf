@@ -93,7 +93,6 @@ variable "delimiter" {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-
 variable "project_type" {
   type        = string
   default     = "infra"
@@ -128,6 +127,12 @@ variable "has_issues" {
   type        = bool
   default     = false
   description = "(Optional) Set to true to enable the GitHub Issues features on the repository."
+}
+
+variable "has_discussions" {
+  type        = bool
+  default     = false
+  description = "(Optional) Set to true to enable GitHub Discussions on the repository. Defaults to false."
 }
 
 variable "has_projects" {
@@ -170,6 +175,30 @@ variable "allow_auto_merge" {
   type        = bool
   default     = false
   description = "(Optional) Set to true to allow auto-merging pull requests on the repository."
+}
+
+variable "squash_merge_commit_title" {
+  type        = string
+  default     = null
+  description = "(Optional) Can be PR_TITLE or COMMIT_OR_PR_TITLE for a default squash merge commit title."
+}
+
+variable "squash_merge_commit_message" {
+  type        = string
+  default     = null
+  description = "(Optional) Can be PR_BODY, COMMIT_MESSAGES, or BLANK for a default squash merge commit message."
+}
+
+variable "merge_commit_title" {
+  type        = string
+  default     = null
+  description = "(Optional) Can be PR_TITLE or MERGE_MESSAGE for a default merge commit title."
+}
+
+variable "merge_commit_message" {
+  type        = string
+  default     = null
+  description = "(Optional) Can be PR_BODY, PR_TITLE, or BLANK for a default merge commit message."
 }
 
 variable "delete_branch_on_merge" {
