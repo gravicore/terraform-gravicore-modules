@@ -29,13 +29,13 @@ variable "create" {
 
 variable "namespace" {
   type        = string
-  default     = ""
+  default     = "grv"
   description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 
 variable "environment" {
   type        = string
-  default     = ""
+  default     = "prd"
   description = "The isolated environment the module is associated with (e.g. Shared Services `shared`, Application `app`)"
 }
 
