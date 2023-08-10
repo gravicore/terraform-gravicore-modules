@@ -45,7 +45,7 @@ data "github_team" "default" {
 }
 
 resource "github_repository_environment" "default" {
-  for_each = var.create ? var.environments : {}
+  for_each = var.create && var.environments != {} ? var.environments : {}
 
   environment = each.key
   repository  = github_repository.default[0].name
