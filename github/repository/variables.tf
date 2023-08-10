@@ -263,26 +263,7 @@ variable "ignore_vulnerability_alerts_during_read" {
 
 variable "environments" {
   type = map(any)
-  default = {
-    dev = {
-      reviewers_teams        = []
-      reviewers_users        = []
-      protected_branches     = false
-      custom_branch_policies = false
-    },
-    stg = {
-      reviewers_teams        = []
-      reviewers_users        = []
-      protected_branches     = false
-      custom_branch_policies = false
-    },
-    prd = {
-      reviewers_teams        = []
-      reviewers_users        = []
-      protected_branches     = true
-      custom_branch_policies = false
-    }
-  }
+  default = {}
   description = "(Optional) - The list of environments to be created on the repository"
 }
 
