@@ -28,4 +28,8 @@ resource "azurerm_storage_container" "tfstate" {
 
   storage_account_name  = concat(azurerm_storage_account.tfstate.*.name, [""])[0]
   container_access_type = "blob"
+
+  depends_on = [
+    azurerm_storage_account.tfstate[0]
+  ]
 }
