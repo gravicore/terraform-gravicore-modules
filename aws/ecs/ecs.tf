@@ -114,6 +114,15 @@ variable "container_cluster_name" {
   default     = ""
 }
 
+variable "placement_strategy" {
+  description = "The placement strategy to use"
+  type = object({
+    type  = string
+    field = string
+  })
+  default = null
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -156,6 +165,14 @@ resource "aws_ecs_service" "default" {
       target_group_arn = load_balancer.value.arn
       container_name   = local.module_prefix
       container_port   = load_balancer.value.port
+    }
+  }
+
+  dynamic ordered_placement_strategy {
+    for_each = var.placement_strategy != null ? var.placement_strategy : []
+    content {
+      type  = ordered_placement_strategy.value.type
+      field = ordered_placement_strategy.value.field
     }
   }
 }
