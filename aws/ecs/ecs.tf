@@ -169,7 +169,7 @@ resource "aws_ecs_service" "default" {
   }
 
   dynamic ordered_placement_strategy {
-    for_each = var.placement_strategy != null ? var.placement_strategy : []
+    for_each = var.placement_strategy != null ? var.placement_strategy : {}
     content {
       type  = ordered_placement_strategy.value.type
       field = ordered_placement_strategy.value.field
