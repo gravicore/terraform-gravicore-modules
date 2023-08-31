@@ -29,37 +29,37 @@ resource "github_repository" "default" {
   ignore_vulnerability_alerts_during_read = var.ignore_vulnerability_alerts_during_read
 }
 
-data "github_user" "default" {
-  for_each = toset(local.users_lists)
-  username = each.key
-}
+# data "github_user" "default" {
+#   for_each = toset(local.users_lists)
+#   username = each.key
+# }
 
-data "github_team" "default" {
-  for_each = toset(local.teams_list)
-  slug     = each.key
-}
+# data "github_team" "default" {
+#   for_each = toset(local.teams_list)
+#   slug     = each.key
+# }
 
 resource "github_repository_environment" "default" {
   for_each = var.create ? var.environments : {}
 
   environment = each.key
   repository  = github_repository.default[0].name
-  reviewers {
-    users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
-    teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
-  }
-  deployment_branch_policy {
-    protected_branches     = lookup(each.value, "protected_branches", true)
-    custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
-  }
+  # reviewers {
+  #   users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
+  #   teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
+  # }
+  # deployment_branch_policy {
+  #   protected_branches     = lookup(each.value, "protected_branches", true)
+  #   custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
+  # }
 }
 
-resource "github_team_repository" "default" {
-  for_each   = var.create ? var.access_teams : {}
-  team_id    = each.key
-  repository = github_repository.default[0].name
-  permission = each.value
-}
+# resource "github_team_repository" "default" {
+#   for_each   = var.create ? var.access_teams : {}
+#   team_id    = each.key
+#   repository = github_repository.default[0].name
+#   permission = each.value
+# }
 
 resource "github_branch_protection" "default" {
   count                           = var.create && var.enable_main_branch_protection ? 1 : 0
