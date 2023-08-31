@@ -262,11 +262,11 @@ locals {
   teams_list  = flatten([for env in var.environments : lookup(env, "reviewers_teams", [])])
 }
 
-variable "access_teams" {
-  type        = map(any)
-  default     = {}
-  description = "Map of teams to be given access to the repository and their permission level"
-}
+# variable "access_teams" {
+#   type        = map(any)
+#   default     = {}
+#   description = "Map of teams to be given access to the repository and their permission level"
+# }
 
 variable "pattern" {
   type        = string
