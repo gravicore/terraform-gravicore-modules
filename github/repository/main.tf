@@ -48,10 +48,10 @@ resource "github_repository_environment" "default" {
   #   users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
   #   teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
   # }
-  # deployment_branch_policy {
-  #   protected_branches     = lookup(each.value, "protected_branches", true)
-  #   custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
-  # }
+  deployment_branch_policy {
+    protected_branches     = lookup(each.value, "protected_branches", true)
+    custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
+  }
 }
 
 # resource "github_team_repository" "default" {
