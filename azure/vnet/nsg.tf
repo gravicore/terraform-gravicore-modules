@@ -145,7 +145,7 @@ resource "azurerm_network_security_group" "default" {
     }
   }
   dynamic "security_rule" {
-    for_each =  toset(each.value.nsg_rules.application_gateway_rules_enabled || each.value.nsg_rules.load_balancer_rules_enabled ? ["enabled"] : [])
+    for_each = toset(each.value.nsg_rules.application_gateway_rules_enabled || each.value.nsg_rules.load_balancer_rules_enabled ? ["enabled"] : [])
 
     content {
       name                       = "lb-health-probe-inbound"
@@ -158,7 +158,7 @@ resource "azurerm_network_security_group" "default" {
       source_address_prefix      = "AzureLoadBalancer"
       destination_address_prefix = "VirtualNetwork"
     }
-    
+
   }
   dynamic "security_rule" {
     for_each = toset(each.value.nsg_rules.nfs_inbound_allowed == true ? ["enabled"] : [])

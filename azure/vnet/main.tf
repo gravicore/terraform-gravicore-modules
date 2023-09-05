@@ -3,8 +3,8 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "azure_region" {
-  source  = "claranet/regions/azurerm"
-  version = "6.1.0"
+  source       = "claranet/regions/azurerm"
+  version      = "6.1.0"
   azure_region = var.region
 }
 
@@ -13,17 +13,17 @@ module "azure_region" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_virtual_network" "default" {
-  count                   = var.create ? 1 : 0
-  name                    = local.module_prefix
-  resource_group_name     = var.resource_group_name
-  address_space           = coalesce(compact([var.vnet_cidr_block]))
-  location                = var.region
-  bgp_community           = var.bgp_community == null ? null : join(":", ["12076", var.bgp_community])
+  count               = var.create ? 1 : 0
+  name                = local.module_prefix
+  resource_group_name = var.resource_group_name
+  address_space       = coalesce(compact([var.vnet_cidr_block]))
+  location            = var.region
+  bgp_community       = var.bgp_community == null ? null : join(":", ["12076", var.bgp_community])
 
   dynamic "ddos_protection_plan" {
     for_each = var.ddos_protection_plan == null ? [] : [var.ddos_protection_plan]
     content {
-      id = ddos_protection_plan.value
+      id     = ddos_protection_plan.value
       enable = true
     }
   }

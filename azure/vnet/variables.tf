@@ -167,8 +167,8 @@ variable "flow_timeout_in_minutes" {
 
 variable "ddos_protection_plan" {
   description = "DDoS protection plan settings"
-  type = any
-  default = null
+  type        = any
+  default     = null
 }
 
 variable "bgp_community" {
@@ -206,7 +206,7 @@ variable "subnets" {
       application_gateway_rules_enabled = bool
       load_balancer_rules_enabled       = bool
       nfs_inbound_allowed               = bool
-      cifs_inbound_allowed              = bool      
+      cifs_inbound_allowed              = bool
       allowed_http_source               = any
       allowed_https_source              = any
       allowed_ssh_source                = any
@@ -236,35 +236,35 @@ variable "subnets" {
 
 
 locals {
-  subnets_map = {for idx, subnet in var.subnets : idx => {
-      prefix                                        = subnet.prefix
-      address_newbits                               = subnet.address_newbits
-      address_netnum                                = subnet.address_netnum
-      address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
-      service_endpoints                             = compact(subnet.service_endpoints)
-      delegation                                    = subnet.delegation
-      private_link_service_network_policies_enabled = try(subnet.private_link_service_network_policies_enabled, true)
-      private_endpoint_network_policies_enabled     = try(subnet.private_endpoint_network_policies_enabled, true)
-      nsg_rules                                     = try(subnet.nsg_rules, {
-        deny_all_inbound                  = false
-        http_inbound_allowed              = false
-        https_inbound_allowed             = false
-        ssh_inbound_allowed               = false
-        rdp_inbound_allowed               = false
-        winrm_inbound_allowed             = false
-        application_gateway_rules_enabled = false
-        load_balancer_rules_enabled       = false
-        nfs_inbound_allowed               = false
-        cifs_inbound_allowed              = false
-        allowed_http_source               = null
-        allowed_https_source              = null
-        allowed_ssh_source                = null
-        allowed_rdp_source                = null
-        allowed_winrm_source              = null
-        allowed_nfs_source                = null
-        allowed_cifs_source               = null
-        custom_security_rules             = []
-      })
-    }}
+  subnets_map = { for idx, subnet in var.subnets : idx => {
+    prefix                                        = subnet.prefix
+    address_newbits                               = subnet.address_newbits
+    address_netnum                                = subnet.address_netnum
+    address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
+    service_endpoints                             = compact(subnet.service_endpoints)
+    delegation                                    = subnet.delegation
+    private_link_service_network_policies_enabled = try(subnet.private_link_service_network_policies_enabled, true)
+    private_endpoint_network_policies_enabled     = try(subnet.private_endpoint_network_policies_enabled, true)
+    nsg_rules = try(subnet.nsg_rules, {
+      deny_all_inbound                  = false
+      http_inbound_allowed              = false
+      https_inbound_allowed             = false
+      ssh_inbound_allowed               = false
+      rdp_inbound_allowed               = false
+      winrm_inbound_allowed             = false
+      application_gateway_rules_enabled = false
+      load_balancer_rules_enabled       = false
+      nfs_inbound_allowed               = false
+      cifs_inbound_allowed              = false
+      allowed_http_source               = null
+      allowed_https_source              = null
+      allowed_ssh_source                = null
+      allowed_rdp_source                = null
+      allowed_winrm_source              = null
+      allowed_nfs_source                = null
+      allowed_cifs_source               = null
+      custom_security_rules             = []
+    })
+  } }
 }
 
