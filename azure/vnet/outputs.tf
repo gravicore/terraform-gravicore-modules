@@ -13,3 +13,4 @@ output "subnet_nsg_details" {
 output "subnet_nsg_association" {
   value = azurerm_subnet_network_security_group_association.default
 }
+
