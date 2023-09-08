@@ -204,3 +204,4 @@ resource "azurerm_subnet_network_security_group_association" "default" {
   subnet_id                 = azurerm_subnet.default[each.key].id
   network_security_group_id = azurerm_network_security_group.default[each.key].id
 }
+

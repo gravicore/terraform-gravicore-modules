@@ -58,3 +58,4 @@ resource "azurerm_subnet" "default" {
     }
   }
 }
+
