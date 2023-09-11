@@ -12,6 +12,17 @@ data "aws_iam_policy_document" "SchedulerCrossAccountPolicy" {
     resources = ["*"]
   }
 
+  dynamic "statement" {
+    for_each = var.enable_kms_access == true ? [1] : []
+    actions = [
+      "kms:Decrypt",
+      "kms:Encrypt",
+      "kms:CreateGrant",
+    ]
+
+    resources = ["*"]
+  }
+
   statement {
     actions = [
       "rds:DescribeDBInstances",
