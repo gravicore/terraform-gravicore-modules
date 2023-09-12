@@ -55,7 +55,7 @@ resource "azurerm_private_dns_a_record" "default" {
   for_each = toset(var.private_dns_zone_ids)
 
   name                = azurerm_private_endpoint.default[0].name
-  zone_name           = element(split("/", each.value), length(split("/", each.value)) -1)
+  zone_name           = element(split("/", each.value), length(split("/", each.value)) - 1)
   resource_group_name = var.resource_group_name
   ttl                 = 300
   records             = [azurerm_private_endpoint.default[0].private_service_connection.0.private_ip_address]
