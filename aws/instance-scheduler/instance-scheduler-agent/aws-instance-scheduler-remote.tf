@@ -14,13 +14,15 @@ data "aws_iam_policy_document" "SchedulerCrossAccountPolicy" {
 
   dynamic "statement" {
     for_each = var.enable_kms_access == true ? [1] : []
-    actions = [
-      "kms:Decrypt",
-      "kms:Encrypt",
-      "kms:CreateGrant",
-    ]
+    content {
+      actions = [
+        "kms:Decrypt",
+        "kms:Encrypt",
+        "kms:CreateGrant",
+      ]
 
-    resources = ["*"]
+      resources = ["*"]
+    }
   }
 
   statement {
