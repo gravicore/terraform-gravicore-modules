@@ -1,3 +1,14 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 2.26"
+    }
+  }
+  required_version = ">= 0.13"
+}
+
+
 variable "master_account_assume_role_name" {
   default = "grv_deploy_svc"
 }

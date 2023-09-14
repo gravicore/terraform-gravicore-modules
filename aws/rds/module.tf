@@ -1,7 +1,15 @@
 terraform {
   required_version = ">= 0.13"
 
-  # The configuration for this backend will be filled in by Terragrunt
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 2.26"
+    }
+
+    required_version = ">= 0.13"
+  }
+
   backend "s3" {}
 }
 
