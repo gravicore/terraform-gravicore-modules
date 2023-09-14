@@ -40,7 +40,7 @@ variable "create" {
 variable "namespace" {
   type        = string
   default     = ""
-  description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. gravicore 'grv', HashiCorp 'hc')"
+  description = "Namespace, which could be your organization abbreviation, client name, etc. (e.g. Gravicore 'grv', HashiCorp 'hc')"
 }
 
 variable "environment" {
@@ -109,7 +109,7 @@ locals {
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
   subnet_prefix      = element(split("-", element(split("/", var.subnet_id), length(split("/", var.subnet_id)) - 1)), 5)
-  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.name, "${local.subnet_prefix}snet", var.name])))
+  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.subresource_name, "${local.subnet_prefix}snet", var.name])))
 
   business_tags = {
     namespace          = var.namespace
@@ -198,7 +198,7 @@ variable "subnet_id" {
 }
 
 variable "private_dns_zone_ids" {
-  description = "Private DNS Zone which a new record will be created for the Private Endpoint. Only valid if `use_existing_private_dns_zones` is set to `true` and `target_resource` is not a Private Link Service. One of `private_dns_zones_ids` or `private_dns_zones_names` must be specified."
+  description = "Private DNS Zone which a new record will be created for the Private Endpoint. One of `private_dns_zones_ids` or `private_dns_zones_names` must be specified."
   type        = list(string)
   default     = null
 }
