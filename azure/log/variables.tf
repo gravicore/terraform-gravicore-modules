@@ -78,7 +78,7 @@ variable "tags" {
 
 variable "desc_prefix" {
   type        = string
-  default     = "gravicore:"
+  default     = "Grvcr:"
   description = "The prefix to add to any descriptions attached to resources"
 }
 
@@ -144,7 +144,7 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "log_analytics_workspaces" {
-  type = list(object({
+  type = map(object({
     prefix                             = string
     security_center_workspace          = optional(bool)
     contributors                       = optional(list(string))
@@ -169,11 +169,12 @@ variable "log_analytics_workspaces" {
       delete = optional(string)
     }))
   }))
-  default = []
+  default = {}
 }
 
 locals {
-  workspace_map = { for ws in var.log_analytics_workspaces : ws.prefix => ws }
+  workspace_map = var.log_analytics_workspaces
+
   role_assignments = [
     for ws_key, ws in local.workspace_map :
     [for principal_id in ws.contributors : {
@@ -181,6 +182,7 @@ locals {
       principal_id = principal_id
     }]
   ]
+
   flat_role_assignments = flatten(local.role_assignments)
 }
 

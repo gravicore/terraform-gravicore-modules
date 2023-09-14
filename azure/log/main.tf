@@ -13,8 +13,7 @@ module "azure_region" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_log_analytics_workspace" "default" {
-  for_each = local.workspace_map
-  # each.key = var.application as identifier for the workspace
+  for_each                           = local.workspace_map
   name                               = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, var.name])
   location                           = var.region
   resource_group_name                = var.resource_group_name
