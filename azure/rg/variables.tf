@@ -77,7 +77,7 @@ variable "tags" {
 
 variable "desc_prefix" {
   type        = string
-  default     = "gravicore:"
+  default     = "Grvcr:"
   description = "The prefix to add to any descriptions attached to resources"
 }
 
