@@ -1,6 +1,8 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
+
+
 variable "name" {
   type        = string
   default     = "diagnostic"
@@ -77,7 +79,7 @@ variable "tags" {
 
 variable "desc_prefix" {
   type        = string
-  default     = "gravicore:"
+  default     = "Grvc:"
   description = "The prefix to add to any descriptions attached to resources"
 }
 
@@ -137,9 +139,11 @@ locals {
   )
 }
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
+
 
 locals {
   enabled = length(var.logs_destinations_ids) > 0
