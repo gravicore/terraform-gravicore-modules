@@ -77,7 +77,7 @@ variable "tags" {
 
 variable "desc_prefix" {
   type        = string
-  default     = "gravicore:"
+  default     = "Grvcr:"
   description = "The prefix to add to any descriptions attached to resources"
 }
 
@@ -142,7 +142,7 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "public_ip" {
-  type = list(object(
+  type = map(object(
     {
       prefix                  = string
       allocation_method       = optional(string, "Static")
@@ -160,6 +160,6 @@ variable "public_ip" {
       sku_tier                = optional(string, "Regional")
     }
   ))
-  default = []
+  default = {}
 }
 
