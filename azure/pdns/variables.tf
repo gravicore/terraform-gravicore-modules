@@ -3,13 +3,13 @@
 # ----------------------------------------------------------------------------------------------------------------------
 variable "name" {
   type        = string
-  default     = "pdnsz"
+  default     = "pdns"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/private-dns"
+  default     = "gravicore/terraform-gravicore-modules/azure/pdns"
   description = "The owner and name of the Terraform module"
 }
 
@@ -144,21 +144,21 @@ locals {
 
 variable "private_dns_zones" {
   description = "List of Private DNS Zones."
-  type = list(object({
+  type = map(object({
     name                        = string
     is_not_private_link_service = bool
     vnets_ids                   = list(string)
     vm_autoregistration_enabled = bool
     resource_group_name         = string
   }))
-  default = []
+  default = {}
 }
 
 
 locals {
   flattened_dns_zones = flatten([
-    for dns_zone in var.private_dns_zones : [
-      for vnet_id in dns_zone.vnets_ids : merge(dns_zone, { vnet_id = vnet_id })
+    for dns_zone_key, dns_zone in var.private_dns_zones : [
+      for vnet_id in dns_zone.vnets_ids : merge({ key = dns_zone_key }, dns_zone, { vnet_id = vnet_id })
     ]
   ])
 }
