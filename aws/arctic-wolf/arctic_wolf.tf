@@ -142,7 +142,7 @@ variable "enable_glacier_transition" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "logs" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.26.0"
   enabled    = var.create && var.cloudtrail_name == null ? true : false
   namespace  = ""
   stage      = ""

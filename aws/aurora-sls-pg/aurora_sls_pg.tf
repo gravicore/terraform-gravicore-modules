@@ -44,7 +44,7 @@ variable "cluster_identifier" {
 
 variable "snapshot_identifier" {
   type        = string
-  default     = ""
+  default     = null
   description = "Specifies whether or not to create this cluster from a snapshot"
 }
 
@@ -413,7 +413,7 @@ locals {
 }
 
 module "dns_master" {
-  source  = "git::https://github.com/cloudposse/terraform-aws-route53-cluster-hostname.git?ref=tags/0.3.0"
+  source  = "git::https://github.com/cloudposse/terraform-aws-route53-cluster-hostname.git?ref=tags/0.13.0"
   enabled = var.create && length(var.zone_id) > 0 ? true : false
   name    = local.cluster_dns_name
   zone_id = var.zone_id

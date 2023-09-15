@@ -1,7 +1,7 @@
 variable "acl" {
   type        = string
   description = "Canned ACL to apply to the S3 bucket"
-  default     = ""
+  default     = "log-delivery-write"
 }
 
 variable "force_destroy" {
@@ -55,7 +55,7 @@ variable "lifecycle_tags" {
 variable "versioning_enabled" {
   type        = bool
   description = "A state of versioning. Versioning is a means of keeping multiple variants of an object in the same bucket"
-  default     = false
+  default     = true
 }
 
 variable "abort_incomplete_multipart_upload_days" {
@@ -102,7 +102,7 @@ variable "restrict_public_buckets" {
 
 resource "aws_s3_bucket" "default" {
   count         = var.create ? 1 : 0
-  bucket        = local.module_prefix
+  bucket        = "${local.module_prefix}-access-logs"
   acl           = var.acl
   force_destroy = var.force_destroy
   policy        = <<policy
@@ -115,7 +115,7 @@ resource "aws_s3_bucket" "default" {
         "s3:PutObject"
       ],
       "Effect": "Allow",
-      "Resource": "arn:aws:s3:::${local.module_prefix}/AWSLogs/*",
+      "Resource": "arn:aws:s3:::${local.module_prefix}-access-logs/AWSLogs/*",
       "Principal": {
         "AWS": [
           "arn:aws:iam::127311923021:root"
