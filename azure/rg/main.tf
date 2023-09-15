@@ -18,7 +18,7 @@ module "azure_region" {
 resource "azurerm_resource_group" "default" {
   count    = var.create ? 1 : 0
   name     = local.module_prefix
-  location = var.region
+  location = var.az_region
   tags     = local.tags
 }
 
