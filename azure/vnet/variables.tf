@@ -182,7 +182,7 @@ variable "bgp_community" {
 # Subnet Variables
 # ----------------------------------------------------------------------------------------------------------------------
 variable "subnets" {
-  type = list(object({
+  type = map(object({
     prefix            = string
     address_newbits   = number
     address_netnum    = number
@@ -236,7 +236,7 @@ variable "subnets" {
 
 
 locals {
-  subnets_map = { for idx, subnet in var.subnets : idx => {
+  subnets_map = { for key, subnet in var.subnets : key => {
     prefix                                        = subnet.prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
