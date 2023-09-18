@@ -236,7 +236,6 @@ variable "subnets" {
 
 locals {
   subnets_map = { for key, subnet in var.subnets : key => {
-    prefix                                        = subnet.prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
     address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
