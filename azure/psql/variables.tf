@@ -119,7 +119,7 @@ locals {
     stage      = var.stage
     module     = var.name
     repository = var.repository
-    region     = var.region
+    region     = var.az_region
   }
   automation_tags = {
     terraform_module = var.terraform_module

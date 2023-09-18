@@ -17,7 +17,7 @@ resource "azurerm_virtual_network" "default" {
   name                = local.module_prefix
   resource_group_name = var.resource_group_name
   address_space       = coalesce(compact([var.vnet_cidr_block]))
-  location            = var.region
+  location            = var.az_region
   bgp_community       = var.bgp_community == null ? null : join(":", ["12076", var.bgp_community])
 
   dynamic "ddos_protection_plan" {

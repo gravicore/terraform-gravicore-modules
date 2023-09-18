@@ -17,7 +17,7 @@ module "azure_region" {
 
 resource "azurerm_application_gateway" "default" {
   count               = var.create ? 1 : 0
-  location            = var.region
+  location            = var.az_region
   resource_group_name = var.resource_group_name
   name                = local.module_prefix
   zones               = var.zones

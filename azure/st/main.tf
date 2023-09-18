@@ -21,7 +21,7 @@ resource "azurerm_storage_account" "default" {
 
   account_replication_type          = each.value.account_replication_type
   account_tier                      = each.value.account_tier
-  location                          = var.region
+  location                          = var.az_region
   name                              = replace(join("", [local.module_prefix, each.value.prefix, var.name]), "-", "")
   resource_group_name               = var.resource_group_name
   access_tier                       = each.value.access_tier

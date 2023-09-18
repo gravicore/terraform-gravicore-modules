@@ -16,7 +16,7 @@ module "azure_region" {
 
 resource "azurerm_container_app_environment" "default" {
   count                          = var.create ? 1 : 0
-  location                       = var.region
+  location                       = var.az_region
   log_analytics_workspace_id     = var.log_analytics_workspace_id
   name                           = local.module_prefix
   resource_group_name            = var.resource_group_name

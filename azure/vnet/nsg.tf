@@ -7,7 +7,7 @@ resource "azurerm_network_security_group" "default" {
   for_each            = var.create ? local.subnets_map : {}
   name                = join(var.delimiter, [azurerm_subnet.default[each.key].name, "nsg"])
   resource_group_name = var.resource_group_name
-  location            = var.region
+  location            = var.az_region
   tags                = local.tags
 
   dynamic "security_rule" {

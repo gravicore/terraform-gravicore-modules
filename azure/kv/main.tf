@@ -32,7 +32,7 @@ data "azuread_service_principal" "adspn" {
 resource "azurerm_key_vault" "default" {
   count                           = var.create ? 1 : 0
   name                            = local.module_prefix
-  location                        = var.region
+  location                        = var.az_region
   resource_group_name             = var.resource_group_name
   tags                            = local.tags
   sku_name                        = var.key_vault_sku_pricing_tier

@@ -17,7 +17,7 @@ resource "azurerm_postgresql_flexible_server" "default" {
 
   resource_group_name = var.resource_group_name
   name                = local.module_prefix
-  location            = var.region
+  location            = var.az_region
   version             = var.postgresql_version
   sku_name            = join("_", [lookup(local.tier_map, var.tier, "GeneralPurpose"), "Standard", var.size])
   storage_mb          = var.storage_mb

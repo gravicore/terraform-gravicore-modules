@@ -15,7 +15,7 @@ module "azure_region" {
 resource "azurerm_log_analytics_workspace" "default" {
   for_each                           = local.workspace_map
   name                               = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, var.name])
-  location                           = var.region
+  location                           = var.az_region
   resource_group_name                = var.resource_group_name
   allow_resource_only_permissions    = each.value.allow_resource_only_permissions
   local_authentication_disabled      = each.value.local_authentication_disabled
@@ -87,7 +87,7 @@ resource "azurerm_log_analytics_solution" "default" {
   }
 
   solution_name         = each.value.solutions[0].solution_name
-  location              = var.region
+  location              = var.az_region
   resource_group_name   = var.resource_group_name
   workspace_resource_id = azurerm_log_analytics_workspace.default[each.key].id
   workspace_name        = azurerm_log_analytics_workspace.default[each.key].name

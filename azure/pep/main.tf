@@ -15,7 +15,7 @@ resource "azurerm_private_endpoint" "default" {
   count                         = var.create ? 1 : 0
   name                          = local.module_prefix
   resource_group_name           = var.resource_group_name
-  location                      = var.region
+  location                      = var.az_region
   subnet_id                     = var.subnet_id
   custom_network_interface_name = join(var.delimiter, [local.module_prefix, "nic"])
 

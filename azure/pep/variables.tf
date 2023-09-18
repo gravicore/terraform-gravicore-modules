@@ -120,7 +120,7 @@ locals {
     stage      = var.stage
     module     = var.name
     repository = var.repository
-    region     = var.region
+    region     = var.az_region
   }
   automation_tags = {
     terraform_module = var.terraform_module
@@ -208,7 +208,7 @@ locals {
   resource_id                 = length(regexall("^\\/(subscriptions)\\/([a-z0-9\\-]+)\\/(resourceGroups)\\/([A-Za-z0-9\\-_]+)\\/(providers)\\/([A-Za-z\\.]+)\\/([A-Za-z]+)\\/([A-Za-z0-9\\-]+)", var.target_resource)) == 1 ? var.target_resource : null
   is_not_private_link_service = local.resource_alias == null && !contains(try(split("/", local.resource_id), []), "privateLinkServices")
 
-  private_dns_zone_group_name     = local.is_not_private_link_service ? join(var.delimiter, [local.module_prefix, var.region, "pdnszg"]) : null
-  private_service_connection_name = join(var.delimiter, [local.module_prefix, var.region, "psc"])
+  private_dns_zone_group_name     = local.is_not_private_link_service ? join(var.delimiter, [local.module_prefix, var.az_region, "pdnszg"]) : null
+  private_service_connection_name = join(var.delimiter, [local.module_prefix, var.az_region, "psc"])
 }
 
