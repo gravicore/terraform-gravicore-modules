@@ -183,53 +183,52 @@ variable "bgp_community" {
 # ----------------------------------------------------------------------------------------------------------------------
 variable "subnets" {
   type = map(object({
-    prefix            = string
     address_newbits   = number
     address_netnum    = number
-    service_endpoints = list(string)
-    delegation = object({
-      name = string
-      service_delegation = object({
-        name    = string
-        actions = list(string)
-      })
-    })
-    private_link_service_network_policies_enabled = bool
-    private_endpoint_network_policies_enabled     = bool
-    nsg_rules = object({
-      deny_all_inbound                  = bool
-      http_inbound_allowed              = bool
-      https_inbound_allowed             = bool
-      ssh_inbound_allowed               = bool
-      rdp_inbound_allowed               = bool
-      winrm_inbound_allowed             = bool
-      application_gateway_rules_enabled = bool
-      load_balancer_rules_enabled       = bool
-      nfs_inbound_allowed               = bool
-      cifs_inbound_allowed              = bool
-      allowed_http_source               = any
-      allowed_https_source              = any
-      allowed_ssh_source                = any
-      allowed_rdp_source                = any
-      allowed_winrm_source              = any
-      allowed_nfs_source                = any
-      allowed_cifs_source               = any
-      custom_security_rules = list(object({
-        name                         = string
-        access                       = string
-        direction                    = string
-        priority                     = number
-        protocol                     = string
-        source_port_range            = string
-        destination_port_range       = string
-        source_address_prefix        = string
-        destination_address_prefix   = string
-        source_address_prefixes      = list(string)
-        destination_address_prefixes = list(string)
-      }))
-    })
+    service_endpoints = optional(list(string), null)
+    delegation = optional(object({
+      name = optional(string)
+      service_delegation = optional(object({
+        name    = optional(string)
+        actions = optional(list(string))
+      }), null)
+    }), null)
+    private_link_service_network_policies_enabled = optional(bool, null)
+    private_endpoint_network_policies_enabled     = optional(bool)
+    nsg_rules = optional(object({
+      deny_all_inbound                  = optional(bool)
+      http_inbound_allowed              = optional(bool)
+      https_inbound_allowed             = optional(bool)
+      ssh_inbound_allowed               = optional(bool)
+      rdp_inbound_allowed               = optional(bool)
+      winrm_inbound_allowed             = optional(bool)
+      application_gateway_rules_enabled = optional(bool)
+      load_balancer_rules_enabled       = optional(bool)
+      nfs_inbound_allowed               = optional(bool)
+      cifs_inbound_allowed              = optional(bool)
+      allowed_http_source               = optional(any)
+      allowed_https_source              = optional(any)
+      allowed_ssh_source                = optional(any)
+      allowed_rdp_source                = optional(any)
+      allowed_winrm_source              = optional(any)
+      allowed_nfs_source                = optional(any)
+      allowed_cifs_source               = optional(any)
+      custom_security_rules = optional(list(object({
+        name                         = optional(string)
+        access                       = optional(string)
+        direction                    = optional(string)
+        priority                     = optional(number)
+        protocol                     = optional(string)
+        source_port_range            = optional(string)
+        destination_port_range       = optional(string)
+        source_address_prefix        = optional(string)
+        destination_address_prefix   = optional(string)
+        source_address_prefixes      = optional(list(string))
+        destination_address_prefixes = optional(list(string))
+      })), null)
+    }), null)
   }))
-  default     = []
+  default     = null
   description = "The subnet information to be created in this VNET"
 }
 

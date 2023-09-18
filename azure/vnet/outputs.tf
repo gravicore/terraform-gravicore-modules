@@ -1,3 +1,7 @@
+output "vnet_id" {
+  value = concat(azurerm_virtual_network.default.*.id, [""])[0]
+}
+
 output "vnet_details" {
   value = azurerm_virtual_network.default
 }
