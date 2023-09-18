@@ -59,8 +59,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "80"
-      source_address_prefix      = try(tostring(each.value.allowed_http_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_http_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_http_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_http_source), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -75,8 +75,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "443"
-      source_address_prefix      = try(tostring(each.value.allowed_https_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_https_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_https_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_https_source), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -91,8 +91,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "22"
-      source_address_prefix      = try(tostring(each.value.allowed_ssh_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_ssh_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_ssh_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_ssh_source), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -107,8 +107,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "3389"
-      source_address_prefix      = try(tostring(each.value.allowed_rdp_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_rdp_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_rdp_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_rdp_source), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -123,8 +123,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "5986"
-      source_address_prefix      = try(tostring(each.value.allowed_winrm_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_winrm_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_winrm_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_winrm_source), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -139,7 +139,7 @@ resource "azurerm_network_security_group" "default" {
       access                     = "Allow"
       protocol                   = "Tcp"
       source_port_range          = "*"
-      destination_port_range     = ["65200-65535"]
+      destination_port_range     = "65200-65535"
       source_address_prefix      = "GatewayManager"
       destination_address_prefix = "VirtualNetwork"
     }
@@ -154,7 +154,7 @@ resource "azurerm_network_security_group" "default" {
       access                     = "Allow"
       protocol                   = "Tcp"
       source_port_range          = "*"
-      destination_port_range     = ["65200-65535"]
+      destination_port_range     = "65200-65535"
       source_address_prefix      = "AzureLoadBalancer"
       destination_address_prefix = "VirtualNetwork"
     }
@@ -188,8 +188,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = ["137", "138", "139", "445"]
-      source_address_prefix      = try(tostring(each.value.allowed_cifs_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_cifs_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_cifs_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_cifs_source), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
