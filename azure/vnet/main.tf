@@ -53,7 +53,7 @@ resource "azurerm_subnet" "default" {
       name = delegation.value.name
       service_delegation {
         name    = delegation.value.service_delegation.name
-        actions = compact(delegation.value.service_delegation.actions)
+        actions = delegation.value.service_delegation.actions
       }
     }
   }
