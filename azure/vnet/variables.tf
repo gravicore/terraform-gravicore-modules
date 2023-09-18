@@ -194,8 +194,8 @@ variable "subnets" {
         actions = optional(list(string))
       }), null)
     }), null)
-    private_link_service_network_policies_enabled = optional(bool, null)
-    private_endpoint_network_policies_enabled     = optional(bool)
+    private_link_service_network_policies_enabled = optional(bool, true)
+    private_endpoint_network_policies_enabled     = optional(bool, true)
     nsg_rules = optional(object({
       deny_all_inbound                  = optional(bool, false)
       http_inbound_allowed              = optional(bool, false)
@@ -227,7 +227,7 @@ variable "subnets" {
         source_address_prefixes      = optional(list(string))
         destination_address_prefixes = optional(list(string))
       })), [])
-    }), {})
+    }), null)
   }))
   default     = null
   description = "The subnet information to be created in this VNET"
@@ -243,8 +243,8 @@ locals {
     address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
     service_endpoints                             = subnet.service_endpoints
     delegation                                    = subnet.delegation
-    private_link_service_network_policies_enabled = try(subnet.private_link_service_network_policies_enabled, true)
-    private_endpoint_network_policies_enabled     = try(subnet.private_endpoint_network_policies_enabled, true)
+    private_link_service_network_policies_enabled = subnet.private_link_service_network_policies_enabled
+    private_endpoint_network_policies_enabled     = subnet.private_endpoint_network_policies_enabled
     nsg_rules = try(subnet.nsg_rules, {
       deny_all_inbound                  = false
       http_inbound_allowed              = false

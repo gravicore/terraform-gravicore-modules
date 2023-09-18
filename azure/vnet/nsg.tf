@@ -200,7 +200,7 @@ resource "azurerm_network_security_group" "default" {
 # Subnet to NSG association
 # ----------------------------------------------------------------------------------------------------------------------
 resource "azurerm_subnet_network_security_group_association" "default" {
-  for_each                  = var.create ? local.subnets_map : {}
+  for_each                  = var.create && length(local.subnets_with_nsg_rules) > 0 ? local.subnets_with_nsg_rules : {}
   subnet_id                 = azurerm_subnet.default[each.key].id
   network_security_group_id = azurerm_network_security_group.default[each.key].id
 }
