@@ -15,7 +15,7 @@ variable "terraform_module" {
   description = "The owner and name of the Terraform module"
 }
 
-variable "region" {
+variable "az_region" {
   type        = string
   default     = ""
   description = "The Azure region to deploy module into"
