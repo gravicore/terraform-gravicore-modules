@@ -4,7 +4,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_network_security_group" "default" {
-  for_each            = var.create ? local.subnets_map : {}
+  for_each            = var.create && length(local.subnets_with_nsg_rules) > 0 ? local.subnets_with_nsg_rules : {}
   name                = join(var.delimiter, [azurerm_subnet.default[each.key].name, "nsg"])
   resource_group_name = var.resource_group_name
   location            = var.az_region

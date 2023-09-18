@@ -183,9 +183,10 @@ variable "bgp_community" {
 # ----------------------------------------------------------------------------------------------------------------------
 variable "subnets" {
   type = map(object({
+    prefix            = string
     address_newbits   = number
     address_netnum    = number
-    service_endpoints = optional(list(string), null)
+    service_endpoints = optional(list(string))
     delegation = optional(object({
       name = optional(string)
       service_delegation = optional(object({
@@ -196,16 +197,16 @@ variable "subnets" {
     private_link_service_network_policies_enabled = optional(bool, null)
     private_endpoint_network_policies_enabled     = optional(bool)
     nsg_rules = optional(object({
-      deny_all_inbound                  = optional(bool)
-      http_inbound_allowed              = optional(bool)
-      https_inbound_allowed             = optional(bool)
-      ssh_inbound_allowed               = optional(bool)
-      rdp_inbound_allowed               = optional(bool)
-      winrm_inbound_allowed             = optional(bool)
-      application_gateway_rules_enabled = optional(bool)
-      load_balancer_rules_enabled       = optional(bool)
-      nfs_inbound_allowed               = optional(bool)
-      cifs_inbound_allowed              = optional(bool)
+      deny_all_inbound                  = optional(bool, false)
+      http_inbound_allowed              = optional(bool, false)
+      https_inbound_allowed             = optional(bool, false)
+      ssh_inbound_allowed               = optional(bool, false)
+      rdp_inbound_allowed               = optional(bool, false)
+      winrm_inbound_allowed             = optional(bool, false)
+      application_gateway_rules_enabled = optional(bool, false)
+      load_balancer_rules_enabled       = optional(bool, false)
+      nfs_inbound_allowed               = optional(bool, false)
+      cifs_inbound_allowed              = optional(bool, false)
       allowed_http_source               = optional(any)
       allowed_https_source              = optional(any)
       allowed_ssh_source                = optional(any)
@@ -225,8 +226,8 @@ variable "subnets" {
         destination_address_prefix   = optional(string)
         source_address_prefixes      = optional(list(string))
         destination_address_prefixes = optional(list(string))
-      })), null)
-    }), null)
+      })), [])
+    }), {})
   }))
   default     = null
   description = "The subnet information to be created in this VNET"
@@ -236,10 +237,11 @@ variable "subnets" {
 
 locals {
   subnets_map = { for key, subnet in var.subnets : key => {
+    prefix = subnet.prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
     address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
-    service_endpoints                             = compact(subnet.service_endpoints)
+    service_endpoints                             = subnet.service_endpoints
     delegation                                    = subnet.delegation
     private_link_service_network_policies_enabled = try(subnet.private_link_service_network_policies_enabled, true)
     private_endpoint_network_policies_enabled     = try(subnet.private_endpoint_network_policies_enabled, true)
@@ -264,5 +266,8 @@ locals {
       custom_security_rules             = []
     })
   } }
+
+  subnets_with_nsg_rules = { for key, value in local.subnets_map : key => value if value.nsg_rules != null }
+
 }
 
