@@ -34,20 +34,16 @@ resource "github_repository" "default" {
   ignore_vulnerability_alerts_during_read = var.ignore_vulnerability_alerts_during_read
 }
 
-# resource "github_repository_environment" "default" {
-#   for_each = var.create && var.environments != {} ? var.environments : {}
+resource "github_repository_environment" "default" {
+  for_each = var.create && var.environments != {} ? var.environments : {}
 
-#   environment = each.key
-#   repository  = github_repository.default[0].name
-#   reviewers {
-#     users = [for user in lookup(each.value, "reviewers_users", []) : data.github_user.default[user].id]
-#     teams = [for team in lookup(each.value, "reviewers_teams", []) : data.github_team.default[team].id]
-#   }
-#   deployment_branch_policy {
-#     protected_branches     = lookup(each.value, "protected_branches", true)
-#     custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
-#   }
-# }
+  environment = each.key
+  repository  = github_repository.default[0].name
+  deployment_branch_policy {
+    protected_branches     = lookup(each.value, "protected_branches", true)
+    custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
+  }
+}
 
 resource "github_branch_protection" "default" {
   count                           = var.create && var.enable_main_branch_protection ? 1 : 0
