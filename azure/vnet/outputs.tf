@@ -3,9 +3,9 @@ output "vnet_id" {
 }
 
 output "subnets_ids" {
-  value = { for s in azurerm_subnet.default : s => s.id }
+  value = { for key, resource in azurerm_subnet.default : key => resource.id }
 }
 
 output "subnet_nsg_details" {
-  value = { for s in azurerm_network_security_group.default : s => s.id }
+  value = { for key, resource in azurerm_network_security_group.default : key => resource.id }
 }
