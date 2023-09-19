@@ -122,27 +122,19 @@ resource "azurerm_container_registry" "default" {
 # PEP Module
 # ----------------------------------------------------------------------------------------------------------------------
 
-module "pep" {
-  count  = var.create ? 1 : 0
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=release-azure"
-  # Module standard variables
-  terraform_module    = var.terraform_module
-  az_region           = var.az_region
-  resource_group_name = var.resource_group_name
-  create              = var.create
-  # Platform Standard Variables
-  namespace   = var.namespace
-  environment = var.environment
-  stage       = var.stage
-  application = var.application
-  repository  = var.repository
-  tags        = local.tags
-  # PEP Module Variables
-  ip_configurations    = var.pep_variables.ip_configurations
-  is_manual_connection = var.pep_variables.is_manual_connection
-  target_resource      = one(azurerm_container_registry.default.*.id)
-  subresource_name     = var.pep_variables.subresource_name
-  subnet_id            = var.pep_variables.subnet_id
-  private_dns_zone_ids = var.pep_variables.private_dns_zone_ids
-}
 
+module "private_endpoint" {
+  depends_on           = [azurerm_container_registry.default]
+  count                = var.create ? length(var.private_endpoints) : 0
+  source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=release-azure"
+  az_region            = var.az_region
+  resource_group_name  = var.private_endpoints[count.index].resource_group_name
+  target_resource      = one(azurerm_container_registry.default.*.id)
+  subnet_id            = var.private_endpoints[count.index].subnet_id
+  private_dns_zone_ids = var.private_endpoints[count.index].private_dns_zone_ids
+  subresource_name     = var.private_endpoints[count.index].subresource_name
+  namespace            = var.namespace
+  environment          = var.environment
+  stage                = var.stage
+  application          = var.application
+}

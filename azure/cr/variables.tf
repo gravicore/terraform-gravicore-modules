@@ -255,9 +255,15 @@ variable "anonymous_pull_enabled" {
 # ----------------------------------------------------------------------------------------------------------------------
 # PEP Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
-variable "pep_variables" {
-  type        = any
-  description = "Variables that need to be passed onto the pep module"
-  default     = ""
+variable "private_endpoints" {
+  description = "List of private endpoints to create for the Key Vault."
+  type = list(object({
+    name                 = optional(string, "pep")
+    subnet_id            = string
+    private_dns_zone_ids = optional(list(string), null)
+    subresource_name     = optional(string, "vault")
+    resource_group_name  = string
+  }))
+  default = []
 }
 
