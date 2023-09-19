@@ -3,6 +3,6 @@ output "container_registry_id" {
 }
 
 output "private_endpoint_fqdn" {
-  value = concat(module.pep[*].private_endpoint_fqdn, [""])[0]
+  value = concat(module.private_endpoint[*].private_endpoint_fqdn, [""])[0]
 }
 
