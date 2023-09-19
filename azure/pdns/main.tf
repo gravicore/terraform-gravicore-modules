@@ -18,7 +18,7 @@ module "azure_region" {
 resource "azurerm_private_dns_zone" "default" {
   for_each            = var.create ? var.private_dns_zones : {}
   name                = each.value.name
-  resource_group_name = each.value.resource_group_name
+  resource_group_name   = var.resource_group_name
   tags                = local.tags
 
   lifecycle {
@@ -40,7 +40,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "default" {
 
   depends_on            = [azurerm_private_dns_zone.default]
   name                  = format("%s-%s-link", azurerm_private_dns_zone.default[each.value.key].name, basename(each.value.vnet_id))
-  resource_group_name   = each.value.resource_group_name
+  resource_group_name   = var.resource_group_name
   private_dns_zone_name = each.value.name
   virtual_network_id    = each.value.vnet_id
   registration_enabled  = each.value.vm_autoregistration_enabled
