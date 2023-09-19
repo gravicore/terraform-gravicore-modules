@@ -143,7 +143,7 @@ locals {
 
 variable "lock_level" {
   type        = string
-  default     = "CanNotDelete"
+  default     = null
   description = "The level of lock to apply to the resource group (e.g. `CanNotDelete`, `ReadOnly`)"
 }
 

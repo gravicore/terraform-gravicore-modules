@@ -23,7 +23,7 @@ resource "azurerm_resource_group" "default" {
 }
 
 resource "azurerm_management_lock" "default" {
-  count      = var.create && var.lock_level != "" ? 1 : 0
+  count      = var.create && var.lock_level != null ? 1 : 0
   name       = join(var.delimiter, [local.module_prefix, "lock"])
   scope      = azurerm_resource_group.default[count.index].id
   lock_level = var.lock_level
