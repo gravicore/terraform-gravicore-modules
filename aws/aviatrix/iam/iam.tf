@@ -29,7 +29,7 @@ resource "aws_iam_policy" "assume_role" {
   description = join(" ", [var.desc_prefix, "Policy for creating assume_role"])
 
   path   = "/"
-  policy = "${data.http.assume_role[0].body}"
+  policy = data.http.assume_role[0].body
 }
 
 data "http" "ec2" {
@@ -70,15 +70,15 @@ EOF
 resource "aws_iam_role_policy_attachment" "ec2" {
   count = var.create ? 1 : 0
 
-  role       = "${aws_iam_role.ec2[0].name}"
-  policy_arn = "${aws_iam_policy.assume_role[0].arn}"
+  role       = aws_iam_role.ec2[0].name
+  policy_arn = aws_iam_policy.assume_role[0].arn
 }
 
 resource "aws_iam_instance_profile" "ec2" {
   count = var.create ? 1 : 0
 
-  name = "${aws_iam_role.ec2[0].name}"
-  role = "${aws_iam_role.ec2[0].name}"
+  name = aws_iam_role.ec2[0].name
+  role = aws_iam_role.ec2[0].name
 }
 
 # Aviatrix Application Role
@@ -129,7 +129,7 @@ resource "aws_iam_role" "app" {
   description = join(" ", [var.desc_prefix, "Aviatrix App Role"])
   tags        = local.tags
 
-  assume_role_policy = "${var.controller_account_id == "" ? local.policy_primary : local.policy_cross}"
+  assume_role_policy = var.controller_account_id == "" ? local.policy_primary : local.policy_cross
 }
 
 resource "aws_iam_policy" "app" {
@@ -137,14 +137,14 @@ resource "aws_iam_policy" "app" {
   name        = "aviatrix-app-policy"
   description = join(" ", [var.desc_prefix, "Policy for Aviatrix Application"])
 
-  policy = "${data.http.ec2[0].body}"
+  policy = data.http.ec2[0].body
 }
 
 resource "aws_iam_role_policy_attachment" "app" {
   count = var.create ? 1 : 0
 
-  role       = "${aws_iam_role.app[0].name}"
-  policy_arn = "${aws_iam_policy.app[0].arn}"
+  role       = aws_iam_role.app[0].name
+  policy_arn = aws_iam_policy.app[0].arn
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

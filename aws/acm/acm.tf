@@ -68,7 +68,7 @@ resource "aws_acm_certificate" "acm" {
 
 locals {
   // Copy domain_validation_options for the distinct domain names
-  validation_domains = [for k, v in aws_acm_certificate.acm[0].domain_validation_options : tomap(v) if contains(local.distinct_domain_names, v.domain_name)]
+  validation_domains = [for k, v in concat(aws_acm_certificate.acm.*.domain_validation_options, [""])[0] : tomap(v) if contains(local.distinct_domain_names, v.domain_name)]
 }
 
 resource "aws_route53_record" "acm_validation" {
@@ -91,7 +91,7 @@ resource "aws_route53_record" "acm_validation" {
 resource "aws_acm_certificate_validation" "acm" {
   count = var.create && var.validation_method == "DNS" && var.validate_certificate && var.wait_for_validation ? 1 : 0
 
-  certificate_arn         = aws_acm_certificate.acm[0].arn
+  certificate_arn         = concat(aws_acm_certificate.acm.*.arn, [""])[0]
   validation_record_fqdns = aws_route53_record.acm_validation.*.fqdn
 }
 

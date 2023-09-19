@@ -191,7 +191,7 @@ data "aws_ami" "windows" {
 # Security group for DFS Namespace. All traffic from my IP.
 #########################################################
 
-variable ingress_cidrs {
+variable "ingress_cidrs" {
   type        = list(string)
   default     = [""]
   description = "description"

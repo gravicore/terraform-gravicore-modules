@@ -35,7 +35,7 @@ variable "customer_master_key_spec" {
 }
 
 variable "backup_resource_ids" {
-  type    = list
+  type    = list(any)
   default = null
 }
 
@@ -98,7 +98,7 @@ variable "iam_role_arn" {
   default     = null
 }
 
-variable kms_key_arn {
+variable "kms_key_arn" {
   type        = string
   default     = null
   description = "(Optional) The server-side encryption key that is used to protect your backups"

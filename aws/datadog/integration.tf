@@ -4,11 +4,11 @@
 
 variable "datadog_aws_account_specific_namespace_rules" {
   description = "Enables or disables metric collection for specific AWS namespaces for this AWS account only. A list of namespaces can be found at the available namespace rules API endpoint."
-  type        = map
+  type        = map(any)
   default     = {}
 }
 
-variable datadog_excluded_regions {
+variable "datadog_excluded_regions" {
   description = "An array of AWS regions to exclude from metrics collection."
   type        = list(string)
   default     = null
@@ -22,13 +22,13 @@ variable "datadog_integration_role_name" {
 
 variable "datadog_aws_filter_tags" {
   description = "Map of EC2 tags (in the form key:value) defines a filter that Datadog use when collecting metrics from EC2. Wildcards, such as ? (for single characters) and * (for multiple characters) can also be used."
-  type        = map
+  type        = map(any)
   default     = {}
 }
 
 variable "datadog_aws_host_tags" {
   description = "Array of tags (in the form key:value) to add to all hosts and metrics reporting through this integration."
-  type        = map
+  type        = map(any)
   default     = {}
 }
 
@@ -178,31 +178,31 @@ resource "aws_cloudformation_stack" "datadog_integration" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
-output account_id {
+output "account_id" {
   value = var.account_id
 }
 
-output datadog_id {
+output "datadog_id" {
   value = concat(datadog_integration_aws.datadog_integration.*.id, [""])[0]
 }
 
-output datadog_account_specific_namespace_rules {
+output "datadog_account_specific_namespace_rules" {
   value = concat(datadog_integration_aws.datadog_integration.*.account_specific_namespace_rules, [""])[0]
 }
 
-output datadog_excluded_regions {
+output "datadog_excluded_regions" {
   value = concat(datadog_integration_aws.datadog_integration.*.excluded_regions, [""])[0]
 }
 
-output datadog_external_id {
+output "datadog_external_id" {
   sensitive = true
   value     = concat(datadog_integration_aws.datadog_integration.*.external_id, [""])[0]
 }
 
-output datadog_filter_tags {
+output "datadog_filter_tags" {
   value = concat(datadog_integration_aws.datadog_integration.*.filter_tags, [""])[0]
 }
 
-output datadog_role_name {
+output "datadog_role_name" {
   value = concat(datadog_integration_aws.datadog_integration.*.role_name, [""])[0]
 }

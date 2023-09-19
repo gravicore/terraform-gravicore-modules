@@ -46,7 +46,7 @@ variable "organization_environments_email_format" {
 }
 
 variable "organization_accounts" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "A map of member accounts to create in the organization. Use this to manage a custom list of accounts, otherwise use `organization_environments` to dynamically generate accoutns from environments and stages."
 }
@@ -151,8 +151,6 @@ module "params" {
     description = "Identifier of the master account" }
     "/${local.stage_prefix}/${var.name}-account-ids" = { value = join(",", aws_organizations_organization.organization[0].accounts[*].id), type = "StringList",
     description = "A list of Organization account identifiers including the master account" }
-    "/${local.stage_prefix}/${var.name}-non-master-accounts" = { value = jsonencode(aws_organizations_organization.organization[0].non_master_accounts),
-    description = "List of organization accounts excluding the master account" }
     "/${local.stage_prefix}/${var.name}-non-master-account-ids" = { value = join(",", aws_organizations_organization.organization[0].non_master_accounts[*].id), type = "StringList",
     description = "A list of Organization account identifiers excluding the master account" }
   }

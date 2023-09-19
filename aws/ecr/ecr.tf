@@ -4,6 +4,7 @@
 
 variable "repos" {
   type        = map(any)
+  default     = {}
   description = <<EOF
   A map of maps with the key being the repo name, and a sub map containing settings options in the following syntax:
   repos = {

@@ -1,4 +1,4 @@
-variable bucket_inventory {
+variable "bucket_inventory" {
   type        = map(any)
   default     = {}
   description = <<EOF

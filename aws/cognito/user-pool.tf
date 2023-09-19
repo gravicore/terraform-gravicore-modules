@@ -4,55 +4,55 @@
 
 ###Variables for Cognito User Pool
 
-variable username_attributes {
-  type        = list
+variable "username_attributes" {
+  type        = list(any)
   description = "Specifies whether email addresses of phone numbers can be specified as usernames when a user signs up. Conflicts with alias_attributes "
   default     = null
 }
 
-variable alias_attributes {
-  type        = list
+variable "alias_attributes" {
+  type        = list(any)
   description = "Attributes supported as an alias for this user pool. Possible values: phone_number, email, or preferred_username. Cconflicts with username_attributes."
   default     = null
 }
 
-variable auto_verified_attributes {
-  type        = list
+variable "auto_verified_attributes" {
+  type        = list(any)
   description = "The attribute to be auto-verified. Possible values: email, phone_number"
   default     = []
 }
 
-variable email_verification_subject {
+variable "email_verification_subject" {
   type        = string
   description = "A string representing the email verification subject. Conflicts with verification_message_template configuration block email_subject argument"
   default     = "Your verification code"
 }
 
-variable email_verification_message {
+variable "email_verification_message" {
   type        = string
   description = "A string representing the email verification message. Conflicts with verification_message_template configuration block email_message argument"
   default     = "Your verification code is {####}"
 }
 
-variable mfa_configuration {
+variable "mfa_configuration" {
   type        = string
   description = "(Default: OFF) Set to enable multifactor authentication. Must be one of the following values (ON, OFF, OPTIONAL)"
   default     = "OFF"
 }
 
-variable schemas {
+variable "schemas" {
   type        = list(any)
   description = "A container with the schema attributes of a user pool. Maximum of 50 attributes"
   default     = null
 }
 
-variable sms_verification_message {
+variable "sms_verification_message" {
   type        = string
   description = "A string representing the SMS verification message. Conficts with verification_message_template configuration block sms_message argument"
   default     = "Your verification code is {####}"
 }
 
-variable sms_authentication_message {
+variable "sms_authentication_message" {
   type        = string
   description = "A string representing the SMS verification message. Conflicts with verification_message_template configuration block sms_message argument"
   default     = "Your authentication code is {####}"
@@ -68,7 +68,7 @@ locals {
 ############################################
 #######Variable for User Pool Add-ons#######
 
-variable advanced_security_mode {
+variable "advanced_security_mode" {
   type        = string
   description = "The mode for advanced security, must be one of OFF, AUDIT or ENFORCED"
   default     = "OFF"
@@ -76,7 +76,7 @@ variable advanced_security_mode {
 
 # Parameter Store
 
-variable parameter_store_kms_arn {
+variable "parameter_store_kms_arn" {
   type        = string
   default     = "alias/parameter_store_key"
   description = "The ARN of a KMS key used to encrypt and decrypt SecretString values"
@@ -88,25 +88,25 @@ data "aws_kms_key" "parameter_store_key" {
 
 # Cognito Domain
 
-variable create_domain_name {
+variable "create_domain_name" {
   type        = bool
   default     = true
   description = "Create cognito domain name"
 }
 
-variable domain_parent_domain_name {
+variable "domain_parent_domain_name" {
   type        = string
   default     = ""
   description = "The custom parent domain string"
 }
 
-variable domain_subdomain_name {
+variable "domain_subdomain_name" {
   type        = string
   default     = ""
   description = "The custom sub domain CNAME"
 }
 
-variable domain_certificate_arn {
+variable "domain_certificate_arn" {
   type        = string
   default     = null
   description = "The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain"
@@ -118,136 +118,136 @@ locals {
 
 # Cognito Identity Provider
 
-variable cognito_identity_provider {
-  type        = map
+variable "cognito_identity_provider" {
+  type        = map(any)
   default     = {}
   description = "Map for building Cognito Identity Providers"
 }
 
 # Cognito User Pool Client
 
-variable allowed_oauth_flows {
+variable "allowed_oauth_flows" {
   type        = list(string)
   default     = null
   description = "(Optional) List of allowed OAuth flows (code, implicit, client_credentials)"
 }
 
-variable allowed_oauth_flows_user_pool_client {
+variable "allowed_oauth_flows_user_pool_client" {
   type        = bool
   default     = null
   description = "(Optional) Whether the client is allowed to follow the OAuth protocol when interacting with Cognito user pools"
 }
 
-variable allowed_oauth_scopes {
+variable "allowed_oauth_scopes" {
   type        = list(string)
   default     = null
   description = "(Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin)"
 }
 
-variable callback_urls {
+variable "callback_urls" {
   type        = list(string)
   default     = null
   description = "(Optional) List of allowed callback URLs for the identity providers"
 }
 
-variable default_redirect_uri {
+variable "default_redirect_uri" {
   type        = string
   default     = null
   description = "(Optional) The default redirect URI. Must be in the list of callback URLs"
 }
 
-variable explicit_auth_flows {
+variable "explicit_auth_flows" {
   type        = list(string)
   default     = null
   description = "(Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH)"
 }
 
-variable generate_secret {
+variable "generate_secret" {
   type        = bool
   default     = null
   description = "(Optional) Should an application secret be generated"
 }
 
-variable logout_urls {
+variable "logout_urls" {
   type        = list(string)
   default     = null
   description = "(Optional) List of allowed logout URLs for the identity providers"
 }
 
-variable prevent_user_existence_errors {
+variable "prevent_user_existence_errors" {
   type        = string
   default     = null
   description = "(Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to ENABLED and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to LEGACY, those APIs will return a UserNotFoundException exception if the user does not exist in the user pool"
 }
 
-variable read_attributes {
+variable "read_attributes" {
   type        = list(string)
   default     = null
   description = "(Optional) List of user pool attributes the application client can read from"
 }
 
-variable supported_identity_providers {
+variable "supported_identity_providers" {
   type        = list(string)
   default     = []
   description = "(Optional) List of provider names for the identity providers that are supported on this client"
 }
 
-variable write_attributes {
+variable "write_attributes" {
   type        = list(string)
   default     = null
   description = "(Optional) List of user pool attributes the application client can write to"
 }
 
-variable refresh_token_validity {
+variable "refresh_token_validity" {
   type        = number
   default     = 1
   description = "(Optional) Time limit in days refresh tokens are valid for"
 }
 
-variable token_validity_units_refresh_token {
+variable "token_validity_units_refresh_token" {
   type        = string
   default     = "days"
   description = "(Optional) Time unit in for the value in refresh_token_validity, defaults to days: Valid values for the following arguments are: seconds, minutes, hours or days"
 }
 
-variable access_token_validity {
+variable "access_token_validity" {
   type        = number
   default     = 1
   description = "(Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. This value will be overridden if you have entered a value in token_validity_units"
 }
 
-variable token_validity_units_access_token {
+variable "token_validity_units_access_token" {
   type        = string
   default     = "hours"
   description = "(Optional) Time unit in for the value in access_token_validity, defaults to hours: Valid values for the following arguments are: seconds, minutes, hours or days"
 }
 
-variable id_token_validity {
+variable "id_token_validity" {
   type        = number
   default     = 1
   description = "(Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. This value will be overridden if you have entered a value in token_validity_units"
 }
 
-variable token_validity_units_id_token {
+variable "token_validity_units_id_token" {
   type        = string
   default     = "hours"
   description = "(Optional) Time unit in for the value in id_token_validity, defaults to hours: Valid values for the following arguments are: seconds, minutes, hours or days"
 }
 
-variable additional_app_clients {
+variable "additional_app_clients" {
   type        = map(any)
   default     = {}
   description = ""
 }
 
-variable resource_servers {
+variable "resource_servers" {
   type        = list(any)
   default     = []
   description = "description"
 }
 
-variable account_recovery_setting_recovery_mechanism {
-  type        = list
+variable "account_recovery_setting_recovery_mechanism" {
+  type        = list(any)
   default     = []
   description = "(Required) List of Account Recovery methods for a user. Priority is determined by list index. Accepted Values: verified_email, verified_phone_number, and admin_only"
 }
@@ -609,7 +609,7 @@ output "cognito_client_logout_urls" {
   description = ""
 }
 
-output additional_app_client_id {
+output "additional_app_client_id" {
   value       = values(aws_cognito_user_pool_client.additional_client)[*].id
   sensitive   = false
   description = ""
@@ -618,7 +618,7 @@ output additional_app_client_id {
   ]
 }
 
-output resource_server {
+output "resource_server" {
   value       = aws_cognito_resource_server.pool
   sensitive   = false
   description = ""

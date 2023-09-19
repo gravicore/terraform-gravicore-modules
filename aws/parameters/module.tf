@@ -1,8 +1,11 @@
 terraform {
-  required_version = "~> 0.12"
+  required_version = ">= 0.13"
 
   required_providers {
-    aws = "~> 2.26"
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 2.26"
+    }
   }
 }
 
@@ -16,7 +19,7 @@ variable "name" {
   description = "The name of the module"
 }
 
-variable terraform_module {
+variable "terraform_module" {
   type        = string
   default     = "gravicore/terraform-gravicore-modules/aws/aviatrix/parameters"
   description = "The owner and name of the Terraform module"
