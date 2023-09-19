@@ -57,16 +57,6 @@ output "vpc_az_zone_ids_available" {
   value       = local.az_zone_ids_available
 }
 
-resource "aws_ssm_parameter" "parameter_az_zone_ids_available" {
-  count       = var.create && local.az_zone_ids_available != "" ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}-az-zone-ids-available"
-  description = format("%s %s", var.desc_prefix, "List of the available Availability Zone IDs")
-  tags        = var.tags
-
-  type  = "StringList"
-  value = join(",", local.az_zone_ids_available)
-}
-
 output "vpc_azs_available" {
   description = "List of the available Availability Zones for the VPC"
   value = [for zone_id in local.az_zone_ids_available : {
@@ -75,32 +65,9 @@ output "vpc_azs_available" {
   }]
 }
 
-resource "aws_ssm_parameter" "parameter_azs_available" {
-  count       = var.create && local.az_zone_ids_available != "" ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}-azs-available"
-  description = format("%s %s", var.desc_prefix, "List of the available Availability Zones for the VPC")
-  tags        = var.tags
-
-  type = "String"
-  value = jsonencode([for zone_id in local.az_zone_ids_available : {
-    zone_id = zone_id
-    name    = data.aws_availability_zone.ids[zone_id].name
-  }])
-}
-
 output "vpc_az_names_available" {
   description = "List of the available Availability Zone names"
   value       = local.az_names_available
-}
-
-resource "aws_ssm_parameter" "parameter_az_names_available" {
-  count       = var.create && local.az_names_available != "" ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}-az-names-available"
-  description = format("%s %s", var.desc_prefix, "List of the available Availability Zone names")
-  tags        = var.tags
-
-  type  = "StringList"
-  value = join(",", local.az_names_available)
 }
 
 output "vpc_azs" {
@@ -111,45 +78,12 @@ output "vpc_azs" {
   }]
 }
 
-resource "aws_ssm_parameter" "parameter_azs" {
-  count       = var.create && local.az_zone_ids_available != "" ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}-azs"
-  description = format("%s %s", var.desc_prefix, "Map of Availability Zones used for the VPC")
-  tags        = var.tags
-
-  type = "String"
-  value = jsonencode([for zone_id in local.az_zone_ids_available : {
-    zone_id = zone_id
-    name    = data.aws_availability_zone.ids[zone_id].name
-  }])
-}
-
 output "vpc_az_names" {
   description = "List of Availability Zone names used for the VPC"
   value       = local.az_names
 }
 
-resource "aws_ssm_parameter" "parameter_az_names" {
-  count       = var.create && local.az_names != "" ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}-az-names"
-  description = format("%s %s", var.desc_prefix, "List of Availability Zone names used for the VPC")
-  tags        = var.tags
-
-  type  = "StringList"
-  value = join(",", local.az_names)
-}
-
 output "vpc_az_zone_ids" {
   description = "List of Availability Zone IDs used for the VPC"
   value       = local.az_zone_ids
-}
-
-resource "aws_ssm_parameter" "parameter_az_zone_ids" {
-  count       = var.create && local.az_zone_ids != "" ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}-az-zone-ids"
-  description = format("%s %s", var.desc_prefix, "List of Availability Zone IDs used for the VPC")
-  tags        = var.tags
-
-  type  = "StringList"
-  value = join(",", local.az_zone_ids)
 }

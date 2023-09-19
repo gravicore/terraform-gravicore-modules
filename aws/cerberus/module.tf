@@ -1,30 +1,10 @@
 terraform {
-  required_version = ">= 0.12"
-
-  # The configuration for this backend will be filled in by Terragrunt
-  backend "s3" {}
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Providers
-# ----------------------------------------------------------------------------------------------------------------------
-
-provider "aws" {
-  version = "~> 2.26.0"
-  region  = var.aws_region
-
-  assume_role {
-    role_arn = "arn:aws:iam::${var.account_id}:role/${var.account_assume_role_name}"
-  }
-}
-
-provider "aws" {
-  alias   = "master"
-  version = "~> 2.26.0"
-  region  = var.aws_region
-
-  assume_role {
-    role_arn = "arn:aws:iam::${var.master_account_id}:role/${var.master_account_assume_role_name}"
+  required_version = ">= 0.13"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = ">= 2.26"
+    }
   }
 }
 
@@ -90,7 +70,7 @@ variable "desc_prefix" {
 }
 
 variable "tags" {
-  type    = map
+  type    = map(any)
   default = {}
 }
 

@@ -32,7 +32,7 @@ variable "http_redirect_enabled" {
 
 variable "http_ingress_cidr_blocks" {
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["10.0.0.0/8"]
   description = "List of CIDR blocks to allow in HTTP security group"
 }
 
@@ -97,7 +97,7 @@ variable "https_ssl_policy" {
 
 variable "access_logs_prefix" {
   type        = string
-  default     = ""
+  default     = null
   description = "The S3 bucket prefix"
 }
 
@@ -109,7 +109,7 @@ variable "access_logs_enabled" {
 
 variable "access_logs_region" {
   type        = string
-  default     = ""
+  default     = null
   description = "The region for the access_logs S3 bucket"
 }
 
@@ -147,48 +147,6 @@ variable "deletion_protection_enabled" {
   default     = false
   description = "A bool flag to enable/disable deletion protection for ALB"
 }
-
-# variable "deregistration_delay" {
-#   type        = number
-#   default     = 15
-#   description = "The amount of time to wait in seconds before changing the state of a deregistering target to unused"
-# }
-
-# variable "health_check_paths" {
-#   type        = list(string)
-#   default     = ["/"]
-#   description = "The destination for the health check request"
-# }
-
-# variable "health_check_timeout" {
-#   type        = number
-#   default     = 10
-#   description = "The amount of time to wait in seconds before failing a health check request"
-# }
-
-# variable "health_check_healthy_threshold" {
-#   type        = number
-#   default     = 2
-#   description = "The number of consecutive health checks successes required before considering an unhealthy target healthy"
-# }
-
-# variable "health_check_unhealthy_threshold" {
-#   type        = number
-#   default     = 2
-#   description = "The number of consecutive health check failures required before considering the target unhealthy"
-# }
-
-# variable "health_check_interval" {
-#   type        = number
-#   default     = 15
-#   description = "The duration in seconds in between health checks"
-# }
-
-# variable "health_check_matcher" {
-#   type        = string
-#   default     = "200-399"
-#   description = "The HTTP response codes to indicate a healthy check"
-# }
 
 variable "target_groups" {
   type = list(any)
@@ -238,19 +196,19 @@ resource "aws_security_group_rule" "egress" {
   to_port           = "0"
   protocol          = "-1"
   cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.alb[0].id
+  security_group_id = concat(aws_security_group.alb.*.id, [""])[0]
 }
 
 resource "aws_security_group_rule" "alb_http_ingress" {
-  count = var.create && var.http_redirect_enabled ? 1 : 0
+  count = var.create ? var.http_redirect_enabled ? 1 : length(var.target_groups) : 0
 
   type              = "ingress"
-  from_port         = 80
-  to_port           = 80
+  from_port         = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
+  to_port           = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
   protocol          = "tcp"
   cidr_blocks       = var.http_ingress_cidr_blocks
   prefix_list_ids   = var.http_ingress_prefix_list_ids
-  security_group_id = aws_security_group.alb[0].id
+  security_group_id = concat(aws_security_group.alb.*.id, [""])[0]
 }
 
 resource "aws_security_group_rule" "alb_https_ingress" {
@@ -262,19 +220,7 @@ resource "aws_security_group_rule" "alb_https_ingress" {
   protocol          = "tcp"
   cidr_blocks       = var.https_ingress_cidr_blocks
   prefix_list_ids   = var.https_ingress_prefix_list_ids
-  security_group_id = aws_security_group.alb[0].id
-}
-
-module "access_logs" {
-  source    = "git::https://github.com/cloudposse/terraform-aws-lb-s3-bucket.git?ref=tags/0.2.0"
-  enabled   = var.create
-  name      = "${local.module_prefix}-access-logs"
-  namespace = ""
-  stage     = ""
-  tags      = local.tags
-
-  region        = coalesce(var.access_logs_region, var.aws_region)
-  force_destroy = var.alb_access_logs_s3_bucket_force_destroy
+  security_group_id = concat(aws_security_group.alb.*.id, [""])[0]
 }
 
 resource "aws_lb" "alb" {
@@ -285,7 +231,7 @@ resource "aws_lb" "alb" {
   load_balancer_type = "application"
   internal           = var.internal
   security_groups = compact(
-    concat(var.security_group_ids, [aws_security_group.alb[0].id]),
+    concat(var.security_group_ids, [concat(aws_security_group.alb.*.id, [""])[0]]),
   )
   subnets                          = var.subnet_ids
   enable_cross_zone_load_balancing = var.cross_zone_load_balancing_enabled
@@ -294,7 +240,7 @@ resource "aws_lb" "alb" {
   ip_address_type                  = var.ip_address_type
   enable_deletion_protection       = var.deletion_protection_enabled
   access_logs {
-    bucket  = module.access_logs.bucket_id
+    bucket  = join("", aws_s3_bucket.default.*.id)
     prefix  = var.access_logs_prefix
     enabled = var.access_logs_enabled
   }
@@ -313,6 +259,7 @@ resource "aws_lb_target_group" "alb" {
   health_check {
     enabled             = var.target_groups[count.index].health_check.enabled
     path                = var.target_groups[count.index].health_check.path
+    protocol            = var.target_groups[count.index].protocol
     timeout             = var.target_groups[count.index].health_check.timeout
     healthy_threshold   = var.target_groups[count.index].health_check.healthy_threshold
     unhealthy_threshold = var.target_groups[count.index].health_check.unhealthy_threshold
@@ -335,24 +282,28 @@ resource "aws_lb_target_group" "alb" {
 }
 
 resource "aws_lb_listener" "http" {
-  count = var.create && var.http_redirect_enabled ? 1 : 0
+  count = var.create ? var.http_redirect_enabled ? 1 : length(var.target_groups) : 0
 
-  load_balancer_arn = aws_lb.alb[0].arn
-  port              = 80
+  load_balancer_arn = concat(aws_lb.alb.*.arn, [""])[0]
+  port              = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
   protocol          = "HTTP"
   default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
+    type             = var.http_redirect_enabled ? "redirect" : "forward"
+    target_group_arn = var.http_redirect_enabled ? "" : aws_lb_target_group.alb[count.index].arn
+    dynamic "redirect" {
+      for_each = var.http_redirect_enabled ? [1] : []
+      content {
+        port        = "443"
+        protocol    = "HTTPS"
+        status_code = "HTTP_301"
+      }
     }
   }
 }
 
 resource "aws_lb_listener" "https" {
   count             = var.create && var.https_enabled ? length(var.https_ports) : 0
-  load_balancer_arn = aws_lb.alb[0].arn
+  load_balancer_arn = concat(aws_lb.alb.*.arn, [""])[0]
 
   port            = var.https_ports[count.index]
   protocol        = "HTTPS"
@@ -372,7 +323,7 @@ resource "aws_route53_record" "alb" {
   name            = coalesce(var.domain_name, join(".", [var.name, var.dns_zone_name]))
   type            = "CNAME"
   ttl             = 30
-  records         = [aws_lb.alb[0].dns_name]
+  records         = [concat(aws_lb.alb.*.dns_name, [""])[0]]
   allow_overwrite = true
 }
 
@@ -382,27 +333,27 @@ resource "aws_route53_record" "alb" {
 
 output "alb_name" {
   description = "The ARN suffix of the ALB"
-  value       = aws_lb.alb[0].name
+  value       = concat(aws_lb.alb.*.name, [""])[0]
 }
 
 output "alb_arn" {
   description = "The ARN of the ALB"
-  value       = aws_lb.alb[0].arn
+  value       = concat(aws_lb.alb.*.arn, [""])[0]
 }
 
 output "alb_arn_suffix" {
   description = "The ARN suffix of the ALB"
-  value       = aws_lb.alb[0].arn_suffix
+  value       = concat(aws_lb.alb.*.arn_suffix, [""])[0]
 }
 
 output "alb_dns_name" {
   description = "DNS name of ALB"
-  value       = aws_lb.alb[0].dns_name
+  value       = concat(aws_lb.alb.*.dns_name, [""])[0]
 }
 
 output "alb_zone_id" {
   description = "The ID of the zone which ALB is provisioned"
-  value       = aws_lb.alb[0].zone_id
+  value       = concat(aws_lb.alb.*.zone_id, [""])[0]
 }
 
 output "security_group_ids" {
@@ -432,12 +383,7 @@ output "listener_arns" {
   )
 }
 
-output "access_logs_bucket_id" {
-  description = "The S3 bucket ID for access logs"
-  value       = module.access_logs.bucket_id
-}
-
 output "route53_dns_name" {
   description = "DNS name of Route53"
-  value       = aws_route53_record.alb[0].name
+  value       = length(aws_route53_record.alb) == 1 ? aws_route53_record.alb[0].name : ""
 }

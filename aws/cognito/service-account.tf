@@ -2,7 +2,7 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable create_cognito_service_user {
+variable "create_cognito_service_user" {
   type        = bool
   default     = false
   description = "Creates a read only service user for congito"

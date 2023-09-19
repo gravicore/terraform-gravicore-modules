@@ -8,7 +8,7 @@ variable "solution_stack_name" {
   description = "(Optional) A solution stack to base your environment off of. Example stacks can be found in the Amazon API documentation(https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html)"
 }
 
-variable logs_stream_logs {
+variable "logs_stream_logs" {
   type        = string
   default     = "true"
   description = "Whether to create groups in CloudWatch Logs for proxy and deployment logs, and stream logs from each instance in your environment"
@@ -20,13 +20,13 @@ variable "logs_delete_on_terminate" {
   type        = string
 }
 
-variable logs_retention_in_days {
+variable "logs_retention_in_days" {
   type        = string
   default     = "7"
   description = "The number of days to keep log events before they expire. Valid Values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653"
 }
 
-variable xray_enabled {
+variable "xray_enabled" {
   type        = string
   default     = "true"
   description = "Set to true to run the X-Ray daemon on the instances in your environment"
@@ -100,13 +100,13 @@ variable "vpc_id" {
 
 variable "alb_subnets" {
   default     = null
-  type        = list
+  type        = list(any)
   description = "The IDs of the subnet or subnets for the elastic load balancer. If you have multiple subnets, specify the value as a single comma-delimited string of subnet IDs"
 }
 
 variable "ec2_subnets" {
   default     = null
-  type        = list
+  type        = list(any)
   description = "The IDs of the Auto Scaling group subnet or subnets. If you have multiple subnets, specify the value as a single comma-delimited string of subnet IDs"
 }
 
@@ -183,7 +183,7 @@ variable "app_healthcheck_url" {
 }
 
 variable "environmental_variables" {
-  type        = map
+  type        = map(any)
   default     = {}
   description = "description"
 }
@@ -404,7 +404,7 @@ resource "aws_elastic_beanstalk_application" "default" {
   name        = local.module_prefix
   description = var.app_description
 
-  tags = "${merge(local.tags, map("Namespace", null))}"
+  tags = merge(local.tags, map("Namespace", null))
 
   lifecycle {
     ignore_changes = [
@@ -416,14 +416,14 @@ resource "aws_elastic_beanstalk_application" "default" {
 resource "aws_iam_instance_profile" "eb_ec2" {
   count = var.create ? 1 : 0
   name  = "${local.module_prefix}-ec2"
-  role  = "${aws_iam_role.eb_ec2[0].name}"
+  role  = aws_iam_role.eb_ec2[0].name
 }
 
 resource "aws_security_group" "eb_alb_sg" {
   count       = var.create ? 1 : 0
   name        = "${local.module_prefix}-alb-sg"
   description = "${var.desc_prefix} ALB Security Group"
-  vpc_id      = "${var.vpc_id}"
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = var.default_process_port
@@ -446,22 +446,22 @@ resource "aws_security_group" "eb_alb_sg" {
     cidr_blocks = var.alb_security_group_egress_cider
   }
 
-  tags = "${merge(local.tags, map("Name", "${local.module_prefix}-alb"))}"
+  tags = merge(local.tags, map("Name", "${local.module_prefix}-alb"))
 }
 
 resource "aws_elastic_beanstalk_environment" "default" {
   count               = var.create ? 1 : 0
-  name                = "${local.module_prefix}"
-  application         = "${aws_elastic_beanstalk_application.default[0].name}"
-  solution_stack_name = "${var.solution_stack_name}"
+  name                = local.module_prefix
+  application         = aws_elastic_beanstalk_application.default[0].name
+  solution_stack_name = var.solution_stack_name
 
-  tags = "${merge(
+  tags = (merge(
     local.technical_tags,
     local.automation_tags,
     local.security_tags,
     var.tags,
     map("Environment", "${var.environment}")
-  )}"
+  ))
 
   wait_for_ready_timeout = "10m"
 
@@ -646,7 +646,7 @@ resource "aws_elastic_beanstalk_environment" "default" {
 
 resource "aws_lb_listener" "https_redirect" {
   count             = var.create && var.https_redirect ? 1 : 0
-  load_balancer_arn = "${join(",", aws_elastic_beanstalk_environment.default[0].load_balancers)}"
+  load_balancer_arn = join(",", aws_elastic_beanstalk_environment.default[0].load_balancers)
   port              = "80"
   protocol          = "HTTP"
 
@@ -677,14 +677,14 @@ resource "aws_route53_record" "default" {
 
 output "beanstalk_env_cname" {
   description = "CNAME of beanstalk enviroment"
-  value       = "${aws_elastic_beanstalk_environment.default[0].cname}"
+  value       = aws_elastic_beanstalk_environment.default[0].cname
 }
 
 output "beanstalk_dns_fqdn" {
   description = "FQDN that points to the beanstalk environment"
-  value       = "${aws_route53_record.default[0].fqdn}"
+  value       = aws_route53_record.default[0].fqdn
 }
 
 output "beanstalk_load_balancer" {
-  value = "${aws_elastic_beanstalk_environment.default[0].load_balancers}"
+  value = aws_elastic_beanstalk_environment.default[0].load_balancers
 }

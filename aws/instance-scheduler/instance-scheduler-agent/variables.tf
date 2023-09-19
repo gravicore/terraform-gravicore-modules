@@ -12,3 +12,9 @@ variable "master_account_id" {
 variable "create" {
 }
 
+variable "enable_kms_access" {
+  type        = bool
+  default     = true
+  description = "Value to enable or disable KMS access in the remote IS role"
+}
+

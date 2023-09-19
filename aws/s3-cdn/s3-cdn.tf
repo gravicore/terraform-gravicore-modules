@@ -331,7 +331,7 @@ variable "enable_security_headers" {
   description = "Enables creation and attachment of origin-responce edge lambda to add security headers"
 }
 
-variable nodejs_security_header_code {
+variable "nodejs_security_header_code" {
   type        = string
   default     = <<EOF
 'use strict';
@@ -360,6 +360,12 @@ exports.handler = (event, context, callback) => {
 };
 EOF
   description = "Additional code to be injected into the origin-responce edge lambda"
+}
+
+variable "enable_glacier_transition" {
+  type        = bool
+  default     = false
+  description = "Enables the transition to AWS Glacier which can cause unnecessary costs for huge amount of small files"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -469,7 +475,7 @@ resource "aws_s3_bucket" "origin" {
 }
 
 module "logs" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.26.0"
   namespace  = ""
   stage      = ""
   name       = local.module_prefix
@@ -504,12 +510,13 @@ module "logs" {
       ]
   })
 
-  tags                     = local.tags
-  lifecycle_prefix         = var.log_prefix
-  standard_transition_days = var.log_standard_transition_days
-  glacier_transition_days  = var.log_glacier_transition_days
-  expiration_days          = var.log_expiration_days
-  force_destroy            = var.origin_force_destroy
+  tags                      = local.tags
+  lifecycle_prefix          = var.log_prefix
+  standard_transition_days  = var.log_standard_transition_days
+  glacier_transition_days   = var.log_glacier_transition_days
+  expiration_days           = var.log_expiration_days
+  force_destroy             = var.origin_force_destroy
+  enable_glacier_transition = var.enable_glacier_transition
 }
 
 data "aws_s3_bucket" "selected" {
@@ -631,7 +638,7 @@ resource "aws_cloudfront_distribution" "default" {
 }
 
 module "dns" {
-  source           = "git::https://github.com/cloudposse/terraform-aws-route53-alias.git?ref=tags/0.3.0"
+  source           = "git::https://github.com/cloudposse/terraform-aws-route53-alias.git?ref=tags/0.13.0"
   enabled          = var.create && length(var.parent_zone_id) > 0 || length(var.parent_zone_name) > 0 ? true : false
   aliases          = var.aliases
   parent_zone_id   = var.parent_zone_id

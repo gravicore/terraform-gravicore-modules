@@ -62,7 +62,7 @@ variable "publicly_accessible" {
 
 variable "subnet_ids" {
   description = "List of subnets for the DB"
-  type        = list
+  type        = list(any)
 }
 
 variable "vpc_id" {
@@ -120,7 +120,7 @@ variable "backup_window" {
 variable "snapshot_identifier" {
   type        = string
   description = "Snapshot identifier e.g: rds:production-2015-06-26-06-05. If specified, the module create cluster from the snapshot"
-  default     = ""
+  default     = null
 }
 
 variable "parameter_group_name" {
@@ -672,14 +672,14 @@ resource "aws_lambda_function" "nlb_tg_register" {
   memory_size = 128
 
   environment {
-    variables = "${merge(local.tags, map(
+    variables = (merge(local.tags, map(
       "aws_region", "${var.aws_region}",
       "rds_master_instance_id", "${var.replicate_source_db[0]}",
       "nlb_target_group", "${aws_lb_target_group.nlb[0].name}",
-    ))}"
+    )))
   }
 
-  tags = "${local.tags}"
+  tags = local.tags
 
   tracing_config {
     mode = "Active"
@@ -699,7 +699,7 @@ resource "aws_sns_topic" "nlb_tg_register" {
   count = var.create && var.deploy_nlb ? 1 : 0
   name  = local.module_prefix
 
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 resource "aws_sns_topic_subscription" "nlb_tg_register" {
@@ -723,7 +723,7 @@ resource "aws_db_event_subscription" "nlb_tg_register" {
     "failover",
     "maintenance",
   ]
-  tags = "${local.tags}"
+  tags = local.tags
 }
 
 data "aws_lambda_invocation" "nlb_tg_register" {

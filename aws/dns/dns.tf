@@ -2,19 +2,19 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable parent_domain_name {}
+variable "parent_domain_name" {}
 
-variable aws_subdomain_name {
+variable "aws_subdomain_name" {
   default = "aws"
 }
 
-variable parent_domain_name_servers {
+variable "parent_domain_name_servers" {
   type        = list(string)
   default     = null
   description = ""
 }
 
-variable delegated_domains {
+variable "delegated_domains" {
   type = list(object({
     name                 = string
     public_name_servers  = list(string)
@@ -24,19 +24,19 @@ variable delegated_domains {
   description = "A list of delegated domains to add to DNS"
 }
 
-variable ttl_default_ns {
+variable "ttl_default_ns" {
   type        = number
   default     = 30
   description = "Default TTL for the NS records"
 }
 
-variable ttl_default_soa {
+variable "ttl_default_soa" {
   type        = number
   default     = 60
   description = "Default TTL for the SOA records"
 }
 
-variable zone_force_destroy {
+variable "zone_force_destroy" {
   type        = bool
   default     = false
   description = "(Optional) Whether to destroy all records (possibly managed outside of Terraform) in the zone when destroying the zone"
@@ -47,67 +47,67 @@ locals {
   aws_domain_name = replace(join(".", compact(list(var.stage, var.aws_subdomain_name, var.parent_domain_name))), "prd.", "")
 }
 
-variable records_a {
+variable "records_a" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_aaaa {
+variable "records_aaaa" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_caa {
+variable "records_caa" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_cname {
+variable "records_cname" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_ds {
+variable "records_ds" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_mx {
+variable "records_mx" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_naptr {
+variable "records_naptr" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_ptr {
+variable "records_ptr" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_spf {
+variable "records_spf" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_srv {
+variable "records_srv" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
 }
 
-variable records_txt {
+variable "records_txt" {
   type        = map(any)
   default     = {}
   description = "Provides a Route53 A record resource"
@@ -357,15 +357,15 @@ resource "aws_route53_record" "dns_delegated_public_ns" {
 
 # Public Zone
 
-output dns_public_zone_id {
+output "dns_public_zone_id" {
   value = aws_route53_zone.dns_public[0].zone_id
 }
 
-output dns_public_zone_name {
+output "dns_public_zone_name" {
   value = aws_route53_zone.dns_public[0].name
 }
 
-output dns_public_zone_name_servers {
+output "dns_public_zone_name_servers" {
   value = flatten(aws_route53_zone.dns_public.*.name_servers)
 }
 

@@ -4,7 +4,7 @@
 
 variable "datasync_tasks" {
   description = "Tasks for DataSync"
-  type        = map
+  type        = map(any)
   default     = {}
 }
 

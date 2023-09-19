@@ -44,14 +44,14 @@ variable "automatic_backup_retention_days" {
   description = "(Optional) The number of days to retain automatic backups. Minimum of 0 and maximum of 90. Defaults to 7. Set to 0 to disable"
 }
 
-variable daily_automatic_backup_start_time {
+variable "daily_automatic_backup_start_time" {
   type        = string
   default     = null
   description = "(Optional) The preferred time (in HH:MM format) to take daily automatic backups, in the UTC time zone"
 }
 
-variable security_group_ids {
-  type        = list
+variable "security_group_ids" {
+  type        = list(any)
   default     = []
   description = "(Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces"
 }
@@ -67,7 +67,7 @@ variable "subnet_ids" {
   description = "(Required) A list of IDs for the subnets that the file system will be accessible from. To specify more than a single subnet set deployment_type to MULTI_AZ_1"
 }
 
-variable ingress_cidrs {
+variable "ingress_cidrs" {
   type    = list(string)
   default = []
 }
@@ -166,7 +166,7 @@ output "fsx_arn" {
   value       = aws_fsx_windows_file_system.default.*.arn
 }
 
-output fsx_security_group {
+output "fsx_security_group" {
   description = "Map of fsx security group apptributes"
   value       = aws_security_group.default.*
 }

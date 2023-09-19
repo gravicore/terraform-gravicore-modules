@@ -68,16 +68,16 @@ resource "aviatrix_vpc" "firenet" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "firenet_vpc_id" {
-  value       = aviatrix_vpc.firenet[0].vpc_id
+  value       = concat(aviatrix_vpc.firenet.*.vpc_id, [""])[0]
   description = "ID of the FireNet VPC"
 }
 
 output "firenet_vpc_subnets" {
-  value       = aviatrix_vpc.firenet[0].subnets
+  value       = concat(aviatrix_vpc.firenet.*.subnets, [""])[0]
   description = "List of subnet maps for the FireNet VPC"
 }
 
 output "firenet_vpc_subnet_ids" {
-  value       = [for subnet in aviatrix_vpc.firenet[0].subnets : subnet.subnet_id]
+  value       = [for subnet in concat(aviatrix_vpc.firenet.*.subnets, [""])[0] : subnet.subnet_id]
   description = "List of subnet IDs for the FireNet VPC"
 }
