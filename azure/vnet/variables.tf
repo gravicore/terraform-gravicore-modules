@@ -207,13 +207,13 @@ variable "subnets" {
       load_balancer_rules_enabled       = optional(bool, false)
       nfs_inbound_allowed               = optional(bool, false)
       cifs_inbound_allowed              = optional(bool, false)
-      allowed_http_source               = optional(list(string))
-      allowed_https_source              = optional(list(string))
-      allowed_ssh_source                = optional(list(string))
-      allowed_rdp_source                = optional(list(string))
-      allowed_winrm_source              = optional(list(string))
-      allowed_nfs_source                = optional(list(string))
-      allowed_cifs_source               = optional(list(string))
+      allowed_http_sources              = optional(list(string))
+      allowed_https_sources             = optional(list(string))
+      allowed_ssh_sources               = optional(list(string))
+      allowed_rdp_sources               = optional(list(string))
+      allowed_winrm_sources             = optional(list(string))
+      allowed_nfs_sources               = optional(list(string))
+      allowed_cifs_sources              = optional(list(string))
       custom_security_rules = optional(list(object({
         name                         = optional(string)
         access                       = optional(string)
@@ -237,7 +237,7 @@ variable "subnets" {
 
 locals {
   subnets_map = { for key, subnet in var.subnets : key => {
-    prefix = subnet.prefix
+    prefix                                        = subnet.prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
     address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
@@ -256,13 +256,13 @@ locals {
       load_balancer_rules_enabled       = false
       nfs_inbound_allowed               = false
       cifs_inbound_allowed              = false
-      allowed_http_source               = null
-      allowed_https_source              = null
-      allowed_ssh_source                = null
-      allowed_rdp_source                = null
-      allowed_winrm_source              = null
-      allowed_nfs_source                = null
-      allowed_cifs_source               = null
+      allowed_http_sources              = null
+      allowed_https_sources             = null
+      allowed_ssh_sources               = null
+      allowed_rdp_sources               = null
+      allowed_winrm_sources             = null
+      allowed_nfs_sources               = null
+      allowed_cifs_sources              = null
       custom_security_rules             = []
     })
   } }
