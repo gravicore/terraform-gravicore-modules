@@ -2,7 +2,7 @@ module "private_endpoint" {
   depends_on           = [azurerm_key_vault.default]
   count                = var.create ? length(var.private_endpoints) : 0
   source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=release-azure"
-  region               = var.az_region
+  az_region            = var.az_region
   resource_group_name  = var.private_endpoints[count.index].resource_group_name
   target_resource      = one(azurerm_key_vault.default.*.id)
   subnet_id            = var.private_endpoints[count.index].subnet_id

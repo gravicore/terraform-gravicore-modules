@@ -18,7 +18,7 @@ module "azure_region" {
 resource "azurerm_private_dns_zone" "default" {
   for_each            = var.create ? var.private_dns_zones : {}
   name                = each.value.name
-  resource_group_name   = var.resource_group_name
+  resource_group_name = var.resource_group_name
   tags                = local.tags
 
   lifecycle {

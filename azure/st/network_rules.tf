@@ -22,7 +22,7 @@ module "private_endpoint" {
   source     = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=release-azure"
   depends_on = [azurerm_storage_account.default]
 
-  region               = var.az_region
+  az_region            = var.az_region
   resource_group_name  = var.resource_group_name
   target_resource      = azurerm_storage_account.default[each.value.st_key].id
   subnet_id            = each.value.subnet_id
