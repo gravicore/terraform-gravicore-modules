@@ -89,15 +89,14 @@ resource "azurerm_role_assignment" "terraform_rbac" {
 }
 
 resource "azurerm_key_vault_certificate_contacts" "default" {
+  for_each = { for contact in var.certificate_contacts : contact.name => contact }
+
   key_vault_id = one(azurerm_key_vault.default.*.id)
 
-  dynamic "contact" {
-    for_each = var.certificate_contacts == null ? [] : var.certificate_contacts
-    content {
-      name  = contact.value.name
-      email = contact.value.email
-      phone = contact.value.phone
-    }
+  contact {
+    name  = each.value.name
+    email = each.value.email
+    phone = each.value.phone
   }
 
   depends_on = [

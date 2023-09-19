@@ -328,10 +328,6 @@ locals {
 
 }
 
-output "combined_access_policies" {
-  value = local.combined_access_policies
-}
-
 
 locals {
   rbac_access_policies = [
