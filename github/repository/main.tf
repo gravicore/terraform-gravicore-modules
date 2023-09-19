@@ -38,7 +38,7 @@ resource "github_repository_environment" "default" {
   for_each = var.create && var.environments != {} ? var.environments : {}
 
   environment = each.key
-  repository  = github_repository.default[0].name
+  repository  = concat(github_repository.default.*.name, [""])[0]
   deployment_branch_policy {
     protected_branches     = lookup(each.value, "protected_branches", true)
     custom_branch_policies = lookup(each.value, "custom_branch_policies", false)
