@@ -262,8 +262,8 @@ variable "ignore_vulnerability_alerts_during_read" {
 }
 
 variable "environments" {
-  type = map(any)
-  default = {}
+  type        = map(any)
+  default     = {}
   description = "(Optional) - The list of environments to be created on the repository"
 }
 
