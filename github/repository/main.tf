@@ -47,7 +47,7 @@ resource "github_repository_environment" "default" {
 
 resource "github_branch_protection" "default" {
   count                           = var.create && var.enable_main_branch_protection ? 1 : 0
-  repository_id                   = github_repository.default[0].name
+  repository_id                   = concat(github_repository.default.*.name, [""])[0]
   pattern                         = var.pattern
   enforce_admins                  = var.enforce_admins
   require_signed_commits          = var.require_signed_commits
