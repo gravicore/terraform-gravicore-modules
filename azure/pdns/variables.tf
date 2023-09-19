@@ -146,7 +146,7 @@ variable "private_dns_zones" {
   description = "List of Private DNS Zones."
   type = map(object({
     name                        = string
-    is_not_private_link_service = optional(true, false)
+    is_not_private_link_service = optional(bool, true)
     vnets_ids                   = list(string)
     vm_autoregistration_enabled = optional(bool, false)
   }))
