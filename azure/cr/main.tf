@@ -124,10 +124,10 @@ resource "azurerm_container_registry" "default" {
 
 module "pep" {
   count  = var.create ? 1 : 0
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=0.43.0"
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=release-azure"
   # Module standard variables
   terraform_module    = var.terraform_module
-  az_region              = var.az_region
+  az_region           = var.az_region
   resource_group_name = var.resource_group_name
   create              = var.create
   # Platform Standard Variables
