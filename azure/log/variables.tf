@@ -145,9 +145,8 @@ locals {
 
 variable "log_analytics_workspaces" {
   type = map(object({
-    prefix                             = string
     security_center_workspace          = optional(bool)
-    contributors                       = optional(list(string))
+    contributors                       = optional(list(string), [])
     allow_resource_only_permissions    = optional(bool)
     local_authentication_disabled      = optional(bool)
     sku                                = optional(string)
