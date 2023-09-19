@@ -261,7 +261,7 @@ variable "private_endpoints" {
     name                 = optional(string, "pep")
     subnet_id            = string
     private_dns_zone_ids = optional(list(string), null)
-    subresource_name     = optional(string, "vault")
+    subresource_name     = optional(string, "cr")
     resource_group_name  = string
   }))
   default = []
