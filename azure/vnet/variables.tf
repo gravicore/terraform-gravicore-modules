@@ -207,6 +207,7 @@ variable "subnets" {
       load_balancer_rules_enabled       = optional(bool, false)
       nfs_inbound_allowed               = optional(bool, false)
       cifs_inbound_allowed              = optional(bool, false)
+      psql_inbound_allowed              = optional(bool, false)
       allowed_http_sources              = optional(list(string))
       allowed_https_sources             = optional(list(string))
       allowed_ssh_sources               = optional(list(string))
@@ -214,6 +215,7 @@ variable "subnets" {
       allowed_winrm_sources             = optional(list(string))
       allowed_nfs_sources               = optional(list(string))
       allowed_cifs_sources              = optional(list(string))
+      allowed_psql_sources              = optional(list(string))      
       custom_security_rules = optional(list(object({
         name                         = optional(string)
         access                       = optional(string)

@@ -32,6 +32,7 @@ resource "azurerm_network_security_group" "default" {
     }
   }
 
+
   dynamic "security_rule" {
     for_each = toset(each.value.nsg_rules.deny_all_inbound == true ? ["enabled"] : [])
 
@@ -193,6 +194,23 @@ resource "azurerm_network_security_group" "default" {
       destination_address_prefix = "VirtualNetwork"
     }
   }
+
+  dynamic "security_rule" {
+    for_each = toset(each.value.nsg_rules.psql_inbound_allowed == true ? ["enabled"] : [])
+
+    content {
+      name                       = "psql-inbound"
+      priority                   = 4009
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "5432"
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_psql_sources), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_psql_sources), null)
+      destination_address_prefix = "VirtualNetwork"
+    }
+  }  
 }
 
 
