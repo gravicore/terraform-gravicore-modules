@@ -9,6 +9,35 @@ module "azure_region" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# Admin credentials creation if AD authentication disabled
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+resource "random_password" "default" {
+  count            = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? 1 : 0
+  length           = 32
+  special          = true
+  override_special = "_%@"
+}
+
+resource "azurerm_key_vault_secret" "postgresql_admin_password" {
+  depends_on = [
+    azurerm_postgresql_flexible_server.default,
+    random_password.default,
+  ]
+  count        = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? 1 : 0
+  name         = azurerm_postgresql_flexible_server.default.administrator_login
+  value        = azurerm_postgresql_flexible_server.default.administrator_password
+  key_vault_id = var.key_vault_id
+  lifecycle {
+    ignore_changes = [
+      value,
+    ]
+  }
+}
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 # Postgresql Server resource
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -23,8 +52,9 @@ resource "azurerm_postgresql_flexible_server" "default" {
   storage_mb          = var.storage_mb
   zone                = var.zone
 
-  administrator_login    = var.administrator_login
-  administrator_password = var.administrator_password
+  administrator_login    = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? var.administrator_login : null
+  administrator_password = var.administrator_password != null ? var.administrator_password : (var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled && var.administrator_password == null ? random_password.default[0].result : null)
+
 
   dynamic "high_availability" {
     for_each = var.standby_zone != null && var.tier != "Burstable" ? toset([var.standby_zone]) : toset([])

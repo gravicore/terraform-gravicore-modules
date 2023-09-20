@@ -189,12 +189,21 @@ variable "standby_zone" {
 variable "administrator_login" {
   description = "PostgreSQL administrator login."
   type        = string
+  default     = "postgresqladmin"
 }
 
 variable "administrator_password" {
   description = "PostgreSQL administrator password. Strong Password : https://docs.microsoft.com/en-us/sql/relational-databases/security/strong-passwords?view=sql-server-2017."
   type        = string
+  default     = null
 }
+
+variable "key_vault_id" {
+  description = "ID of the key vault to store the PostgreSQL administrator password."
+  type        = string
+  default     = null
+}
+
 
 variable "backup_retention_days" {
   description = "Backup retention days for the PostgreSQL Flexible Server (Between 7 and 35 days)."
