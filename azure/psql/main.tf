@@ -26,8 +26,8 @@ resource "azurerm_key_vault_secret" "postgresql_admin_password" {
     random_password.default,
   ]
   count        = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? 1 : 0
-  name         = azurerm_postgresql_flexible_server.default.administrator_login
-  value        = azurerm_postgresql_flexible_server.default.administrator_password
+  name         = azurerm_postgresql_flexible_server.default[0].administrator_login
+  value        = azurerm_postgresql_flexible_server.default[0].administrator_password
   key_vault_id = var.key_vault_id
   lifecycle {
     ignore_changes = [
@@ -118,7 +118,7 @@ resource "azurerm_postgresql_flexible_server" "default" {
   lifecycle {
     precondition {
       condition     = var.private_dns_zone_id != null && var.delegated_subnet_id != null && var.allowed_ip_addresses == null || var.private_dns_zone_id == null && var.delegated_subnet_id == null && var.allowed_ip_addresses != null
-      error_message = "var.private_dns_zone_id and var.delegated_subnet_id should either both be set or none of them."
+      error_message = "You must provide either a private_dns_zone_id and delegated_subnet_id or allowed_ip_addresses"
     }
     ignore_changes = [
       tags,

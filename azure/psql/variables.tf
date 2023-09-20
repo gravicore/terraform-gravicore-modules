@@ -250,7 +250,11 @@ variable "auto_grow_enabled" {
 variable "authentication" {
   description = "Map of authentication configuration."
   type        = map(bool)
-  default     = null
+  default     = {
+    active_directory_auth_enabled = false
+    password_auth_enabled         = true
+    tenant_id                     = null
+  }
 }
 
 variable "customer_managed_key" {
