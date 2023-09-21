@@ -48,7 +48,7 @@ resource "azurerm_key_vault" "default" {
   dynamic "network_acls" {
     for_each = var.network_acls == null ? [] : [var.network_acls]
     content {
-      bypass                     = try(network_acls.value.bypass, "None")
+      bypass                     = try(network_acls.value.bypass, "AzureServices")
       default_action             = try(network_acls.value.default_action, "Deny")
       ip_rules                   = distinct(compact(network_acls.value.ip_rules))
       virtual_network_subnet_ids = distinct(compact(network_acls.value.virtual_network_subnet_ids))
