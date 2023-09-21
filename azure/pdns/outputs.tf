@@ -1,10 +1,10 @@
-output "private_dns_zone_ids" {
-  description = "Map of Private DNS Zone IDs."
-  value       = { for key, resource in azurerm_private_dns_zone.default : key => resource.id }
-}
+output "private_dns_zone_info" {
+  description = "Map of Private DNS Zone names to their IDs."
 
-output "private_dns_zone_names" {
-  description = "Map of Private DNS Zone IDs."
-  value       = { for key, resource in azurerm_private_dns_zone.default : key => resource.name }
+  value = {
+    for key, resource in azurerm_private_dns_zone.default : key => {
+      name = resource.name
+      id   = resource.id
+    }
+  }
 }
-
