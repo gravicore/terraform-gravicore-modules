@@ -161,6 +161,18 @@ variable "internal_load_balancer_enabled" {
   default     = true
   description = "(Optional) Should the Container Environment operate in Internal Load Balancing Mode? Defaults to `false`. Changing this forces a new resource to be created."
 }
+
+variable "dns_a_record" {
+  type = object({
+    name                = string
+    zone_name           = string
+    resource_group_name = string
+    ttl                 = optional(number, 300)
+  })
+  default     = null
+  description = "(Optional) The DNS record to create for the Container Apps Control Plane. Changing this forces a new resource to be created."
+}
+
 variable "dapr_component" {
   type = map(object({
     component_type = string
