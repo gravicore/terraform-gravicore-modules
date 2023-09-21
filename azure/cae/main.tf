@@ -81,5 +81,5 @@ resource "azurerm_dns_a_record" "default" {
   zone_name           = var.dns_a_record.zone_name
   resource_group_name = var.dns_a_record.resource_group_name
   ttl                 = var.dns_a_record.ttl
-  target_resource_id  = azurerm_container_app_environment.default[0].static_ip_address
+  records             = azurerm_container_app_environment.default[0].static_ip_address
 }
