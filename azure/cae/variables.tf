@@ -146,19 +146,19 @@ locals {
 
 variable "log_analytics_workspace_id" {
   type        = string
-  default     = ""
+  default     = null
   description = "(Optional) The ID for the Log Analytics Workspace to link this Container Apps Managed Environment to. Changing this forces a new resource to be created."
 }
 
 variable "infrastructure_subnet_id" {
   type        = string
-  default     = ""
+  default     = null
   description = "(Optional) The existing Subnet to use for the Container Apps Control Plane. Changing this forces a new resource to be created."
 }
 
 variable "internal_load_balancer_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "(Optional) Should the Container Environment operate in Internal Load Balancing Mode? Defaults to `false`. Changing this forces a new resource to be created."
 }
 variable "dapr_component" {
