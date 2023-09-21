@@ -177,13 +177,13 @@ variable "postgresql_version" {
 variable "zone" {
   description = "Specify availability-zone for PostgreSQL Flexible main Server."
   type        = number
-  default     = 1
+  default     = null
 }
 
 variable "standby_zone" {
   description = "Specify availability-zone to enable high_availability and create standby PostgreSQL Flexible Server. (Null to disable high-availability)"
   type        = number
-  default     = 2
+  default     = null
 }
 
 variable "administrator_login" {
