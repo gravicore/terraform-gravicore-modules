@@ -183,8 +183,8 @@ variable "network_acls" {
   type = object({
     bypass                     = string
     default_action             = string
-    ip_rules                   = list(string)
-    virtual_network_subnet_ids = list(string)
+    ip_rules                   = optional(list(string), [])
+    virtual_network_subnet_ids = optional(list(string), [])
   })
   default = null
 }
