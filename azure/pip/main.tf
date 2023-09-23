@@ -16,9 +16,9 @@ module "azure_region" {
 resource "azurerm_public_ip" "default" {
   for_each                = { for ip in var.public_ip : ip.prefix => ip }
   location                = var.az_region
-  name                    = join(var.delimiter, [local.module_prefix, each.key, var.name])
+  name                    = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, each.key, var.name])
   resource_group_name     = var.resource_group_name
-  allocation_method       = try(each.value.allocation_method, "Static")
+  allocation_method       = each.value.allocation_method
   zones                   = each.value.zones
   ddos_protection_mode    = each.value.ddos_protection_mode
   ddos_protection_plan_id = each.value.ddos_protection_plan_id
