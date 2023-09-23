@@ -142,16 +142,14 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "sku_capacity" {
-  description = "The Capacity of the SKU to use for this Application Gateway - which must be between 1 and 10, optional if autoscale_configuration is set"
-  type        = number
-  default     = 2
-}
 
 variable "sku" {
-  description = "The Name of the SKU to use for this Application Gateway. Possible values are Standard_v2 and WAF_v2."
-  type        = string
-  default     = "WAF_v2"
+  description = "The sku pricing model of v1 and v2"
+  type = object({
+    name     = string
+    tier     = string
+    capacity = optional(number)
+  })
 }
 
 variable "zones" {
@@ -178,16 +176,13 @@ variable "public_ip_address_id" {
   default     = ""
 }
 
-variable "frontend_port_settings" {
+variable "frontend_port" {
   description = "Frontend port settings. Each port setting contains the name and the port for the frontend port."
   type = list(object({
     name = string
     port = number
   }))
 }
-
-
-### Security
 
 variable "ssl_policy" {
   description = "Application Gateway SSL configuration. The list of available policies can be found here: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway#disabled_protocols"
@@ -218,7 +213,7 @@ variable "ssl_profile" {
   default = null
 }
 
-variable "trusted_root_certificate_configs" {
+variable "trusted_root_certificate" {
   description = "List of trusted root certificates. `file_path` is checked first, using `data` (base64 cert content) if null. This parameter is required if you are not using a trusted certificate authority (eg. selfsigned certificate)."
   type = list(object({
     name                = string
@@ -229,7 +224,6 @@ variable "trusted_root_certificate_configs" {
   default = []
 }
 
-
 variable "custom_error_configuration" {
   description = "List of objects with global level custom error configurations."
   type = list(object({
@@ -239,7 +233,7 @@ variable "custom_error_configuration" {
   default = []
 }
 
-variable "ssl_certificates_configs" {
+variable "ssl_certificates" {
   description = "List of objects with SSL certificates configurations."
   type = list(object({
     name                = string
@@ -251,7 +245,13 @@ variable "ssl_certificates_configs" {
 }
 
 variable "authentication_certificates_configs" {
-  description = "List of objects with authentication certificates configurations."
+  description = <<EOD
+List of objects with authentication certificates configurations.
+The path to a base-64 encoded certificate is expected in the 'data' attribute:
+```
+data = filebase64("./file_path")
+```
+EOD
   type = list(object({
     name = string
     data = string
@@ -260,7 +260,13 @@ variable "authentication_certificates_configs" {
 }
 
 variable "trusted_client_certificates_configs" {
-  description = "List of objects with trusted client certificates configurations."
+  description = <<EOD
+List of objects with trusted client certificates configurations.
+The path to a base-64 encoded certificate is expected in the 'data' attribute:
+```
+data = filebase64("./file_path")
+```
+EOD
   type = list(object({
     name = string
     data = string
@@ -274,45 +280,14 @@ variable "force_firewall_policy_association" {
   default     = false
 }
 
-variable "waf_configuration" {
-  description = "WAF configuration object (only available with WAF_v2 SKU) with following attribute."
-  type = object({
-    enabled                  = optional(bool, true)
-    file_upload_limit_mb     = optional(number, 100)
-    firewall_mode            = optional(string, "Prevention")
-    max_request_body_size_kb = optional(number, 128)
-    request_body_check       = optional(bool, true)
-    rule_set_type            = optional(string, "OWASP")
-    rule_set_version         = optional(string, 3.1)
-    disabled_rule_group = optional(list(object({
-      rule_group_name = string
-      rules           = optional(list(string))
-    })), [])
-    exclusion = optional(list(object({
-      match_variable          = string
-      selector                = optional(string)
-      selector_match_operator = optional(string)
-    })), [])
-  })
-  default = {}
-}
-
-### IDENTITY
 variable "user_assigned_identity_id" {
   description = "User assigned identity id assigned to this resource."
   type        = string
   default     = null
 }
 
-### APPGW PRIVATE
-variable "private" {
-  description = "Boolean variable to create a private Application Gateway. When `true`, the default http listener will listen on private IP instead of the public IP."
-  type        = bool
-  default     = false
-}
-
-variable "private_ip" {
-  description = "Private IP for Application Gateway. Used when variable `private` is set to `true`."
+variable "private_ip_address" {
+  description = "Private IP for Application Gateway"
   type        = string
   default     = null
 }
@@ -321,10 +296,9 @@ variable "subnet_id" {
   description = "Custom subnet ID for attaching the Application Gateway."
   type        = string
   nullable    = false
-  default     = ""
+  default     = null
 }
 
-### Autoscaling
 variable "autoscaling_parameters" {
   description = "Map containing autoscaling parameters. Must contain at least min_capacity"
   type = object({
@@ -334,125 +308,195 @@ variable "autoscaling_parameters" {
   default = null
 }
 
-### Backend, listener, probe, and rule variable
+variable "backend_address_pools" {
+  description = "List of backend address pools"
+  type = list(object({
+    name         = string
+    fqdns        = optional(list(string))
+    ip_addresses = optional(list(string))
+  }))
+}
 
-variable "backends" {
-  default = {}
-  type = map(object({
-    prefix = string
-
-    backend_pool = object({
-      fqdns        = optional(list(string))
-      ip_addresses = optional(list(string))
-    })
-
-    backend_http_settings = object({
-      port                                = number
-      protocol                            = string
-      cookie_based_affinity               = string
-      request_timeout                     = optional(number)
-      host_name                           = optional(string)
-      pick_host_name_from_backend_address = optional(bool)
-      path                                = optional(string)
-      probe_name                          = optional(string)
-      authentication_certificate = optional(object({
-        name = string
-        id   = string
-      }))
-      connection_draining = optional(object({
-        enabled = bool
-        timeout = number
-      }))
-    })
-
-    http_listeners = object({
-      frontend_port_name   = string
-      protocol             = string
-      host_name            = optional(string)
-      host_names           = optional(list(string))
-      require_sni          = optional(bool)
-      ssl_certificate_name = optional(string)
-      firewall_policy_id   = optional(string)
-      ssl_profile_name     = optional(string)
-      custom_error_configurations = optional(list(object({
-        custom_error_page_url = string
-        status_code           = string
-      })))
-    })
-
-
-    redirect_configuration = optional(object({
-      redirect_type        = string
-      target_url           = string
-      target_listener_name = optional(string)
-      include_path         = optional(bool)
-      include_query_string = optional(bool)
+variable "backend_http_settings" {
+  description = "List of backend HTTP settings."
+  type = list(object({
+    name                                = string
+    cookie_based_affinity               = string
+    affinity_cookie_name                = optional(string)
+    path                                = optional(string)
+    enable_https                        = bool
+    probe_name                          = optional(string)
+    request_timeout                     = number
+    host_name                           = optional(string)
+    pick_host_name_from_backend_address = optional(bool)
+    authentication_certificate = optional(object({
+      name = string
     }))
-
-
-    rewrite_rule_set = optional(object({
-      rewrite_rules = optional(list(object({
-        name          = string
-        rule_sequence = string
-
-        conditions = optional(list(object({
-          variable    = string
-          pattern     = string
-          ignore_case = optional(bool, false)
-          negate      = optional(bool, false)
-        })), [])
-
-        response_header_configurations = optional(list(object({
-          header_name  = string
-          header_value = string
-        })), [])
-
-        request_header_configurations = optional(list(object({
-          header_name  = string
-          header_value = string
-        })), [])
-
-        url_reroute = optional(object({
-          path         = optional(string)
-          query_string = optional(string)
-          components   = optional(string)
-          reroute      = optional(bool)
-        }))
-      })))
-    }))
-
-
-    url_path_map = optional(object({
-      use_redirect = bool
-      path_rules = list(object({
-        name  = string
-        paths = list(string)
-      }))
-    }))
-
-    request_routing_rule = object({
-      rule_type    = string
-      use_redirect = bool
-      priority     = optional(number)
-      use_rewrite  = bool
-    })
-
-
-    probes = optional(object({
-      interval                                  = number
-      path                                      = string
-      protocol                                  = string
-      timeout                                   = number
-      unhealthy_threshold                       = number
-      minimum_servers                           = optional(number)
-      host                                      = optional(string)
-      port                                      = optional(number)
-      pick_host_name_from_backend_http_settings = optional(bool)
-      match = optional(object({
-        body        = optional(string)
-        status_code = optional(list(string))
-      }))
+    trusted_root_certificate_names = optional(list(string))
+    connection_draining = optional(object({
+      enable_connection_draining = bool
+      drain_timeout_sec          = number
     }))
   }))
 }
 
+variable "http_listeners" {
+  description = "List of HTTP/HTTPS listeners. SSL Certificate name is required"
+  type = list(object({
+    name                 = string
+    host_name            = optional(string)
+    host_names           = optional(list(string))
+    require_sni          = optional(bool)
+    ssl_certificate_name = optional(string)
+    firewall_policy_id   = optional(string)
+    ssl_profile_name     = optional(string)
+    frontend_port_name   = string
+    public_listener      = optional(bool, true)
+    custom_error_configuration = optional(list(object({
+      status_code           = string
+      custom_error_page_url = string
+    })))
+  }))
+}
+
+variable "redirect_configuration" {
+  description = "List of objects with redirect configurations."
+  type = list(object({
+    name = string
+
+    redirect_type        = optional(string, "Permanent")
+    target_listener_name = optional(string)
+    target_url           = optional(string)
+
+    include_path         = optional(bool, true)
+    include_query_string = optional(bool, true)
+  }))
+  default = []
+}
+
+
+variable "ssl_policy" {
+  description = "Application Gateway SSL configuration. The list of available policies can be found here: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway#disabled_protocols"
+  type = object({
+    disabled_protocols   = optional(list(string), [])
+    policy_type          = optional(string, "Predefined")
+    policy_name          = optional(string, "AppGwSslPolicy20170401S")
+    cipher_suites        = optional(list(string), [])
+    min_protocol_version = optional(string, "TLSv1_2")
+  })
+  default = null
+}
+
+variable "ssl_profile" {
+  description = "Application Gateway SSL profile. Default profile is used when this variable is set to null. https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway#name"
+  type = object({
+    name                             = string
+    trusted_client_certificate_names = optional(list(string), [])
+    verify_client_cert_issuer_dn     = optional(bool, false)
+    ssl_policy = optional(object({
+      disabled_protocols   = optional(list(string), [])
+      policy_type          = optional(string, "Predefined")
+      policy_name          = optional(string, "AppGwSslPolicy20170401S")
+      cipher_suites        = optional(list(string), [])
+      min_protocol_version = optional(string, "TLSv1_2")
+    }))
+  })
+  default = null
+}
+
+variable "rewrite_rule_set" {
+  description = "List of rewrite rule set objects with rewrite rules."
+  type = list(object({
+    name = string
+    rewrite_rules = list(object({
+      name          = string
+      rule_sequence = string
+
+      conditions = optional(list(object({
+        variable    = string
+        pattern     = string
+        ignore_case = optional(bool, false)
+        negate      = optional(bool, false)
+      })), [])
+
+      response_header_configurations = optional(list(object({
+        header_name  = string
+        header_value = string
+      })), [])
+
+      request_header_configurations = optional(list(object({
+        header_name  = string
+        header_value = string
+      })), [])
+
+      url_reroute = optional(object({
+        path         = optional(string)
+        query_string = optional(string)
+        components   = optional(string)
+        reroute      = optional(bool)
+      }))
+    }))
+  }))
+  default = []
+}
+
+variable "url_path_map" {
+  description = "List of objects with URL path map configurations."
+  type = list(object({
+    name                                = string
+    default_backend_address_pool_name   = optional(string)
+    default_redirect_configuration_name = optional(string)
+    default_backend_http_settings_name  = optional(string)
+    default_rewrite_rule_set_name       = optional(string)
+
+    path_rules = list(object({
+      name                        = string
+      backend_address_pool_name   = optional(string)
+      backend_http_settings_name  = optional(string)
+      rewrite_rule_set_name       = optional(string)
+      paths                       = optional(list(string), [])
+      redirect_configuration_name = optional(string)
+      firewall_policy_id          = optional(string)
+    }))
+  }))
+  default = []
+}
+
+variable "request_routing_rule" {
+  description = "List of objects with request routing rules configurations. With AzureRM v3+ provider, `priority` attribute becomes mandatory."
+  type = list(object({
+    name                        = string
+    rule_type                   = optional(string, "Basic")
+    http_listener_name          = optional(string)
+    backend_address_pool_name   = optional(string)
+    backend_http_settings_name  = optional(string)
+    url_path_map_name           = optional(string)
+    redirect_configuration_name = optional(string)
+    rewrite_rule_set_name       = optional(string)
+    priority                    = optional(number)
+  }))
+  default = []
+}
+
+variable "health_probes" {
+  description = "List of objects with probes configurations."
+  type = list(object({
+    name     = string
+    host     = optional(string)
+    port     = optional(number, null)
+    interval = optional(number, 30)
+    path     = optional(string, "/")
+    protocol = optional(string, "Https")
+    timeout  = optional(number, 30)
+
+    unhealthy_threshold                       = optional(number, 3)
+    pick_host_name_from_backend_http_settings = optional(bool, false)
+    minimum_servers                           = optional(number, 0)
+
+    match = optional(object({
+      body        = optional(string, "")
+      status_code = optional(list(string), ["200-399"])
+    }), {})
+  }))
+  default = []
+}
