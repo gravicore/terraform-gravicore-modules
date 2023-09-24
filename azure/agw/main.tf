@@ -25,27 +25,27 @@ resource "azurerm_application_gateway" "default" {
   firewall_policy_id                = var.firewall_policy_id != null ? var.firewall_policy_id : null
   enable_http2                      = var.enable_http2
   tags                              = local.tags
-  
+
   sku {
     name     = var.sku.name
     tier     = var.sku.tier
     capacity = var.autoscale_configuration == null ? var.sku.capacity : null
   }
-  
+
   dynamic "frontend_ip_configuration" {
     for_each = var.private_ip_address != null ? [var.private_ip_address] : []
     content {
-      name                          = "private-ipc"
+      name                          = local.resource_suffixes.private_ip_address
       private_ip_address            = var.private_ip_address
       private_ip_address_allocation = "Static"
       subnet_id                     = var.subnet_id
     }
   }
-  
+
   dynamic "frontend_ip_configuration" {
     for_each = var.public_ip_address_id != null ? [var.public_ip_address_id] : []
     content {
-      name                 = "public-ipc"
+      name                 = local.resource_suffixes.public_ip_address
       public_ip_address_id = var.public_ip_address_id
     }
   }
@@ -53,20 +53,21 @@ resource "azurerm_application_gateway" "default" {
   dynamic "frontend_port" {
     for_each = var.frontend_port
     content {
-      name = frontend_port.value.name
+      name = join(var.delimiter, [frontend_port.value.name, local.resource_suffixes.frontend_port])
       port = frontend_port.value.port
+
     }
   }
 
   gateway_ip_configuration {
-    name      = "gateway-ipc"
+    name      = local.resource_suffixes.gateway_ipc
     subnet_id = var.subnet_id
   }
 
   dynamic "backend_address_pool" {
     for_each = var.backend_address_pools
     content {
-      name         = backend_address_pool.value.name
+      name         = join(var.delimiter, [backend_address_pool.value.name, local.resource_suffixes.backend_address_pool])
       fqdns        = backend_address_pool.value.fqdns
       ip_addresses = backend_address_pool.value.ip_addresses
     }
@@ -75,12 +76,12 @@ resource "azurerm_application_gateway" "default" {
   dynamic "backend_http_settings" {
     for_each = var.backend_http_settings
     content {
-      name                                = join(var.delimiter, [backend_http_settings.name, "http-settings"])
+      name                                = join(var.delimiter, [backend_http_settings.name, local.resource_suffixes.backend_http_settings])
       cookie_based_affinity               = backend_http_settings.value.cookie_based_affinity
       affinity_cookie_name                = backend_http_settings.value.affinity_cookie_name
       path                                = backend_http_settings.value.path
       port                                = backend_http_settings.value.enable_https ? 443 : 80
-      probe_name                          = backend_http_settings.value.probe_name
+      probe_name                          = join(var.delimiter, [backend_http_settings.value.probe_name, local.resource_suffixes.probe])
       protocol                            = backend_http_settings.value.enable_https ? "Https" : "Http"
       request_timeout                     = backend_http_settings.value.request_timeout
       host_name                           = backend_http_settings.value.pick_host_name_from_backend_address == false ? backend_http_settings.value.host_name : null
@@ -108,9 +109,9 @@ resource "azurerm_application_gateway" "default" {
   dynamic "http_listener" {
     for_each = var.http_listeners
     content {
-      name                           = join(var.delimiter, [http_listener.value.name, "http-listener"])
-      frontend_ip_configuration_name = var.public_listener ? "public-ipc" : "private-ipc"
-      frontend_port_name             = http_listener.value.frontend_port_name
+      name                           = join(var.delimiter, [http_listener.value.name, local.resource_suffixes.http_listener])
+      frontend_ip_configuration_name = http_listener.value.public_listener ? local.resource_suffixes.public_ip_address : local.resource_suffixes.private_ip_address
+      frontend_port_name             = join(var.delimiter, [http_listener.value.frontend_port_name, local.resource_suffixes.frontend_port])
       host_name                      = http_listener.value.host_name
       host_names                     = http_listener.value.host_names
       protocol                       = http_listener.value.ssl_certificate_name == null ? "Http" : "Https"
@@ -132,9 +133,9 @@ resource "azurerm_application_gateway" "default" {
   dynamic "redirect_configuration" {
     for_each = var.redirect_configuration
     content {
-      name                 = redirect_configuration.value.name
+      name                 = join(var.delimiter, [rredirect_configuration.value.name, local.resource_suffixes.redirect])
       redirect_type        = redirect_configuration.value.redirect_type
-      target_listener_name = redirect_configuration.value.target_listener_name
+      target_listener_name = join(var.delimiter, [redirect_configuration.value.target_listener_name, local.resource_suffixes.http_listener])
       target_url           = redirect_configuration.value.target_url
       include_path         = redirect_configuration.value.include_path
       include_query_string = redirect_configuration.value.include_query_string
@@ -144,13 +145,13 @@ resource "azurerm_application_gateway" "default" {
   dynamic "rewrite_rule_set" {
     for_each = var.appgw_rewrite_rule_set
     content {
-      name = join(var.delimiter, [rewrite_rule_set.value.name, "rewrite-rule-set"])
+      name = join(var.delimiter, [rewrite_rule_set.value.name, local.resource_suffixes.rewrite_rule_set])
 
       dynamic "rewrite_rule" {
         for_each = rewrite_rule_set.value.rewrite_rules
         iterator = rule
         content {
-          name          = rule.value.name
+          name          = join(var.delimiter, [rule.value.name, local.resource_suffixes.rewrite_rule])
           rule_sequence = rule.value.rule_sequence
 
           dynamic "condition" {
@@ -199,21 +200,29 @@ resource "azurerm_application_gateway" "default" {
   dynamic "url_path_map" {
     for_each = var.url_path_map
     content {
-      name                                = url_path_map.value.name
-      default_redirect_configuration_name = url_path_map.value.default_backend_address_pool_name == null && url_path_map.value.default_backend_http_settings_name == null ? url_path_map.value.default_redirect_configuration_name : null
-      default_backend_address_pool_name   = url_path_map.value.default_redirect_configuration_name == null ? url_path_map.value.default_backend_address_pool_name : null
-      default_backend_http_settings_name  = url_path_map.value.default_redirect_configuration_name == null ? coalesce(url_path_map.value.default_backend_http_settings_name, url_path_map.value.default_backend_address_pool_name) : null
-      default_rewrite_rule_set_name       = url_path_map.value.default_rewrite_rule_set_name
+      name                                = join(var.delimiter, [url_path_map.value.name, local.resource_suffixes.url_path_map])
+      default_redirect_configuration_name = url_path_map.value.default_backend_address_pool_name == null && url_path_map.value.default_backend_http_settings_name == null ? join(var.delimiter, [url_path_map.value.default_redirect_configuration_name, local.resource_suffixes.redirect]) : null
+      default_backend_address_pool_name   = url_path_map.value.default_redirect_configuration_name == null ? join(var.delimiter, [url_path_map.value.default_backend_address_pool_name, local.resource_suffixes.backend_address_pool]) : null
+      default_backend_http_settings_name  = url_path_map.value.default_redirect_configuration_name == null ? (
+        url_path_map.value.default_backend_http_settings_name != null ? (
+          join(var.delimiter, [url_path_map.value.default_backend_http_settings_name, local.resource_suffixes.backend_http_settings])
+          ) : (
+          url_path_map.value.default_backend_address_pool_name != null ? (
+            join(var.delimiter, [url_path_map.value.default_backend_address_pool_name, local.resource_suffixes.backend_address_pool])
+          ) : null
+        )
+      ) : null
+      default_rewrite_rule_set_name = join(var.delimiter, [url_path_map.value.default_rewrite_rule_set_name, local.resource_suffixes.rewrite_rule_set])
 
       dynamic "path_rule" {
         for_each = url_path_map.value.path_rules
         content {
-          name                        = path_rule.value.name
-          backend_address_pool_name   = coalesce(path_rule.value.backend_address_pool_name, path_rule.value.name)
-          backend_http_settings_name  = coalesce(path_rule.value.backend_http_settings_name, path_rule.value.name)
-          rewrite_rule_set_name       = path_rule.value.rewrite_rule_set_name
+          name                        = join(var.delimiter, [path_rule.value.name, local.resource_suffixes.path_rule])
+          backend_address_pool_name   = join(var.delimiter, [path_rule.value.backend_address_pool_name, local.resource_suffixes.backend_address_pool])
+          backend_http_settings_name  = join(var.delimiter, [path_rule.value.backend_http_settings_name, local.resource_suffixes.backend_http_settings])
+          rewrite_rule_set_name       = join(var.delimiter, [path_rule.value.rewrite_rule_set_name, local.resource_suffixes.rewrite_rule_set])
+          redirect_configuration_name = join(var.delimiter, [path_rule.value.redirect_configuration_name, local.resource_suffixes.redirect])
           paths                       = path_rule.value.paths
-          redirect_configuration_name = path_rule.value.redirect_configuration_name
           firewall_policy_id          = path_rule.value.firewall_policy_id
         }
       }
@@ -222,25 +231,24 @@ resource "azurerm_application_gateway" "default" {
 
   dynamic "request_routing_rule" {
     for_each = var.request_routing_rule
-    iterator = routing
     content {
-      name      = routing.value.name
-      rule_type = routing.value.rule_type
+      name      = join(var.delimiter, [request_routing_rule.value.name, local.resource_suffixes.request_routing_rule])
+      rule_type = request_routing_rule.value.rule_type
 
-      http_listener_name          = coalesce(routing.value.http_listener_name, routing.value.name)
-      backend_address_pool_name   = routing.value.backend_address_pool_name
-      backend_http_settings_name  = routing.value.backend_http_settings_name
-      url_path_map_name           = routing.value.url_path_map_name
-      redirect_configuration_name = routing.value.redirect_configuration_name
-      rewrite_rule_set_name       = routing.value.rewrite_rule_set_name
-      priority                    = coalesce(routing.value.priority, routing.key + 1)
+      http_listener_name          = join(var.delimiter, [request_routing_rule.value.http_listener_name, local.resource_suffixes.http_listener])
+      backend_address_pool_name   = join(var.delimiter, [request_routing_rule.value.backend_address_pool_name, local.resource_suffixes.backend_address_pool])
+      backend_http_settings_name  = join(var.delimiter, [request_routing_rule.value.backend_http_settings_name, local.resource_suffixes.backend_http_settings])
+      url_path_map_name           = join(var.delimiter, [request_routing_rule.value.url_path_map_name, local.resource_suffixes.url_path_map])
+      redirect_configuration_name = join(var.delimiter, [request_routing_rule.value.redirect_configuration_name, local.resource_suffixes.redirect])
+      rewrite_rule_set_name       = join(var.delimiter, [request_routing_rule.value.rewrite_rule_set_name, local.resource_suffixes.rewrite_rule])
+      priority                    = coalesce(request_routing_rule.value.priority, routing.key + 1)
     }
   }
 
   dynamic "probe" {
     for_each = var.health_probes
     content {
-      name = join(var.delimiter, [probe.value.name, "probe"])
+      name = join(var.delimiter, [probe.value.name, local.resource_suffixes.probe])
 
       host     = probe.value.host
       port     = probe.value.port
@@ -260,7 +268,7 @@ resource "azurerm_application_gateway" "default" {
     }
   }
 
-  
+
   dynamic "identity" {
     for_each = var.user_assigned_identity_id != null ? ["enabled"] : []
     content {
@@ -268,7 +276,7 @@ resource "azurerm_application_gateway" "default" {
       identity_ids = [var.user_assigned_identity_id]
     }
   }
-  
+
   dynamic "ssl_policy" {
     for_each = var.ssl_policy == null ? [] : ["enabled"]
     content {
@@ -279,7 +287,7 @@ resource "azurerm_application_gateway" "default" {
       min_protocol_version = var.ssl_policy.policy_type == "Custom" ? var.ssl_policy.min_protocol_version : null
     }
   }
-  
+
   dynamic "ssl_profile" {
     for_each = var.ssl_profile == null ? [] : ["enabled"]
 
@@ -308,7 +316,7 @@ resource "azurerm_application_gateway" "default" {
       data = authentication_certificate.value.data
     }
   }
-  
+
   dynamic "trusted_client_certificate" {
     for_each = var.trusted_client_certificates_configs
 
@@ -326,7 +334,7 @@ resource "azurerm_application_gateway" "default" {
     }
   }
 
-  
+
   dynamic "custom_error_configuration" {
     for_each = var.custom_error_configuration
     content {
@@ -344,7 +352,7 @@ resource "azurerm_application_gateway" "default" {
       key_vault_secret_id = ssl_certificate.value.key_vault_secret_id
     }
   }
-  
+
   dynamic "trusted_root_certificate" {
     for_each = var.trusted_root_certificate
     content {

@@ -155,7 +155,7 @@ variable "sku" {
 variable "zones" {
   description = "A collection of availability zones to spread the Application Gateway over. This option is only supported for v2 SKUs"
   type        = list(number)
-  default     = [1, 2, 3]
+  default     = null
 }
 
 variable "firewall_policy_id" {
@@ -182,35 +182,6 @@ variable "frontend_port" {
     name = string
     port = number
   }))
-}
-
-variable "ssl_policy" {
-  description = "Application Gateway SSL configuration. The list of available policies can be found here: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway#disabled_protocols"
-  type = object({
-    disabled_protocols   = optional(list(string), [])
-    policy_type          = optional(string, "Predefined")
-    policy_name          = optional(string, "AppGwSslPolicy20170401S")
-    cipher_suites        = optional(list(string), [])
-    min_protocol_version = optional(string, "TLSv1_2")
-  })
-  default = null
-}
-
-variable "ssl_profile" {
-  description = "Application Gateway SSL profile. Default profile is used when this variable is set to null. https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/application_gateway#name"
-  type = list(object({
-    name                             = optional(string)
-    trusted_client_certificate_names = optional(list(string), [])
-    verify_client_cert_issuer_dn     = optional(bool, false)
-    ssl_policy = optional(object({
-      disabled_protocols   = optional(list(string), [])
-      policy_type          = optional(string, "Predefined")
-      policy_name          = optional(string, "AppGwSslPolicy20170401S")
-      cipher_suites        = optional(list(string), [])
-      min_protocol_version = optional(string, "TLSv1_2")
-    }))
-  }))
-  default = null
 }
 
 variable "trusted_root_certificate" {
@@ -296,7 +267,6 @@ variable "subnet_id" {
   description = "Custom subnet ID for attaching the Application Gateway."
   type        = string
   nullable    = false
-  default     = null
 }
 
 variable "autoscaling_parameters" {
@@ -326,7 +296,7 @@ variable "backend_http_settings" {
     path                                = optional(string)
     enable_https                        = bool
     probe_name                          = optional(string)
-    request_timeout                     = number
+    request_timeout                     = optional(number)
     host_name                           = optional(string)
     pick_host_name_from_backend_address = optional(bool)
     authentication_certificate = optional(object({
@@ -467,8 +437,8 @@ variable "request_routing_rule" {
   type = list(object({
     name                        = string
     rule_type                   = optional(string, "Basic")
-    http_listener_name          = optional(string)
-    backend_address_pool_name   = optional(string)
+    http_listener_name          = string
+    backend_address_pool_name   = string
     backend_http_settings_name  = optional(string)
     url_path_map_name           = optional(string)
     redirect_configuration_name = optional(string)
@@ -499,4 +469,24 @@ variable "health_probes" {
     }), {})
   }))
   default = []
+}
+
+
+locals  {
+  resource_suffixes = {
+    probe                 = "probe"
+    http_listener         = "http-listener"
+    url_path_map          = "url-path-map"
+    path_rule             = "path-rule"
+    request_routing_rule  = "request-routing-rule"
+    backend_address_pool  = "backend-address-pool"
+    backend_http_settings = "http-settings"
+    public_ip_address     = "public-ipc"
+    private_ip_address    = "private-ipc"
+    frontend_port         = "frontend-port"
+    rewrite_rule_set      = "rewrite-rule-set"
+    rewrite_rule          = "rewrite-rule"
+    redirect              = "redirect"
+    gateway_ipc           = "gateway-ipc"
+  }
 }
