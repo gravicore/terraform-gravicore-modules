@@ -32,6 +32,14 @@ resource "azurerm_application_gateway" "default" {
     capacity = var.autoscale_configuration == null ? var.sku.capacity : null
   }
 
+  dynamic "autoscale_configuration" {
+    for_each = var.autoscale_configuration != null ? ["enabled"] : []
+    content {
+      min_capacity = var.autoscale_configuration.min_capacity
+      max_capacity = var.autoscale_configuration.max_capacity
+    }
+  }
+
   dynamic "frontend_ip_configuration" {
     for_each = var.private_ip_address != null ? [var.private_ip_address] : []
     content {
@@ -76,12 +84,12 @@ resource "azurerm_application_gateway" "default" {
   dynamic "backend_http_settings" {
     for_each = var.backend_http_settings
     content {
-      name                                = join(var.delimiter, [backend_http_settings.name, local.resource_suffixes.backend_http_settings])
+      name                                = join(var.delimiter, [backend_http_settings.value.name, local.resource_suffixes.backend_http_settings])
       cookie_based_affinity               = backend_http_settings.value.cookie_based_affinity
       affinity_cookie_name                = backend_http_settings.value.affinity_cookie_name
       path                                = backend_http_settings.value.path
       port                                = backend_http_settings.value.enable_https ? 443 : 80
-      probe_name                          = join(var.delimiter, [backend_http_settings.value.probe_name, local.resource_suffixes.probe])
+      probe_name                          = backend_http_settings.value.probe_name != null ? join(var.delimiter, [backend_http_settings.value.probe_name, local.resource_suffixes.probe]) : null
       protocol                            = backend_http_settings.value.enable_https ? "Https" : "Http"
       request_timeout                     = backend_http_settings.value.request_timeout
       host_name                           = backend_http_settings.value.pick_host_name_from_backend_address == false ? backend_http_settings.value.host_name : null
@@ -135,7 +143,7 @@ resource "azurerm_application_gateway" "default" {
     content {
       name                 = join(var.delimiter, [rredirect_configuration.value.name, local.resource_suffixes.redirect])
       redirect_type        = redirect_configuration.value.redirect_type
-      target_listener_name = join(var.delimiter, [redirect_configuration.value.target_listener_name, local.resource_suffixes.http_listener])
+      target_listener_name = redirect_configuration.value.target_listener_name != null ? join(var.delimiter, [redirect_configuration.value.target_listener_name, local.resource_suffixes.http_listener]) : null
       target_url           = redirect_configuration.value.target_url
       include_path         = redirect_configuration.value.include_path
       include_query_string = redirect_configuration.value.include_query_string
@@ -143,7 +151,7 @@ resource "azurerm_application_gateway" "default" {
   }
 
   dynamic "rewrite_rule_set" {
-    for_each = var.appgw_rewrite_rule_set
+    for_each = var.rewrite_rule_set
     content {
       name = join(var.delimiter, [rewrite_rule_set.value.name, local.resource_suffixes.rewrite_rule_set])
 
@@ -203,7 +211,7 @@ resource "azurerm_application_gateway" "default" {
       name                                = join(var.delimiter, [url_path_map.value.name, local.resource_suffixes.url_path_map])
       default_redirect_configuration_name = url_path_map.value.default_backend_address_pool_name == null && url_path_map.value.default_backend_http_settings_name == null ? join(var.delimiter, [url_path_map.value.default_redirect_configuration_name, local.resource_suffixes.redirect]) : null
       default_backend_address_pool_name   = url_path_map.value.default_redirect_configuration_name == null ? join(var.delimiter, [url_path_map.value.default_backend_address_pool_name, local.resource_suffixes.backend_address_pool]) : null
-      default_backend_http_settings_name  = url_path_map.value.default_redirect_configuration_name == null ? (
+      default_backend_http_settings_name = url_path_map.value.default_redirect_configuration_name == null ? (
         url_path_map.value.default_backend_http_settings_name != null ? (
           join(var.delimiter, [url_path_map.value.default_backend_http_settings_name, local.resource_suffixes.backend_http_settings])
           ) : (
@@ -212,16 +220,16 @@ resource "azurerm_application_gateway" "default" {
           ) : null
         )
       ) : null
-      default_rewrite_rule_set_name = join(var.delimiter, [url_path_map.value.default_rewrite_rule_set_name, local.resource_suffixes.rewrite_rule_set])
+      default_rewrite_rule_set_name = url_path_map.value.default_rewrite_rule_set_name != null ? join(var.delimiter, [url_path_map.value.default_rewrite_rule_set_name, local.resource_suffixes.rewrite_rule_set]) : null
 
       dynamic "path_rule" {
         for_each = url_path_map.value.path_rules
         content {
           name                        = join(var.delimiter, [path_rule.value.name, local.resource_suffixes.path_rule])
-          backend_address_pool_name   = join(var.delimiter, [path_rule.value.backend_address_pool_name, local.resource_suffixes.backend_address_pool])
-          backend_http_settings_name  = join(var.delimiter, [path_rule.value.backend_http_settings_name, local.resource_suffixes.backend_http_settings])
-          rewrite_rule_set_name       = join(var.delimiter, [path_rule.value.rewrite_rule_set_name, local.resource_suffixes.rewrite_rule_set])
-          redirect_configuration_name = join(var.delimiter, [path_rule.value.redirect_configuration_name, local.resource_suffixes.redirect])
+          backend_address_pool_name   = path_rule.value.backend_address_pool_name != null ? join(var.delimiter, [path_rule.value.backend_address_pool_name, local.resource_suffixes.backend_address_pool]) : null
+          backend_http_settings_name  = path_rule.value.backend_http_settings_name != null ? join(var.delimiter, [path_rule.value.backend_http_settings_name, local.resource_suffixes.backend_http_settings]) : null
+          rewrite_rule_set_name       = path_rule.value.rewrite_rule_set_name != null ? join(var.delimiter, [path_rule.value.rewrite_rule_set_name, local.resource_suffixes.rewrite_rule_set]) : null
+          redirect_configuration_name = path_rule.value.redirect_configuration_name != null ? join(var.delimiter, [path_rule.value.redirect_configuration_name, local.resource_suffixes.redirect]) : null
           paths                       = path_rule.value.paths
           firewall_policy_id          = path_rule.value.firewall_policy_id
         }
@@ -237,11 +245,11 @@ resource "azurerm_application_gateway" "default" {
 
       http_listener_name          = join(var.delimiter, [request_routing_rule.value.http_listener_name, local.resource_suffixes.http_listener])
       backend_address_pool_name   = join(var.delimiter, [request_routing_rule.value.backend_address_pool_name, local.resource_suffixes.backend_address_pool])
-      backend_http_settings_name  = join(var.delimiter, [request_routing_rule.value.backend_http_settings_name, local.resource_suffixes.backend_http_settings])
-      url_path_map_name           = join(var.delimiter, [request_routing_rule.value.url_path_map_name, local.resource_suffixes.url_path_map])
-      redirect_configuration_name = join(var.delimiter, [request_routing_rule.value.redirect_configuration_name, local.resource_suffixes.redirect])
-      rewrite_rule_set_name       = join(var.delimiter, [request_routing_rule.value.rewrite_rule_set_name, local.resource_suffixes.rewrite_rule])
-      priority                    = coalesce(request_routing_rule.value.priority, routing.key + 1)
+      backend_http_settings_name  = request_routing_rule.value.backend_http_settings_name != null ? join(var.delimiter, [request_routing_rule.value.backend_http_settings_name, local.resource_suffixes.backend_http_settings]) : null
+      url_path_map_name           = request_routing_rule.value.url_path_map_name != null ? join(var.delimiter, [request_routing_rule.value.url_path_map_name, local.resource_suffixes.url_path_map]) : null
+      redirect_configuration_name = request_routing_rule.value.redirect_configuration_name != null ? join(var.delimiter, [request_routing_rule.value.redirect_configuration_name, local.resource_suffixes.redirect]) : null
+      rewrite_rule_set_name       = request_routing_rule.value.rewrite_rule_set_name != null ? join(var.delimiter, [request_routing_rule.value.rewrite_rule_set_name, local.resource_suffixes.rewrite_rule]) : null
+      priority                    = coalesce(request_routing_rule.value.priority, request_routing_rule.key + 1)
     }
   }
 
@@ -323,14 +331,6 @@ resource "azurerm_application_gateway" "default" {
     content {
       name = trusted_client_certificate.value.name
       data = trusted_client_certificate.value.data
-    }
-  }
-
-  dynamic "autoscale_configuration" {
-    for_each = var.autoscaling_parameters != null ? ["enabled"] : []
-    content {
-      min_capacity = var.autoscaling_parameters.min_capacity
-      max_capacity = var.autoscaling_parameters.max_capacity
     }
   }
 

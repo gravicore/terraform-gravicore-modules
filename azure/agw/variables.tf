@@ -269,7 +269,7 @@ variable "subnet_id" {
   nullable    = false
 }
 
-variable "autoscaling_parameters" {
+variable "autoscale_configuration" {
   description = "Map containing autoscaling parameters. Must contain at least min_capacity"
   type = object({
     min_capacity = number
