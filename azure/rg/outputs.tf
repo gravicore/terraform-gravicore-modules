@@ -5,3 +5,4 @@ output "resource_group_id" {
 output "resource_group_name" {
   value = concat(azurerm_resource_group.default.*.name, [""])[0]
 }
+

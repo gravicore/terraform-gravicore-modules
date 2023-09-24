@@ -210,7 +210,7 @@ resource "azurerm_network_security_group" "default" {
       source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_psql_sources), null)
       destination_address_prefix = "VirtualNetwork"
     }
-  }  
+  }
 }
 
 

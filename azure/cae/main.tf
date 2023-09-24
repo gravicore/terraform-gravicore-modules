@@ -83,3 +83,4 @@ resource "azurerm_private_dns_a_record" "default" {
   ttl                 = var.dns_a_record.ttl
   records             = [azurerm_container_app_environment.default[0].static_ip_address]
 }
+

@@ -132,14 +132,14 @@ resource "azurerm_postgresql_flexible_server" "default" {
 
 
 resource "azurerm_postgresql_flexible_server_configuration" "default" {
-  count     = var.flexible_server_configuration != null ? length(var.flexible_server_configuration) : 0  
+  count     = var.flexible_server_configuration != null ? length(var.flexible_server_configuration) : 0
   name      = var.flexible_server_configuration[count.index].name
   server_id = azurerm_postgresql_flexible_server.default[0].id
   value     = var.flexible_server_configuration[count.index].value
 }
 
 resource "azurerm_postgresql_flexible_server_firewall_rule" "default" {
-  count = local.should_create_firewall_rule ? length(var.allowed_ip_addresses) : 0
+  count            = local.should_create_firewall_rule ? length(var.allowed_ip_addresses) : 0
   name             = join(var.delimiter, [replace(replace(element(var.allowed_ip_addresses, count.index), ".", "-"), "/", "-"), "psqlfw"])
   server_id        = azurerm_postgresql_flexible_server.default[0].id
   start_ip_address = cidrhost(var.allowed_ip_addresses[count.index], 0)

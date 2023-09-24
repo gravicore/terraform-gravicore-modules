@@ -472,7 +472,7 @@ variable "health_probes" {
 }
 
 
-locals  {
+locals {
   resource_suffixes = {
     probe                 = "probe"
     http_listener         = "http-listener"

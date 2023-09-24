@@ -215,7 +215,7 @@ variable "subnets" {
       allowed_winrm_sources             = optional(list(string))
       allowed_nfs_sources               = optional(list(string))
       allowed_cifs_sources              = optional(list(string))
-      allowed_psql_sources              = optional(list(string))      
+      allowed_psql_sources              = optional(list(string))
       custom_security_rules = optional(list(object({
         name                         = optional(string)
         access                       = optional(string)

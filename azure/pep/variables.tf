@@ -211,4 +211,4 @@ locals {
   private_dns_zone_group_name     = local.is_not_private_link_service ? join(var.delimiter, [local.module_prefix, var.az_region, "pdnszg"]) : null
   private_service_connection_name = join(var.delimiter, [local.module_prefix, var.az_region, "psc"])
 }
- 
+
