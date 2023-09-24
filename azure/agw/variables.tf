@@ -318,7 +318,6 @@ variable "http_listeners" {
     host_names           = optional(list(string))
     require_sni          = optional(bool)
     ssl_certificate_name = optional(string)
-    firewall_policy_id   = optional(string)
     ssl_profile_name     = optional(string)
     frontend_port_name   = string
     public_listener      = optional(bool, true)
@@ -426,7 +425,6 @@ variable "url_path_map" {
       rewrite_rule_set_name       = optional(string)
       paths                       = optional(list(string), [])
       redirect_configuration_name = optional(string)
-      firewall_policy_id          = optional(string)
     }))
   }))
   default = []
@@ -490,3 +488,4 @@ locals {
     gateway_ipc           = "gateway-ipc"
   }
 }
+

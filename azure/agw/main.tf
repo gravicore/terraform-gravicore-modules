@@ -21,7 +21,7 @@ resource "azurerm_application_gateway" "default" {
   resource_group_name               = var.resource_group_name
   name                              = local.module_prefix
   zones                             = var.zones
-  force_firewall_policy_association = var.force_firewall_policy_association
+  force_firewall_policy_association = var.firewall_policy_id != null ? var.force_firewall_policy_association : "false"
   firewall_policy_id                = var.firewall_policy_id != null ? var.firewall_policy_id : null
   enable_http2                      = var.enable_http2
   tags                              = local.tags
@@ -125,7 +125,7 @@ resource "azurerm_application_gateway" "default" {
       protocol                       = http_listener.value.ssl_certificate_name == null ? "Http" : "Https"
       require_sni                    = http_listener.value.ssl_certificate_name != null ? http_listener.value.require_sni : null
       ssl_certificate_name           = http_listener.value.ssl_certificate_name
-      firewall_policy_id             = http_listener.value.firewall_policy_id
+      firewall_policy_id             = var.firewall_policy_id != null ? var.firewall_policy_id : null
       ssl_profile_name               = http_listener.value.ssl_profile_name
 
       dynamic "custom_error_configuration" {
@@ -231,7 +231,7 @@ resource "azurerm_application_gateway" "default" {
           rewrite_rule_set_name       = path_rule.value.rewrite_rule_set_name != null ? join(var.delimiter, [path_rule.value.rewrite_rule_set_name, local.resource_suffixes.rewrite_rule_set]) : null
           redirect_configuration_name = path_rule.value.redirect_configuration_name != null ? join(var.delimiter, [path_rule.value.redirect_configuration_name, local.resource_suffixes.redirect]) : null
           paths                       = path_rule.value.paths
-          firewall_policy_id          = path_rule.value.firewall_policy_id
+          firewall_policy_id          = var.firewall_policy_id != null ? var.firewall_policy_id : null
         }
       }
     }
