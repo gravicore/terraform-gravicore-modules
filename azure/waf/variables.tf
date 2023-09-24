@@ -192,7 +192,7 @@ variable "policy_settings" {
 variable "managed_rules" {
   description = "Managed rules for WAF"
   type = object({
-    exclusions = optional(list(object({
+    exclusion = optional(list(object({
       match_variable          = string
       selector                = string
       selector_match_operator = string
@@ -204,7 +204,7 @@ variable "managed_rules" {
           excluded_rules  = optional(list(string))
         })))
       })))
-    })))
+    })), [])
     managed_rule_sets = list(object({
       type    = optional(string)
       version = string
@@ -218,6 +218,5 @@ variable "managed_rules" {
       })))
     }))
   })
-  default = null
 }
 
