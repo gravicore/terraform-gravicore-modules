@@ -138,3 +138,4 @@ module "private_endpoint" {
   stage                = var.stage
   application          = var.application
 }
+

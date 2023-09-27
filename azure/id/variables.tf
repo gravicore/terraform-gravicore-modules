@@ -150,14 +150,14 @@ variable "identity" {
   type = map(object({
     prefix = string
     role_assignments = optional(list(object({
-      scope              = string
-      role_definition_id = string
+      scope                = string
+      role_definition_name = string
     })))
     kv_access_policies = optional(list(object({
       key_vault_id            = string
-      key_permissions         = list(string)
-      secret_permissions      = list(string)
-      certificate_permissions = list(string)
+      key_permissions         = optional(list(string))
+      secret_permissions      = optional(list(string))
+      certificate_permissions = optional(list(string))
     })))
   }))
   default = {}
@@ -168,22 +168,23 @@ locals {
   flattened_role_assignments = flatten([
     for k, v in var.identity : [
       for role_assignment in v.role_assignments : {
-        index              = k
-        scope              = role_assignment.scope
-        role_definition_id = role_assignment.role_definition_id
+        identity_key         = k
+        scope                = role_assignment.scope
+        role_definition_name = role_assignment.role_definition_name
       }
-    ] if v.role_assignments != null
+    ] if v.role_assignments != null && v.role_assignments != []
   ])
 
   flattened_kv_access_policies = flatten([
     for k, v in var.identity : [
       for policy in v.kv_access_policies : {
-        index              = k
-        key_vault_id       = policy.key_vault_id
-        key_permissions    = policy.key_permissions
-        secret_permissions = policy.secret_permissions
+        identity_key            = k
+        key_vault_id            = policy.key_vault_id
+        key_permissions         = policy.key_permissions
+        secret_permissions      = policy.secret_permissions
+        certificate_permissions = policy.certificate_permissions
       }
-    ] if v.kv_access_policies != null
+    ] if v.kv_access_policies != null && v.kv_access_policies != []
   ])
 }
 

@@ -7,3 +7,4 @@ output "public_ip_mappings" {
     }
   }
 }
+

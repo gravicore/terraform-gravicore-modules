@@ -9,3 +9,4 @@ output "subnets_ids" {
 output "subnet_nsg_details" {
   value = { for key, resource in azurerm_network_security_group.default : key => resource.id }
 }
+
