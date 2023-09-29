@@ -57,3 +57,9 @@ variable "acme" {
     server_url = "https://acme-v02.api.letsencrypt.org/directory"
   }
 }
+
+variable "container_app_environment_id" {
+  type        = string
+  description = "The ID of the Container App Environment to store the certificate in."
+}
+
