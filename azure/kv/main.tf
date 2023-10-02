@@ -125,3 +125,14 @@ resource "azurerm_role_assignment" "key_vault_rbac" {
   principal_id         = coalesce(local.rbac_combined_access_policies[count.index].object_id, "")
 }
 
+module "diagostic" {
+  create                = var.create && var.logs_destinations_ids != [] ? true : false
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=release-azure"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = concat(azurerm_key_vault.default.*.id, [""])[0]
+  logs_destinations_ids = var.logs_destinations_ids
+} 

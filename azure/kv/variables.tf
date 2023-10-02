@@ -216,6 +216,11 @@ variable "certificate_contacts" {
   default = []
 }
 
+variable "logs_destinations_ids" {
+  type        = list(string)
+  default     = []
+  description = "List of destination resources IDs for logs diagnostic destination."
+}
 
 variable "access_policies" {
   description = "List of access policies for the Key Vault."
