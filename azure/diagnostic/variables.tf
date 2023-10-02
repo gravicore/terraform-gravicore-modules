@@ -21,6 +21,11 @@ variable "az_region" {
   description = "The Azure region to deploy module into"
 }
 
+variable "create" {
+  type        = bool
+  default     = true
+  description = "Set to false to prevent the module from creating any resources"
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables

@@ -23,7 +23,7 @@ data "azurerm_monitor_diagnostic_categories" "default" {
 
 
 resource "azurerm_monitor_diagnostic_setting" "default" {
-  count =  var.create ? 1 : 0
+  count              = var.create ? 1 : 0
   name               = join(var.delimiter, [element(split("/", var.target_resource_id), length(split("/", var.target_resource_id)) - 1), var.name])
   target_resource_id = var.target_resource_id
 
