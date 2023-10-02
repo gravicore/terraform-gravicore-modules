@@ -1,6 +1,6 @@
 output "diagnostic_ids" {
   description = "Export diagnostic ID"
-  value       = concat(aazurerm_monitor_diagnostic_setting.default[*].id, [""])[0]
+  value       = concat(azurerm_monitor_diagnostic_setting.default[*].id, [""])[0]
 }
 
 output "all_available_categories" {
