@@ -191,7 +191,6 @@ variable "container_apps" {
           interval_seconds                 = optional(number, 10)
           path                             = optional(string)
           port                             = number
-          termination_grace_period_seconds = optional(number, 30)
           timeout                          = optional(number, 1)
           transport                        = string
         }))
@@ -221,7 +220,6 @@ variable "container_apps" {
           port                             = number
           timeout                          = optional(number)
           transport                        = string
-          termination_grace_period_seconds = optional(number, 30)
         }))
         volume_mounts = optional(object({
           name = string
@@ -229,7 +227,7 @@ variable "container_apps" {
         }))
       }))
       max_replicas    = optional(number)
-      min_replicas    = optional(number)
+      min_replicas    = optional(number, 1)
       revision_suffix = optional(string)
       azure_queue_scale_rule = optional(object({
         name         = string
@@ -303,6 +301,11 @@ variable "container_apps" {
       identity             = optional(string)
     })))
 
+    secret = optional(list(object({
+      name               = string
+      secret_name_in_kv  = string
+    })), [])
+
   }))
 }
 
@@ -311,19 +314,15 @@ variable "key_vault_id" {
   description = "(Required) The ID of the Key Vault to use for secrets. Changing this forces a new resource to be created."  
 }
 
-
-variable "container_app_secrets" {
-  type = map(list(object({
-    name  = string
-    value = string
-  })))
-  default     = {}
-  description = "(Optional) The secrets of the container apps. The key of the map should be aligned with the corresponding container app."
-  nullable    = false
-  sensitive   = true
-}
-
 locals {
-  container_app_secrets = { for k, v in var.container_app_secrets : k => { for i in v : i.name => i.value } }
+  secret_keys = merge([
+    for app_name, app in var.container_apps : {
+      for secret in app.secret : "${app_name}-${secret.name}" => {
+        app_name = app_name
+        secret_name = secret.name
+        secret_name_in_kv = secret.secret_name_in_kv
+      }
+    }
+  ]...)
 }
 

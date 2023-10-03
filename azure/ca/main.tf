@@ -18,7 +18,7 @@ module "azure_region" {
 resource "azurerm_container_app" "default" {
   for_each                     = var.create && length(var.container_apps) > 0 ? var.container_apps : {}
   container_app_environment_id = var.container_app_environment_id
-  name                         = join(var.delimiter, [local.module_prefix, "${each.value.name}"])
+  name                         = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, each.value.name, var.name])
   revision_mode                = each.value.revision_mode
   resource_group_name          = var.resource_group_name
   tags                         = local.tags
@@ -29,81 +29,81 @@ resource "azurerm_container_app" "default" {
     min_replicas    = each.value.template.min_replicas
     revision_suffix = each.value.template.revision_suffix
 
-    dynamic "azure_queue_scale_rule" {
-      for_each = each.value.azure_queue_scale_rule == null ? [] : each.value.azure_queue_scale_rule
+    # dynamic "azure_queue_scale_rule" {
+    #   for_each = each.value.azure_queue_scale_rule == null ? [] : [each.value.azure_queue_scale_rule]
 
-      content {
-        name         = azure_queue_scale_rule.value.name
-        queue_name   = azure_queue_scale_rule.value.queue_name
-        queue_length = azure_queue_scale_rule.value.queue_length
+    #   content {
+    #     name         = azure_queue_scale_rule.value.name
+    #     queue_name   = azure_queue_scale_rule.value.queue_name
+    #     queue_length = azure_queue_scale_rule.value.queue_length
 
-        dynamic "authentication" {
-          for_each = azure_queue_scale_rule.value.authentication
+    #     dynamic "authentication" {
+    #       for_each = azure_queue_scale_rule.value.authentication
 
-          content {
-            secret_name       = authentication.value.secret_name
-            trigger_parameter = authentication.value.trigger_parameter
-          }
-        }
-      }
-    }
-
-
-    dynamic "custom_scale_rule" {
-      for_each = each.value.custom_scale_rule == null ? [] : each.value.custom_scale_rule
-
-      content {
-        name             = custom_scale_rule.value.name
-        custom_rule_type = custom_scale_rule.value.custom_rule_type
-        metadata         = custom_scale_rule.value.metadata
-
-        dynamic "authentication" {
-          for_each = custom_scale_rule.value.authentication == null ? [] : custom_scale_rule.value.authentication
-
-          content {
-            secret_name       = authentication.value.secret_name
-            trigger_parameter = authentication.value.trigger_parameter
-          }
-        }
-      }
-    }
+    #       content {
+    #         secret_name       = authentication.value.secret_name
+    #         trigger_parameter = authentication.value.trigger_parameter
+    #       }
+    #     }
+    #   }
+    # }
 
 
-    dynamic "http_scale_rule" {
-      for_each = each.value.http_scale_rule == null ? [] : each.value.http_scale_rule
+    # dynamic "custom_scale_rule" {
+    #   for_each = each.value.custom_scale_rule == null ? [] : [each.value.custom_scale_rule]
 
-      content {
-        name                = http_scale_rule.value.name
-        concurrent_requests = http_scale_rule.value.concurrent_requests
+    #   content {
+    #     name             = custom_scale_rule.value.name
+    #     custom_rule_type = custom_scale_rule.value.custom_rule_type
+    #     metadata         = custom_scale_rule.value.metadata
 
-        dynamic "authentication" {
-          for_each = http_scale_rule.value.authentication == null ? [] : http_scale_rule.value.authentication
+    #     dynamic "authentication" {
+    #       for_each = custom_scale_rule.value.authentication == null ? [] : custom_scale_rule.value.authentication
 
-          content {
-            secret_name       = authentication.value.secret_name
-            trigger_parameter = authentication.value.trigger_parameter
-          }
-        }
-      }
-    }
+    #       content {
+    #         secret_name       = authentication.value.secret_name
+    #         trigger_parameter = authentication.value.trigger_parameter
+    #       }
+    #     }
+    #   }
+    # }
 
-    dynamic "tcp_scale_rule" {
-      for_each = each.value.tcp_scale_rule == null ? [] : each.value.tcp_scale_rule
 
-      content {
-        name                = tcp_scale_rule.value.name
-        concurrent_requests = tcp_scale_rule.value.concurrent_requests
+    # dynamic "http_scale_rule" {
+    #   for_each = each.value.http_scale_rule == null ? [] : [each.value.http_scale_rule]
 
-        dynamic "authentication" {
-          for_each = tcp_scale_rule.value.authentication == null ? [] : tcp_scale_rule.value.authentication
+    #   content {
+    #     name                = http_scale_rule.value.name
+    #     concurrent_requests = http_scale_rule.value.concurrent_requests
 
-          content {
-            secret_name       = authentication.value.secret_name
-            trigger_parameter = authentication.value.trigger_parameter
-          }
-        }
-      }
-    }
+    #     dynamic "authentication" {
+    #       for_each = http_scale_rule.value.authentication == null ? [] : http_scale_rule.value.authentication
+
+    #       content {
+    #         secret_name       = authentication.value.secret_name
+    #         trigger_parameter = authentication.value.trigger_parameter
+    #       }
+    #     }
+    #   }
+    # }
+
+    # dynamic "tcp_scale_rule" {
+    #   for_each = each.value.tcp_scale_rule == null ? [] : [each.value.tcp_scale_rule]
+
+    #   content {
+    #     name                = tcp_scale_rule.value.name
+    #     concurrent_requests = tcp_scale_rule.value.concurrent_requests
+
+    #     dynamic "authentication" {
+    #       for_each = tcp_scale_rule.value.authentication == null ? [] : tcp_scale_rule.value.authentication
+
+    #       content {
+    #         secret_name       = authentication.value.secret_name
+    #         trigger_parameter = authentication.value.trigger_parameter
+    #       }
+    #     }
+    #   }
+    # }
 
 
     dynamic "container" {
@@ -136,7 +136,6 @@ resource "azurerm_container_app" "default" {
             host                             = liveness_probe.value.host
             initial_delay                    = liveness_probe.value.initial_delay
             interval_seconds                 = liveness_probe.value.interval_seconds
-            termination_grace_period_seconds = liveness_probe.value.termination_grace_period_seconds
             path                             = liveness_probe.value.path
             timeout                          = liveness_probe.value.timeout
 
@@ -184,7 +183,6 @@ resource "azurerm_container_app" "default" {
             interval_seconds                 = startup_probe.value.interval_seconds
             path                             = startup_probe.value.path
             timeout                          = startup_probe.value.timeout
-            termination_grace_period_seconds = startup_probe.value.termination_grace_period_seconds
 
             dynamic "header" {
               for_each = startup_probe.value.header == null ? [] : [startup_probe.value.header]
@@ -232,7 +230,7 @@ resource "azurerm_container_app" "default" {
     for_each = var.identity_ids
 
     content {
-      type         = "SystemAssigned"
+      type         = "UserAssigned"
       identity_ids = compact(var.identity_ids)
     }
   }
@@ -248,7 +246,7 @@ resource "azurerm_container_app" "default" {
       fqdn                       = ingress.value.fqdn
 
       dynamic "custom_domain" {
-        for_each = ingress.value.custom_domain == null ? [] : [ingress.value.custom_domain]
+        for_each = ingress.value.custom_domain == null ? [] : ingress.value.custom_domain
 
         content {
           name                     = custom_domain.value.name
@@ -281,23 +279,31 @@ resource "azurerm_container_app" "default" {
     }
   }
 
-  dynamic "secret" {
-    for_each = nonsensitive(toset([for pair in lookup(var.container_app_secrets, each.key, []) : pair.name]))
 
+  dynamic "secret" {
+    for_each = data.azurerm_key_vault_secret.secrets
+  
     content {
-      name  = secret.key
-      value = local.container_app_secrets[each.key][secret.key]
+      name  = local.secret_keys[secret.key]["secret_name"]
+      value = secret.value.value 
     }
   }
 
 }
 
+data "azurerm_key_vault_secret" "secrets" {
+  for_each = local.secret_keys
+
+  name         = each.value["secret_name_in_kv"]
+  key_vault_id = var.key_vault_id
+}
 
 
 locals {
   certificate_names = [for app in var.container_apps : length(app.ingress.custom_domain) > 0 ? [for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""] : []]
   flattened_certificates = compact(flatten(local.certificate_names))
 }
+
 
 data "azurerm_key_vault_secret" "certificates" {
   for_each      = toset(local.flattened_certificates)
