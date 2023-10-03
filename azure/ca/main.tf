@@ -316,5 +316,6 @@ resource "azurerm_container_app_environment_certificate" "default" {
   name                          = each.key
   container_app_environment_id  = var.container_app_environment_id
   certificate_blob_base64       = data.azurerm_key_vault_secret.certificates[each.key].value
+  certificate_password          = ""
   # certificate_password          = data.azurerm_key_vault_secret.passwords[each.key].value
 }

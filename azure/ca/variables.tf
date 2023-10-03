@@ -306,11 +306,17 @@ variable "container_apps" {
   }))
 }
 
+variable "key_vault_id" {
+  type        = string
+  description = "(Required) The ID of the Key Vault to use for secrets. Changing this forces a new resource to be created."  
+}
+
+
 variable "container_app_secrets" {
-  type = list(object({
+  type = map(list(object({
     name  = string
     value = string
-  }))
+  })))
   default     = {}
   description = "(Optional) The secrets of the container apps. The key of the map should be aligned with the corresponding container app."
   nullable    = false
