@@ -295,8 +295,8 @@ resource "azurerm_container_app" "default" {
 
 
 locals {
-  certificate_names = [for app in var.container_apps : app.ingress.custom_domain ? [for domain in app.ingress.custom_domain : domain.certificate_name] : []]
-  flattened_certificates = flatten(local.certificate_names)
+  certificate_names = [for app in var.container_apps : length(app.ingress.custom_domain) > 0 ? [for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""] : []]
+  flattened_certificates = compact(flatten(local.certificate_names))
 }
 
 data "azurerm_key_vault_secret" "certificates" {
