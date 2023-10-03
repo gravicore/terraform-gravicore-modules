@@ -150,6 +150,12 @@ variable "container_app_environment_id" {
   description = "(Required) The ID of the Container App Environment within which this Container App should exist. Changing this forces a new resource to be created."
 }
 
+variable "identity_ids" {
+  type        = list(string)
+  default     = []
+  description = "(Optional) The identities to assign to the container app."
+}
+
 variable "container_apps" {
   description = "The container apps to deploy."
   nullable    = false
@@ -160,17 +166,16 @@ variable "container_apps" {
 
   type = map(object({
     name          = string
-    tags          = optional(map(string))
     revision_mode = string
     template = object({
-      containers = set(object({
+      containers = list(object({
         name    = string
         image   = string
         args    = optional(list(string))
         command = optional(list(string))
         cpu     = string
         memory  = string
-        env = optional(set(object({
+        env = optional(list(object({
           name        = string
           secret_name = optional(string)
           value       = optional(string)
@@ -181,13 +186,14 @@ variable "container_apps" {
             name  = string
             value = string
           }))
-          host             = optional(string)
-          initial_delay    = optional(number, 1)
-          interval_seconds = optional(number, 10)
-          path             = optional(string)
-          port             = number
-          timeout          = optional(number, 1)
-          transport        = string
+          host                             = optional(string)
+          initial_delay                    = optional(number, 10)
+          interval_seconds                 = optional(number, 10)
+          path                             = optional(string)
+          port                             = number
+          termination_grace_period_seconds = optional(number, 30)
+          timeout                          = optional(number, 1)
+          transport                        = string
         }))
         readiness_probe = optional(object({
           failure_count_threshold = optional(number)
@@ -209,12 +215,13 @@ variable "container_apps" {
             name  = string
             value = string
           }))
-          host             = optional(string)
-          interval_seconds = optional(number, 10)
-          path             = optional(string)
-          port             = number
-          timeout          = optional(number)
-          transport        = string
+          host                             = optional(string)
+          interval_seconds                 = optional(number, 10)
+          path                             = optional(string)
+          port                             = number
+          timeout                          = optional(number)
+          transport                        = string
+          termination_grace_period_seconds = optional(number, 30)
         }))
         volume_mounts = optional(object({
           name = string
@@ -224,8 +231,41 @@ variable "container_apps" {
       max_replicas    = optional(number)
       min_replicas    = optional(number)
       revision_suffix = optional(string)
-
-      volume = optional(set(object({
+      azure_queue_scale_rule = optional(object({
+        name         = string
+        queue_name   = string
+        queue_length = number
+        authentication = object({
+          secret_name       = string
+          trigger_parameter = string
+        })
+      }))
+      custom_scale_rule = optional(object({
+        name             = string
+        custom_rule_type = string
+        metadata         = string
+        authentication = object({
+          secret_name       = string
+          trigger_parameter = string
+        })
+      }))
+      http_scale_rule = optional(object({
+        name                = string
+        concurrent_requests = number
+        authentication = object({
+          secret_name       = string
+          trigger_parameter = string
+        })
+      }))
+      tcp_scale_rule = optional(object({
+        name                = string
+        concurrent_requests = number
+        authentication = object({
+          secret_name       = string
+          trigger_parameter = string
+        })
+      }))
+      volume = optional(list(object({
         name         = string
         storage_name = optional(string)
         storage_type = optional(string)
@@ -236,17 +276,18 @@ variable "container_apps" {
       external_enabled           = optional(bool, false)
       target_port                = number
       transport                  = optional(string)
+      fqdn                       = optional(string)
+      custom_domain = optional(list(object({
+        name                     = string
+        certificate_name         = string
+        certificate_binding_type = optional(string)
+      })))
       traffic_weight = object({
         label           = optional(string)
         latest_revision = optional(string)
         revision_suffix = optional(string)
         percentage      = number
       })
-    }))
-
-    identity = optional(object({
-      type         = string
-      identity_ids = optional(list(string))
     }))
 
     dapr = optional(object({
@@ -266,10 +307,10 @@ variable "container_apps" {
 }
 
 variable "container_app_secrets" {
-  type = map(list(object({
+  type = list(object({
     name  = string
     value = string
-  })))
+  }))
   default     = {}
   description = "(Optional) The secrets of the container apps. The key of the map should be aligned with the corresponding container app."
   nullable    = false

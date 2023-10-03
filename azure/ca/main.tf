@@ -29,6 +29,83 @@ resource "azurerm_container_app" "default" {
     min_replicas    = each.value.template.min_replicas
     revision_suffix = each.value.template.revision_suffix
 
+    dynamic "azure_queue_scale_rule" {
+      for_each = each.value.azure_queue_scale_rule == null ? [] : each.value.azure_queue_scale_rule
+
+      content {
+        name         = azure_queue_scale_rule.value.name
+        queue_name   = azure_queue_scale_rule.value.queue_name
+        queue_length = azure_queue_scale_rule.value.queue_length
+
+        dynamic "authentication" {
+          for_each = azure_queue_scale_rule.value.authentication
+
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
+
+
+    dynamic "custom_scale_rule" {
+      for_each = each.value.custom_scale_rule == null ? [] : each.value.custom_scale_rule
+
+      content {
+        name             = custom_scale_rule.value.name
+        custom_rule_type = custom_scale_rule.value.custom_rule_type
+        metadata         = custom_scale_rule.value.metadata
+
+        dynamic "authentication" {
+          for_each = custom_scale_rule.value.authentication == null ? [] : custom_scale_rule.value.authentication
+
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
+
+
+    dynamic "http_scale_rule" {
+      for_each = each.value.http_scale_rule == null ? [] : each.value.http_scale_rule
+
+      content {
+        name                = http_scale_rule.value.name
+        concurrent_requests = http_scale_rule.value.concurrent_requests
+
+        dynamic "authentication" {
+          for_each = http_scale_rule.value.authentication == null ? [] : http_scale_rule.value.authentication
+
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
+
+    dynamic "tcp_scale_rule" {
+      for_each = each.value.tcp_scale_rule == null ? [] : each.value.tcp_scale_rule
+
+      content {
+        name                = tcp_scale_rule.value.name
+        concurrent_requests = tcp_scale_rule.value.concurrent_requests
+
+        dynamic "authentication" {
+          for_each = tcp_scale_rule.value.authentication == null ? [] : tcp_scale_rule.value.authentication
+
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
+
+
     dynamic "container" {
       for_each = tolist(each.value.template.containers)
 
@@ -53,14 +130,15 @@ resource "azurerm_container_app" "default" {
           for_each = container.value.liveness_probe == null ? [] : [container.value.liveness_probe]
 
           content {
-            port                    = liveness_probe.value.port
-            transport               = liveness_probe.value.transport
-            failure_count_threshold = liveness_probe.value.failure_count_threshold
-            host                    = liveness_probe.value.host
-            initial_delay           = liveness_probe.value.initial_delay
-            interval_seconds        = liveness_probe.value.interval_seconds
-            path                    = liveness_probe.value.path
-            timeout                 = liveness_probe.value.timeout
+            port                             = liveness_probe.value.port
+            transport                        = liveness_probe.value.transport
+            failure_count_threshold          = liveness_probe.value.failure_count_threshold
+            host                             = liveness_probe.value.host
+            initial_delay                    = liveness_probe.value.initial_delay
+            interval_seconds                 = liveness_probe.value.interval_seconds
+            termination_grace_period_seconds = liveness_probe.value.termination_grace_period_seconds
+            path                             = liveness_probe.value.path
+            timeout                          = liveness_probe.value.timeout
 
             dynamic "header" {
               for_each = liveness_probe.value.header == null ? [] : [liveness_probe.value.header]
@@ -99,13 +177,14 @@ resource "azurerm_container_app" "default" {
           for_each = container.value.startup_probe == null ? [] : [container.value.startup_probe]
 
           content {
-            port                    = startup_probe.value.port
-            transport               = startup_probe.value.transport
-            failure_count_threshold = startup_probe.value.failure_count_threshold
-            host                    = startup_probe.value.host
-            interval_seconds        = startup_probe.value.interval_seconds
-            path                    = startup_probe.value.path
-            timeout                 = startup_probe.value.timeout
+            port                             = startup_probe.value.port
+            transport                        = startup_probe.value.transport
+            failure_count_threshold          = startup_probe.value.failure_count_threshold
+            host                             = startup_probe.value.host
+            interval_seconds                 = startup_probe.value.interval_seconds
+            path                             = startup_probe.value.path
+            timeout                          = startup_probe.value.timeout
+            termination_grace_period_seconds = startup_probe.value.termination_grace_period_seconds
 
             dynamic "header" {
               for_each = startup_probe.value.header == null ? [] : [startup_probe.value.header]
@@ -150,11 +229,11 @@ resource "azurerm_container_app" "default" {
   }
 
   dynamic "identity" {
-    for_each = each.value.identity == null ? [] : [each.value.identity]
+    for_each = var.identity_ids
 
     content {
-      type         = identity.value.type
-      identity_ids = identity.value.identity_ids
+      type         = "SystemAssigned"
+      identity_ids = compact(var.identity_ids)
     }
   }
 
@@ -166,6 +245,17 @@ resource "azurerm_container_app" "default" {
       allow_insecure_connections = ingress.value.allow_insecure_connections
       external_enabled           = ingress.value.external_enabled
       transport                  = ingress.value.transport
+      fqdn                       = ingress.value.fqdn
+
+      dynamic "custom_domain" {
+        for_each = ingress.value.custom_domain == null ? [] : [ingress.value.custom_domain]
+
+        content {
+          name                     = custom_domain.value.name
+          certificate_id           = azurerm_container_app_environment_certificate.default[custom_domain.value.certificate_name].id
+          certificate_binding_type = custom_domain.value.certificate_binding_type
+        }
+      }
 
       dynamic "traffic_weight" {
         for_each = ingress.value.traffic_weight == null ? [] : [ingress.value.traffic_weight]
@@ -185,9 +275,9 @@ resource "azurerm_container_app" "default" {
 
     content {
       server               = registry.value.server
-      identity             = registry.value.identity
       password_secret_name = registry.value.password_secret_name
       username             = registry.value.username
+      identity             = registry.value.identity != null ? registry.value.identity : (length(var.identity_ids) == 0 ? null : compact(var.identity_ids)[0])
     }
   }
 
@@ -202,3 +292,29 @@ resource "azurerm_container_app" "default" {
 
 }
 
+
+
+locals {
+  certificate_names = [for app in var.container_apps : app.ingress.custom_domain ? [for domain in app.ingress.custom_domain : domain.certificate_name] : []]
+  flattened_certificates = flatten(local.certificate_names)
+}
+
+data "azurerm_key_vault_secret" "certificates" {
+  for_each      = toset(local.flattened_certificates)
+  name          = each.key
+  key_vault_id  = var.key_vault_id
+}
+
+# data "azurerm_key_vault_secret" "passwords" {
+#   for_each      = toset(local.flattened_certificates)
+#   name          = "${each.key}-password"
+#   key_vault_id  = var.key_vault_id
+# }
+
+resource "azurerm_container_app_environment_certificate" "default" {
+  for_each                      = toset(local.flattened_certificates)
+  name                          = each.key
+  container_app_environment_id  = var.container_app_environment_id
+  certificate_blob_base64       = data.azurerm_key_vault_secret.certificates[each.key].value
+  # certificate_password          = data.azurerm_key_vault_secret.passwords[each.key].value
+}
