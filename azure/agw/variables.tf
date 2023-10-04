@@ -210,9 +210,16 @@ variable "ssl_certificates" {
     name                = string
     data                = optional(string)
     password            = optional(string)
-    key_vault_secret_id = optional(string)
+    key_vault_certificate_name = optional(string)
+
   }))
   default = []
+}
+
+variable "key_vault_id" {
+  description = "ID of the Key Vault to use for storing SSL certificates."
+  type        = string
+  default     = null
 }
 
 variable "authentication_certificates_configs" {

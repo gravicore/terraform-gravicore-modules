@@ -347,11 +347,11 @@ resource "azurerm_application_gateway" "default" {
     for_each = var.ssl_certificates
     content {
       name                = ssl_certificate.value.name
-      data                = ssl_certificate.value.key_vault_secret_id == null ? filebase64(ssl_certificate.value.data) : null
-      password            = ssl_certificate.value.key_vault_secret_id == null ? ssl_certificate.value.password : null
-      key_vault_secret_id = ssl_certificate.value.key_vault_secret_id
+      data                = lookup(ssl_certificate.value, "key_vault_certificate_name", null) == null ? filebase64(ssl_certificate.value.data) : null
+      password            = lookup(ssl_certificate.value, "key_vault_certificate_name", null) == null ? ssl_certificate.value.password : null
+      key_vault_secret_id = lookup(data.azurerm_key_vault_secret.certificates, ssl_certificate.value.name, null) == null ? null : data.azurerm_key_vault_secret.certificates[ssl_certificate.value.name].id
     }
-  }
+  }  
 
   dynamic "trusted_root_certificate" {
     for_each = var.trusted_root_certificate
@@ -361,6 +361,16 @@ resource "azurerm_application_gateway" "default" {
       key_vault_secret_id = trusted_root_certificate.value.key_vault_secret_id
     }
   }
+}
 
+
+locals {
+  certificates_with_key_vault = { for cert in var.ssl_certificates : cert.name => cert if cert.key_vault_certificate_name != null }
+}
+
+data "azurerm_key_vault_secret" "certificates" {
+  for_each     = local.certificates_with_key_vault
+  name         = each.value.key_vault_certificate_name
+  key_vault_id = var.key_vault_id
 }
 
