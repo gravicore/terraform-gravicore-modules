@@ -485,31 +485,6 @@ module "logs" {
   versioning_enabled     = var.s3_bucket_versioning ? true : false
   access_log_bucket_name = var.s3_bucket_access_logging ? join(var.delimiter, [local.module_prefix, "logs"]) : ""
 
-  policy = var.s3_bucket_ssl_requests_only == false ? "" : jsonencode(
-    {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Principal" : {
-            "AWS" : "*"
-          },
-          "Action" : [
-            "s3:*"
-          ],
-          "Resource" : [
-            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}/*",
-            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}"
-          ],
-          "Effect" : "Deny",
-          "Condition" : {
-            "Bool" : {
-              "aws:SecureTransport" : "false"
-            }
-          }
-        }
-      ]
-  })
-
   tags                      = local.tags
   lifecycle_prefix          = var.log_prefix
   standard_transition_days  = var.log_standard_transition_days
