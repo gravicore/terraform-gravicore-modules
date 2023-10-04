@@ -147,6 +147,6 @@ module "diagnostic" {
   stage                 = var.stage
   application           = var.application
   az_region             = var.az_region
-  target_resource_id    = concat(azurerm_key_vault.default.*.id, [""])[0]
+  target_resource_id    = concat(azurerm_container_registry.default[*].id, [""])[0]
   logs_destinations_ids = var.logs_destinations_ids
 } 
