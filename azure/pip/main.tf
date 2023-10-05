@@ -34,3 +34,16 @@ resource "azurerm_public_ip" "default" {
   tags                    = local.tags
 }
 
+module "diagnostic" {
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=release-azure"
+  for_each              = { for ip in var.public_ip : ip.prefix => ip }
+  create                = var.create && length(var.logs_destinations_ids) > 0 ? true : false
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = azurerm_public_ip.default[each.key].id
+  logs_destinations_ids = var.logs_destinations_ids
+}
+

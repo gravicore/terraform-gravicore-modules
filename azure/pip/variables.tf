@@ -163,3 +163,9 @@ variable "public_ip" {
   default = {}
 }
 
+variable "logs_destinations_ids" {
+  type        = list(string)
+  default     = []
+  description = "List of destination resources IDs for logs diagnostic destination."
+}
+
