@@ -28,11 +28,6 @@ resource "azurerm_key_vault_secret" "postgresql_admin_password" {
   name         = azurerm_postgresql_flexible_server.default[0].administrator_login
   value        = azurerm_postgresql_flexible_server.default[0].administrator_password
   key_vault_id = var.key_vault_id
-  lifecycle {
-    ignore_changes = [
-      value,
-    ]
-  }
 }
 
 
