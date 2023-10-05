@@ -14,10 +14,9 @@ module "azure_region" {
 
 
 resource "random_password" "default" {
-  count            = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? 1 : 0
-  length           = 32
-  special          = true
-  override_special = "_%@"
+  count   = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? 1 : 0
+  length  = 20
+  special = false
 }
 
 resource "azurerm_key_vault_secret" "postgresql_admin_password" {
@@ -157,3 +156,4 @@ module "diagnostic" {
   target_resource_id    = concat(azurerm_postgresql_flexible_server.default.*.id, [""])[0]
   logs_destinations_ids = var.logs_destinations_ids
 }
+
