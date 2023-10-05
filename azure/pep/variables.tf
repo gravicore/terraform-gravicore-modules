@@ -203,11 +203,6 @@ variable "private_dns_zone_ids" {
   default     = null
 }
 
-variable "logs_destinations_ids" {
-  type        = list(string)
-  default     = []
-  description = "List of destination resources IDs for logs diagnostic destination."
-}
 
 locals {
   resource_alias              = length(regexall("^([a-z0-9\\-]+)\\.([a-z0-9\\-]+)\\.([a-z]+)\\.(azure)\\.(privatelinkservice)$", var.target_resource)) == 1 ? var.target_resource : null
