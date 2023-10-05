@@ -351,7 +351,7 @@ resource "azurerm_application_gateway" "default" {
       password            = lookup(ssl_certificate.value, "key_vault_certificate_name", null) == null ? ssl_certificate.value.password : null
       key_vault_secret_id = lookup(data.azurerm_key_vault_secret.certificates, ssl_certificate.value.name, null) == null ? null : data.azurerm_key_vault_secret.certificates[ssl_certificate.value.name].id
     }
-  }  
+  }
 
   dynamic "trusted_root_certificate" {
     for_each = var.trusted_root_certificate
@@ -374,3 +374,14 @@ data "azurerm_key_vault_secret" "certificates" {
   key_vault_id = var.key_vault_id
 }
 
+module "diagnostic" {
+  create                = var.create && var.logs_destinations_ids != [] ? true : false
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=release-azure"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = concat(azurerm_application_gateway.default[*].id, [""])[0]
+  logs_destinations_ids = var.logs_destinations_ids
+}

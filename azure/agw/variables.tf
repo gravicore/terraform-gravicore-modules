@@ -207,9 +207,9 @@ variable "custom_error_configuration" {
 variable "ssl_certificates" {
   description = "List of objects with SSL certificates configurations."
   type = list(object({
-    name                = string
-    data                = optional(string)
-    password            = optional(string)
+    name                       = string
+    data                       = optional(string)
+    password                   = optional(string)
     key_vault_certificate_name = optional(string)
 
   }))
@@ -496,3 +496,8 @@ locals {
   }
 }
 
+variable "logs_destinations_ids" {
+  type        = list(string)
+  default     = []
+  description = "List of destination resources IDs for logs diagnostic destination."
+}
