@@ -146,3 +146,14 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "default" {
   end_ip_address   = cidrhost(var.allowed_ip_addresses[count.index], -1)
 }
 
+module "diagnostic" {
+  create                = var.create && var.logs_destinations_ids != [] ? true : false
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=release-azure"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = concat(azurerm_postgresql_flexible_server.default.*.id, [""])[0]
+  logs_destinations_ids = var.logs_destinations_ids
+}
