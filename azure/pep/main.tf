@@ -50,3 +50,14 @@ resource "azurerm_private_endpoint" "default" {
   tags = local.tags
 }
 
+module "diagnostic" {
+  create                = var.create && var.logs_destinations_ids != [] ? true : false
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=release-azure"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = concat(azurerm_private_endpoint.default[*].id, [""])[0]
+  logs_destinations_ids = var.logs_destinations_ids
+}
