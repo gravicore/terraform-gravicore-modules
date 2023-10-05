@@ -84,3 +84,15 @@ resource "azurerm_private_dns_a_record" "default" {
   records             = [azurerm_container_app_environment.default[0].static_ip_address]
 }
 
+module "diagnostic" {
+  create                = var.create && var.log_analytics_workspace_id != [] ? true : false
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=release-azure"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = concat(azurerm_container_app_environment.default.*.id, [""])[0]
+  logs_destinations_ids = var.log_analytics_workspace_id
+}
+
