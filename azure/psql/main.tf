@@ -120,9 +120,6 @@ resource "azurerm_postgresql_flexible_server" "default" {
       error_message = "You must provide either a private_dns_zone_id and delegated_subnet_id or allowed_ip_addresses"
     }
     ignore_changes = [
-      tags,
-      administrator_login,
-      administrator_password,
       zone,
       high_availability.0.standby_availability_zone
     ]
