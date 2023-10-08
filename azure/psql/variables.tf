@@ -180,10 +180,13 @@ variable "zone" {
   default     = null
 }
 
-variable "standby_zone" {
-  description = "Specify availability-zone to enable high_availability and create standby PostgreSQL Flexible Server. (Null to disable high-availability)"
-  type        = number
-  default     = null
+variable "high_availability" {
+  description = "Map of high availability configuration."
+  type = object({
+    mode         = string
+    standby_zone = optional(number)
+  })
+  default = null
 }
 
 variable "administrator_login" {

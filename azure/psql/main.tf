@@ -51,11 +51,11 @@ resource "azurerm_postgresql_flexible_server" "default" {
 
 
   dynamic "high_availability" {
-    for_each = var.standby_zone != null && var.tier != "Burstable" ? toset([var.standby_zone]) : toset([])
+    for_each = var.high_availability != null && var.tier != "Burstable" ? toset([var.high_availability]) : toset([])
 
     content {
-      mode                      = "ZoneRedundant"
-      standby_availability_zone = high_availability.value
+      mode                      = high_availability.value.mode
+      standby_availability_zone = high_availability.value.standby_zone
     }
   }
 
