@@ -131,11 +131,12 @@ resource "azurerm_postgresql_flexible_server_configuration" "default" {
 
 resource "azurerm_postgresql_flexible_server_firewall_rule" "default" {
   count            = local.should_create_firewall_rule ? length(var.allowed_ip_addresses) : 0
-  name             = join(var.delimiter, [replace(replace(element(var.allowed_ip_addresses, count.index), ".", "-"), "/", "-"), "psqlfw"])
+  name             = var.allowed_ip_addresses[count.index]["rule_name"]
   server_id        = azurerm_postgresql_flexible_server.default[0].id
-  start_ip_address = cidrhost(var.allowed_ip_addresses[count.index], 0)
-  end_ip_address   = cidrhost(var.allowed_ip_addresses[count.index], -1)
+  start_ip_address = cidrhost(var.allowed_ip_addresses[count.index]["ip_prefix"], 0)
+  end_ip_address   = cidrhost(var.allowed_ip_addresses[count.index]["ip_prefix"], -1)
 }
+
 
 module "diagnostic" {
   create                = var.create && var.logs_destinations_ids != [] ? true : false

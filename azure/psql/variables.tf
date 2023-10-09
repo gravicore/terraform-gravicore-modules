@@ -283,9 +283,13 @@ variable "flexible_server_configuration" {
 
 variable "allowed_ip_addresses" {
   description = "List of allowed IP addresses for the PostgreSQL Flexible Server."
-  type        = list(string)
-  default     = null
+  type = list(object({
+    rule_name = string
+    ip_prefix = string
+  }))
+  default = null
 }
+
 
 variable "logs_destinations_ids" {
   type        = list(string)
