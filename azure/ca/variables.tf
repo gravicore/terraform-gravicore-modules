@@ -186,13 +186,13 @@ variable "container_apps" {
             name  = string
             value = string
           }))
-          host                             = optional(string)
-          initial_delay                    = optional(number, 10)
-          interval_seconds                 = optional(number, 10)
-          path                             = optional(string)
-          port                             = number
-          timeout                          = optional(number, 1)
-          transport                        = string
+          host             = optional(string)
+          initial_delay    = optional(number, 10)
+          interval_seconds = optional(number, 10)
+          path             = optional(string)
+          port             = number
+          timeout          = optional(number, 1)
+          transport        = string
         }))
         readiness_probe = optional(object({
           failure_count_threshold = optional(number)
@@ -214,12 +214,12 @@ variable "container_apps" {
             name  = string
             value = string
           }))
-          host                             = optional(string)
-          interval_seconds                 = optional(number, 10)
-          path                             = optional(string)
-          port                             = number
-          timeout                          = optional(number)
-          transport                        = string
+          host             = optional(string)
+          interval_seconds = optional(number, 10)
+          path             = optional(string)
+          port             = number
+          timeout          = optional(number)
+          transport        = string
         }))
         volume_mounts = optional(object({
           name = string
@@ -302,8 +302,8 @@ variable "container_apps" {
     })))
 
     secret = optional(list(object({
-      name               = string
-      secret_name_in_kv  = string
+      name              = string
+      secret_name_in_kv = string
     })), [])
 
   }))
@@ -311,18 +311,21 @@ variable "container_apps" {
 
 variable "key_vault_id" {
   type        = string
-  description = "(Required) The ID of the Key Vault to use for secrets. Changing this forces a new resource to be created."  
+  description = "(Required) The ID of the Key Vault to use for secrets. Changing this forces a new resource to be created."
 }
 
 locals {
   secret_keys = merge([
     for app_name, app in var.container_apps : {
       for secret in app.secret : "${app_name}-${secret.name}" => {
-        app_name = app_name
-        secret_name = secret.name
+        app_name          = app_name
+        secret_name       = secret.name
         secret_name_in_kv = secret.secret_name_in_kv
       }
     }
   ]...)
+
+  certificate_names      = [for app in var.container_apps : length(app.ingress.custom_domain) > 0 ? [for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""] : []]
+  flattened_certificates = compact(flatten(local.certificate_names))
 }
 

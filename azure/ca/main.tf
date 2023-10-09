@@ -130,14 +130,14 @@ resource "azurerm_container_app" "default" {
           for_each = container.value.liveness_probe == null ? [] : [container.value.liveness_probe]
 
           content {
-            port                             = liveness_probe.value.port
-            transport                        = liveness_probe.value.transport
-            failure_count_threshold          = liveness_probe.value.failure_count_threshold
-            host                             = liveness_probe.value.host
-            initial_delay                    = liveness_probe.value.initial_delay
-            interval_seconds                 = liveness_probe.value.interval_seconds
-            path                             = liveness_probe.value.path
-            timeout                          = liveness_probe.value.timeout
+            port                    = liveness_probe.value.port
+            transport               = liveness_probe.value.transport
+            failure_count_threshold = liveness_probe.value.failure_count_threshold
+            host                    = liveness_probe.value.host
+            initial_delay           = liveness_probe.value.initial_delay
+            interval_seconds        = liveness_probe.value.interval_seconds
+            path                    = liveness_probe.value.path
+            timeout                 = liveness_probe.value.timeout
 
             dynamic "header" {
               for_each = liveness_probe.value.header == null ? [] : [liveness_probe.value.header]
@@ -176,13 +176,13 @@ resource "azurerm_container_app" "default" {
           for_each = container.value.startup_probe == null ? [] : [container.value.startup_probe]
 
           content {
-            port                             = startup_probe.value.port
-            transport                        = startup_probe.value.transport
-            failure_count_threshold          = startup_probe.value.failure_count_threshold
-            host                             = startup_probe.value.host
-            interval_seconds                 = startup_probe.value.interval_seconds
-            path                             = startup_probe.value.path
-            timeout                          = startup_probe.value.timeout
+            port                    = startup_probe.value.port
+            transport               = startup_probe.value.transport
+            failure_count_threshold = startup_probe.value.failure_count_threshold
+            host                    = startup_probe.value.host
+            interval_seconds        = startup_probe.value.interval_seconds
+            path                    = startup_probe.value.path
+            timeout                 = startup_probe.value.timeout
 
             dynamic "header" {
               for_each = startup_probe.value.header == null ? [] : [startup_probe.value.header]
@@ -282,10 +282,10 @@ resource "azurerm_container_app" "default" {
 
   dynamic "secret" {
     for_each = data.azurerm_key_vault_secret.secrets
-  
+
     content {
       name  = local.secret_keys[secret.key]["secret_name"]
-      value = secret.value.value 
+      value = secret.value.value
     }
   }
 
@@ -299,16 +299,10 @@ data "azurerm_key_vault_secret" "secrets" {
 }
 
 
-locals {
-  certificate_names = [for app in var.container_apps : length(app.ingress.custom_domain) > 0 ? [for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""] : []]
-  flattened_certificates = compact(flatten(local.certificate_names))
-}
-
-
 data "azurerm_key_vault_secret" "certificates" {
-  for_each      = toset(local.flattened_certificates)
-  name          = each.key
-  key_vault_id  = var.key_vault_id
+  for_each     = toset(local.flattened_certificates)
+  name         = each.key
+  key_vault_id = var.key_vault_id
 }
 
 # data "azurerm_key_vault_secret" "passwords" {
@@ -318,10 +312,11 @@ data "azurerm_key_vault_secret" "certificates" {
 # }
 
 resource "azurerm_container_app_environment_certificate" "default" {
-  for_each                      = toset(local.flattened_certificates)
-  name                          = each.key
-  container_app_environment_id  = var.container_app_environment_id
-  certificate_blob_base64       = data.azurerm_key_vault_secret.certificates[each.key].value
-  certificate_password          = ""
+  for_each                     = toset(local.flattened_certificates)
+  name                         = each.key
+  container_app_environment_id = var.container_app_environment_id
+  certificate_blob_base64      = data.azurerm_key_vault_secret.certificates[each.key].value
+  certificate_password         = ""
   # certificate_password          = data.azurerm_key_vault_secret.passwords[each.key].value
 }
+
