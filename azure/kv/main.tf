@@ -3,8 +3,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "azure_region" {
-  source       = "claranet/regions/azurerm"
-  version      = "6.1.0"
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/caf-region?ref=release-azure"
   azure_region = var.az_region
 }
 
@@ -136,4 +135,5 @@ module "diagnostic" {
   az_region             = var.az_region
   target_resource_id    = concat(azurerm_key_vault.default.*.id, [""])[0]
   logs_destinations_ids = var.logs_destinations_ids
-} 
+}
+

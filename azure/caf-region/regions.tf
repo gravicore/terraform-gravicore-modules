@@ -259,3 +259,4 @@ locals {
 
   paired_region = try(local.paired[local.location_slug], null)
 }
+

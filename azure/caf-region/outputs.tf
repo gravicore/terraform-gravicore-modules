@@ -37,3 +37,4 @@ EOD
     location_slug  = local.paired_region
   }
 }
+

@@ -501,3 +501,4 @@ variable "logs_destinations_ids" {
   default     = []
   description = "List of destination resources IDs for logs diagnostic destination."
 }
+

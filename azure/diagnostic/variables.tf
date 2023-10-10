@@ -212,3 +212,4 @@ variable "metric_categories" {
   default     = null
   description = "List of metric categories. Defaults to all available."
 }
+
