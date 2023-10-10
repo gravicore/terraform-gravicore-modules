@@ -13,6 +13,83 @@ module "azure_region" {
 # Container Environment
 # ----------------------------------------------------------------------------------------------------------------------
 
+# resource "azurerm_resource_group" "default" {
+#   count    = var.create ? 1 : 0
+#   name     = join(var.delimiter, [local.module_prefix, "rg", "infra"])
+#   location = var.az_region
+#   tags     = local.tags
+# }
+
+# resource "azurerm_management_lock" "default" {
+#   count      = var.create && var.lock_level != null ? 1 : 0
+#   name       = join(var.delimiter, [azurerm_resource_group.default[count.index].name, "lock"])
+#   scope      = azurerm_resource_group.default[count.index].id
+#   lock_level = var.lock_level
+#   notes      = "Resource Group '${azurerm_resource_group.default[count.index].name}' is locked with '${var.lock_level}' level."
+# }
+
+# resource "azapi_resource" "default" {
+#   count     = var.create ? 1 : 0
+#   type      = "Microsoft.App/managedEnvironments@2023-05-01"
+#   name      = local.module_prefix
+#   location  = var.az_region
+#   parent_id = var.resource_group_id
+#   tags      = local.tags
+#   body = jsonencode({
+#     properties = {
+#       # appLogsConfiguration = {
+#       #   destination = "log-analytics"
+#       #   logAnalyticsConfiguration = {
+#       #     customerId = "string"
+#       #     sharedKey = null
+#       #   }        
+#       # }
+#       # infrastructureResourceGroup = azurerm_resource_group.default[count.index].id
+#       vnetConfiguration = {
+#         infrastructureSubnetId = var.infrastructure_subnet_id
+#         internal               = var.internal_load_balancer_enabled != null ? true : false
+#       }
+#       workloadProfiles = var.workload_profiles
+#       zoneRedundant    = var.zone_redundant
+#     }
+#     # kind = "string"
+#   })
+# }
+
+# output "container_app_environment_id" {
+#   value = azapi_resource.default.id
+# }
+
+
+# variable "workload_profiles" {
+#   type = list(object({
+#     maximumCount        = optional(number)
+#     minimumCount        = optional(number)
+#     name                = string
+#     workloadProfileType = string
+#   }))
+#   default     = []
+#   description = "(Optional) The Workload Profiles to use for the Container Apps Control Plane. Changing this forces a new resource to be created."
+# }
+
+# variable "zone_redundant" {
+#   type        = bool
+#   default     = false
+#   description = "(Optional) Should the Container Environment operate in Zone Redundant Mode? Defaults to `false`. Changing this forces a new resource to be created."
+# }
+
+# variable "resource_group_id" {
+#   type        = string
+#   default     = null
+#   description = "(Optional) The ID of the Resource Group to create the Container App Environment in. Changing this forces a new resource to be created."
+# }
+
+# variable "lock_level" {
+#   type        = string
+#   default     = null
+#   description = "The level of lock to apply to the resource group (e.g. `CanNotDelete`, `ReadOnly`)"
+# }
+
 resource "azurerm_container_app_environment" "default" {
   count                          = var.create ? 1 : 0
   location                       = var.az_region
