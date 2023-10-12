@@ -339,8 +339,8 @@ variable "storage_accounts" {
   }))
   default = {}
   validation {
-    condition     = alltrue([for st in var.storage_accounts : length(st.prefix) <= 4 || st.prefix == null])
-    error_message = "The prefix must be 4 characters or fewer."
+    condition     = alltrue([for st in var.storage_accounts : length(st.prefix) <= 5 || st.prefix == null])
+    error_message = "The prefix must be 5 characters or fewer."
   }
 }
 
