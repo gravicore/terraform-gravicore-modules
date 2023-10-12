@@ -280,12 +280,12 @@ variable "container_apps" {
         certificate_name         = string
         certificate_binding_type = optional(string)
       })))
-      traffic_weight = object({
+      traffic_weight = optional(object({
         label           = optional(string)
         latest_revision = optional(string)
         revision_suffix = optional(string)
         percentage      = number
-      })
+      }))
     }))
 
     dapr = optional(object({
