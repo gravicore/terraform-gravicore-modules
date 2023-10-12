@@ -67,19 +67,9 @@ resource "azurerm_key_vault_access_policy" "terraform" {
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azurerm_client_config.current.object_id
 
-  certificate_permissions = [
-    "ManageContacts",
-  ]
-
-  key_permissions = [
-    "Create",
-  ]
-
-  secret_permissions = [
-    "Get",
-    "Set",
-    "List",
-  ]
+  secret_permissions      = ["Get", "List", "Set", "Delete", "Recover", "Backup", "Restore", "Purge"]
+  key_permissions         = ["Get", "List", "Update", "Create", "Import", "Delete", "Recover", "Backup", "Restore", "Decrypt", "Encrypt", "UnwrapKey", "WrapKey", "Verify", "Sign", "Purge", "Release", "Rotate", "GetRotationPolicy", "SetRotationPolicy"]
+  certificate_permissions = ["Get", "List", "Update", "Create", "Import", "Delete", "Recover", "Backup", "Restore", "ManageContacts", "ManageIssuers", "GetIssuers", "ListIssuers", "SetIssuers", "DeleteIssuers", "Purge"]
 }
 
 resource "azurerm_role_assignment" "terraform_rbac" {
