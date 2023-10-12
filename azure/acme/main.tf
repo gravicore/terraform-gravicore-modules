@@ -1,5 +1,5 @@
 provider "acme" {
-  server_url = acme.server_url
+  server_url = var.acme.server_url
 }
 
 locals {
@@ -15,7 +15,7 @@ resource "tls_private_key" "default" {
 
 resource "acme_registration" "default" {
   count           = var.create ? 1 : 0
-  account_key_pem = tls_private_key.private_key.private_key_pem
+  account_key_pem = tls_private_key.default[0].private_key_pem
   email_address   = var.email
 }
 
@@ -26,10 +26,10 @@ resource "random_password" "default" {
 
 resource "acme_certificate" "default" {
   count                     = var.create ? 1 : 0
-  account_key_pem           = acme_registration.reg.account_key_pem
+  account_key_pem           = acme_registration.default[0].account_key_pem
   common_name               = var.common_name
   subject_alternative_names = var.subject_alternative_names
-  certificate_p12_password  = random_password.cert.result
+  certificate_p12_password  = random_password.default[0].result
 
   dns_challenge {
     provider = "azure"
@@ -48,8 +48,8 @@ resource "azurerm_key_vault_certificate" "default" {
   key_vault_id = var.key_vault_id
 
   certificate {
-    contents = acme_certificate.certificate.certificate_p12
-    password = acme_certificate.certificate.certificate_p12_password
+    contents = acme_certificate.default[0].certificate_p12
+    password = acme_certificate.default[0].certificate_p12_password
   }
 
   certificate_policy {
@@ -73,7 +73,7 @@ resource "azurerm_key_vault_certificate" "default" {
 resource "azurerm_key_vault_secret" "default" {
   count        = var.create ? 1 : 0
   name         = "${var.key_vault_certificate_name}-password"
-  value        = acme_certificate.certificate.certificate_p12_password
+  value        = acme_certificate.default[0].certificate_p12_password
   key_vault_id = var.key_vault_id
 }
 
@@ -81,6 +81,7 @@ resource "azurerm_container_app_environment_certificate" "default" {
   count                        = var.container_app_environment_id != null ? 1 : 0
   name                         = var.key_vault_certificate_name
   container_app_environment_id = var.container_app_environment_id
-  certificate_blob             = acme_certificate.certificate.certificate_p12
-  certificate_password         = acme_certificate.certificate.certificate_p12
+  certificate_blob             = acme_certificate.default[0].certificate_p12
+  certificate_password         = acme_certificate.default[0].certificate_p12
 }
+
