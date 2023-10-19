@@ -368,6 +368,12 @@ variable "enable_glacier_transition" {
   description = "Enables the transition to AWS Glacier which can cause unnecessary costs for huge amount of small files"
 }
 
+variable "lambda_function_runtime" {
+  type        = string
+  default     = "nodejs18.x"
+  description = "The runtime environment for the origin request Lambda function"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -690,7 +696,7 @@ resource "aws_lambda_function" "hsts" {
 
   source_code_hash = data.archive_file.hsts.output_base64sha256
 
-  runtime     = "nodejs12.x"
+  runtime     = var.lambda_function_runtime
   timeout     = 1
   memory_size = 128
 
