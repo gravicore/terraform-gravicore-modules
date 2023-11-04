@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "azure_region" {
-  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=release-azure"
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=GDEV-336-release-azure"
   azure_region = var.az_region
 }
 
@@ -139,7 +139,7 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "default" {
 
 module "diagnostic" {
   create                = var.create && var.logs_destinations_ids != [] ? true : false
-  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=release-azure"
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=GDEV-336-release-azure"
   namespace             = var.namespace
   environment           = var.environment
   stage                 = var.stage

@@ -4,7 +4,7 @@
 
 
 module "azure_region" {
-  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=release-azure"
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=GDEV-336-release-azure"
   azure_region = var.az_region
 }
 
@@ -375,7 +375,7 @@ data "azurerm_key_vault_secret" "certificates" {
 
 module "diagnostic" {
   create                = var.create && var.logs_destinations_ids != [] ? true : false
-  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=release-azure"
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=GDEV-336-release-azure"
   namespace             = var.namespace
   environment           = var.environment
   stage                 = var.stage
