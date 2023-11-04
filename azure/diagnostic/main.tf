@@ -15,8 +15,7 @@ module "azure_region" {
 
 
 data "azurerm_monitor_diagnostic_categories" "default" {
-  count = local.enabled ? 1 : 0
-
+  count = var.create && local.enabled ? 1 : 0
   resource_id = var.target_resource_id
 }
 
