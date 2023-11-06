@@ -274,7 +274,7 @@ resource "azurerm_container_app" "default" {
       server               = registry.value.server
       password_secret_name = registry.value.password_secret_name
       username             = registry.value.username
-      identity             = registry.value.identity != null ? registry.value.identity : (length(var.identity_ids) == 0 ? null : compact(var.identity_ids)[0])
+      identity             = registry.value.identity
     }
   }
 
