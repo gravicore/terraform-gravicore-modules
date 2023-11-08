@@ -114,7 +114,7 @@ resource "azurerm_web_application_firewall_policy" "default" {
           version = managed_rule_set.value.version
 
           dynamic "rule_group_override" {
-            for_each = managed_rule_set.value.rule_group_override != null ? toset([managed_rule_set.value.rule_group_override]) : toset([])
+            for_each = managed_rule_set.value.rule_group_override != null ? managed_rule_set.value.rule_group_override : []
             content {
               rule_group_name = rule_group_override.value.rule_group_name
 
