@@ -208,13 +208,21 @@ variable "subnets" {
       nfs_inbound_allowed               = optional(bool, false)
       cifs_inbound_allowed              = optional(bool, false)
       psql_inbound_allowed              = optional(bool, false)
+      allowed_http_source               = optional(string)
       allowed_http_sources              = optional(list(string))
+      allowed_https_source              = optional(string)
       allowed_https_sources             = optional(list(string))
+      allowed_ssh_source                = optional(string)
       allowed_ssh_sources               = optional(list(string))
+      allowed_rdp_source                = optional(string)
       allowed_rdp_sources               = optional(list(string))
+      allowed_winrm_source              = optional(string)
       allowed_winrm_sources             = optional(list(string))
+      allowed_nfs_source                = optional(string)
       allowed_nfs_sources               = optional(list(string))
+      allowed_cifs_source               = optional(string)
       allowed_cifs_sources              = optional(list(string))
+      allowed_psql_source               = optional(string)
       allowed_psql_sources              = optional(list(string))
       custom_security_rules = optional(list(object({
         name                         = optional(string)
@@ -258,13 +266,22 @@ locals {
       load_balancer_rules_enabled       = false
       nfs_inbound_allowed               = false
       cifs_inbound_allowed              = false
+      allowed_http_source               = null
       allowed_http_sources              = null
+      allowed_https_source              = null
       allowed_https_sources             = null
+      allowed_ssh_source                = null
       allowed_ssh_sources               = null
+      allowed_rdp_source                = null
       allowed_rdp_sources               = null
+      allowed_winrm_source              = null
       allowed_winrm_sources             = null
+      allowed_nfs_source                = null
       allowed_nfs_sources               = null
+      allowed_cifs_source               = null
       allowed_cifs_sources              = null
+      allowed_psql_source               = null
+      allowed_psql_sources              = null
       custom_security_rules             = []
     })
   } }
