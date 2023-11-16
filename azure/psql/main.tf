@@ -13,10 +13,11 @@ module "azure_region" {
 
 
 resource "random_password" "default" {
-  count   = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? 1 : 0
+  count   = var.create && (var.create_mode == "Default" || var.create_mode == "Update") && var.authentication.password_auth_enabled ? 1 : 0
   length  = 20
   special = false
 }
+
 
 resource "azurerm_key_vault_secret" "postgresql_admin_password" {
   depends_on = [
