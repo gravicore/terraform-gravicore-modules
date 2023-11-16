@@ -24,7 +24,7 @@ resource "azurerm_key_vault_secret" "postgresql_admin_password" {
     azurerm_postgresql_flexible_server.default,
     random_password.default,
   ]
-  count        = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? 1 : 0
+  count        = var.create && (var.create_mode == "Default" || var.create_mode == "Update") && var.authentication.password_auth_enabled ? 1 : 0
   name         = azurerm_postgresql_flexible_server.default[0].administrator_login
   value        = azurerm_postgresql_flexible_server.default[0].administrator_password
   key_vault_id = var.key_vault_id
