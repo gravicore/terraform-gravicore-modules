@@ -136,6 +136,16 @@ resource "azurerm_postgresql_flexible_server_firewall_rule" "default" {
   end_ip_address   = cidrhost(var.allowed_ip_addresses[count.index]["ip_prefix"], -1)
 }
 
+resource "azurerm_postgresql_flexible_server_active_directory_administrator" "example" {
+  count = var.authentication.active_directory_auth_enabled ? length(var.active_directory_administrators) : 0
+
+  server_name         = azurerm_postgresql_flexible_server.default[0].name
+  resource_group_name = azurerm_postgresql_flexible_server.default[0].resource_group_name
+  tenant_id           = var.active_directory_administrators[count.index].tenant_id
+  object_id           = var.active_directory_administrators[count.index].object_id
+  principal_name      = var.active_directory_administrators[count.index].principal_name
+  principal_type      = var.active_directory_administrators[count.index].principal_type
+}
 
 module "diagnostic" {
   create                = var.create && var.logs_destinations_ids != [] ? true : false

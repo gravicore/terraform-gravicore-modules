@@ -297,3 +297,14 @@ variable "logs_destinations_ids" {
   description = "List of destination resources IDs for logs diagnostic destination."
 }
 
+variable "active_directory_administrators" {
+  description = "List of allowed IP addresses for the PostgreSQL Flexible Server."
+  type = list(object({
+    tenant_id      = string
+    object_id      = string
+    principal_name = string
+    principal_type = string
+  }))
+  default = null
+}
+
