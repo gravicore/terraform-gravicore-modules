@@ -8,7 +8,7 @@ module "azure_region" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Admin credentials creation if AD authentication disabled
+# Admin credentials creation if Password Authentication is enabled
 # ----------------------------------------------------------------------------------------------------------------------
 
 
@@ -21,8 +21,7 @@ resource "random_password" "default" {
 
 resource "azurerm_key_vault_secret" "postgresql_admin_password" {
   depends_on = [
-    azurerm_postgresql_flexible_server.default,
-    random_password.default,
+    azurerm_postgresql_flexible_server.default[0],
   ]
   count        = var.create && (var.create_mode == "Default" || var.create_mode == "Update") && var.authentication.password_auth_enabled ? 1 : 0
   name         = azurerm_postgresql_flexible_server.default[0].administrator_login
@@ -47,7 +46,7 @@ resource "azurerm_postgresql_flexible_server" "default" {
   zone                = var.zone
 
   administrator_login    = var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled ? var.administrator_login : null
-  administrator_password = var.administrator_password != null ? var.administrator_password : (var.create && var.create_mode == "Default" && var.authentication.password_auth_enabled && var.administrator_password == null ? random_password.default[0].result : null)
+  administrator_password = var.administrator_password != null ? var.administrator_password : (var.create && (var.create_mode == "Default" || var.create_mode == "Update") && var.authentication.password_auth_enabled && var.administrator_password == null ? random_password.default[0].result : null)
 
 
   dynamic "high_availability" {
