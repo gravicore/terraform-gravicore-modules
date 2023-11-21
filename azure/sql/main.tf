@@ -10,7 +10,7 @@ module "azure_region" {
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Resource Group resource
+# SQL server resource
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_mssql_server" "default" {
@@ -52,7 +52,7 @@ resource "azurerm_mssql_server" "default" {
   tags = local.tags
 }
 
-resource "azurerm_mssql_firewall_rule" "firewall_rule" {
+resource "azurerm_mssql_firewall_rule" "default" {
   count = try(length(var.allowed_ip_addresses), 0)
 
   name      = var.allowed_ip_addresses[count.index]["rule_name"]
@@ -62,7 +62,7 @@ resource "azurerm_mssql_firewall_rule" "firewall_rule" {
   end_ip_address   = cidrhost(var.allowed_ip_addresses[count.index]["ip_prefix"], -1)
 }
 
-resource "azurerm_mssql_elasticpool" "elastic_pool" {
+resource "azurerm_mssql_elasticpool" "default" {
   count = var.elastic_pool_enabled ? 1 : 0
 
   name = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, "sqlep"])
@@ -94,26 +94,26 @@ resource "azurerm_mssql_elasticpool" "elastic_pool" {
   tags = local.tags
 }
 
-resource "azurerm_mssql_virtual_network_rule" "vnet_rule" {
+resource "azurerm_mssql_virtual_network_rule" "default" {
   for_each                             = try({ for subnet in local.allowed_subnets : subnet.name => subnet }, {})
   name                                 = each.key
-  server_id                            = azurerm_mssql_server.sql.id
+  server_id                            = azurerm_mssql_server.default[0].id
   subnet_id                            = each.value.subnet_id
   ignore_missing_vnet_service_endpoint = var.ignore_missing_vnet_service_endpoint
 }
 
-resource "azurerm_mssql_server_security_alert_policy" "sql_server" {
+resource "azurerm_mssql_server_security_alert_policy" "default" {
   for_each = toset(var.sql_server_security_alerting_enabled ? ["enabled"] : [])
 
   resource_group_name = var.resource_group_name
-  server_name         = azurerm_mssql_server.sql.name
+  server_name         = azurerm_mssql_server.default[0].name
   state               = "Enabled"
 }
 
-resource "azurerm_mssql_server_vulnerability_assessment" "sql_server" {
+resource "azurerm_mssql_server_vulnerability_assessment" "default" {
   for_each = toset(var.sql_server_vulnerability_assessment_enabled ? ["enabled"] : [])
 
-  server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.sql_server["enabled"].id
+  server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.default["enabled"].id
   storage_container_path          = format("%s%s/", var.security_storage_account_blob_endpoint, var.security_storage_account_container_name)
   storage_account_access_key      = var.security_storage_account_access_key
 
@@ -124,10 +124,10 @@ resource "azurerm_mssql_server_vulnerability_assessment" "sql_server" {
   }
 }
 
-resource "azurerm_mssql_server_extended_auditing_policy" "sql_server" {
+resource "azurerm_mssql_server_extended_auditing_policy" "default" {
   for_each = toset(var.sql_server_extended_auditing_enabled ? ["enabled"] : [])
 
-  server_id                               = azurerm_mssql_server.sql.id
+  server_id                               = azurerm_mssql_server.default[0].id
   storage_endpoint                        = var.security_storage_account_blob_endpoint
   storage_account_access_key              = var.security_storage_account_access_key
   storage_account_access_key_is_secondary = false

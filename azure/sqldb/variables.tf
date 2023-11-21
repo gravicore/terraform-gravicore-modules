@@ -141,6 +141,12 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "mssql_server_id" {
+  description = "The ID of the SQL Server to deploy the databases to."
+  type        = string
+  default     = ""
+}
+
 variable "elastic_pool_enabled" {
   description = "True to deploy the databases in an ElasticPool, single databases are deployed otherwise."
   type        = bool

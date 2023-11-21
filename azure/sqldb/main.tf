@@ -10,14 +10,14 @@ module "azure_region" {
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Resource Group resource
+# SQL DB resource
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_mssql_database" "single_database" {
   for_each = try({ for db in var.databases : db.name => db if !var.elastic_pool_enabled }, {})
 
   name      = local.module_prefix
-  server_id = azurerm_mssql_server.default[0].name
+  server_id = var.mssql_server_id
 
   sku_name     = var.single_databases_sku_name
   license_type = each.value.license_type
@@ -84,7 +84,7 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
   for_each = try({ for db in var.databases : db.name => db if var.elastic_pool_enabled }, {})
 
   name      = local.module_prefix
-  server_id = azurerm_mssql_server.default[0].name
+  server_id = var.mssql_server_id
 
   sku_name        = "ElasticPool"
   license_type    = each.value.license_type
