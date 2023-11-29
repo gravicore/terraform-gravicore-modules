@@ -134,7 +134,7 @@ module "diagnostic_settings" {
   resource_id = concat(azurerm_key_vault.default.*.id, [""])[0]
 
   logs_destinations_ids = [
-    var.logs_destinations_ids
+    "${var.logs_destinations_ids}"
   ]
 }
 
