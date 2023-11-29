@@ -147,18 +147,18 @@ locals {
     (
       var.log_categories != null ?
       var.log_categories :
-      try(data.azurerm_monitor_diagnostic_categories.default[0].log_category_types, [])
+      try(data.azurerm_monitor_diagnostic_categories.default.log_category_types, [])
     ) : log if !contains(var.excluded_log_categories, log)
   ]
 
   metric_categories = (
     var.metric_categories != null ?
     var.metric_categories :
-    try(data.azurerm_monitor_diagnostic_categories.default[0].metrics, [])
+    try(data.azurerm_monitor_diagnostic_categories.default.metrics, [])
   )
 
   metrics = {
-    for metric in try(data.azurerm_monitor_diagnostic_categories.default[0].metrics, []) : metric => {
+    for metric in try(data.azurerm_monitor_diagnostic_categories.default.metrics, []) : metric => {
       enabled = contains(local.metric_categories, metric)
     }
   }
