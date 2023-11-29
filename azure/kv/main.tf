@@ -116,7 +116,8 @@ resource "azurerm_role_assignment" "key_vault_rbac" {
 
 
 module "diagnostic" {
-  create                = var.create && var.logs_destinations_ids != [] ? true : false
+  # create                = var.create && var.logs_destinations_ids != [] ? true : false
+  count                 = var.create && var.logs_destinations_ids != [] ? 1 : 0
   source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=GDEV-336-release-azure"
   namespace             = var.namespace
   environment           = var.environment
@@ -126,15 +127,4 @@ module "diagnostic" {
   target_resource_id    = concat(azurerm_key_vault.default.*.id, [""])[0]
   logs_destinations_ids = var.logs_destinations_ids
 }
-
-# module "diagnostic_settings" {
-#   source  = "claranet/diagnostic-settings/azurerm"
-#   version = "6.5.0"
-
-#   resource_id = concat(azurerm_key_vault.default.*.id, [""])[0]
-
-#   logs_destinations_ids = [
-#     "${var.logs_destinations_ids}"
-#   ]
-# }
 
