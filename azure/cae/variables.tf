@@ -144,10 +144,10 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-variable "log_analytics_workspace_id" {
-  type        = string
-  default     = null
-  description = "(Optional) The ID for the Log Analytics Workspace to link this Container Apps Managed Environment to. Changing this forces a new resource to be created."
+variable "logs_destinations_ids" {
+  type        = list(string)
+  default     = []
+  description = "List of destination resources IDs for logs diagnostic destination."
 }
 
 variable "infrastructure_subnet_id" {

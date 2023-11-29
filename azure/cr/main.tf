@@ -139,7 +139,7 @@ module "private_endpoint" {
 }
 
 module "diagnostic" {
-  create                = var.create && var.logs_destinations_ids != [] ? true : false
+  count                 = var.create && var.logs_destinations_ids != [] ? 1 : 0
   source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=GDEV-336-release-azure"
   namespace             = var.namespace
   environment           = var.environment
