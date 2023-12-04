@@ -263,9 +263,9 @@ variable "outbound_network_restriction_enabled" {
 variable "azuread_administrator" {
   description = "Azure AD Administrator configuration block of this SQL Server."
   type = object({
-    login_username              = optional(string)
-    object_id                   = optional(string)
-    tenant_id                   = optional(string)
+    login_username              = string
+    object_id                   = string
+    tenant_id                   = string
     azuread_authentication_only = optional(bool)
   })
   default = null
