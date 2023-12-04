@@ -223,11 +223,13 @@ variable "elastic_pool_databases_max_capacity" {
 variable "administrator_login" {
   description = "Administrator login for SQL Server"
   type        = string
+  default     = null
 }
 
 variable "administrator_password" {
   description = "Administrator password for SQL Server"
   type        = string
+  default     = null
 }
 
 variable "allowed_subnets_ids" {
@@ -266,7 +268,7 @@ variable "azuread_administrator" {
     login_username              = string
     object_id                   = string
     tenant_id                   = string
-    azuread_authentication_only = optional(bool)
+    azuread_authentication_only = optional(bool, false)
   })
   default = null
 }
@@ -279,7 +281,7 @@ variable "identity" {
 
 variable "primary_user_assigned_identity_id" {
   description = "Map of primary user identity configuration."
-  type        = map(string)
+  type        = string
   default     = null
 }
 

@@ -17,7 +17,7 @@ resource "azurerm_mssql_server" "default" {
   count               = var.create ? 1 : 0
   name                = local.module_prefix
   resource_group_name = var.resource_group_name
-  location            = var.var.az_region
+  location            = var.az_region
 
   version                              = var.server_version
   connection_policy                    = var.connection_policy
