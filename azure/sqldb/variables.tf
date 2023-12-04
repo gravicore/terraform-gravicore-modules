@@ -142,9 +142,14 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "mssql_server_id" {
-  description = "The ID of the SQL Server to deploy the databases to."
+  description = "The ID of the MSSQL Server to create the databases on."
   type        = string
-  default     = ""
+}
+
+variable "elastic_pool_id" {
+  description = "The ID of the Elastic Pool to create the databases on."
+  type        = string
+  default     = null
 }
 
 variable "elastic_pool_enabled" {
@@ -153,11 +158,6 @@ variable "elastic_pool_enabled" {
   default     = false
 }
 
-variable "single_databases_sku_name" {
-  description = "Specifies the name of the SKU used by the database. For example, `GP_S_Gen5_2`, `HS_Gen4_1`, `BC_Gen5_2`. Use only if `elastic_pool_enabled` variable is set to `false`. More documentation [here](https://docs.microsoft.com/en-us/azure/azure-sql/database/service-tiers-general-purpose-business-critical)"
-  type        = string
-  default     = "GP_Gen5_2"
-}
 
 variable "create_databases_users" {
   description = "True to create a user named <db>_user on each database with generated password and role db_owner."
@@ -185,6 +185,7 @@ variable "databases" {
     name                        = string
     license_type                = optional(string)
     max_size_gb                 = number
+    single_databases_sku_name   = optional(stringi, "GP_Gen5_2")
     create_mode                 = optional(string)
     min_capacity                = optional(number)
     auto_pause_delay_in_minutes = optional(number)
@@ -196,75 +197,29 @@ variable "databases" {
     restore_dropped_database_id = optional(string)
     storage_account_type        = optional(string, "Geo")
     database_extra_tags         = optional(map(string), {})
+    zone_redundant              = optional(bool, true)
+    databases_collation         = optional(string, "SQL_Latin1_General_CP1_CI_AS")
+    short_term_retention_policy = optional(object({
+      retention_days           = optional(number, 7)
+      backup_interval_in_hours = optional(number, 12)
+    }))
+    long_term_retention_policy = optional(object({
+      weekly_retention  = optional(number)
+      monthly_retention = optional(number)
+      yearly_retention  = optional(number)
+      week_of_year      = optional(number)
+    }))
+    threat_detection_policy = optional(object({
+      state                      = optional(string, "Disabled")
+      email_account_admins       = optional(string, "Disabled")
+      email_addresses            = optional(list(string))
+      retention_days             = optional(number, 7)
+      disabled_alerts            = optional(list(string))
+      storage_endpoint           = optional(string)
+      storage_account_access_key = optional(string)
+    }))
   }))
   default = []
-}
-
-variable "backup_retention" {
-  description = "Definition of long term backup retention for all the databases in this SQL Server."
-  type = object({
-    weekly_retention  = optional(number)
-    monthly_retention = optional(number)
-    yearly_retention  = optional(number)
-    week_of_year      = optional(number)
-  })
-  default = {}
-}
-
-variable "databases_collation" {
-  description = "SQL Collation for the databases"
-  type        = string
-  default     = "SQL_Latin1_General_CP1_CI_AS"
-}
-
-variable "databases_zone_redundant" {
-  description = "True to have databases zone redundant, which means the replicas of the databases will be spread across multiple availability zones. This property is only settable for `Premium` and `Business Critical` databases."
-  type        = bool
-  default     = null
-}
-
-variable "point_in_time_restore_retention_days" {
-  description = "Point In Time Restore configuration. Value has to be between `7` and `35`"
-  type        = number
-  default     = 7
-  validation {
-    condition     = var.point_in_time_restore_retention_days >= 7 && var.point_in_time_restore_retention_days <= 35
-    error_message = "The PITR retention should be between 7 and 35 days."
-  }
-}
-
-variable "point_in_time_backup_interval_in_hours" {
-  description = "The hours between each differential backup. This is only applicable to live databases but not dropped databases. Value has to be 12 or 24. Defaults to 12 hours."
-  type        = number
-  default     = 12
-  validation {
-    condition     = var.point_in_time_backup_interval_in_hours == 12 || var.point_in_time_backup_interval_in_hours == 24
-    error_message = "The PITR retention should be 12 or 24 hours."
-  }
-}
-
-variable "alerting_email_addresses" {
-  description = "List of email addresses to send reports for threat detection and vulnerability assesment"
-  type        = list(string)
-  default     = []
-}
-
-variable "threat_detection_policy_enabled" {
-  description = "True to enable thread detection policy on the databases"
-  type        = bool
-  default     = false
-}
-
-variable "threat_detection_policy_retention_days" {
-  description = "Specifies the number of days to keep in the Threat Detection audit logs"
-  type        = number
-  default     = 7
-}
-
-variable "threat_detection_policy_disabled_alerts" {
-  description = "Specifies a list of alerts which should be disabled. Possible values include `Access_Anomaly`, `Sql_Injection` and `Sql_Injection_Vulnerability`"
-  type        = list(string)
-  default     = []
 }
 
 variable "databases_extended_auditing_enabled" {

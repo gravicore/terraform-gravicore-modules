@@ -8,21 +8,21 @@ resource "azurerm_mssql_database" "single_database" {
   name      = local.module_prefix
   server_id = var.mssql_server_id
 
-  sku_name     = var.single_databases_sku_name
+  sku_name     = each.value.single_databases_sku_name
   license_type = each.value.license_type
 
-  collation      = var.databases_collation
+  collation      = each.value.databases_collation
   max_size_gb    = can(regex("Secondary|OnlineSecondary", each.value.create_mode)) ? null : each.value.max_size_gb
-  zone_redundant = can(regex("^DW", var.single_databases_sku_name)) && var.databases_zone_redundant != null ? var.databases_zone_redundant : false
+  zone_redundant = can(regex("^DW", each.value.single_databases_sku_name)) && each.value.databases_zone_redundant != null ? each.value.databases_zone_redundant : false
 
-  min_capacity                = can(regex("^GP_S", var.single_databases_sku_name)) ? each.value.min_capacity : null
-  auto_pause_delay_in_minutes = can(regex("^GP_S", var.single_databases_sku_name)) ? each.value.auto_pause_delay_in_minutes : null
+  min_capacity                = can(regex("^GP_S", each.value.single_databases_sku_name)) ? each.value.min_capacity : null
+  auto_pause_delay_in_minutes = can(regex("^GP_S", each.value.single_databases_sku_name)) ? each.value.auto_pause_delay_in_minutes : null
 
-  read_scale         = can(regex("^P|BC", var.single_databases_sku_name)) && each.value.read_scale != null ? each.value.read_scale : false
-  read_replica_count = can(regex("^HS", var.single_databases_sku_name)) ? each.value.read_replica_count : null
+  read_scale         = can(regex("^P|BC", each.value.single_databases_sku_name)) && each.value.read_scale != null ? each.value.read_scale : false
+  read_replica_count = can(regex("^HS", each.value.single_databases_sku_name)) ? each.value.read_replica_count : null
 
   #https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.sql.models.database.createmode?view=azure-dotnet
-  create_mode = can(regex("^DW", var.single_databases_sku_name)) ? lookup(local.datawarehouse_allowed_create_mode, each.value.create_mode, "Default") : try(lookup(local.standard_allowed_create_mode, each.value.create_mode), "Default")
+  create_mode = can(regex("^DW", each.value.single_databases_sku_name)) ? lookup(local.datawarehouse_allowed_create_mode, each.value.create_mode, "Default") : try(lookup(local.standard_allowed_create_mode, each.value.create_mode), "Default")
 
   creation_source_database_id = can(regex("Copy|Secondary|PointInTimeRestore|Recovery|RestoreExternalBackup|Restore|RestoreExternalBackupSecondary", each.value.create_mode)) ? each.value.creation_source_database_id : null
 
@@ -33,36 +33,39 @@ resource "azurerm_mssql_database" "single_database" {
   storage_account_type = each.value.storage_account_type
 
   dynamic "threat_detection_policy" {
-    for_each = var.threat_detection_policy_enabled ? ["enabled"] : []
+    for_each = each.value.threat_detection_policy == null ? [] : [each.value.threat_detection_policy]
     content {
-      state                      = "Enabled"
-      email_account_admins       = "Enabled"
-      email_addresses            = var.alerting_email_addresses
-      retention_days             = var.threat_detection_policy_retention_days
-      disabled_alerts            = var.threat_detection_policy_disabled_alerts
-      storage_endpoint           = var.security_storage_account_blob_endpoint
-      storage_account_access_key = var.security_storage_account_access_key
+      state                      = threat_detection_policy.value.state
+      email_account_admins       = threat_detection_policy.value.email_account_admins
+      email_addresses            = threat_detection_policy.value.alerting_email_addresses
+      retention_days             = threat_detection_policy.value.threat_detection_policy_retention_days
+      disabled_alerts            = threat_detection_policy.value.threat_detection_policy_disabled_alerts
+      storage_endpoint           = threat_detection_policy.value.security_storage_account_blob_endpoint
+      storage_account_access_key = threat_detection_policy.value.security_storage_account_access_key
     }
   }
 
-  short_term_retention_policy {
-    retention_days           = var.point_in_time_restore_retention_days
-    backup_interval_in_hours = var.point_in_time_backup_interval_in_hours
+  dynamic "short_term_retention_policy" {
+    for_each = each.value.short_term_retention_policy == null ? [] : [each.value.short_term_retention_policy]
+    content {
+      retention_days           = short_term_retention_policy.value.retention_days
+      backup_interval_in_hours = short_term_retention_policy.value.backup_interval_in_hours
+    }
   }
 
   dynamic "long_term_retention_policy" {
     for_each = coalesce(
-      try(var.backup_retention.weekly_retention, ""),
-      try(var.backup_retention.monthly_retention, ""),
-      try(var.backup_retention.yearly_retention, ""),
-      try(var.backup_retention.week_of_year, ""),
+      try(each.value.backup_retention.weekly_retention, ""),
+      try(each.value.backup_retention.monthly_retention, ""),
+      try(each.value.backup_retention.yearly_retention, ""),
+      try(each.value.backup_retention.week_of_year, ""),
       "empty"
     ) == "empty" ? [] : ["enabled"]
     content {
-      weekly_retention  = try(format("P%sW", var.backup_retention.weekly_retention), null)
-      monthly_retention = try(format("P%sM", var.backup_retention.monthly_retention), null)
-      yearly_retention  = try(format("P%sY", var.backup_retention.yearly_retention), null)
-      week_of_year      = var.backup_retention.week_of_year
+      weekly_retention  = try(format("P%sW", each.value.backup_retention.weekly_retention), null)
+      monthly_retention = try(format("P%sM", each.value.backup_retention.monthly_retention), null)
+      yearly_retention  = try(format("P%sY", each.value.backup_retention.yearly_retention), null)
+      week_of_year      = each.value.backup_retention.week_of_year
     }
   }
 
@@ -77,11 +80,11 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
 
   sku_name        = "ElasticPool"
   license_type    = each.value.license_type
-  elastic_pool_id = one(azurerm_mssql_elasticpool.elastic_pool[*].id)
+  elastic_pool_id = var.elastic_pool_id
 
-  collation      = var.databases_collation
+  collation      = each.value.databases_collation
   max_size_gb    = can(regex("Secondary|OnlineSecondary", each.value.create_mode)) ? null : each.value.max_size_gb
-  zone_redundant = can(regex("^DW", var.single_databases_sku_name)) && var.databases_zone_redundant != null ? var.databases_zone_redundant : false
+  zone_redundant = can(regex("^DW", each.value.single_databases_sku_name)) && each.value.databases_zone_redundant != null ? each.value.databases_zone_redundant : false
 
   #https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.sql.models.database.createmode?view=azure-dotnet
   create_mode = try(lookup(local.standard_allowed_create_mode, each.value.create_mode), "Default")
@@ -95,61 +98,63 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
   storage_account_type = each.value.storage_account_type
 
   dynamic "threat_detection_policy" {
-    for_each = var.threat_detection_policy_enabled ? ["enabled"] : []
+    for_each = each.value.threat_detection_policy == null ? [] : each.value.threat_detection_policy
     content {
-      state                      = "Enabled"
-      email_account_admins       = "Enabled"
-      email_addresses            = var.alerting_email_addresses
-      retention_days             = var.threat_detection_policy_retention_days
-      disabled_alerts            = var.threat_detection_policy_disabled_alerts
-      storage_endpoint           = var.security_storage_account_blob_endpoint
-      storage_account_access_key = var.security_storage_account_access_key
+      state                      = threat_detection_policy.value.state
+      email_account_admins       = threat_detection_policy.value.email_account_admins
+      email_addresses            = threat_detection_policy.value.alerting_email_addresses
+      retention_days             = threat_detection_policy.value.threat_detection_policy_retention_days
+      disabled_alerts            = threat_detection_policy.value.threat_detection_policy_disabled_alerts
+      storage_endpoint           = threat_detection_policy.value.security_storage_account_blob_endpoint
+      storage_account_access_key = threat_detection_policy.value.security_storage_account_access_key
     }
   }
 
-  short_term_retention_policy {
-    retention_days           = var.point_in_time_restore_retention_days
-    backup_interval_in_hours = var.point_in_time_backup_interval_in_hours
+  dynamic "short_term_retention_policy" {
+    for_each = each.value.short_term_retention_policy == null ? [] : [each.value.short_term_retention_policy]
+    content {
+      retention_days           = short_term_retention_policy.value.retention_days
+      backup_interval_in_hours = short_term_retention_policy.value.backup_interval_in_hours
+    }
   }
 
   dynamic "long_term_retention_policy" {
     for_each = coalesce(
-      try(var.backup_retention.weekly_retention, ""),
-      try(var.backup_retention.monthly_retention, ""),
-      try(var.backup_retention.yearly_retention, ""),
-      try(var.backup_retention.week_of_year, ""),
+      try(each.value.backup_retention.weekly_retention, ""),
+      try(each.value.backup_retention.monthly_retention, ""),
+      try(each.value.backup_retention.yearly_retention, ""),
+      try(each.value.backup_retention.week_of_year, ""),
       "empty"
     ) == "empty" ? [] : ["enabled"]
     content {
-      weekly_retention  = try(format("P%sW", var.backup_retention.weekly_retention), null)
-      monthly_retention = try(format("P%sM", var.backup_retention.monthly_retention), null)
-      yearly_retention  = try(format("P%sY", var.backup_retention.yearly_retention), null)
-      week_of_year      = var.backup_retention.week_of_year
+      weekly_retention  = try(format("P%sW", each.value.backup_retention.weekly_retention), null)
+      monthly_retention = try(format("P%sM", each.value.backup_retention.monthly_retention), null)
+      yearly_retention  = try(format("P%sY", each.value.backup_retention.yearly_retention), null)
+      week_of_year      = each.value.backup_retention.week_of_year
     }
-
   }
 
   tags = local.tags
 }
 
 
-resource "azurerm_mssql_database_extended_auditing_policy" "elastic_pool_db" {
-  for_each = var.databases_extended_auditing_enabled ? try({ for db in var.databases : db.name => db if var.elastic_pool_enabled == true }, {}) : {}
+# resource "azurerm_mssql_database_extended_auditing_policy" "elastic_pool_db" {
+#   for_each = var.databases_extended_auditing_enabled ? try({ for db in var.databases : db.name => db if var.elastic_pool_enabled == true }, {}) : {}
 
-  database_id                             = azurerm_mssql_database.elastic_pool_database[each.key].id
-  storage_endpoint                        = var.security_storage_account_blob_endpoint
-  storage_account_access_key              = var.security_storage_account_access_key
-  storage_account_access_key_is_secondary = false
-  retention_in_days                       = var.databases_extended_auditing_retention_days
-}
+#   database_id                             = azurerm_mssql_database.elastic_pool_database[each.key].id
+#   storage_endpoint                        = var.security_storage_account_blob_endpoint
+#   storage_account_access_key              = var.security_storage_account_access_key
+#   storage_account_access_key_is_secondary = false
+#   retention_in_days                       = var.databases_extended_auditing_retention_days
+# }
 
-resource "azurerm_mssql_database_extended_auditing_policy" "single_db" {
-  for_each = var.databases_extended_auditing_enabled ? try({ for db in var.databases : db.name => db if var.elastic_pool_enabled == false }, {}) : {}
+# resource "azurerm_mssql_database_extended_auditing_policy" "single_db" {
+#   for_each = var.databases_extended_auditing_enabled ? try({ for db in var.databases : db.name => db if var.elastic_pool_enabled == false }, {}) : {}
 
-  database_id                             = azurerm_mssql_database.single_database[each.key].id
-  storage_endpoint                        = var.security_storage_account_blob_endpoint
-  storage_account_access_key              = var.security_storage_account_access_key
-  storage_account_access_key_is_secondary = false
-  retention_in_days                       = var.databases_extended_auditing_retention_days
-}
+#   database_id                             = azurerm_mssql_database.single_database[each.key].id
+#   storage_endpoint                        = var.security_storage_account_blob_endpoint
+#   storage_account_access_key              = var.security_storage_account_access_key
+#   storage_account_access_key_is_secondary = false
+#   retention_in_days                       = var.databases_extended_auditing_retention_days
+# }
 
