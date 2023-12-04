@@ -223,10 +223,10 @@ variable "elastic_pool_databases_max_capacity" {
 variable "administrator_login" {
   description = "Administrator login for SQL Server"
   type        = string
-  default     = null
+  default     = "sqladmin"
 }
 
-variable "administrator_password" {
+variable "administrator_login_password" {
   description = "Administrator password for SQL Server"
   type        = string
   default     = null
@@ -349,6 +349,12 @@ variable "private_endpoints" {
     resource_group_name  = string
   }))
   default = []
+}
+
+variable "key_vault_id" {
+  description = "ID of the key vault to store the PostgreSQL administrator password."
+  type        = string
+  default     = null
 }
 
 

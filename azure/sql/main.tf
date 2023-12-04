@@ -8,6 +8,28 @@ module "azure_region" {
   azure_region = var.az_region
 }
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Admin credentials creation if Password Authentication is enabled
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+resource "random_password" "default" {
+  count   = var.create ? 1 : 0
+  length  = 20
+  special = false
+}
+
+
+resource "azurerm_key_vault_secret" "postgresql_admin_password" {
+  depends_on = [
+    azurerm_mssql_server.default[0],
+  ]
+  count        = var.create ? 1 : 0
+  name         = azurerm_mssql_server.default[0].administrator_login
+  value        = azurerm_mssql_server.default[0].administrator_login_password
+  key_vault_id = var.key_vault_id
+}
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # SQL server resource
@@ -25,8 +47,9 @@ resource "azurerm_mssql_server" "default" {
   public_network_access_enabled        = var.public_network_access_enabled
   outbound_network_restriction_enabled = var.outbound_network_restriction_enabled
 
-  administrator_login          = var.administrator_login
-  administrator_login_password = var.administrator_password
+  administrator_login          = var.azuread_administrator.azuread_authentication_only ? null : var.administrator_login
+  administrator_login_password = var.azuread_administrator.azuread_authentication_only ? null : (var.administrator_login_password != null ? var.administrator_login_password : random_password.default[0].result)
+
 
   dynamic "azuread_administrator" {
     for_each = var.azuread_administrator != null ? ["enabled"] : []
