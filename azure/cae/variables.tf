@@ -143,17 +143,9 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-variable "logs_destinations_ids" {
-  type        = list(string)
-  default     = []
-  description = "List of destination resources IDs for logs diagnostic destination."
-}
-
 variable "log_analytics_workspace_id" {
-  type        = list(string)
-  default     = []
-  description = "Destination resources ID runtime logs."
+  type        = string
+  description = "List of destination resources IDs for logs diagnostic destination."
 }
 
 variable "infrastructure_subnet_id" {

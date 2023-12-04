@@ -16,8 +16,8 @@ module "azure_region" {
 resource "azurerm_container_app_environment" "default" {
   count                          = var.create ? 1 : 0
   location                       = var.az_region
-  log_analytics_workspace_id     = var.log_analytics_workspace_id
   name                           = local.module_prefix
+  log_analytics_workspace_id     = var.log_analytics_workspace_id
   resource_group_name            = var.resource_group_name
   infrastructure_subnet_id       = var.infrastructure_subnet_id
   internal_load_balancer_enabled = var.internal_load_balancer_enabled
@@ -84,23 +84,5 @@ resource "azurerm_private_dns_a_record" "default" {
   resource_group_name = var.dns_a_record.resource_group_name
   ttl                 = var.dns_a_record.ttl
   records             = [azurerm_container_app_environment.default[0].static_ip_address]
-}
-
-
-# # ----------------------------------------------------------------------------------------------------------------------
-# # Container Environment Diagnostic
-# # ----------------------------------------------------------------------------------------------------------------------
-
-
-module "diagnostic" {
-  count                 = var.create && var.logs_destinations_ids != [] ? 1 : 0
-  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=GDEV-336-release-azure"
-  namespace             = var.namespace
-  environment           = var.environment
-  stage                 = var.stage
-  application           = var.application
-  az_region             = var.az_region
-  target_resource_id    = concat(azurerm_container_app_environment.default.*.id, [""])[0]
-  logs_destinations_ids = [var.logs_destinations_ids]
 }
 
