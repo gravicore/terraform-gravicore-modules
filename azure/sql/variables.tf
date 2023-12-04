@@ -337,6 +337,18 @@ variable "security_storage_account_container_name" {
   default     = null
 }
 
+variable "private_endpoints" {
+  description = "List of private endpoints to create for the Key Vault."
+  type = list(object({
+    name                 = optional(string, "pep")
+    subnet_id            = string
+    private_dns_zone_ids = optional(list(string), null)
+    subresource_name     = optional(string, "sqlServer")
+    resource_group_name  = string
+  }))
+  default = []
+}
+
 
 locals {
   allowed_subnets = [
@@ -346,13 +358,13 @@ locals {
     }
   ]
 
-  databases_users = var.create_databases_users ? [
-    for db in var.databases : {
-      username = format("%s_user", replace(db.name, "-", "_"))
-      database = db.name
-      roles    = ["db_owner"]
-    }
-  ] : []
+  # databases_users = var.create_databases_users ? [
+  #   for db in var.databases : {
+  #     username = format("%s_user", replace(db.name, "-", "_"))
+  #     database = db.name
+  #     roles    = ["db_owner"]
+  #   }
+  # ] : []
 
   standard_allowed_create_mode = {
     "a" = "Default"
