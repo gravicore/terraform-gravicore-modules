@@ -150,6 +150,12 @@ variable "logs_destinations_ids" {
   description = "List of destination resources IDs for logs diagnostic destination."
 }
 
+variable "log_analytics_workspace_id" {
+  type        = list(string)
+  default     = []
+  description = "Destination resources ID runtime logs."
+}
+
 variable "infrastructure_subnet_id" {
   type        = string
   default     = null
