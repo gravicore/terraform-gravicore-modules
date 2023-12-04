@@ -101,6 +101,6 @@ module "diagnostic" {
   application           = var.application
   az_region             = var.az_region
   target_resource_id    = concat(azurerm_container_app_environment.default.*.id, [""])[0]
-  logs_destinations_ids = [var.log_analytics_workspace_id]
+  logs_destinations_ids = [var.logs_destinations_ids]
 }
 
