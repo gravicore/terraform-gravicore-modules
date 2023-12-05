@@ -146,6 +146,7 @@ variable "key_pair" {
     {
       public_key_secret_name  = string
       private_key_secret_name = string
+      key_vault_id            = string
     }
   ))
   default = {}
