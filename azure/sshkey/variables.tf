@@ -155,3 +155,4 @@ variable "key_vault_id" {
   type        = string
   description = "The ID of the Key Vault to store the certificate in."
 }
+
