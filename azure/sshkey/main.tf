@@ -39,7 +39,7 @@ resource "azurerm_key_vault_secret" "publickey" {
   count        = var.create ? 1 : 0
   name         = each.value.public_key_secret_name
   value        = jsondecode(azapi_resource_action.ssh_public_key_gen.output).publicKey
-  key_vault_id = var.key_vault_id
+  key_vault_id = each.value.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "privatekey" {
@@ -47,6 +47,6 @@ resource "azurerm_key_vault_secret" "privatekey" {
   count        = var.create ? 1 : 0
   name         = each.value.private_key_secret_name
   value        = jsondecode(azapi_resource_action.ssh_public_key_gen.output).privateKey
-  key_vault_id = var.key_vault_id
+  key_vault_id = each.value.key_vault_id
 }
 
