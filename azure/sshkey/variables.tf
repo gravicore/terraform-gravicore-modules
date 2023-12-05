@@ -150,3 +150,9 @@ variable "key_pair" {
   ))
   default = {}
 }
+
+variable "subscription_id" {
+  type        = string
+  default     = ""
+  description = "The Azure subscription ID"
+}
