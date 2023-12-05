@@ -26,7 +26,6 @@ resource "azapi_resource_action" "ssh_public_key_gen" {
 
 resource "azapi_resource" "ssh_public_key" {
   for_each  = var.key_pair
-  count     = var.create ? 1 : 0
   type      = "Microsoft.Compute/sshPublicKeys@2022-11-01"
   name      = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, each.key, var.name])
   location  = var.az_region
@@ -36,7 +35,6 @@ resource "azapi_resource" "ssh_public_key" {
 
 resource "azurerm_key_vault_secret" "publickey" {
   for_each     = var.key_pair
-  count        = var.create ? 1 : 0
   name         = each.value.public_key_secret_name
   value        = jsondecode(azapi_resource_action.ssh_public_key_gen.output).publicKey
   key_vault_id = each.value.key_vault_id
@@ -44,7 +42,6 @@ resource "azurerm_key_vault_secret" "publickey" {
 
 resource "azurerm_key_vault_secret" "privatekey" {
   for_each     = var.key_pair
-  count        = var.create ? 1 : 0
   name         = each.value.private_key_secret_name
   value        = jsondecode(azapi_resource_action.ssh_public_key_gen.output).privateKey
   key_vault_id = each.value.key_vault_id
