@@ -36,14 +36,14 @@ resource "azapi_resource" "ssh_public_key" {
 resource "azurerm_key_vault_secret" "publickey" {
   for_each     = var.key_pair
   name         = each.value.public_key_secret_name
-  value        = jsondecode(azapi_resource_action.ssh_public_key_gen.output).publicKey
+  value        = jsondecode(azapi_resource_action.ssh_public_key_gen[each.key].output).publicKey
   key_vault_id = each.value.key_vault_id
 }
 
 resource "azurerm_key_vault_secret" "privatekey" {
   for_each     = var.key_pair
   name         = each.value.private_key_secret_name
-  value        = jsondecode(azapi_resource_action.ssh_public_key_gen.output).privateKey
+  value        = jsondecode(azapi_resource_action.ssh_public_key_gen[each.key].output).privateKey
   key_vault_id = each.value.key_vault_id
 }
 
