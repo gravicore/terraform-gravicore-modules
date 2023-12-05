@@ -156,3 +156,4 @@ variable "subscription_id" {
   default     = ""
   description = "The Azure subscription ID"
 }
+
