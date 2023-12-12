@@ -1,7 +1,7 @@
 resource "azurerm_network_interface" "default" {
   count = var.new_network_interface != null ? 1 : 0
 
-  location                      = var.location
+  location                      = var.az_region
   name                          = join(var.delimiter, [local.module_prefix, "nic"])
   resource_group_name           = var.resource_group_name
   dns_servers                   = var.new_network_interface.dns_servers
@@ -37,7 +37,7 @@ resource "azurerm_network_interface" "default" {
 resource "azurerm_network_interface_security_group_association" "nic_nsg" {
   count = var.nic_nsg_id == null ? 0 : 1
 
-  network_interface_id      = azurerm_network_interface.nic.id
+  network_interface_id      = azurerm_network_interface.default[0].id
   network_security_group_id = var.nic_nsg_id
 }
 
@@ -46,7 +46,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "lb_pool_a
 
   backend_address_pool_id = var.load_balancer_backend_pool_id
   ip_configuration_name   = local.ip_configuration_name
-  network_interface_id    = azurerm_network_interface.nic.id
+  network_interface_id    = azurerm_network_interface.default[0].id
 }
 
 resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "appgw_pool_association" {
@@ -54,6 +54,6 @@ resource "azurerm_network_interface_application_gateway_backend_address_pool_ass
 
   backend_address_pool_id = var.application_gateway_backend_pool_id
   ip_configuration_name   = local.ip_configuration_name
-  network_interface_id    = azurerm_network_interface.nic.id
+  network_interface_id    = azurerm_network_interface.default[0].id
 }
 

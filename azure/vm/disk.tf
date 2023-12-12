@@ -2,7 +2,7 @@ resource "azurerm_managed_disk" "disk" {
   for_each = { for d in var.data_disks : d.attach_setting.lun => d }
 
   create_option                    = each.value.create_option
-  location                         = var.location
+  location                         = var.az_region
   name                             = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, each.value.name, "datadisk"])
   resource_group_name              = var.resource_group_name
   storage_account_type             = each.value.storage_account_type
