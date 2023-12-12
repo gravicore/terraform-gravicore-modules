@@ -1009,6 +1009,7 @@ variable "log_analytics_workspace_key" {
 variable "azure_monitor_data_collection_rule_id" {
   description = "Data Collection Rule ID from Azure Monitor for metrics and logs collection. Used with new monitoring agent, set to `null` if legacy agent is used."
   type        = string
+  default     = null
 }
 
 variable "azure_monitor_agent_version" {
