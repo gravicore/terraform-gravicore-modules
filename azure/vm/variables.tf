@@ -988,7 +988,7 @@ variable "diagnostics_storage_account_sas_token" {
 }
 
 ## Logs & monitoring variables
-variable "use_legacy_monitoring_agent" {
+variable "use_monitoring_agent" {
   description = "True to use the legacy monitoring agent instead of Azure Monitor Agent."
   type        = bool
   default     = false
@@ -1040,3 +1040,10 @@ variable "maintenance_configuration_ids" {
   type        = list(string)
   default     = []
 }
+
+variable "custom_dcr_name" {
+  description = "Custom name for Data collection rule association"
+  type        = string
+  default     = null
+}
+

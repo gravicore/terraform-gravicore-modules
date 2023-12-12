@@ -92,3 +92,27 @@ SETTINGS
   }
 }
 
+resource "azurerm_virtual_machine_extension" "azure_monitor_agent" {
+  for_each = toset(var.use_monitoring_agent ? [] : ["enabled"])
+
+  name = "${azurerm_linux_virtual_machine.default[0].name}-azmonitorextension"
+
+  publisher                  = "Microsoft.Azure.Monitor"
+  type                       = "AzureMonitorLinuxAgent"
+  type_handler_version       = var.azure_monitor_agent_version
+  auto_upgrade_minor_version = "true"
+  automatic_upgrade_enabled  = var.azure_monitor_agent_auto_upgrade_enabled
+
+  virtual_machine_id = azurerm_linux_virtual_machine.default[0].id
+
+  tags = merge(local.tags, local.default_vm_tags, var.extra_tags, var.extensions_extra_tags)
+}
+
+resource "azurerm_monitor_data_collection_rule_association" "dcr" {
+  for_each = toset(var.use_monitoring_agent ? [] : ["enabled"])
+
+  name                    = local.dcr_name
+  target_resource_id      = azurerm_linux_virtual_machine.default[0].id
+  data_collection_rule_id = var.azure_monitor_data_collection_rule_id
+}
+
