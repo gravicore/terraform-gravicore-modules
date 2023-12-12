@@ -1,23 +1,5 @@
 locals {
-  virtual_machine = local.is_windows ? {
-    id                            = try(azurerm_windows_virtual_machine.vm_windows[0].id, null)
-    name                          = try(azurerm_windows_virtual_machine.vm_windows[0].name, null)
-    admin_username                = try(azurerm_windows_virtual_machine.vm_windows[0].admin_username, null)
-    network_interface_ids         = try(azurerm_windows_virtual_machine.vm_windows[0].network_interface_ids, null)
-    availability_set_id           = try(azurerm_windows_virtual_machine.vm_windows[0].availability_set_id, null)
-    capacity_reservation_group_id = try(azurerm_windows_virtual_machine.vm_windows[0].capacity_reservation_group_id, null)
-    computer_name                 = try(azurerm_windows_virtual_machine.vm_windows[0].computer_name, null)
-    dedicated_host_id             = try(azurerm_windows_virtual_machine.vm_windows[0].dedicated_host_id, null)
-    dedicated_host_group_id       = try(azurerm_windows_virtual_machine.vm_windows[0].dedicated_host_group_id, null)
-    patch_mode                    = try(azurerm_windows_virtual_machine.vm_windows[0].patch_mode, null)
-    proximity_placement_group_id  = try(azurerm_windows_virtual_machine.vm_windows[0].proximity_placement_group_id, null)
-    source_image_id               = try(azurerm_windows_virtual_machine.vm_windows[0].source_image_id, null)
-    virtual_machine_scale_set_id  = try(azurerm_windows_virtual_machine.vm_windows[0].virtual_machine_scale_set_id, null)
-    timezone                      = try(azurerm_windows_virtual_machine.vm_windows[0].timezone, null)
-    zone                          = try(azurerm_windows_virtual_machine.vm_windows[0].zone, null)
-    identity                      = try(azurerm_windows_virtual_machine.vm_windows[0].identity, null)
-    source_image_reference        = try(azurerm_windows_virtual_machine.vm_windows[0].source_image_reference, null)
-    } : {
+  virtual_machine = {
     id                            = try(azurerm_linux_virtual_machine.default[0].id, null)
     name                          = try(azurerm_linux_virtual_machine.default[0].name, null)
     admin_username                = try(azurerm_linux_virtual_machine.default[0].admin_username, null)
