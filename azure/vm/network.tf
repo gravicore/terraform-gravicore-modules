@@ -2,7 +2,7 @@ resource "azurerm_network_interface" "default" {
   count = var.new_network_interface != null ? 1 : 0
 
   location                      = var.location
-  name                          = join("-", [local.module_prefix, "nic"])
+  name                          = join(var.delimiter, [local.module_prefix, "nic"])
   resource_group_name           = var.resource_group_name
   dns_servers                   = var.new_network_interface.dns_servers
   edge_zone                     = var.new_network_interface.edge_zone

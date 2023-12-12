@@ -3,7 +3,7 @@ resource "azurerm_managed_disk" "disk" {
 
   create_option                    = each.value.create_option
   location                         = var.location
-  name                             = join("-", [local.module_prefix, each.value.name, "datadisk"])
+  name                             = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, each.value.name, "datadisk"])
   resource_group_name              = var.resource_group_name
   storage_account_type             = each.value.storage_account_type
   disk_access_id                   = each.value.disk_access_id

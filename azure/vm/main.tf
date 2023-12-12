@@ -13,7 +13,6 @@ module "azure_region" {
 # Virtual Machine resource
 # ----------------------------------------------------------------------------------------------------------------------
 
-
 resource "azurerm_linux_virtual_machine" "default" {
   count = local.is_linux ? 1 : 0
 
@@ -57,7 +56,7 @@ resource "azurerm_linux_virtual_machine" "default" {
     storage_account_type             = var.os_disk.storage_account_type
     disk_encryption_set_id           = var.os_disk.disk_encryption_set_id
     disk_size_gb                     = var.os_disk.disk_size_gb
-    name                             = var.os_disk.name
+    name                             = var.os_disk.name == null ? join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, var.name, "osdisk"]) : var.os_disk.name
     secure_vm_disk_encryption_set_id = var.os_disk.secure_vm_disk_encryption_set_id
     security_encryption_type         = var.os_disk.security_encryption_type
     write_accelerator_enabled        = var.os_disk.write_accelerator_enabled
@@ -91,10 +90,10 @@ resource "azurerm_linux_virtual_machine" "default" {
     }
   }
   dynamic "boot_diagnostics" {
-    for_each = var.boot_diagnostics ? ["boot_diagnostics"] : []
+    for_each = var.boot_diagnostics_storage_account_uri == null ? [] : var.boot_diagnostics_storage_account_uri
 
     content {
-      storage_account_uri = try(azurerm_storage_account.boot_diagnostics[0].primary_blob_endpoint, var.boot_diagnostics_storage_account_uri)
+      storage_account_uri = var.boot_diagnostics_storage_account_uri
     }
   }
   dynamic "gallery_application" {

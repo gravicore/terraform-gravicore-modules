@@ -158,16 +158,10 @@ variable "location" {
   nullable    = false
 }
 
-variable "name" {
-  type        = string
-  description = "(Required) The name of the Virtual Machine. Changing this forces a new resource to be created."
-  nullable    = false
-}
-
 variable "os_disk" {
   type = object({
-    caching                          = string
-    storage_account_type             = string
+    caching                          = optional(string, "ReadWrite")
+    storage_account_type             = optional(string, "StandardSSD_LRS")
     disk_encryption_set_id           = optional(string)
     disk_size_gb                     = optional(number)
     name                             = optional(string)
@@ -175,7 +169,7 @@ variable "os_disk" {
     security_encryption_type         = optional(string)
     write_accelerator_enabled        = optional(bool, false)
     diff_disk_settings = optional(object({
-      option    = string
+      option    = option(string, "Local")
       placement = optional(string, "CacheDisk")
     }), null)
   })
@@ -216,19 +210,20 @@ variable "subnet_id" {
   nullable    = false
 }
 
-variable "additional_unattend_contents" {
-  type = list(object({
-    content = string
-    setting = string
-  }))
-  default     = []
-  description = <<-EOT
-  list(object({
-    content = "(Required) The XML formatted content that is added to the unattend.xml file for the specified path and component. Changing this forces a new resource to be created."
-    setting = "(Required) The name of the setting to which the content applies. Possible values are `AutoLogon` and `FirstLogonCommands`. Changing this forces a new resource to be created."
-  }))
-  EOT
-}
+# For azurerm_windows_virtual_machine
+# variable "additional_unattend_contents" {
+#   type = list(object({
+#     content = string
+#     setting = string
+#   }))
+#   default     = []
+#   description = <<-EOT
+#   list(object({
+#     content = "(Required) The XML formatted content that is added to the unattend.xml file for the specified path and component. Changing this forces a new resource to be created."
+#     setting = "(Required) The name of the setting to which the content applies. Possible values are `AutoLogon` and `FirstLogonCommands`. Changing this forces a new resource to be created."
+#   }))
+#   EOT
+# }
 
 variable "admin_password" {
   type        = string
@@ -260,15 +255,16 @@ variable "admin_username" {
 
 variable "allow_extension_operations" {
   type        = bool
-  default     = false
+  default     = true
   description = "(Optional) Should Extension Operations be allowed on this Virtual Machine? Defaults to `false`."
 }
 
-variable "automatic_updates_enabled" {
-  type        = bool
-  default     = true
-  description = "(Optional) Specifies if Automatic Updates are Enabled for the Windows Virtual Machine. Changing this forces a new resource to be created. Defaults to `true`."
-}
+# For azurerm_windows_virtual_machine
+# variable "automatic_updates_enabled" {
+#   type        = bool
+#   default     = true
+#   description = "(Optional) Specifies if Automatic Updates are Enabled for the Windows Virtual Machine. Changing this forces a new resource to be created. Defaults to `true`."
+# }
 
 variable "availability_set_id" {
   type        = string
@@ -547,77 +543,6 @@ variable "network_interface_ids" {
   }
 }
 
-variable "new_boot_diagnostics_storage_account" {
-  type = object({
-    name                             = optional(string)
-    account_kind                     = optional(string, "StorageV2")
-    account_tier                     = optional(string, "Standard")
-    account_replication_type         = optional(string, "LRS")
-    cross_tenant_replication_enabled = optional(bool, true)
-    access_tier                      = optional(string, "Hot")
-    enable_https_traffic_only        = optional(bool, true)
-    min_tls_version                  = optional(string, "TLS1_2")
-    allow_nested_items_to_be_public  = optional(bool, true)
-    shared_access_key_enabled        = optional(bool, true)
-    public_network_access_enabled    = optional(bool, false)
-    default_to_oauth_authentication  = optional(bool, false)
-    customer_managed_key = optional(object({
-      key_vault_key_id          = string
-      user_assigned_identity_id = string
-    }))
-    blob_properties = optional(object({
-      delete_retention_policy = optional(object({
-        days = optional(number, 7)
-      }))
-      restore_policy = optional(object({
-        days = number
-      }))
-      container_delete_retention_policy = optional(object({
-        days = optional(number, 7)
-      }))
-    }))
-    identity = optional(object({
-      type         = string
-      identity_ids = optional(list(string))
-    }))
-  })
-  default     = null
-  description = <<-EOT
-  object({
-    name                             = "(Optional) Specifies the name of the storage account. Only lowercase Alphanumeric characters allowed. Omit this field would generate one. Changing this forces a new resource to be created. This must be unique across the entire Azure service, not just within the resource group."
-    account_kind                     = "(Optional) Defines the Kind of account. Valid options are `BlobStorage`, `BlockBlobStorage`, `FileStorage`, `Storage` and `StorageV2`.  Defaults to `StorageV2`. Changing the `account_kind` value from `Storage` to `StorageV2` will not trigger a force new on the storage account, it will only upgrade the existing storage account from `Storage` to `StorageV2` keeping the existing storage account in place."
-    account_tier                     = "(Optional) Defines the Tier to use for this storage account. Valid options are `Standard` and `Premium`. For `BlockBlobStorage` and `FileStorage` accounts only `Premium` is valid. Defaults to `Standard`. Changing this forces a new resource to be created. Blobs with a tier of `Premium` are of account kind `StorageV2`."
-    account_replication_type         = "(Optional) Defines the type of replication to use for this storage account. Valid options are `LRS`, `GRS`, `RAGRS`, `ZRS`, `GZRS` and `RAGZRS`. Defaults to `LRS`. Changing this forces a new resource to be created when types `LRS`, `GRS` and `RAGRS` are changed to `ZRS`, `GZRS` or `RAGZRS` and vice versa."
-    cross_tenant_replication_enabled = "(Optional) Should cross Tenant replication be enabled? Defaults to `true`."
-    access_tier                      = "(Optional) Defines the access tier for `BlobStorage`, `FileStorage` and `StorageV2` accounts. Valid options are `Hot` and `Cool`, defaults to `Hot`."
-    enable_https_traffic_only        = "(Optional) Boolean flag which forces HTTPS if enabled, see [here](https://docs.microsoft.com/azure/storage/storage-require-secure-transfer/) for more information. Defaults to `true`."
-    min_tls_version                  = "(Optional) The minimum supported TLS version for the storage account. Possible values are `TLS1_0`, `TLS1_1`, and `TLS1_2`. Defaults to `TLS1_2` for new storage accounts. At this time `min_tls_version` is only supported in the Public Cloud, China Cloud, and US Government Cloud."
-    allow_nested_items_to_be_public  = "(Optional) Allow or disallow nested items within this Account to opt into being public. Defaults to `true`. At this time `allow_nested_items_to_be_public` is only supported in the Public Cloud, China Cloud, and US Government Cloud."
-    shared_access_key_enabled        = "(Optional) Indicates whether the storage account permits requests to be authorized with the account access key via Shared Key. If false, then all requests, including shared access signatures, must be authorized with Azure Active Directory (Azure AD). The default value is `true`. Terraform uses Shared Key Authorisation to provision Storage Containers, Blobs and other items - when Shared Key Access is disabled, you will need to enable [the `storage_use_azuread` flag in the Provider block](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs#storage_use_azuread) to use Azure AD for authentication, however not all Azure Storage services support Active Directory authentication."
-    public_network_access_enabled    = "(Optional) Whether the public network access is enabled? Defaults to `false`."
-    default_to_oauth_authentication  = "(Optional) Default to Azure Active Directory authorization in the Azure portal when accessing the Storage Account. The default value is `false`"
-    customer_managed_key             = optional(object({
-      key_vault_key_id          = "(Required) The ID of the Key Vault Key, supplying a version-less key ID will enable auto-rotation of this key."
-      user_assigned_identity_id = "(Required) The ID of a user assigned identity. `customer_managed_key` can only be set when the `account_kind` is set to `StorageV2` or `account_tier` set to `Premium`, and the identity type is `UserAssigned`."
-    }))
-    blob_properties = optional(object({
-      delete_retention_policy = optional(object({
-        days = "(Optional) Specifies the number of days that the blob should be retained, between `1` and `365` days. Defaults to `7`."
-      }))
-      restore_policy = optional(object({
-        days = "(Required) Specifies the number of days that the blob can be restored, between `1` and `365` days. This must be less than the `days` specified for `delete_retention_policy`."
-      }))
-      container_delete_retention_policy = optional(object({
-        days = "(Optional) Specifies the number of days that the container should be retained, between `1` and `365` days. Defaults to `7`."
-      }))
-    }))
-    identity = optional(object({
-      type         = "(Required) Specifies the type of Managed Service Identity that should be configured on this Storage Account. Possible values are `SystemAssigned`, `UserAssigned`, `SystemAssigned, UserAssigned` (to enable both)."
-      identity_ids = "(Optional) Specifies a list of User Assigned Managed Identity IDs to be assigned to this Storage Account. This is required when `type` is set to `UserAssigned` or `SystemAssigned, UserAssigned`."
-    }))
-  })
-  EOT
-}
 
 variable "new_network_interface" {
   type = object({
@@ -854,14 +779,6 @@ variable "standard_os" {
   }))
   EOT
   nullable    = false
-}
-
-variable "tags" {
-  type = map(string)
-  default = {
-    source = "terraform"
-  }
-  description = "A map of the tags to use on the resources that are deployed with this module."
 }
 
 variable "termination_notification" {
