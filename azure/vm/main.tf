@@ -90,7 +90,7 @@ resource "azurerm_linux_virtual_machine" "default" {
     }
   }
   dynamic "boot_diagnostics" {
-    for_each = var.boot_diagnostics_storage_account_uri == null ? [] : var.boot_diagnostics_storage_account_uri
+    for_each = var.boot_diagnostics_storage_account_uri == null ? [] : ["var.boot_diagnostics_storage_account_uri"]
 
     content {
       storage_account_uri = var.boot_diagnostics_storage_account_uri
