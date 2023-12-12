@@ -93,7 +93,7 @@ SETTINGS
 }
 
 resource "azurerm_virtual_machine_extension" "azure_monitor_agent" {
-  for_each = toset(var.use_monitoring_agent ? [] : ["enabled"])
+  count = var.use_monitoring_agent ? 1 : 0
 
   name = "${azurerm_linux_virtual_machine.default[0].name}-azmonitorextension"
 
@@ -109,8 +109,7 @@ resource "azurerm_virtual_machine_extension" "azure_monitor_agent" {
 }
 
 resource "azurerm_monitor_data_collection_rule_association" "dcr" {
-  for_each = toset(var.use_monitoring_agent ? [] : ["enabled"])
-
+  count                   = var.use_monitoring_agent ? 1 : 0
   name                    = local.dcr_name
   target_resource_id      = azurerm_linux_virtual_machine.default[0].id
   data_collection_rule_id = var.azure_monitor_data_collection_rule_id
