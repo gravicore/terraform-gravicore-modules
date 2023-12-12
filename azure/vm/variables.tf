@@ -169,7 +169,7 @@ variable "os_disk" {
     security_encryption_type         = optional(string)
     write_accelerator_enabled        = optional(bool, false)
     diff_disk_settings = optional(object({
-      option    = option(string, "Local")
+      option    = optional(string, "Local")
       placement = optional(string, "CacheDisk")
     }), null)
   })
@@ -192,11 +192,6 @@ variable "os_disk" {
   nullable    = false
 }
 
-variable "resource_group_name" {
-  type        = string
-  description = "(Required) The name of the Resource Group in which the Virtual Machine should be exist. Changing this forces a new resource to be created."
-  nullable    = false
-}
 
 variable "size" {
   type        = string
@@ -1045,12 +1040,3 @@ variable "maintenance_configuration_ids" {
   type        = list(string)
   default     = []
 }
-
-locals {
-  is_linux                                   = var.image_os == "linux"
-  is_windows                                 = var.image_os == "windows"
-  network_interface_ip_configuration_indexes = var.new_network_interface == null ? [] : toset(range(length(var.new_network_interface.ip_configurations)))
-  patch_mode                                 = coalesce(var.patch_mode, local.is_linux ? "ImageDefault" : "AutomaticByOS")
-  ip_configuration_name                      = join("-", [local.module_prefix, "nic", "ipconfig"])
-}
-
