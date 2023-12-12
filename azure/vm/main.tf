@@ -17,7 +17,7 @@ resource "azurerm_linux_virtual_machine" "default" {
   count = local.is_linux ? 1 : 0
 
   admin_username                  = var.admin_username
-  location                        = var.location
+  location                        = var.az_region
   name                            = local.module_prefix
   network_interface_ids           = local.network_interface_ids
   resource_group_name             = var.resource_group_name

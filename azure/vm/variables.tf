@@ -152,12 +152,6 @@ variable "image_os" {
   }
 }
 
-variable "location" {
-  type        = string
-  description = "(Required) The Azure location where the Virtual Machine should exist. Changing this forces a new resource to be created."
-  nullable    = false
-}
-
 variable "os_disk" {
   type = object({
     caching                          = optional(string, "ReadWrite")
