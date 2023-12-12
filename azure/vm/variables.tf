@@ -901,6 +901,7 @@ variable "application_gateway_backend_pool_id" {
 variable "backup_policy_id" {
   description = "Backup policy ID from the Recovery Vault to attach the Virtual Machine to (value to `null` to disable backup)."
   type        = string
+  default     = null
 }
 
 variable "aad_ssh_login_enabled" {
@@ -979,6 +980,7 @@ variable "os_disk_overwrite_tags" {
 variable "diagnostics_storage_account_name" {
   description = "Name of the Storage Account in which store boot diagnostics and for legacy monitoring agent."
   type        = string
+  default     = null
 }
 
 variable "diagnostics_storage_account_sas_token" {
