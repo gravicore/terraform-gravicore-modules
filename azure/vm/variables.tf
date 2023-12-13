@@ -108,7 +108,7 @@ variable "delimiter" {
 locals {
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
-  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.name])))
+  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.vm_prefix, var.name])))
 
   business_tags = {
     namespace          = var.namespace
@@ -151,6 +151,12 @@ variable "image_os" {
     error_message = "`image_os` must be either `windows` or `linux`."
   }
 }
+
+variable "vm_prefix" {
+  type        = string
+  description = "(Required) Prefix for virtual machine's name"
+}
+
 
 variable "os_disk" {
   type = object({
