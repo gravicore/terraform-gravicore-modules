@@ -18,7 +18,7 @@ resource "azurerm_linux_virtual_machine" "default" {
 
   admin_username                  = var.admin_username
   location                        = var.az_region
-  name                            = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.vm_prefix, var.name]))
+  name                            = local.module_prefix
   network_interface_ids           = local.network_interface_ids
   resource_group_name             = var.resource_group_name
   size                            = var.size
