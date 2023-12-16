@@ -217,9 +217,9 @@ variable "databases" {
       disabled_alerts            = optional(list(string))
       storage_endpoint           = optional(string)
       storage_account_access_key = optional(string)
-    }))
+    }), {})
   }))
-  default = []
+  default = {}
 }
 
 variable "databases_extended_auditing_enabled" {
