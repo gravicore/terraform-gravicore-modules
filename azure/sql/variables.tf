@@ -345,7 +345,7 @@ variable "private_endpoints" {
     name                 = optional(string, "pep")
     subnet_id            = string
     private_dns_zone_ids = optional(list(string), null)
-    subresource_name     = optional(string, "sqlServer")
+    subresource_name     = optional(string, "sqlServer") # https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-overview#private-link-resource
     resource_group_name  = string
   }))
   default = []
