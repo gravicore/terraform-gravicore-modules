@@ -3,9 +3,9 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_mssql_database" "single_database" {
-  for_each = try({ for db in var.databases : db.name => db if !var.elastic_pool_enabled }, {})
+  for_each = var.elastic_pool_enabled ? {} : var.databases
 
-  name      = local.module_prefix
+  name      = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, var.name]))
   server_id = var.mssql_server_id
 
   sku_name     = each.value.single_databases_sku_name
@@ -73,9 +73,9 @@ resource "azurerm_mssql_database" "single_database" {
 }
 
 resource "azurerm_mssql_database" "elastic_pool_database" {
-  for_each = try({ for db in var.databases : db.name => db if var.elastic_pool_enabled }, {})
+  for_each = var.elastic_pool_enabled ? var.databases : {}
 
-  name      = local.module_prefix
+  name      = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, var.name]))
   server_id = var.mssql_server_id
 
   sku_name        = "ElasticPool"
@@ -138,23 +138,23 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
 }
 
 
-# resource "azurerm_mssql_database_extended_auditing_policy" "elastic_pool_db" {
-#   for_each = var.databases_extended_auditing_enabled ? try({ for db in var.databases : db.name => db if var.elastic_pool_enabled == true }, {}) : {}
+resource "azurerm_mssql_database_extended_auditing_policy" "elastic_pool_db" {
+  for_each = var.databases_extended_auditing_enabled && var.elastic_pool_enabled ? var.databases : {}
 
-#   database_id                             = azurerm_mssql_database.elastic_pool_database[each.key].id
-#   storage_endpoint                        = var.security_storage_account_blob_endpoint
-#   storage_account_access_key              = var.security_storage_account_access_key
-#   storage_account_access_key_is_secondary = false
-#   retention_in_days                       = var.databases_extended_auditing_retention_days
-# }
+  database_id                             = azurerm_mssql_database.elastic_pool_database[each.key].id
+  storage_endpoint                        = var.security_storage_account_blob_endpoint
+  storage_account_access_key              = var.security_storage_account_access_key
+  storage_account_access_key_is_secondary = false
+  retention_in_days                       = var.databases_extended_auditing_retention_days
+}
 
-# resource "azurerm_mssql_database_extended_auditing_policy" "single_db" {
-#   for_each = var.databases_extended_auditing_enabled ? try({ for db in var.databases : db.name => db if var.elastic_pool_enabled == false }, {}) : {}
+resource "azurerm_mssql_database_extended_auditing_policy" "single_db" {
+  for_each = var.databases_extended_auditing_enabled && var.elastic_pool_enabled == false ? var.databases : {}
 
-#   database_id                             = azurerm_mssql_database.single_database[each.key].id
-#   storage_endpoint                        = var.security_storage_account_blob_endpoint
-#   storage_account_access_key              = var.security_storage_account_access_key
-#   storage_account_access_key_is_secondary = false
-#   retention_in_days                       = var.databases_extended_auditing_retention_days
-# }
+  database_id                             = azurerm_mssql_database.single_database[each.key].id
+  storage_endpoint                        = var.security_storage_account_blob_endpoint
+  storage_account_access_key              = var.security_storage_account_access_key
+  storage_account_access_key_is_secondary = false
+  retention_in_days                       = var.databases_extended_auditing_retention_days
+}
 

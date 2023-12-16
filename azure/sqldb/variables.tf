@@ -181,8 +181,8 @@ DESC
 
 variable "databases" {
   description = "List of the databases configurations for this server."
-  type = list(object({
-    name                        = string
+  type = map(object({
+    prefix                      = optional(string)
     license_type                = optional(string)
     max_size_gb                 = number
     single_databases_sku_name   = optional(stringi, "GP_Gen5_2")
