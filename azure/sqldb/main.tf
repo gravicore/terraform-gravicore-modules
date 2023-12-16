@@ -19,21 +19,21 @@ resource "azurerm_mssql_database" "single_database" {
   name      = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, var.name]))
   server_id = var.mssql_server_id
 
-  sku_name     = each.value.single_databases_sku_name
+  sku_name     = each.value.single_database_sku_name
   license_type = each.value.license_type
 
   collation      = each.value.databases_collation
   max_size_gb    = can(regex("Secondary|OnlineSecondary", each.value.create_mode)) ? null : each.value.max_size_gb
-  zone_redundant = can(regex("^DW", each.value.single_databases_sku_name)) && each.value.databases_zone_redundant != null ? each.value.databases_zone_redundant : false
+  zone_redundant = can(regex("^DW", each.value.single_database_sku_name)) && each.value.zone_redundant != null ? each.value.zone_redundant : false
 
-  min_capacity                = can(regex("^GP_S", each.value.single_databases_sku_name)) ? each.value.min_capacity : null
-  auto_pause_delay_in_minutes = can(regex("^GP_S", each.value.single_databases_sku_name)) ? each.value.auto_pause_delay_in_minutes : null
+  min_capacity                = can(regex("^GP_S", each.value.single_database_sku_name)) ? each.value.min_capacity : null
+  auto_pause_delay_in_minutes = can(regex("^GP_S", each.value.single_database_sku_name)) ? each.value.auto_pause_delay_in_minutes : null
 
-  read_scale         = can(regex("^P|BC", each.value.single_databases_sku_name)) && each.value.read_scale != null ? each.value.read_scale : false
-  read_replica_count = can(regex("^HS", each.value.single_databases_sku_name)) ? each.value.read_replica_count : null
+  read_scale         = can(regex("^P|BC", each.value.single_database_sku_name)) && each.value.read_scale != null ? each.value.read_scale : false
+  read_replica_count = can(regex("^HS", each.value.single_database_sku_name)) ? each.value.read_replica_count : null
 
   #https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.sql.models.database.createmode?view=azure-dotnet
-  create_mode = can(regex("^DW", each.value.single_databases_sku_name)) ? lookup(local.datawarehouse_allowed_create_mode, each.value.create_mode, "Default") : try(lookup(local.standard_allowed_create_mode, each.value.create_mode), "Default")
+  create_mode = can(regex("^DW", each.value.single_database_sku_name)) ? lookup(local.datawarehouse_allowed_create_mode, each.value.create_mode, "Default") : try(lookup(local.standard_allowed_create_mode, each.value.create_mode), "Default")
 
   creation_source_database_id = can(regex("Copy|Secondary|PointInTimeRestore|Recovery|RestoreExternalBackup|Restore|RestoreExternalBackupSecondary", each.value.create_mode)) ? each.value.creation_source_database_id : null
 
@@ -48,11 +48,11 @@ resource "azurerm_mssql_database" "single_database" {
     content {
       state                      = threat_detection_policy.value.state
       email_account_admins       = threat_detection_policy.value.email_account_admins
-      email_addresses            = threat_detection_policy.value.alerting_email_addresses
-      retention_days             = threat_detection_policy.value.threat_detection_policy_retention_days
-      disabled_alerts            = threat_detection_policy.value.threat_detection_policy_disabled_alerts
-      storage_endpoint           = threat_detection_policy.value.security_storage_account_blob_endpoint
-      storage_account_access_key = threat_detection_policy.value.security_storage_account_access_key
+      email_addresses            = threat_detection_policy.value.email_addresses
+      retention_days             = threat_detection_policy.value.retention_days
+      disabled_alerts            = threat_detection_policy.value.disabled_alerts
+      storage_endpoint           = threat_detection_policy.value.storage_endpoint
+      storage_account_access_key = threat_detection_policy.value.storage_account_access_key
     }
   }
 
@@ -95,7 +95,7 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
 
   collation      = each.value.databases_collation
   max_size_gb    = can(regex("Secondary|OnlineSecondary", each.value.create_mode)) ? null : each.value.max_size_gb
-  zone_redundant = can(regex("^DW", each.value.single_databases_sku_name)) && each.value.databases_zone_redundant != null ? each.value.databases_zone_redundant : false
+  zone_redundant = can(regex("^DW", each.value.single_database_sku_name)) && each.value.zone_redundant != null ? each.value.zone_redundant : false
 
   #https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.management.sql.models.database.createmode?view=azure-dotnet
   create_mode = try(lookup(local.standard_allowed_create_mode, each.value.create_mode), "Default")
@@ -113,11 +113,11 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
     content {
       state                      = threat_detection_policy.value.state
       email_account_admins       = threat_detection_policy.value.email_account_admins
-      email_addresses            = threat_detection_policy.value.alerting_email_addresses
-      retention_days             = threat_detection_policy.value.threat_detection_policy_retention_days
-      disabled_alerts            = threat_detection_policy.value.threat_detection_policy_disabled_alerts
-      storage_endpoint           = threat_detection_policy.value.security_storage_account_blob_endpoint
-      storage_account_access_key = threat_detection_policy.value.security_storage_account_access_key
+      email_addresses            = threat_detection_policy.value.email_addresses
+      retention_days             = threat_detection_policy.value.retention_days
+      disabled_alerts            = threat_detection_policy.value.disabled_alerts
+      storage_endpoint           = threat_detection_policy.value.storage_endpoint
+      storage_account_access_key = threat_detection_policy.value.storage_account_access_key
     }
   }
 
