@@ -249,9 +249,9 @@ variable "security_storage_account_access_key" {
 locals {
 
   databases_users = var.create_databases_users ? [
-    for db in var.databases : {
-      username = format("%s_user", replace(db.name, "-", "_"))
-      database = db.name
+    for db_key, db_value in var.databases : {
+      username = format("%s_user", replace(db_key, "-", "_"))
+      database = db_key
       roles    = ["db_owner"]
     }
   ] : []
