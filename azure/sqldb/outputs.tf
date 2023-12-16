@@ -1,8 +1,8 @@
-output "resource_group_id" {
-  value = concat(azurerm_resource_group.default.*.id, [""])[0]
+output "mssql_database_ids" {
+  value = { for db in azurerm_mssql_database.single_database : db.name => db.id }
 }
 
-output "resource_group_name" {
-  value = concat(azurerm_resource_group.default.*.name, [""])[0]
+output "mssql_database_names" {
+  value = [for db in azurerm_mssql_database.single_database : db.name]
 }
 
