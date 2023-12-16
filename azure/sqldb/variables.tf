@@ -180,14 +180,14 @@ DESC
 }
 
 variable "databases" {
-  description = "List of the databases configurations for this server."
+  description = "List of the database configurations for this server."
   type = map(object({
     prefix                      = optional(string)
     license_type                = optional(string)
     max_size_gb                 = number
-    single_databases_sku_name   = optional(stringi, "GP_Gen5_2")
+    single_database_sku_name    = optional(string, "GP_Gen5_2")
     create_mode                 = optional(string)
-    min_capacity                = optional(number)
+    min_capacity                = optional(number, 1)
     auto_pause_delay_in_minutes = optional(number)
     read_scale                  = optional(string)
     read_replica_count          = optional(number)
