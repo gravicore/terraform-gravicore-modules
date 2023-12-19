@@ -118,7 +118,7 @@ resource "azurerm_mssql_elasticpool" "default" {
 }
 
 resource "azurerm_mssql_virtual_network_rule" "default" {
-  for_each                             = try({ for subnet in local.allowed_subnets : subnet.name => subnet }, {})
+  for_each                             = var.create ? try({ for subnet in local.allowed_subnets : subnet.name => subnet }, {}) : {}
   name                                 = each.key
   server_id                            = azurerm_mssql_server.default[0].id
   subnet_id                            = each.value.subnet_id
