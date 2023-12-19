@@ -76,7 +76,7 @@ resource "azurerm_mssql_server" "default" {
 }
 
 resource "azurerm_mssql_firewall_rule" "default" {
-  count = try(length(var.allowed_ip_addresses), 0)
+  count = var.create && can(length(var.allowed_ip_addresses)) ? length(var.allowed_ip_addresses) : 0
 
   name      = var.allowed_ip_addresses[count.index]["rule_name"]
   server_id = azurerm_mssql_server.default[0].id
@@ -127,7 +127,7 @@ resource "azurerm_mssql_virtual_network_rule" "default" {
 
 module "private_endpoint" {
   depends_on           = [azurerm_mssql_server.default[0]]
-  count                = var.create ? length(var.private_endpoints) : 0
+  count                = var.create && can(length(var.private_endpoints)) ? length(var.private_endpoints) : 0
   source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=GDEV-336-release-azure"
   az_region            = var.az_region
   resource_group_name  = var.private_endpoints[count.index].resource_group_name
