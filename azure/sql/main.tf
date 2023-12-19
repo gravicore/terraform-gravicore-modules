@@ -20,7 +20,7 @@ resource "random_password" "default" {
 }
 
 
-resource "azurerm_key_vault_secret" "postgresql_admin_password" {
+resource "azurerm_key_vault_secret" "azuresql_admin_password" {
   depends_on = [
     azurerm_mssql_server.default[0],
   ]
