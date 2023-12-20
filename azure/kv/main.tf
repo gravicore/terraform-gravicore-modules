@@ -63,7 +63,7 @@ resource "azurerm_key_vault" "default" {
 
 resource "azurerm_key_vault_access_policy" "terraform" {
   count        = var.enable_rbac_authorization ? 0 : 1
-  key_vault_id = one(azurerm_key_vault.default.*.id)
+  key_vault_id = one(azurerm_key_vault.default[*].id)
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azurerm_client_config.current.object_id
 
@@ -82,7 +82,7 @@ resource "azurerm_role_assignment" "terraform_rbac" {
 resource "azurerm_key_vault_certificate_contacts" "default" {
   for_each = { for contact in var.certificate_contacts : contact.name => contact }
 
-  key_vault_id = one(azurerm_key_vault.default.*.id)
+  key_vault_id = one(azurerm_key_vault.default[*].id)
 
   contact {
     name  = each.value.name
@@ -98,7 +98,7 @@ resource "azurerm_key_vault_certificate_contacts" "default" {
 
 resource "azurerm_key_vault_access_policy" "default" {
   count                   = var.enable_rbac_authorization ? 0 : length(local.combined_access_policies)
-  key_vault_id            = one(azurerm_key_vault.default.*.id)
+  key_vault_id            = one(azurerm_key_vault.default[*].id)
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = coalesce(local.combined_access_policies[count.index].object_id, "")
   certificate_permissions = distinct(compact(local.combined_access_policies[count.index].certificate_permissions))

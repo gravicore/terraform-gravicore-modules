@@ -79,7 +79,7 @@ resource "azurerm_mssql_firewall_rule" "default" {
   count = var.create && can(length(var.allowed_ip_addresses)) ? length(var.allowed_ip_addresses) : 0
 
   name      = var.allowed_ip_addresses[count.index]["rule_name"]
-  server_id = azurerm_mssql_server.default[0].id
+  server_id = one(azurerm_mssql_server.default[*].id)
 
   start_ip_address = cidrhost(var.allowed_ip_addresses[count.index]["ip_prefix"], 0)
   end_ip_address   = cidrhost(var.allowed_ip_addresses[count.index]["ip_prefix"], -1)
@@ -95,7 +95,7 @@ resource "azurerm_mssql_elasticpool" "default" {
 
   license_type = var.elastic_pool_license_type
 
-  server_name = azurerm_mssql_server.default[0].name
+  server_name = one(azurerm_mssql_server.default[*].name)
 
   per_database_settings {
     max_capacity = coalesce(var.elastic_pool_databases_max_capacity, var.elastic_pool_sku.capacity)
@@ -120,18 +120,18 @@ resource "azurerm_mssql_elasticpool" "default" {
 resource "azurerm_mssql_virtual_network_rule" "default" {
   for_each                             = var.create ? try({ for subnet in local.allowed_subnets : subnet.name => subnet }, {}) : {}
   name                                 = each.key
-  server_id                            = azurerm_mssql_server.default[0].id
+  server_id                            = one(azurerm_mssql_server.default[*].id)
   subnet_id                            = each.value.subnet_id
   ignore_missing_vnet_service_endpoint = var.ignore_missing_vnet_service_endpoint
 }
 
 module "private_endpoint" {
-  depends_on           = [azurerm_mssql_server.default[0]]
+  depends_on           = [azurerm_mssql_server.default]
   count                = var.create && can(length(var.private_endpoints)) ? length(var.private_endpoints) : 0
   source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=GDEV-336-release-azure"
   az_region            = var.az_region
   resource_group_name  = var.private_endpoints[count.index].resource_group_name
-  target_resource      = one(azurerm_mssql_server.default.*.id)
+  target_resource      = one(azurerm_mssql_server.default[*].id)
   subnet_id            = var.private_endpoints[count.index].subnet_id
   private_dns_zone_ids = var.private_endpoints[count.index].private_dns_zone_ids
   subresource_name     = var.private_endpoints[count.index].subresource_name
@@ -145,7 +145,7 @@ resource "azurerm_mssql_server_security_alert_policy" "default" {
   for_each = toset(var.sql_server_security_alerting_enabled ? ["enabled"] : [])
 
   resource_group_name = var.resource_group_name
-  server_name         = azurerm_mssql_server.default[0].name
+  server_name         = one(azurerm_mssql_server.default[*].name)
   state               = "Enabled"
 }
 

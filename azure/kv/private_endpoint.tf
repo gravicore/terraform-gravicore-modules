@@ -4,7 +4,7 @@ module "private_endpoint" {
   source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=GDEV-336-release-azure"
   az_region            = var.az_region
   resource_group_name  = var.private_endpoints[count.index].resource_group_name
-  target_resource      = one(azurerm_key_vault.default.*.id)
+  target_resource      = one(azurerm_key_vault.default[*].id)
   subnet_id            = var.private_endpoints[count.index].subnet_id
   private_dns_zone_ids = var.private_endpoints[count.index].private_dns_zone_ids
   subresource_name     = var.private_endpoints[count.index].subresource_name
