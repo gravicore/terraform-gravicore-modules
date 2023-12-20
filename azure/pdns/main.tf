@@ -35,7 +35,7 @@ resource "azurerm_private_dns_zone" "default" {
 
 
 resource "azurerm_private_dns_zone_virtual_network_link" "default" {
-  for_each = { for item in local.flattened_dns_zones : "${item.key}-${item.vnet_id}" => item }
+  for_each = var.create ? { for item in local.flattened_dns_zones : "${item.key}-${item.vnet_id}" => item } : {}
 
   depends_on            = [azurerm_private_dns_zone.default]
   name                  = format("%s-%s-link", azurerm_private_dns_zone.default[each.value.key].name, basename(each.value.vnet_id))
