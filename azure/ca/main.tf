@@ -28,81 +28,81 @@ resource "azurerm_container_app" "default" {
     min_replicas    = each.value.template.min_replicas
     revision_suffix = each.value.template.revision_suffix
 
-    # dynamic "azure_queue_scale_rule" {
-    #   for_each = each.value.azure_queue_scale_rule == null ? [] : [each.value.azure_queue_scale_rule]
+    dynamic "azure_queue_scale_rule" {
+      for_each = each.value.template.azure_queue_scale_rule == null ? [] : [each.value.template.azure_queue_scale_rule]
 
-    #   content {
-    #     name         = azure_queue_scale_rule.value.name
-    #     queue_name   = azure_queue_scale_rule.value.queue_name
-    #     queue_length = azure_queue_scale_rule.value.queue_length
+      content {
+        name         = azure_queue_scale_rule.value.name
+        queue_name   = azure_queue_scale_rule.value.queue_name
+        queue_length = azure_queue_scale_rule.value.queue_length
 
-    #     dynamic "authentication" {
-    #       for_each = azure_queue_scale_rule.value.authentication
+        dynamic "authentication" {
+          for_each = azure_queue_scale_rule.value.authentication
 
-    #       content {
-    #         secret_name       = authentication.value.secret_name
-    #         trigger_parameter = authentication.value.trigger_parameter
-    #       }
-    #     }
-    #   }
-    # }
-
-
-    # dynamic "custom_scale_rule" {
-    #   for_each = each.value.custom_scale_rule == null ? [] : [each.value.custom_scale_rule]
-
-    #   content {
-    #     name             = custom_scale_rule.value.name
-    #     custom_rule_type = custom_scale_rule.value.custom_rule_type
-    #     metadata         = custom_scale_rule.value.metadata
-
-    #     dynamic "authentication" {
-    #       for_each = custom_scale_rule.value.authentication == null ? [] : custom_scale_rule.value.authentication
-
-    #       content {
-    #         secret_name       = authentication.value.secret_name
-    #         trigger_parameter = authentication.value.trigger_parameter
-    #       }
-    #     }
-    #   }
-    # }
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
 
 
-    # dynamic "http_scale_rule" {
-    #   for_each = each.value.http_scale_rule == null ? [] : [each.value.http_scale_rule]
+    dynamic "custom_scale_rule" {
+      for_each = each.value.template.custom_scale_rule == null ? [] : [each.value.template.custom_scale_rule]
 
-    #   content {
-    #     name                = http_scale_rule.value.name
-    #     concurrent_requests = http_scale_rule.value.concurrent_requests
+      content {
+        name             = custom_scale_rule.value.name
+        custom_rule_type = custom_scale_rule.value.custom_rule_type
+        metadata         = custom_scale_rule.value.metadata
 
-    #     dynamic "authentication" {
-    #       for_each = http_scale_rule.value.authentication == null ? [] : http_scale_rule.value.authentication
+        dynamic "authentication" {
+          for_each = custom_scale_rule.value.authentication == null ? [] : custom_scale_rule.value.authentication
 
-    #       content {
-    #         secret_name       = authentication.value.secret_name
-    #         trigger_parameter = authentication.value.trigger_parameter
-    #       }
-    #     }
-    #   }
-    # }
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
 
-    # dynamic "tcp_scale_rule" {
-    #   for_each = each.value.tcp_scale_rule == null ? [] : [each.value.tcp_scale_rule]
 
-    #   content {
-    #     name                = tcp_scale_rule.value.name
-    #     concurrent_requests = tcp_scale_rule.value.concurrent_requests
+    dynamic "http_scale_rule" {
+      for_each = each.value.template.http_scale_rule == null ? [] : [each.value.template.http_scale_rule]
 
-    #     dynamic "authentication" {
-    #       for_each = tcp_scale_rule.value.authentication == null ? [] : tcp_scale_rule.value.authentication
+      content {
+        name                = http_scale_rule.value.name
+        concurrent_requests = http_scale_rule.value.concurrent_requests
 
-    #       content {
-    #         secret_name       = authentication.value.secret_name
-    #         trigger_parameter = authentication.value.trigger_parameter
-    #       }
-    #     }
-    #   }
-    # }
+        dynamic "authentication" {
+          for_each = http_scale_rule.value.authentication == null ? [] : http_scale_rule.value.authentication
+
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
+
+    dynamic "tcp_scale_rule" {
+      for_each = each.value.template.tcp_scale_rule == null ? [] : [each.value.template.tcp_scale_rule]
+
+      content {
+        name                = tcp_scale_rule.value.name
+        concurrent_requests = tcp_scale_rule.value.concurrent_requests
+
+        dynamic "authentication" {
+          for_each = tcp_scale_rule.value.authentication == null ? [] : tcp_scale_rule.value.authentication
+
+          content {
+            secret_name       = authentication.value.secret_name
+            trigger_parameter = authentication.value.trigger_parameter
+          }
+        }
+      }
+    }
 
 
     dynamic "container" {
