@@ -182,7 +182,7 @@ POLICY
 }
 
 module "logs" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.26.0"
   namespace  = ""
   stage      = ""
   name       = local.module_prefix
@@ -191,32 +191,6 @@ module "logs" {
 
   versioning_enabled     = var.s3_bucket_versioning ? true : false
   access_log_bucket_name = var.s3_bucket_access_logging ? join(var.delimiter, [local.module_prefix, "logs"]) : ""
-
-  policy = var.s3_bucket_ssl_requests_only == false ? "" : jsonencode(
-    {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Sid" : "AllowSSLRequestsOnly",
-          "Principal" : {
-            "AWS" : "*"
-          },
-          "Action" : [
-            "s3:*"
-          ],
-          "Resource" : [
-            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}/*",
-            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}"
-          ],
-          "Effect" : "Deny",
-          "Condition" : {
-            "Bool" : {
-              "aws:SecureTransport" : "false"
-            }
-          }
-        }
-      ]
-  })
 
   tags                      = local.tags
   lifecycle_prefix          = var.log_prefix

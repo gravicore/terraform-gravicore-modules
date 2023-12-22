@@ -368,6 +368,12 @@ variable "enable_glacier_transition" {
   description = "Enables the transition to AWS Glacier which can cause unnecessary costs for huge amount of small files"
 }
 
+variable "lambda_function_runtime" {
+  type        = string
+  default     = "nodejs18.x"
+  description = "The runtime environment for the origin request Lambda function"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -475,7 +481,7 @@ resource "aws_s3_bucket" "origin" {
 }
 
 module "logs" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.12.0"
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.26.0"
   namespace  = ""
   stage      = ""
   name       = local.module_prefix
@@ -484,31 +490,6 @@ module "logs" {
 
   versioning_enabled     = var.s3_bucket_versioning ? true : false
   access_log_bucket_name = var.s3_bucket_access_logging ? join(var.delimiter, [local.module_prefix, "logs"]) : ""
-
-  policy = var.s3_bucket_ssl_requests_only == false ? "" : jsonencode(
-    {
-      "Version" : "2012-10-17",
-      "Statement" : [
-        {
-          "Principal" : {
-            "AWS" : "*"
-          },
-          "Action" : [
-            "s3:*"
-          ],
-          "Resource" : [
-            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}/*",
-            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, "logs"])}"
-          ],
-          "Effect" : "Deny",
-          "Condition" : {
-            "Bool" : {
-              "aws:SecureTransport" : "false"
-            }
-          }
-        }
-      ]
-  })
 
   tags                      = local.tags
   lifecycle_prefix          = var.log_prefix
@@ -638,7 +619,7 @@ resource "aws_cloudfront_distribution" "default" {
 }
 
 module "dns" {
-  source           = "git::https://github.com/cloudposse/terraform-aws-route53-alias.git?ref=tags/0.3.0"
+  source           = "git::https://github.com/cloudposse/terraform-aws-route53-alias.git?ref=tags/0.13.0"
   enabled          = var.create && length(var.parent_zone_id) > 0 || length(var.parent_zone_name) > 0 ? true : false
   aliases          = var.aliases
   parent_zone_id   = var.parent_zone_id
@@ -715,7 +696,7 @@ resource "aws_lambda_function" "hsts" {
 
   source_code_hash = data.archive_file.hsts.output_base64sha256
 
-  runtime     = "nodejs12.x"
+  runtime     = var.lambda_function_runtime
   timeout     = 1
   memory_size = 128
 

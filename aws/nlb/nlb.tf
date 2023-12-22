@@ -112,6 +112,14 @@ resource "aws_lb_target_group" "nlb" {
     port                = lookup(each.value, "health_check_port", "traffic-port")
   }
 
+  dynamic "stickiness" {
+    for_each = lookup(each.value, "enabled", null) == null ? [] : [each.value]
+    content {
+      type    = lookup(stickiness.value, "type", "source_ip")
+      enabled = lookup(stickiness.value, "enabled", false)
+    }
+  }
+
   lifecycle {
     create_before_destroy = true
   }

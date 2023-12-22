@@ -33,7 +33,7 @@ resource "aws_route53_zone" "dns_public" {
   count   = var.create ? 1 : 0
   name    = local.sub_domain_name
   tags    = local.tags
-  comment = join(" ", list(var.desc_prefix, format("VPC Public DNS zone for %s", local.stage_prefix)))
+  comment = join(" ", tolist([var.desc_prefix, format("VPC Public DNS zone for %s", local.stage_prefix)]))
 }
 
 resource "aws_route53_record" "dns_public_ns" {
@@ -69,7 +69,7 @@ resource "aws_route53_zone" "dns_private" {
   tags  = local.tags
 
   name    = local.sub_domain_name
-  comment = join(" ", list(var.desc_prefix, format("VPC Private DNS zone for %s %s", local.stage_prefix, var.vpc_id)))
+  comment = join(" ", tolist([var.desc_prefix, format("VPC Private DNS zone for %s %s", local.stage_prefix, var.vpc_id)]))
 
   vpc {
     vpc_id = var.vpc_id

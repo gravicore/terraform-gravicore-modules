@@ -8,6 +8,12 @@ variable "kms_param_arn" {
   description = "The ARN of a KMS key used to encrypt and decrypt SecretString values"
 }
 
+variable "enable_key_pair_local_write" {
+  type        = bool
+  default     = false
+  description = "On true, creates local files for the private and public keys"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -19,7 +25,7 @@ module "ssh_key_pair_private" {
   version = "2.0.0"
 
   name = "${local.module_prefix}-private"
-  path = "${pathexpand("~/.ssh")}/${var.namespace}/${var.stage}"
+  path = var.enable_key_pair_local_write ? "${pathexpand("~/.ssh")}/${var.namespace}/${var.stage}" : ""
 }
 
 module "ssh_key_pair_public" {
@@ -27,7 +33,7 @@ module "ssh_key_pair_public" {
   version = "2.0.0"
 
   name = "${local.module_prefix}-public"
-  path = "${pathexpand("~/.ssh")}/${var.namespace}/${var.stage}"
+  path = var.enable_key_pair_local_write ? "${pathexpand("~/.ssh")}/${var.namespace}/${var.stage}" : ""
 }
 
 
