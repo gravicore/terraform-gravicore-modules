@@ -5,7 +5,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "azure_region" {
-  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=GDEV-336-release-azure"
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=0.46.0"
   azure_region = var.az_region
 }
 

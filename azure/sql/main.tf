@@ -4,7 +4,7 @@
 
 
 module "azure_region" {
-  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=GDEV-336-release-azure"
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=0.46.0"
   azure_region = var.az_region
 }
 
@@ -128,7 +128,7 @@ resource "azurerm_mssql_virtual_network_rule" "default" {
 module "private_endpoint" {
   depends_on           = [azurerm_mssql_server.default]
   count                = var.create && can(length(var.private_endpoints)) ? length(var.private_endpoints) : 0
-  source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=GDEV-336-release-azure"
+  source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=0.46.0"
   az_region            = var.az_region
   resource_group_name  = var.private_endpoints[count.index].resource_group_name
   target_resource      = one(azurerm_mssql_server.default[*].id)

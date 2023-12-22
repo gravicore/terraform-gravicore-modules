@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "azure_region" {
-  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=GDEV-336-release-azure"
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=0.46.0"
   azure_region = var.az_region
 }
 
@@ -125,7 +125,7 @@ resource "azurerm_container_registry" "default" {
 module "private_endpoint" {
   depends_on           = [azurerm_container_registry.default]
   count                = var.create ? length(var.private_endpoints) : 0
-  source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=GDEV-336-release-azure"
+  source               = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=0.46.0"
   az_region            = var.az_region
   resource_group_name  = var.private_endpoints[count.index].resource_group_name
   target_resource      = one(azurerm_container_registry.default[*].id)
@@ -140,7 +140,7 @@ module "private_endpoint" {
 
 module "diagnostic" {
   count                 = var.create && var.logs_destinations_ids != [] ? 1 : 0
-  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=GDEV-336-release-azure"
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
   namespace             = var.namespace
   environment           = var.environment
   stage                 = var.stage

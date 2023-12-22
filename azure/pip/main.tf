@@ -3,7 +3,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "azure_region" {
-  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=GDEV-336-release-azure"
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=0.46.0"
   azure_region = var.az_region
 }
 
@@ -34,7 +34,7 @@ resource "azurerm_public_ip" "default" {
 }
 
 module "diagnostic" {
-  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=GDEV-336-release-azure"
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
   for_each              = { for ip in var.public_ip : ip.prefix => ip if var.create && var.logs_destinations_ids != [] }
   namespace             = var.namespace
   environment           = var.environment

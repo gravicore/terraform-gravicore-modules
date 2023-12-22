@@ -19,7 +19,7 @@ locals {
 module "private_endpoint" {
   for_each = local.private_endpoint_map
 
-  source     = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=GDEV-336-release-azure"
+  source     = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/pep?ref=0.46.0"
   depends_on = [azurerm_storage_account.default]
 
   az_region            = var.az_region
