@@ -3,9 +3,8 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "azure_region" {
-  source       = "claranet/regions/azurerm"
-  version      = "6.1.0"
-  azure_region = var.region
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=0.46.0"
+  azure_region = var.az_region
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -15,7 +14,7 @@ resource "azurerm_private_endpoint" "default" {
   count                         = var.create ? 1 : 0
   name                          = local.module_prefix
   resource_group_name           = var.resource_group_name
-  location                      = var.region
+  location                      = var.az_region
   subnet_id                     = var.subnet_id
   custom_network_interface_name = join(var.delimiter, [local.module_prefix, "nic"])
 
@@ -48,16 +47,5 @@ resource "azurerm_private_endpoint" "default" {
 
 
   tags = local.tags
-}
-
-
-resource "azurerm_private_dns_a_record" "default" {
-  for_each = toset(var.private_dns_zone_ids)
-
-  name                = azurerm_private_endpoint.default[0].name
-  zone_name           = element(split("/", each.value), length(split("/", each.value)) - 1)
-  resource_group_name = var.resource_group_name
-  ttl                 = 300
-  records             = [azurerm_private_endpoint.default[0].private_service_connection.0.private_ip_address]
 }
 

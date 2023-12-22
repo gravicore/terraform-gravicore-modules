@@ -3,9 +3,8 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "azure_region" {
-  source       = "claranet/regions/azurerm"
-  version      = "6.1.0"
-  azure_region = var.region
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=0.46.0"
+  azure_region = var.az_region
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -17,7 +16,7 @@ resource "azurerm_virtual_network" "default" {
   name                = local.module_prefix
   resource_group_name = var.resource_group_name
   address_space       = coalesce(compact([var.vnet_cidr_block]))
-  location            = var.region
+  location            = var.az_region
   bgp_community       = var.bgp_community == null ? null : join(":", ["12076", var.bgp_community])
 
   dynamic "ddos_protection_plan" {
@@ -53,7 +52,7 @@ resource "azurerm_subnet" "default" {
       name = delegation.value.name
       service_delegation {
         name    = delegation.value.service_delegation.name
-        actions = compact(delegation.value.service_delegation.actions)
+        actions = delegation.value.service_delegation.actions
       }
     }
   }

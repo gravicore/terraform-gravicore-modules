@@ -1,15 +1,17 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
+
+
 variable "name" {
   type        = string
-  default     = "pep"
-  description = "The name of the main module which call the this module"
+  default     = "cae"
+  description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/pep"
+  default     = "gravicore/terraform-gravicore-modules/azure/cae"
   description = "The owner and name of the Terraform module"
 }
 
@@ -108,8 +110,7 @@ variable "delimiter" {
 locals {
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
-  subnet_prefix      = element(split("-", element(split("/", var.subnet_id), length(split("/", var.subnet_id)) - 1)), 5)
-  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.subresource_name, "${local.subnet_prefix}snet", var.name])))
+  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.name])))
 
   business_tags = {
     namespace          = var.namespace
@@ -142,74 +143,82 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-variable "ip_configurations" {
-  description = <<EOD
-List of IP Configuration object. Any modification to the parameters of the IP Configuration object forces a new resource to be created.
-```
-name               = Name of the IP Configuration.
-member_name        = Member name of the IP Configuration. If it is not specified, it will use the value of `subresource_name`. Only valid if `target_resource` is not a Private Link Service.
-subresource_name   = Subresource name of the IP Configuration. Only valid if `target_resource` is not a Private Link Service.
-private_ip_address = Private IP address within the Subnet of the Private Endpoint.
-```
-EOD
-  type = list(object({
-    name               = optional(string, "default")
-    member_name        = optional(string)
-    subresource_name   = optional(string)
-    private_ip_address = string
-  }))
-  default  = []
-  nullable = false
-}
-
-variable "is_manual_connection" {
-  description = "Does the Private Endpoint require manual approval from the remote resource owner? Default to `false`."
-  type        = bool
-  default     = false
-}
-
-variable "request_message" {
-  description = "A message passed to the owner of the remote resource when the Private Endpoint attempts to establish the connection to the remote resource. Only valid if `is_manual_connection` is set to `true`."
+variable "log_analytics_workspace_id" {
   type        = string
-  default     = "Private Endpoint Deployment"
+  description = "List of destination resources IDs for logs diagnostic destination."
 }
 
-variable "target_resource" {
-  description = "Private Link Service Alias or ID of the target resource."
+variable "infrastructure_subnet_id" {
   type        = string
-
-  validation {
-    condition     = length(regexall("^([a-z0-9\\-]+)\\.([a-z0-9\\-]+)\\.([a-z]+)\\.(azure)\\.(privatelinkservice)$", var.target_resource)) == 1 || length(regexall("^\\/(subscriptions)\\/([a-z0-9\\-]+)\\/(resourceGroups)\\/([A-Za-z0-9\\-_]+)\\/(providers)\\/([A-Za-z\\.]+)\\/([A-Za-z]+)\\/([A-Za-z0-9\\-]+)", var.target_resource)) == 1
-    error_message = "The `target_resource` variable must be a Private Link Service Alias or a resource ID."
-  }
-}
-
-variable "subresource_name" {
-  description = "Name of the subresource corresponding to the target Azure resource. Only valid if `target_resource` is not a Private Link Service."
-  type        = string
-  default     = ""
-}
-
-variable "subnet_id" {
-  description = "The resource ID of the subnet for the private endpoint"
-  type        = string
-  default     = ""
-}
-
-variable "private_dns_zone_ids" {
-  description = "Private DNS Zone which a new record will be created for the Private Endpoint. One of `private_dns_zones_ids` or `private_dns_zones_names` must be specified."
-  type        = list(string)
   default     = null
+  description = "(Optional) The existing Subnet to use for the Container Apps Control Plane. Changing this forces a new resource to be created."
 }
 
+variable "internal_load_balancer_enabled" {
+  type        = bool
+  default     = true
+  description = "(Optional) Should the Container Environment operate in Internal Load Balancing Mode? Defaults to `false`. Changing this forces a new resource to be created."
+}
+
+variable "dns_a_record" {
+  type = object({
+    name                = string
+    zone_name           = string
+    resource_group_name = string
+    ttl                 = optional(number, 300)
+  })
+  default     = null
+  description = "(Optional) The DNS record to create for the Container Apps Control Plane. Changing this forces a new resource to be created."
+}
+
+variable "dapr_component" {
+  type = map(object({
+    component_type = string
+    version        = string
+    ignore_errors  = optional(bool, false)
+    init_timeout   = optional(string, "5s")
+    scopes         = optional(list(string))
+    metadata = optional(set(object({
+      name        = string
+      secret_name = optional(string)
+      value       = string
+    })))
+  }))
+  default     = {}
+  description = "(Optional) The Dapr component to deploy."
+  nullable    = false
+}
+
+variable "dapr_component_secrets" {
+  type = map(list(object({
+    name  = string
+    value = string
+  })))
+  default     = {}
+  description = "(Optional) The secrets of the Dapr components. The key of the map should be aligned with the corresponding Dapr component."
+  nullable    = false
+  sensitive   = true
+}
+
+variable "env_storage" {
+  type = map(object({
+    account_name = string
+    share_name   = string
+    access_mode  = string
+  }))
+  default     = {}
+  description = "(Optional) Manages a Container App Environment Storage, writing files to this file share to make data accessible by other systems."
+  nullable    = false
+}
+
+variable "environment_storage_access_key" {
+  type        = map(string)
+  default     = null
+  description = "(Optional) The Storage Account Access Key. The key of the map should be aligned with the corresponding environment storage."
+  sensitive   = true
+}
 
 locals {
-  resource_alias              = length(regexall("^([a-z0-9\\-]+)\\.([a-z0-9\\-]+)\\.([a-z]+)\\.(azure)\\.(privatelinkservice)$", var.target_resource)) == 1 ? var.target_resource : null
-  resource_id                 = length(regexall("^\\/(subscriptions)\\/([a-z0-9\\-]+)\\/(resourceGroups)\\/([A-Za-z0-9\\-_]+)\\/(providers)\\/([A-Za-z\\.]+)\\/([A-Za-z]+)\\/([A-Za-z0-9\\-]+)", var.target_resource)) == 1 ? var.target_resource : null
-  is_not_private_link_service = local.resource_alias == null && !contains(try(split("/", local.resource_id), []), "privateLinkServices")
-
-  private_dns_zone_group_name     = local.is_not_private_link_service ? join(var.delimiter, [local.module_prefix, var.az_region, "pdnszg"]) : null
-  private_service_connection_name = join(var.delimiter, [local.module_prefix, var.az_region, "psc"])
+  dapr_component_secrets = { for k, v in var.dapr_component_secrets : k => { for i in v : i.name => i.value } }
 }
 

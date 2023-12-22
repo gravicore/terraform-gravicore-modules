@@ -1,15 +1,17 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
+
+
 variable "name" {
   type        = string
-  default     = "pep"
-  description = "The name of the main module which call the this module"
+  default     = "diagnostic"
+  description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/pep"
+  default     = "gravicore/terraform-gravicore-modules/azure/diagnostic"
   description = "The owner and name of the Terraform module"
 }
 
@@ -17,12 +19,6 @@ variable "az_region" {
   type        = string
   default     = ""
   description = "The Azure region to deploy module into"
-}
-
-variable "resource_group_name" {
-  type        = string
-  default     = ""
-  description = "The name of the Azure resource group"
 }
 
 variable "create" {
@@ -108,8 +104,7 @@ variable "delimiter" {
 locals {
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
-  subnet_prefix      = element(split("-", element(split("/", var.subnet_id), length(split("/", var.subnet_id)) - 1)), 5)
-  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.subresource_name, "${local.subnet_prefix}snet", var.name])))
+  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.name])))
 
   business_tags = {
     namespace          = var.namespace
@@ -138,78 +133,83 @@ locals {
   )
 }
 
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-variable "ip_configurations" {
-  description = <<EOD
-List of IP Configuration object. Any modification to the parameters of the IP Configuration object forces a new resource to be created.
-```
-name               = Name of the IP Configuration.
-member_name        = Member name of the IP Configuration. If it is not specified, it will use the value of `subresource_name`. Only valid if `target_resource` is not a Private Link Service.
-subresource_name   = Subresource name of the IP Configuration. Only valid if `target_resource` is not a Private Link Service.
-private_ip_address = Private IP address within the Subnet of the Private Endpoint.
-```
-EOD
-  type = list(object({
-    name               = optional(string, "default")
-    member_name        = optional(string)
-    subresource_name   = optional(string)
-    private_ip_address = string
-  }))
-  default  = []
-  nullable = false
-}
+locals {
+  enabled = length(var.logs_destinations_ids) > 0
 
-variable "is_manual_connection" {
-  description = "Does the Private Endpoint require manual approval from the remote resource owner? Default to `false`."
-  type        = bool
-  default     = false
-}
+  log_categories = [
+    for log in
+    (
+      var.log_categories != null ?
+      var.log_categories :
+      try(data.azurerm_monitor_diagnostic_categories.default.log_category_types, [])
+    ) : log if !contains(var.excluded_log_categories, log)
+  ]
 
-variable "request_message" {
-  description = "A message passed to the owner of the remote resource when the Private Endpoint attempts to establish the connection to the remote resource. Only valid if `is_manual_connection` is set to `true`."
-  type        = string
-  default     = "Private Endpoint Deployment"
-}
+  metric_categories = (
+    var.metric_categories != null ?
+    var.metric_categories :
+    try(data.azurerm_monitor_diagnostic_categories.default.metrics, [])
+  )
 
-variable "target_resource" {
-  description = "Private Link Service Alias or ID of the target resource."
-  type        = string
-
-  validation {
-    condition     = length(regexall("^([a-z0-9\\-]+)\\.([a-z0-9\\-]+)\\.([a-z]+)\\.(azure)\\.(privatelinkservice)$", var.target_resource)) == 1 || length(regexall("^\\/(subscriptions)\\/([a-z0-9\\-]+)\\/(resourceGroups)\\/([A-Za-z0-9\\-_]+)\\/(providers)\\/([A-Za-z\\.]+)\\/([A-Za-z]+)\\/([A-Za-z0-9\\-]+)", var.target_resource)) == 1
-    error_message = "The `target_resource` variable must be a Private Link Service Alias or a resource ID."
+  metrics = {
+    for metric in try(data.azurerm_monitor_diagnostic_categories.default.metrics, []) : metric => {
+      enabled = contains(local.metric_categories, metric)
+    }
   }
+
+  storage_id       = coalescelist([for r in var.logs_destinations_ids : r if contains(split("/", lower(r)), "microsoft.storage")], [null])[0]
+  log_analytics_id = coalescelist([for r in var.logs_destinations_ids : r if contains(split("/", lower(r)), "microsoft.operationalinsights")], [null])[0]
+
+  eventhub_authorization_rule_id = coalescelist([for r in var.logs_destinations_ids : split("|", r)[0] if contains(split("/", lower(r)), "microsoft.eventhub")], [null])[0]
+  eventhub_name                  = coalescelist([for r in var.logs_destinations_ids : try(split("|", r)[1], null) if contains(split("/", lower(r)), "microsoft.eventhub")], [null])[0]
+
+  log_analytics_destination_type = local.log_analytics_id != null ? var.log_analytics_destination_type : null
 }
 
-variable "subresource_name" {
-  description = "Name of the subresource corresponding to the target Azure resource. Only valid if `target_resource` is not a Private Link Service."
+
+
+variable "target_resource_id" {
+  description = "Resource ID of the actual resource that log categories will be enabled of"
   type        = string
-  default     = ""
 }
 
-variable "subnet_id" {
-  description = "The resource ID of the subnet for the private endpoint"
+variable "logs_destinations_ids" {
+  type        = list(string)
+  nullable    = false
+  description = <<EOD
+List of destination resources IDs for logs diagnostic destination.
+Can be `Storage Account`, `Log Analytics Workspace` and `Event Hub`. No more than one of each can be set.
+If you want to use Azure EventHub as destination, you must provide a formatted string with both the EventHub Namespace authorization send ID and the EventHub name (name of the queue to use in the Namespace) separated by the <code>&#124;</code> character.
+EOD
+}
+
+variable "log_analytics_destination_type" {
   type        = string
-  default     = ""
+  default     = "AzureDiagnostics"
+  description = "When set to 'Dedicated' logs sent to a Log Analytics workspace will go into resource specific tables, instead of the legacy AzureDiagnostics table."
 }
 
-variable "private_dns_zone_ids" {
-  description = "Private DNS Zone which a new record will be created for the Private Endpoint. One of `private_dns_zones_ids` or `private_dns_zones_names` must be specified."
+variable "log_categories" {
   type        = list(string)
   default     = null
+  description = "List of log categories. Defaults to all available."
 }
 
+variable "excluded_log_categories" {
+  type        = list(string)
+  default     = []
+  description = "List of log categories to exclude."
+}
 
-locals {
-  resource_alias              = length(regexall("^([a-z0-9\\-]+)\\.([a-z0-9\\-]+)\\.([a-z]+)\\.(azure)\\.(privatelinkservice)$", var.target_resource)) == 1 ? var.target_resource : null
-  resource_id                 = length(regexall("^\\/(subscriptions)\\/([a-z0-9\\-]+)\\/(resourceGroups)\\/([A-Za-z0-9\\-_]+)\\/(providers)\\/([A-Za-z\\.]+)\\/([A-Za-z]+)\\/([A-Za-z0-9\\-]+)", var.target_resource)) == 1 ? var.target_resource : null
-  is_not_private_link_service = local.resource_alias == null && !contains(try(split("/", local.resource_id), []), "privateLinkServices")
-
-  private_dns_zone_group_name     = local.is_not_private_link_service ? join(var.delimiter, [local.module_prefix, var.az_region, "pdnszg"]) : null
-  private_service_connection_name = join(var.delimiter, [local.module_prefix, var.az_region, "psc"])
+variable "metric_categories" {
+  type        = list(string)
+  default     = null
+  description = "List of metric categories. Defaults to all available."
 }
 

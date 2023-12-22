@@ -4,10 +4,10 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_network_security_group" "default" {
-  for_each            = var.create ? local.subnets_map : {}
+  for_each            = var.create && length(local.subnets_with_nsg_rules) > 0 ? local.subnets_with_nsg_rules : {}
   name                = join(var.delimiter, [azurerm_subnet.default[each.key].name, "nsg"])
   resource_group_name = var.resource_group_name
-  location            = var.region
+  location            = var.az_region
   tags                = local.tags
 
   dynamic "security_rule" {
@@ -31,6 +31,7 @@ resource "azurerm_network_security_group" "default" {
       destination_application_security_group_ids = try(security_rule.value.destination_application_security_group_ids, null)
     }
   }
+
 
   dynamic "security_rule" {
     for_each = toset(each.value.nsg_rules.deny_all_inbound == true ? ["enabled"] : [])
@@ -59,8 +60,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "80"
-      source_address_prefix      = try(tostring(each.value.allowed_http_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_http_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_http_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_http_sources), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -75,8 +76,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "443"
-      source_address_prefix      = try(tostring(each.value.allowed_https_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_https_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_https_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_https_sources), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -91,8 +92,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "22"
-      source_address_prefix      = try(tostring(each.value.allowed_ssh_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_ssh_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_ssh_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_ssh_sources), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -107,8 +108,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "3389"
-      source_address_prefix      = try(tostring(each.value.allowed_rdp_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_rdp_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_rdp_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_rdp_sources), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -123,8 +124,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "5986"
-      source_address_prefix      = try(tostring(each.value.allowed_winrm_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_winrm_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_winrm_source), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_winrm_sources), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -139,9 +140,9 @@ resource "azurerm_network_security_group" "default" {
       access                     = "Allow"
       protocol                   = "Tcp"
       source_port_range          = "*"
-      destination_port_range     = ["65200-65535"]
+      destination_port_range     = "65200-65535"
       source_address_prefix      = "GatewayManager"
-      destination_address_prefix = "VirtualNetwork"
+      destination_address_prefix = "*"
     }
   }
   dynamic "security_rule" {
@@ -154,9 +155,9 @@ resource "azurerm_network_security_group" "default" {
       access                     = "Allow"
       protocol                   = "Tcp"
       source_port_range          = "*"
-      destination_port_range     = ["65200-65535"]
+      destination_port_range     = "65200-65535"
       source_address_prefix      = "AzureLoadBalancer"
-      destination_address_prefix = "VirtualNetwork"
+      destination_address_prefix = "*"
     }
 
   }
@@ -171,8 +172,8 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = "2049"
-      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_nfs_source), null)
-      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_nfs_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_nfs_sources), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_nfs_sources), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -188,8 +189,25 @@ resource "azurerm_network_security_group" "default" {
       protocol                   = "Tcp"
       source_port_range          = "*"
       destination_port_range     = ["137", "138", "139", "445"]
-      source_address_prefix      = try(tostring(each.value.allowed_cifs_source), null)
-      source_address_prefixes    = try(tolist(each.value.allowed_cifs_source), null)
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_cifs_sources), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_cifs_sources), null)
+      destination_address_prefix = "VirtualNetwork"
+    }
+  }
+
+  dynamic "security_rule" {
+    for_each = toset(each.value.nsg_rules.psql_inbound_allowed == true ? ["enabled"] : [])
+
+    content {
+      name                       = "psql-inbound"
+      priority                   = 4009
+      direction                  = "Inbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "5432"
+      source_address_prefix      = try(tostring(each.value.nsg_rules.allowed_psql_sources), null)
+      source_address_prefixes    = try(tolist(each.value.nsg_rules.allowed_psql_sources), null)
       destination_address_prefix = "VirtualNetwork"
     }
   }
@@ -200,7 +218,7 @@ resource "azurerm_network_security_group" "default" {
 # Subnet to NSG association
 # ----------------------------------------------------------------------------------------------------------------------
 resource "azurerm_subnet_network_security_group_association" "default" {
-  for_each                  = var.create ? local.subnets_map : {}
+  for_each                  = var.create && length(local.subnets_with_nsg_rules) > 0 ? local.subnets_with_nsg_rules : {}
   subnet_id                 = azurerm_subnet.default[each.key].id
   network_security_group_id = azurerm_network_security_group.default[each.key].id
 }

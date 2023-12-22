@@ -13,7 +13,7 @@ variable "terraform_module" {
   description = "The owner and name of the Terraform module"
 }
 
-variable "region" {
+variable "az_region" {
   type        = string
   default     = ""
   description = "The Azure region to deploy module into"
@@ -119,7 +119,7 @@ locals {
     stage      = var.stage
     module     = var.name
     repository = var.repository
-    region     = var.region
+    region     = var.az_region
   }
   automation_tags = {
     terraform_module = var.terraform_module
@@ -182,69 +182,79 @@ variable "bgp_community" {
 # Subnet Variables
 # ----------------------------------------------------------------------------------------------------------------------
 variable "subnets" {
-  type = list(object({
+  type = map(object({
     prefix            = string
     address_newbits   = number
     address_netnum    = number
-    service_endpoints = list(string)
-    delegation = object({
-      name = string
-      service_delegation = object({
-        name    = string
-        actions = list(string)
-      })
-    })
-    private_link_service_network_policies_enabled = bool
-    private_endpoint_network_policies_enabled     = bool
-    nsg_rules = object({
-      deny_all_inbound                  = bool
-      http_inbound_allowed              = bool
-      https_inbound_allowed             = bool
-      ssh_inbound_allowed               = bool
-      rdp_inbound_allowed               = bool
-      winrm_inbound_allowed             = bool
-      application_gateway_rules_enabled = bool
-      load_balancer_rules_enabled       = bool
-      nfs_inbound_allowed               = bool
-      cifs_inbound_allowed              = bool
-      allowed_http_source               = any
-      allowed_https_source              = any
-      allowed_ssh_source                = any
-      allowed_rdp_source                = any
-      allowed_winrm_source              = any
-      allowed_nfs_source                = any
-      allowed_cifs_source               = any
-      custom_security_rules = list(object({
-        name                         = string
-        access                       = string
-        direction                    = string
-        priority                     = number
-        protocol                     = string
-        source_port_range            = string
-        destination_port_range       = string
-        source_address_prefix        = string
-        destination_address_prefix   = string
-        source_address_prefixes      = list(string)
-        destination_address_prefixes = list(string)
-      }))
-    })
+    service_endpoints = optional(list(string))
+    delegation = optional(object({
+      name = optional(string)
+      service_delegation = optional(object({
+        name    = optional(string)
+        actions = optional(list(string))
+      }), null)
+    }), null)
+    private_link_service_network_policies_enabled = optional(bool, true)
+    private_endpoint_network_policies_enabled     = optional(bool, true)
+    nsg_rules = optional(object({
+      deny_all_inbound                  = optional(bool, false)
+      http_inbound_allowed              = optional(bool, false)
+      https_inbound_allowed             = optional(bool, false)
+      ssh_inbound_allowed               = optional(bool, false)
+      rdp_inbound_allowed               = optional(bool, false)
+      winrm_inbound_allowed             = optional(bool, false)
+      application_gateway_rules_enabled = optional(bool, false)
+      load_balancer_rules_enabled       = optional(bool, false)
+      nfs_inbound_allowed               = optional(bool, false)
+      cifs_inbound_allowed              = optional(bool, false)
+      psql_inbound_allowed              = optional(bool, false)
+      allowed_http_source               = optional(string)
+      allowed_http_sources              = optional(list(string))
+      allowed_https_source              = optional(string)
+      allowed_https_sources             = optional(list(string))
+      allowed_ssh_source                = optional(string)
+      allowed_ssh_sources               = optional(list(string))
+      allowed_rdp_source                = optional(string)
+      allowed_rdp_sources               = optional(list(string))
+      allowed_winrm_source              = optional(string)
+      allowed_winrm_sources             = optional(list(string))
+      allowed_nfs_source                = optional(string)
+      allowed_nfs_sources               = optional(list(string))
+      allowed_cifs_source               = optional(string)
+      allowed_cifs_sources              = optional(list(string))
+      allowed_psql_source               = optional(string)
+      allowed_psql_sources              = optional(list(string))
+      custom_security_rules = optional(list(object({
+        name                         = optional(string)
+        access                       = optional(string)
+        direction                    = optional(string)
+        priority                     = optional(number)
+        protocol                     = optional(string)
+        source_port_range            = optional(string)
+        destination_port_range       = optional(string)
+        source_address_prefix        = optional(string)
+        destination_address_prefix   = optional(string)
+        source_address_prefixes      = optional(list(string))
+        destination_address_prefixes = optional(list(string))
+      })), [])
+    }), null)
   }))
-  default     = []
+  default     = null
   description = "The subnet information to be created in this VNET"
 }
 
 
 
 locals {
-  subnets_map = { for idx, subnet in var.subnets : idx => {
+  subnets_map = { for key, subnet in var.subnets : key => {
     prefix                                        = subnet.prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
     address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
-    service_endpoints                             = compact(subnet.service_endpoints)
+    service_endpoints                             = subnet.service_endpoints
     delegation                                    = subnet.delegation
-    private_link_service_network_policies_enabled = try(subnet.private_link_service_network_policies_enabled, true)
-    private_endpoint_network_policies_enabled     = try(subnet.private_endpoint_network_policies_enabled, true)
+    private_link_service_network_policies_enabled = subnet.private_link_service_network_policies_enabled
+    private_endpoint_network_policies_enabled     = subnet.private_endpoint_network_policies_enabled
     nsg_rules = try(subnet.nsg_rules, {
       deny_all_inbound                  = false
       http_inbound_allowed              = false
@@ -257,14 +267,26 @@ locals {
       nfs_inbound_allowed               = false
       cifs_inbound_allowed              = false
       allowed_http_source               = null
+      allowed_http_sources              = null
       allowed_https_source              = null
+      allowed_https_sources             = null
       allowed_ssh_source                = null
+      allowed_ssh_sources               = null
       allowed_rdp_source                = null
+      allowed_rdp_sources               = null
       allowed_winrm_source              = null
+      allowed_winrm_sources             = null
       allowed_nfs_source                = null
+      allowed_nfs_sources               = null
       allowed_cifs_source               = null
+      allowed_cifs_sources              = null
+      allowed_psql_source               = null
+      allowed_psql_sources              = null
       custom_security_rules             = []
     })
   } }
+
+  subnets_with_nsg_rules = { for key, value in local.subnets_map : key => value if value.nsg_rules != null }
+
 }
 

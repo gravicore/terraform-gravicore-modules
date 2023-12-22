@@ -1,15 +1,17 @@
 # ----------------------------------------------------------------------------------------------------------------------
 # Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
+
+
 variable "name" {
   type        = string
-  default     = "pep"
-  description = "The name of the main module which call the this module"
+  default     = "id"
+  description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/pep"
+  default     = "gravicore/terraform-gravicore-modules/azure/ca"
   description = "The owner and name of the Terraform module"
 }
 
@@ -108,8 +110,7 @@ variable "delimiter" {
 locals {
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
-  subnet_prefix      = element(split("-", element(split("/", var.subnet_id), length(split("/", var.subnet_id)) - 1)), 5)
-  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.subresource_name, "${local.subnet_prefix}snet", var.name])))
+  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.name])))
 
   business_tags = {
     namespace          = var.namespace
@@ -143,73 +144,47 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-variable "ip_configurations" {
-  description = <<EOD
-List of IP Configuration object. Any modification to the parameters of the IP Configuration object forces a new resource to be created.
-```
-name               = Name of the IP Configuration.
-member_name        = Member name of the IP Configuration. If it is not specified, it will use the value of `subresource_name`. Only valid if `target_resource` is not a Private Link Service.
-subresource_name   = Subresource name of the IP Configuration. Only valid if `target_resource` is not a Private Link Service.
-private_ip_address = Private IP address within the Subnet of the Private Endpoint.
-```
-EOD
-  type = list(object({
-    name               = optional(string, "default")
-    member_name        = optional(string)
-    subresource_name   = optional(string)
-    private_ip_address = string
+
+variable "identity" {
+  description = "Map of User assigned managed identities and their role assignments and key vault access policies"
+  type = map(object({
+    prefix = string
+    role_assignments = optional(list(object({
+      scope                = string
+      role_definition_name = string
+    })))
+    kv_access_policies = optional(list(object({
+      key_vault_id            = string
+      key_permissions         = optional(list(string))
+      secret_permissions      = optional(list(string))
+      certificate_permissions = optional(list(string))
+    })))
   }))
-  default  = []
-  nullable = false
-}
-
-variable "is_manual_connection" {
-  description = "Does the Private Endpoint require manual approval from the remote resource owner? Default to `false`."
-  type        = bool
-  default     = false
-}
-
-variable "request_message" {
-  description = "A message passed to the owner of the remote resource when the Private Endpoint attempts to establish the connection to the remote resource. Only valid if `is_manual_connection` is set to `true`."
-  type        = string
-  default     = "Private Endpoint Deployment"
-}
-
-variable "target_resource" {
-  description = "Private Link Service Alias or ID of the target resource."
-  type        = string
-
-  validation {
-    condition     = length(regexall("^([a-z0-9\\-]+)\\.([a-z0-9\\-]+)\\.([a-z]+)\\.(azure)\\.(privatelinkservice)$", var.target_resource)) == 1 || length(regexall("^\\/(subscriptions)\\/([a-z0-9\\-]+)\\/(resourceGroups)\\/([A-Za-z0-9\\-_]+)\\/(providers)\\/([A-Za-z\\.]+)\\/([A-Za-z]+)\\/([A-Za-z0-9\\-]+)", var.target_resource)) == 1
-    error_message = "The `target_resource` variable must be a Private Link Service Alias or a resource ID."
-  }
-}
-
-variable "subresource_name" {
-  description = "Name of the subresource corresponding to the target Azure resource. Only valid if `target_resource` is not a Private Link Service."
-  type        = string
-  default     = ""
-}
-
-variable "subnet_id" {
-  description = "The resource ID of the subnet for the private endpoint"
-  type        = string
-  default     = ""
-}
-
-variable "private_dns_zone_ids" {
-  description = "Private DNS Zone which a new record will be created for the Private Endpoint. One of `private_dns_zones_ids` or `private_dns_zones_names` must be specified."
-  type        = list(string)
-  default     = null
+  default = {}
 }
 
 
 locals {
-  resource_alias              = length(regexall("^([a-z0-9\\-]+)\\.([a-z0-9\\-]+)\\.([a-z]+)\\.(azure)\\.(privatelinkservice)$", var.target_resource)) == 1 ? var.target_resource : null
-  resource_id                 = length(regexall("^\\/(subscriptions)\\/([a-z0-9\\-]+)\\/(resourceGroups)\\/([A-Za-z0-9\\-_]+)\\/(providers)\\/([A-Za-z\\.]+)\\/([A-Za-z]+)\\/([A-Za-z0-9\\-]+)", var.target_resource)) == 1 ? var.target_resource : null
-  is_not_private_link_service = local.resource_alias == null && !contains(try(split("/", local.resource_id), []), "privateLinkServices")
+  flattened_role_assignments = flatten([
+    for k, v in var.identity : [
+      for role_assignment in v.role_assignments : {
+        identity_key         = k
+        scope                = role_assignment.scope
+        role_definition_name = role_assignment.role_definition_name
+      }
+    ] if v.role_assignments != null && v.role_assignments != []
+  ])
 
-  private_dns_zone_group_name     = local.is_not_private_link_service ? join(var.delimiter, [local.module_prefix, var.az_region, "pdnszg"]) : null
-  private_service_connection_name = join(var.delimiter, [local.module_prefix, var.az_region, "psc"])
+  flattened_kv_access_policies = flatten([
+    for k, v in var.identity : [
+      for policy in v.kv_access_policies : {
+        identity_key            = k
+        key_vault_id            = policy.key_vault_id
+        key_permissions         = policy.key_permissions
+        secret_permissions      = policy.secret_permissions
+        certificate_permissions = policy.certificate_permissions
+      }
+    ] if v.kv_access_policies != null && v.kv_access_policies != []
+  ])
 }
 
