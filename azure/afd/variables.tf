@@ -467,6 +467,14 @@ variable "rule_sets" {
 }
 
 # ------------------
+# CDN FrontDoor logging
+variable "logs_destinations_ids" {
+  type        = list(string)
+  default     = []
+  description = "List of destination resources IDs for logs diagnostic destination."
+}
+
+# ------------------
 # CDN FrontDoor Firewall Policies
 variable "firewall_policies" {
   description = "CDN Frontdoor Firewall Policies configurations."

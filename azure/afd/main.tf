@@ -129,3 +129,15 @@ resource "azurerm_cdn_frontdoor_origin" "default" {
   }
 }
 
+module "diagnostic" {
+  count                 = var.create && var.logs_destinations_ids != [] ? 1 : 0
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = one(azurerm_cdn_frontdoor_profile.default[*].id)
+  logs_destinations_ids = var.logs_destinations_ids
+}
+
