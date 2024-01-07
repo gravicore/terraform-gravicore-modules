@@ -38,15 +38,3 @@ resource "azurerm_private_link_service" "default" {
   }
 }
 
-module "diagnostic" {
-  for_each              = var.create ? { for key, val in var.private_link_service : key => val if can(val.logs_destinations_ids) && length(val.logs_destinations_ids) > 0 } : {}
-  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
-  namespace             = var.namespace
-  environment           = var.environment
-  stage                 = var.stage
-  application           = var.application
-  az_region             = var.az_region
-  target_resource_id    = azurerm_private_link_service.default[each.key].id
-  logs_destinations_ids = each.value.logs_destinations_ids
-}
-
