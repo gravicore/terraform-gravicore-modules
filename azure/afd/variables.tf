@@ -164,7 +164,6 @@ variable "endpoints" {
   type = list(object({
     name                 = string
     prefix               = optional(string)
-    custom_resource_name = optional(string)
     enabled              = optional(bool, true)
   }))
   default = []
@@ -176,7 +175,6 @@ variable "origin_groups" {
   description = "CDN FrontDoor Origin Groups configurations."
   type = list(object({
     name                                                      = string
-    custom_resource_name                                      = optional(string)
     session_affinity_enabled                                  = optional(bool, true)
     restore_traffic_time_to_healed_or_new_endpoint_in_minutes = optional(number, 10)
     health_probe = optional(object({
@@ -200,7 +198,6 @@ variable "origins" {
   description = "CDN FrontDoor Origins configurations."
   type = list(object({
     name                           = string
-    custom_resource_name           = optional(string)
     origin_group_name              = string
     enabled                        = optional(bool, true)
     certificate_name_check_enabled = optional(bool, true)
@@ -228,7 +225,6 @@ variable "custom_domains" {
   description = "CDN FrontDoor Custom Domains configurations."
   type = list(object({
     name                 = string
-    custom_resource_name = optional(string)
     host_name            = string
     dns_zone_id          = optional(string)
     tls = optional(object({
@@ -256,7 +252,6 @@ variable "routes" {
   description = "CDN FrontDoor Routes configurations."
   type = list(object({
     name                 = string
-    custom_resource_name = optional(string)
     enabled              = optional(bool, true)
 
     endpoint_name     = string
@@ -289,10 +284,8 @@ variable "rule_sets" {
   description = "CDN FrontDoor Rule Sets and associated Rules configurations."
   type = list(object({
     name                 = string
-    custom_resource_name = optional(string)
     rules = optional(list(object({
       name                 = string
-      custom_resource_name = optional(string)
       order                = number
       behavior_on_match    = optional(string, "Continue")
 
@@ -459,7 +452,6 @@ variable "firewall_policies" {
   description = "CDN Frontdoor Firewall Policies configurations."
   type = list(object({
     name                              = string
-    custom_resource_name              = optional(string)
     enabled                           = optional(bool, true)
     mode                              = optional(string, "Prevention")
     redirect_url                      = optional(string)
@@ -519,7 +511,6 @@ variable "security_policies" {
   description = "CDN FrontDoor Security policies configurations."
   type = list(object({
     name                 = string
-    custom_resource_name = optional(string)
     firewall_policy_name = string
     patterns_to_match    = optional(list(string), ["/*"])
     custom_domain_names  = optional(list(string), [])

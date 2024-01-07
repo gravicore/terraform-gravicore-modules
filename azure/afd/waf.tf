@@ -1,7 +1,7 @@
 resource "azurerm_cdn_frontdoor_firewall_policy" "default" {
   for_each = try({ for firewall_policy in var.firewall_policies : firewall_policy.name => firewall_policy }, {})
 
-  name                              = coalesce(each.value.custom_resource_name)
+  name                              = coalesce(each.value.name)
   resource_group_name               = var.resource_group_name
   sku_name                          = var.sku_name
   enabled                           = each.value.enabled
@@ -88,7 +88,7 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "default" {
 resource "azurerm_cdn_frontdoor_security_policy" "default" {
   for_each = try({ for security_policy in var.security_policies : security_policy.name => security_policy }, {})
 
-  name                     = coalesce(each.value.custom_resource_name)
+  name                     = coalesce(each.value.name)
   cdn_frontdoor_profile_id = one(azurerm_cdn_frontdoor_profile.default[*].id)
 
   security_policies {

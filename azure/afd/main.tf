@@ -17,7 +17,7 @@ resource "azurerm_cdn_frontdoor_profile" "default" {
 resource "azurerm_cdn_frontdoor_endpoint" "default" {
   for_each = var.create ? try({ for endpoint in var.endpoints : endpoint.name => endpoint }, {}) : {}
 
-  name                     = each.value.custom_resource_name
+  name                     = each.value.name
   cdn_frontdoor_profile_id = one(azurerm_cdn_frontdoor_profile.default[*].id)
 
   enabled = each.value.enabled
@@ -28,7 +28,7 @@ resource "azurerm_cdn_frontdoor_endpoint" "default" {
 resource "azurerm_cdn_frontdoor_custom_domain" "default" {
   for_each = var.create ? try({ for custom_domain in var.custom_domains : custom_domain.name => custom_domain }, {}) : {}
 
-  name                     = each.value.custom_resource_name
+  name                     = each.value.name
   cdn_frontdoor_profile_id = one(azurerm_cdn_frontdoor_profile.default[*].id)
   dns_zone_id              = each.value.dns_zone_id
   host_name                = each.value.host_name
@@ -46,7 +46,7 @@ resource "azurerm_cdn_frontdoor_custom_domain" "default" {
 resource "azurerm_cdn_frontdoor_route" "default" {
   for_each = var.create ? try({ for route in var.routes : route.name => route }, {}) : {}
 
-  name    = each.value.custom_resource_name
+  name    = each.value.name
   enabled = each.value.enabled
 
   cdn_frontdoor_endpoint_id     = azurerm_cdn_frontdoor_endpoint.default[each.value.endpoint_name].id
@@ -79,7 +79,7 @@ resource "azurerm_cdn_frontdoor_route" "default" {
 resource "azurerm_cdn_frontdoor_origin_group" "default" {
   for_each = var.create ? try({ for origin_group in var.origin_groups : origin_group.name => origin_group }, {}) : {}
 
-  name                     = each.value.custom_resource_name
+  name                     = each.value.name
   cdn_frontdoor_profile_id = one(azurerm_cdn_frontdoor_profile.default[*].id)
 
   session_affinity_enabled = each.value.session_affinity_enabled
@@ -106,7 +106,7 @@ resource "azurerm_cdn_frontdoor_origin_group" "default" {
 resource "azurerm_cdn_frontdoor_origin" "default" {
   for_each = var.create ? try({ for origin in var.origins : origin.name => origin }, {}) : {}
 
-  name                          = each.value.custom_resource_name
+  name                          = each.value.name
   cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.default[each.value.origin_group_name].id
 
   enabled                        = each.value.enabled

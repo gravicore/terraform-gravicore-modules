@@ -3,7 +3,7 @@ resource "azurerm_cdn_frontdoor_rule_set" "cdn_frontdoor_rule_set" {
     for rule_set in var.rule_sets : rule_set.name => rule_set
   } : {}
 
-  name = each.value.custom_resource_name
+  name = each.value.name
 
   cdn_frontdoor_profile_id = one(azurerm_cdn_frontdoor_profile.default[*].id)
 }
@@ -13,7 +13,7 @@ resource "azurerm_cdn_frontdoor_rule" "cdn_frontdoor_rule" {
     for rule in local.rules_per_rule_set : format("%s.%s", rule.rule_set_name, rule.name) => rule
   } : {}
 
-  name = each.value.custom_resource_name
+  name = each.value.name
 
   cdn_frontdoor_rule_set_id = azurerm_cdn_frontdoor_rule_set.default[each.value.rule_set_name].id
 
