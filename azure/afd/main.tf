@@ -129,6 +129,20 @@ resource "azurerm_cdn_frontdoor_origin" "default" {
   }
 }
 
+resource "null_resource" "approve_private_endpoints" {
+  count = length(local.private_link_ids) > 0 ? 1 : 0
+  depends_on = [
+    azurerm_cdn_frontdoor_route.default
+  ]
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+  provisioner "local-exec" {
+    working_dir = path.module
+    command     = "python3 approve_private_endpoints.py ${join(" ", local.private_link_ids)}"
+  }
+}
+
 module "diagnostic" {
   count                 = var.create && var.logs_destinations_ids != [] ? 1 : 0
   source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"

@@ -213,9 +213,13 @@ variable "origins" {
       target_type            = optional(string)
       location               = string
       private_link_target_id = string
-    }))
+    }), {})
   }))
   default = []
+}
+
+locals {
+  private_link_ids = [for origin in var.origins : origin.private_link != null ? origin.private_link.private_link_target_id : ""]
 }
 
 # ------------------
@@ -259,7 +263,7 @@ variable "routes" {
 
     forwarding_protocol = optional(string, "HttpsOnly")
     patterns_to_match   = optional(list(string), ["/*"])
-    supported_protocols = optional(list(string), ["Https"])
+    supported_protocols = optional(list(string), ["Http", "Https"])
     cache = optional(object({
       query_string_caching_behavior = optional(string, "IgnoreQueryString")
       query_strings                 = optional(list(string))
