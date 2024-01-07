@@ -50,6 +50,6 @@ output "security_policies" {
 
 output "validation_token" {
   description = "CDN FrontDoor validation tokens for custom domains."
-  value       = { for k, custom_domain in azurerm_cdn_frontdoor_custom_domain.default : k => firewall_policy.validation_token }
+  value       = { for k, custom_domain in azurerm_cdn_frontdoor_custom_domain.default : k => custom_domain.validation_token }
 }
 
