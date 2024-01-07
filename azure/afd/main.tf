@@ -136,7 +136,7 @@ module "diagnostic" {
   environment           = var.environment
   stage                 = var.stage
   application           = var.application
-  az_region             = var.az_region
+  az_region             = var.afd_region
   target_resource_id    = one(azurerm_cdn_frontdoor_profile.default[*].id)
   logs_destinations_ids = var.logs_destinations_ids
 }

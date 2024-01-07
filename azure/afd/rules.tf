@@ -1,4 +1,4 @@
-resource "azurerm_cdn_frontdoor_rule_set" "cdn_frontdoor_rule_set" {
+resource "azurerm_cdn_frontdoor_rule_set" "default" {
   for_each = var.create ? {
     for rule_set in var.rule_sets : rule_set.name => rule_set
   } : {}
@@ -8,7 +8,7 @@ resource "azurerm_cdn_frontdoor_rule_set" "cdn_frontdoor_rule_set" {
   cdn_frontdoor_profile_id = one(azurerm_cdn_frontdoor_profile.default[*].id)
 }
 
-resource "azurerm_cdn_frontdoor_rule" "cdn_frontdoor_rule" {
+resource "azurerm_cdn_frontdoor_rule" "default" {
   for_each = var.create ? {
     for rule in local.rules_per_rule_set : format("%s.%s", rule.rule_set_name, rule.name) => rule
   } : {}
