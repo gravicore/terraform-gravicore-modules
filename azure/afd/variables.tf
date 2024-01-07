@@ -186,7 +186,7 @@ variable "origin_groups" {
       additional_latency_in_milliseconds = optional(number, 50)
       sample_size                        = optional(number, 4)
       successful_samples_required        = optional(number, 3)
-    }), {})
+    }))
   }))
   default = []
 }
@@ -213,7 +213,7 @@ variable "origins" {
       target_type            = optional(string)
       location               = string
       private_link_target_id = string
-    }), {})
+    }))
   }))
   default = []
 }

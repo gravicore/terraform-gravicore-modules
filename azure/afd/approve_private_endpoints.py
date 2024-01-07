@@ -1,13 +1,20 @@
+import subprocess
 import sys
+
+def install(packages):
+    for name in packages:
+        subprocess.call([sys.executable, '-m', 'pip', 'install', name])
+
+packages_to_install = ['azure-identity', 'azure-mgmt-network']
+install(packages_to_install)
+
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.network import NetworkManagementClient
-
 
 private_link_ids = sys.argv[1:]
 subscription_ids = []
 for private_link_id in private_link_ids:
     subscription_ids.append(private_link_id.split("/")[2])
-
 
 def approve_private_endpoints(subscription_ids, private_link_ids):
     for sub_id in subscription_ids:
@@ -29,3 +36,4 @@ def approve_private_endpoints(subscription_ids, private_link_ids):
                         raise ValueError("Update error")
 
 approve_private_endpoints(subscription_ids, private_link_ids)
+
