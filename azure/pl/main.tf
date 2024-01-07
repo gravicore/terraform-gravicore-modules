@@ -46,7 +46,7 @@ module "diagnostic" {
   stage                 = var.stage
   application           = var.application
   az_region             = var.az_region
-  target_resource_id    = concat(azurerm_application_gateway.default[*].id, [""])[0]
+  target_resource_id    = concat(azurerm_private_link_service.default[*].id, [""])[0]
   logs_destinations_ids = var.private_link_service[each.key].logs_destinations_ids
 }
 
