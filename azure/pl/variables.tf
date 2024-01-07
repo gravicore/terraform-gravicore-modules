@@ -149,7 +149,6 @@ variable "private_link_service" {
     visibility_subscription_ids                 = optional(list(string))
     load_balancer_frontend_ip_configuration_ids = list(string)
     enable_proxy_protocol                       = optional(bool)
-    logs_destinations_ids                       = optional(list(string))
     fqdns                                       = optional(list(string))
     nat_ip_configurations = list(object({
       name                       = string

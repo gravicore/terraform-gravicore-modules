@@ -177,10 +177,10 @@ variable "origin_groups" {
     session_affinity_enabled                                  = optional(bool, true)
     restore_traffic_time_to_healed_or_new_endpoint_in_minutes = optional(number, 10)
     health_probe = optional(object({
-      interval_in_seconds = number
+      interval_in_seconds = optional(number, 10)
       path                = string
-      protocol            = string
-      request_type        = string
+      protocol            = optional(string, "Https")
+      request_type        = optional(string, "GET")
     }))
     load_balancing = optional(object({
       additional_latency_in_milliseconds = optional(number, 50)
@@ -209,7 +209,7 @@ variable "origins" {
     weight             = optional(number, 1)
 
     private_link = optional(object({
-      request_message        = optional(string)
+      request_message        = optional(string, "Request access for Private Link Origin CDN Frontdoor")
       target_type            = optional(string)
       location               = string
       private_link_target_id = string
@@ -259,7 +259,7 @@ variable "routes" {
 
     forwarding_protocol = optional(string, "HttpsOnly")
     patterns_to_match   = optional(list(string), ["/*"])
-    supported_protocols = optional(list(string), ["Http", "Https"])
+    supported_protocols = optional(list(string), ["Https"])
     cache = optional(object({
       query_string_caching_behavior = optional(string, "IgnoreQueryString")
       query_strings                 = optional(list(string))
