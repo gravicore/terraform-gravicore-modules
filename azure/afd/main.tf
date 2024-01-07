@@ -134,12 +134,9 @@ resource "null_resource" "approve_private_endpoints" {
   depends_on = [
     azurerm_cdn_frontdoor_route.default
   ]
-  triggers = {
-    always_run = "${timestamp()}"
-  }
   provisioner "local-exec" {
     working_dir = path.module
-    command     = "python3 approve_private_endpoints.py ${join(" ", local.private_link_ids)}"
+    command     = "python approve_private_endpoints.py ${join(" ", local.private_link_ids)}"
   }
 }
 
