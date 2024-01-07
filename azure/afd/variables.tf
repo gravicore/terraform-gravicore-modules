@@ -162,9 +162,8 @@ variable "response_timeout_seconds" {
 variable "endpoints" {
   description = "CDN FrontDoor Endpoints configurations."
   type = list(object({
-    name                 = string
-    prefix               = optional(string)
-    enabled              = optional(bool, true)
+    name    = string
+    enabled = optional(bool, true)
   }))
   default = []
 }
@@ -224,9 +223,9 @@ variable "origins" {
 variable "custom_domains" {
   description = "CDN FrontDoor Custom Domains configurations."
   type = list(object({
-    name                 = string
-    host_name            = string
-    dns_zone_id          = optional(string)
+    name        = string
+    host_name   = string
+    dns_zone_id = optional(string)
     tls = optional(object({
       certificate_type        = optional(string, "ManagedCertificate")
       minimum_tls_version     = optional(string, "TLS12")
@@ -251,8 +250,8 @@ variable "custom_domains" {
 variable "routes" {
   description = "CDN FrontDoor Routes configurations."
   type = list(object({
-    name                 = string
-    enabled              = optional(bool, true)
+    name    = string
+    enabled = optional(bool, true)
 
     endpoint_name     = string
     origin_group_name = string
@@ -283,11 +282,11 @@ variable "routes" {
 variable "rule_sets" {
   description = "CDN FrontDoor Rule Sets and associated Rules configurations."
   type = list(object({
-    name                 = string
+    name = string
     rules = optional(list(object({
-      name                 = string
-      order                = number
-      behavior_on_match    = optional(string, "Continue")
+      name              = string
+      order             = number
+      behavior_on_match = optional(string, "Continue")
 
       actions = object({
         url_rewrite_actions = optional(list(object({
