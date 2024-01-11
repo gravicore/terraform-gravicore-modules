@@ -107,7 +107,6 @@ locals {
       }, {
       name  = "DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL",
       value = "true"
-      }, {
     }]
   }
 }
