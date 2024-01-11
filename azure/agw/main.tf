@@ -368,7 +368,7 @@ locals {
 }
 
 data "azurerm_key_vault_secret" "certificates" {
-  for_each     = local.certificates_with_key_vault
+  for_each     = var.create ? local.certificates_with_key_vault : {}
   name         = each.value.key_vault_certificate_name
   key_vault_id = var.key_vault_id
 }
