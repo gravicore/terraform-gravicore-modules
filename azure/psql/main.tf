@@ -117,6 +117,7 @@ resource "azurerm_postgresql_flexible_server" "default" {
       zone,
       high_availability.0.standby_availability_zone
     ]
+    prevent_destroy = true
   }
 }
 

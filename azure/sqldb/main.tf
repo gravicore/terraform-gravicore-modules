@@ -80,6 +80,10 @@ resource "azurerm_mssql_database" "single_database" {
     }
   }
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   tags = local.tags
 }
 
@@ -143,6 +147,10 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
       yearly_retention  = try(format("P%sY", each.value.backup_retention.yearly_retention), null)
       week_of_year      = each.value.backup_retention.week_of_year
     }
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 
   tags = local.tags
