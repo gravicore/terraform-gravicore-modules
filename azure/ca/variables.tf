@@ -229,7 +229,7 @@ variable "container_apps" {
       max_replicas    = optional(number)
       min_replicas    = optional(number, 1)
       revision_suffix = optional(string)
-      azure_queue_scale_rule = optional(object({
+      azure_queue_scale_rule = optional(list(object({
         name         = string
         queue_name   = string
         queue_length = number
@@ -237,32 +237,32 @@ variable "container_apps" {
           secret_name       = string
           trigger_parameter = string
         })
-      }))
-      custom_scale_rule = optional(object({
+      })))
+      custom_scale_rule = optional(list(object({
         name             = string
         custom_rule_type = string
-        metadata         = string
-        authentication = object({
+        metadata         = any
+        authentication = optional(list(object({
           secret_name       = string
           trigger_parameter = string
-        })
-      }))
-      http_scale_rule = optional(object({
+        })))
+      })))
+      http_scale_rule = optional(list(object({
         name                = string
         concurrent_requests = number
-        authentication = object({
+        authentication = optional(list(object({
           secret_name       = string
           trigger_parameter = string
-        })
-      }))
-      tcp_scale_rule = optional(object({
+        })))
+      })))
+      tcp_scale_rule = optional(list(object({
         name                = string
         concurrent_requests = number
-        authentication = object({
+        authentication = optional(list(object({
           secret_name       = string
           trigger_parameter = string
-        })
-      }))
+        })))
+      })))
       volume = optional(list(object({
         name         = string
         storage_name = optional(string)
