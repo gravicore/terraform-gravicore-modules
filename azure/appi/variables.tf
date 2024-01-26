@@ -152,6 +152,7 @@ variable "application_insights" {
     name                                  = string
     application_type                      = string
     daily_data_cap_in_gb                  = optional(number)
+    retention_in_days                     = optional(string)
     daily_data_cap_notifications_disabled = optional(bool)
     sampling_percentage                   = optional(number)
     disable_ip_masking                    = optional(bool)
