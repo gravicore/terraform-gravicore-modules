@@ -247,7 +247,7 @@ variable "ignore_missing_vnet_service_endpoint" {
 variable "tls_minimum_version" {
   description = "The TLS minimum version for all SQL Database associated with the server. Valid values are: `1.0`, `1.1` and `1.2`."
   type        = string
-  default     = "1.1"
+  default     = "1.2"
 }
 
 variable "public_network_access_enabled" {
