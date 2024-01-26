@@ -73,6 +73,10 @@ resource "azurerm_mssql_server" "default" {
   primary_user_assigned_identity_id = var.primary_user_assigned_identity_id
 
   tags = local.tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_mssql_firewall_rule" "default" {
