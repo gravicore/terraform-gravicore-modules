@@ -38,8 +38,8 @@ resource "azurerm_key_vault_secret" "application_insights_connection_string" {
     azurerm_application_insights.default,
   ]
   for_each     = var.create ? var.application_insights : {}
-  name         = azurerm_postgresql_flexible_server.default[each.key].name
-  value        = azurerm_postgresql_flexible_server.default[each.key].connection_string
+  name         = azurerm_application_insights.default[each.key].name
+  value        = azurerm_application_insights.default[each.key].connection_string
   key_vault_id = var.key_vault_id
 }
 
