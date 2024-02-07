@@ -43,3 +43,54 @@ resource "azurerm_key_vault_secret" "application_insights_connection_string" {
   key_vault_id = var.key_vault_id
 }
 
+locals {
+  headers          = tolist(var.webtests["custom_webtest_key"].request.headers)
+  validation_rules = var.webtests["custom_webtest_key"].validation_rules != null ? [var.webtests["custom_webtest_key"].validation_rules] : []
+}
+
+resource "azapi_resource" "webtests" {
+  for_each  = var.create ? var.webtests : {}
+  type      = "Microsoft.Insights/webtests@2022-06-15"
+  name      = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "webtest"])
+  location  = var.az_region
+  parent_id = var.resource_group_name
+  tags      = local.tags
+
+  body = jsonencode({
+    properties = {
+      Configuration = {
+        WebTest = each.value.request.request_body
+      }
+      Description = each.value.name
+      Enabled     = each.value.enabled
+      Frequency   = each.value.frequency
+      Kind        = each.value.kind
+      Locations   = each.value.locations
+      Name        = each.value.name
+      Request = {
+        FollowRedirects        = each.value.request.follow_redirects
+        HttpVerb               = each.value.request.http_verb
+        ParseDependentRequests = each.value.request.parse_dependent_requests
+        RequestBody            = each.value.request.request_body
+        RequestUrl             = each.value.request.request_url
+        Headers                = [for h in local.headers : { key = h.key, value = h.value }]
+      }
+      RetryEnabled       = each.value.retry_enabled
+      SyntheticMonitorId = each.value.synthetic_monitor_id
+      Timeout            = each.value.timeout
+      ValidationRules = [for v in local.validation_rules : {
+        ContentValidation = v.content_validation != null ? {
+          ContentMatch    = v.content_validation.content_match
+          IgnoreCase      = v.content_validation.ignore_case
+          PassIfTextFound = v.content_validation.pass_if_text_found
+        } : null
+        ExpectedHttpStatusCode        = v.expected_http_status_code
+        IgnoreHttpStatusCode          = v.ignore_http_status_code
+        SSLCertRemainingLifetimeCheck = v.ssl_cert_remaining_lifetime_check
+        SSLCheck                      = v.ssl_check
+      }]
+    }
+    kind = each.value.kind
+  })
+}
+

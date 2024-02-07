@@ -219,3 +219,43 @@ locals {
   }
 }
 
+
+
+variable "webtests" {
+  description = "Configuration for Azure Application Insights Web Tests"
+  type = map(object({
+    enabled   = bool
+    frequency = optional(number, 300)
+    kind      = optional(string, "standard")
+    locations = list(object({
+      id = string
+    }))
+    name = string
+    request = object({
+      follow_redirects = optional(bool, true)
+      headers = optional(list(object({
+        key   = string
+        value = string
+      })), [])
+      http_verb                = optional(string, "GET")
+      parse_dependent_requests = optional(bool, false)
+      request_body             = optional(string)
+      request_url              = string
+    })
+    retry_enabled        = optional(bool, true)
+    synthetic_monitor_id = optional(string)
+    timeout              = optional(number, 30)
+    validation_rules = optional(object({
+      content_validation = optional(object({
+        content_match      = string
+        ignore_case        = optional(bool, false)
+        pass_if_text_found = optional(bool, true)
+      }))
+      expected_http_status_code         = optional(number)
+      ignore_http_status_code           = optional(bool, false)
+      ssl_cert_remaining_lifetime_check = optional(number)
+      ssl_check                         = optional(bool, false)
+    }))
+  }))
+}
+
