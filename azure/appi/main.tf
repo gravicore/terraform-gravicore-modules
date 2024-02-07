@@ -86,7 +86,7 @@ resource "azapi_resource" "webtests" {
         Headers                = local.headers_per_webtest[each.key] != null ? [for h in local.headers_per_webtest[each.key] : { key = h.key, value = h.value }] : []
       }
       RetryEnabled       = each.value.retry_enabled
-      SyntheticMonitorId = each.value.synthetic_monitor_id
+      SyntheticMonitorId = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "webtest"])
       Timeout            = each.value.timeout
       ValidationRules = local.validation_rules_per_webtest[each.key] != null ? {
         ContentValidation = local.validation_rules_per_webtest[each.key].content_validation != null ? {
