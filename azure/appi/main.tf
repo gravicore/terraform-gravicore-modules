@@ -48,12 +48,16 @@ locals {
   validation_rules = var.webtests["custom_webtest_key"].validation_rules != null ? [var.webtests["custom_webtest_key"].validation_rules] : []
 }
 
+data "azurerm_resource_group" "default" {
+  name = var.resource_group_name
+}
+
 resource "azapi_resource" "webtests" {
   for_each  = var.create ? var.webtests : {}
   type      = "Microsoft.Insights/webtests@2022-06-15"
   name      = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "webtest"])
   location  = var.az_region
-  parent_id = var.resource_group_name
+  parent_id = data.azurerm_resource_group.default.id
   tags      = local.tags
 
   body = jsonencode({
