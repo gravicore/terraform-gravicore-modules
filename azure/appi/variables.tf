@@ -224,9 +224,10 @@ locals {
 variable "webtests" {
   description = "Configuration for Azure Application Insights Web Tests"
   type = map(object({
-    enabled   = bool
-    frequency = optional(number, 300)
-    kind      = optional(string, "standard")
+    enabled                  = bool
+    application_insights_key = string
+    frequency                = optional(number, 300)
+    kind                     = optional(string, "standard")
     locations = list(object({
       Id = string
     }))
