@@ -228,7 +228,7 @@ variable "webtests" {
     frequency = optional(number, 300)
     kind      = optional(string, "standard")
     locations = list(object({
-      id = string
+      Id = string
     }))
     name = string
     request = object({
