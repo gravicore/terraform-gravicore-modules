@@ -44,11 +44,12 @@ resource "azurerm_monitor_action_group" "default" {
   dynamic "email_receiver" {
     for_each = each.value.email_receivers
     content {
-      name                    = email_receiver.key
-      email_address           = email_receiver.value
-      use_common_alert_schema = email_receiver.use_common_alert_schema
+      name                    = email_receiver.value.name
+      email_address           = email_receiver.value.email_address
+      use_common_alert_schema = email_receiver.value.use_common_alert_schema
     }
   }
+
   tags = local.tags
 }
 
