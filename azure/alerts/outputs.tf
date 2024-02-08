@@ -1,22 +1,30 @@
-output "component_name" {
-  description = "The name of this Application Insights component."
-  value       = { for k, v in azurerm_application_insights.default : k => v.name }
+output "monitor_action_group_name" {
+  description = "The name of the Monitor Action Group."
+  value       = { for k, v in azurerm_monitor_action_group.default : k => v.name }
 }
 
-output "component_id" {
-  description = "The ID of this Application Insights component."
-  value       = { for k, v in azurerm_application_insights.default : k => v.id }
+output "monitor_action_group_id" {
+  description = "The ID of the Monitor Action Group."
+  value       = { for k, v in azurerm_monitor_action_group.default : k => v.id }
 }
 
-output "instrumentation_key" {
-  description = "The instrumentation key of this Application Insights component."
-  value       = { for k, v in azurerm_application_insights.default : k => v.instrumentation_key }
-  sensitive   = true
+output "monitor_metric_alert_name" {
+  description = "The name of the Monitor Metric Alert."
+  value       = { for k, v in azurerm_monitor_metric_alert.default : k => v.name }
 }
 
-output "connection_string" {
-  description = "The connection string of this Application Insights component."
-  value       = { for k, v in azurerm_application_insights.default : k => v.connection_string }
-  sensitive   = true
+output "monitor_metric_alert_id" {
+  description = "The ID of the Monitor Metric Alert."
+  value       = { for k, v in azurerm_monitor_metric_alert.default : k => v.id }
+}
+
+output "monitor_activity_log_alert_name" {
+  description = "The name of the Monitor Activity Log Alert."
+  value       = { for k, v in azurerm_monitor_activity_log_alert.default : k => v.name }
+}
+
+output "monitor_activity_log_alert_id" {
+  description = "The ID of the Monitor Activity Log Alert."
+  value       = { for k, v in azurerm_monitor_activity_log_alert.default : k => v.id }
 }
 

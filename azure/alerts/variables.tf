@@ -169,38 +169,12 @@ variable "action_group" {
 }
 
 
-variable "activity_log_alerts" {
-  description = "Map of Activity log Alerts."
-  type = map(object({
-    description         = optional(string)
-    custom_name         = optional(string)
-    resource_group_name = optional(string)
-    scopes              = list(string)
-    criteria = object({
-      operation_name = optional(string)
-      category       = optional(string, "Recommendation")
-      level          = optional(string, "Error")
-      status         = optional(string)
 
-      resource_provider = optional(string)
-      resource_type     = optional(string)
-      resource_group    = optional(string)
-      resource_id       = optional(string)
-    })
-    service_health = optional(object({
-      events    = optional(string, "Incident")
-      locations = optional(string, "Global")
-      services  = optional(string)
-    }))
-  }))
-  default = {}
-}
 
 variable "metric_alerts" {
   description = "Map of metric Alerts"
   type = map(object({
     action_group_key         = string
-    custom_name              = optional(string, null)
     description              = optional(string, null)
     resource_group_name      = optional(string)
     scopes                   = optional(list(string), [])
@@ -248,6 +222,33 @@ variable "metric_alerts" {
     }), null)
   }))
 
+  default = {}
+}
+
+variable "activity_log_alerts" {
+  description = "Map of Activity log Alerts."
+  type = map(object({
+    description         = optional(string)
+    resource_group_name = optional(string)
+    action_group_key    = string
+    scopes              = list(string)
+    criteria = object({
+      operation_name = optional(string)
+      category       = optional(string, "Recommendation")
+      level          = optional(string, "Error")
+      status         = optional(string)
+
+      resource_provider = optional(string)
+      resource_type     = optional(string)
+      resource_group    = optional(string)
+      resource_id       = optional(string)
+    })
+    service_health = optional(object({
+      events    = optional(string, "Incident")
+      locations = optional(string, "Global")
+      services  = optional(string)
+    }))
+  }))
   default = {}
 }
 
