@@ -227,11 +227,8 @@ variable "standard_web_test" {
     enabled                  = bool
     application_insights_key = string
     frequency                = optional(number, 300)
-    kind                     = optional(string, "standard")
-    geo_locations = list(object({
-      Id = string
-    }))
-    name = string
+    description              = optional(string)
+    geo_locations            = list(string)
     request = object({
       follow_redirects = optional(bool, true)
       headers = optional(list(object({
@@ -241,7 +238,7 @@ variable "standard_web_test" {
       http_verb                = optional(string, "GET")
       parse_dependent_requests = optional(bool, false)
       request_body             = optional(string)
-      request_url              = string
+      request_url              = optional(string)
     })
     retry_enabled        = optional(bool, true)
     synthetic_monitor_id = optional(string)

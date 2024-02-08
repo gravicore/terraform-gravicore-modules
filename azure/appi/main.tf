@@ -59,33 +59,34 @@ resource "azurerm_application_insights_standard_web_test" "default" {
   timeout                 = each.value.timeout
 
   dynamic "request" {
-    for_each = each.value.request == null ? [] : ["enabled"]
+    for_each = each.value.request == null ? [] : [each.value.request]
     content {
       url                              = request.value.request_url
       body                             = request.value.request_body
-      http_verb                        = request.value.request_method
-      follow_redirects_enabled         = request.value.follow_redirects_enabled
-      parse_dependent_requests_enabled = request.value.parse_dependent_requests_enabled
+      http_verb                        = request.value.http_verb
+      follow_redirects_enabled         = request.value.follow_redirects
+      parse_dependent_requests_enabled = request.value.parse_dependent_requests
 
       dynamic "header" {
-        for_each = request.value.headers == null ? [] : ["enabled"]
+        for_each = request.value.headers == null ? [] : request.value.headers
         content {
-          name  = headers.value.name
-          value = headers.value.value
+          name  = header.value.key
+          value = header.value.value
         }
       }
     }
   }
 
+
   dynamic "validation_rules" {
-    for_each = each.value.validation_rules == null ? [] : ["enabled"]
+    for_each = each.value.validation_rules == null ? [] : [each.value.validation_rules]
     content {
-      expected_status_code        = validation_rules.value.expected_status_code
-      ssl_cert_remaining_lifetime = validation_rules.value.ssl_cert_remaining_lifetime
-      ssl_check_enabled           = validation_rules.value.ssl_check_enabled
+      expected_status_code        = validation_rules.value.expected_http_status_code
+      ssl_cert_remaining_lifetime = validation_rules.value.ssl_cert_remaining_lifetime_check
+      ssl_check_enabled           = validation_rules.value.ssl_check
 
       dynamic "content" {
-        for_each = validation_rules.value.content == null ? [] : ["enabled"]
+        for_each = validation_rules.value.content_validation == null ? [] : [validation_rules.value.content_validation]
         content {
           content_match      = content.value.content_match
           ignore_case        = content.value.ignore_case
@@ -95,35 +96,7 @@ resource "azurerm_application_insights_standard_web_test" "default" {
     }
   }
 
+
   tags = local.tags
 }
 
-
-
-
-variable "standard_web_test" {
-  description = "Map of standard web test configurations"
-  type = map(object({
-    name                    = string
-    resource_group_name     = string
-    location                = string
-    application_insights_id = string
-    geo_locations           = list(string)
-    description             = string
-    enabled                 = bool
-    frequency               = number
-    retry_enabled           = bool
-    timeout                 = number
-    validation_rules = list(object({
-      name            = string
-      validation_type = string
-      validation_text = string
-    }))
-    request_url           = string
-    request_method        = string
-    request_headers       = map(string)
-    request_body          = string
-    request_parse_depends = list(string)
-  }))
-  default = {}
-}
