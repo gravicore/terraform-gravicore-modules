@@ -101,6 +101,12 @@ locals {
       }, {
       name  = "DD_DOGSTATSD_TAGS",
       value = "${var.container_datadog_env_tag}"
+      }, {
+      name  = "DD_LOGS_ENABLED",
+      value = "true"
+      }, {
+      name  = "DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL",
+      value = "true"
     }]
   }
 }
