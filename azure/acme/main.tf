@@ -77,11 +77,3 @@ resource "azurerm_key_vault_secret" "default" {
   key_vault_id = var.key_vault_id
 }
 
-resource "azurerm_container_app_environment_certificate" "default" {
-  count                        = var.container_app_environment_id != null ? 1 : 0
-  name                         = var.key_vault_certificate_name
-  container_app_environment_id = var.container_app_environment_id
-  certificate_blob             = acme_certificate.default[0].certificate_p12
-  certificate_password         = acme_certificate.default[0].certificate_p12
-}
-

@@ -325,7 +325,7 @@ locals {
     }
   ]...)
 
-  certificate_names      = [for app in var.container_apps : length(app.ingress.custom_domain) > 0 ? [for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""] : []]
+  certificate_names      = [for app in var.container_apps : can([for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""]) ? [for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""] : []]
   flattened_certificates = compact(flatten(local.certificate_names))
 }
 
