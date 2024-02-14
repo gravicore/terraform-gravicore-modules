@@ -149,7 +149,7 @@ variable "key_vault_id" {
 }
 variable "application_insights" {
   type = map(object({
-    name                                  = string
+    #name                                  = string # it can be required if we will decide to use azapi_resource
     application_type                      = string
     daily_data_cap_in_gb                  = optional(number)
     retention_in_days                     = optional(string)
