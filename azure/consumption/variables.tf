@@ -14,12 +14,6 @@ variable "terraform_module" {
   description = "The owner and name of the Terraform module"
 }
 
-variable "az_region" {
-  type        = string
-  default     = ""
-  description = "The Azure region to deploy module into"
-}
-
 variable "resource_group_name" {
   type        = string
   default     = ""
@@ -109,7 +103,7 @@ variable "delimiter" {
 locals {
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
-  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.name])))
+  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, var.name])))
 
   business_tags = {
     namespace          = var.namespace
@@ -120,7 +114,6 @@ locals {
     stage      = var.stage
     module     = var.name
     repository = var.repository
-    region     = var.az_region
   }
   automation_tags = {
     terraform_module = var.terraform_module
@@ -149,7 +142,7 @@ variable "subscription_consumption_budget" {
     name            = string
     subscription_id = string
     amount          = number
-    time_grain      = optional(string)
+    time_grain      = optional(string, "Monthly")
     time_period = object({
       start_date = string
       end_date   = optional(string)
