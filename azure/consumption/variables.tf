@@ -140,7 +140,7 @@ variable "subscription_consumption_budget" {
   description = "Map of Consumption Budgets for Subscriptions."
   type = map(object({
     name            = string
-    subscription_id = string
+    subscription_id = optional(string)
     amount          = number
     time_grain      = optional(string, "Monthly")
     time_period = object({

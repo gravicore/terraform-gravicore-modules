@@ -42,12 +42,12 @@ resource "azurerm_consumption_budget_subscription" "default" {
   }
 
   dynamic "notification" {
-    for_each = each.value.notifications == null ? [] : [each.value.notifications]
+    for_each = each.value.notifications == null ? [] : each.value.notifications
     content {
       enabled        = notification.value.enabled
       threshold      = notification.value.threshold
       operator       = notification.value.operator
-      threshold_type = notification.value.threshold_typ
+      threshold_type = notification.value.threshold_type
       contact_emails = notification.value.contact_emails
       contact_groups = notification.value.contact_groups
       contact_roles  = notification.value.contact_roles
@@ -78,7 +78,7 @@ resource "azurerm_consumption_budget_resource_group" "default" {
     for_each = each.value.filter != null ? [each.value.filter] : []
     content {
       dynamic "dimension" {
-        for_each = filter.value.dimension != null ? [filter.value.dimension] : []
+        for_each = filter.value.dimension != null ? filter.value.dimension : []
         content {
           name     = dimension.value.name
           operator = dimension.value.operator
@@ -87,7 +87,7 @@ resource "azurerm_consumption_budget_resource_group" "default" {
       }
 
       dynamic "tag" {
-        for_each = filter.value.tag != null ? [filter.value.tag] : []
+        for_each = filter.value.tag != null ? filter.value.tag : []
         content {
           name     = tag.value.name
           operator = tag.value.operator
@@ -98,7 +98,7 @@ resource "azurerm_consumption_budget_resource_group" "default" {
   }
 
   dynamic "notification" {
-    for_each = each.value.notifications == null ? [] : [each.value.notifications]
+    for_each = each.value.notifications == null ? [] : each.value.notifications
     content {
       enabled        = notification.value.enabled
       threshold      = notification.value.threshold
