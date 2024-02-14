@@ -3,6 +3,14 @@
 # ----------------------------------------------------------------------------------------------------------------------
 data "azurerm_subscription" "current" {}
 
+resource "azurerm_cost_anomaly_alert" "default" {
+  count = var.create && var.azurerm_cost_anomaly_alert != null ? 1 : 0
+
+  name            = var.azurerm_cost_anomaly_alert.name
+  display_name    = var.azurerm_cost_anomaly_alert.display_name
+  email_subject   = var.azurerm_cost_anomaly_alert.email_subject
+  email_addresses = var.azurerm_cost_anomaly_alert.email_addresses
+}
 
 resource "azurerm_consumption_budget_subscription" "default" {
   for_each = var.create ? var.subscription_consumption_budget : {}

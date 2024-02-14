@@ -217,3 +217,12 @@ variable "resource_group_consumption" {
   }
 }
 
+variable "azurerm_cost_anomaly_alert" {
+  type = object({
+    name            = string
+    display_name    = string
+    email_subject   = string
+    email_addresses = list(string)
+  })
+  default = {}
+}
