@@ -224,5 +224,5 @@ variable "azurerm_cost_anomaly_alert" {
     email_subject   = string
     email_addresses = list(string)
   })
-  default = {}
 }
+
