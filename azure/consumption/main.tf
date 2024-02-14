@@ -55,12 +55,16 @@ resource "azurerm_consumption_budget_subscription" "default" {
   }
 }
 
+data "azurerm_resource_group" "default" {
+  for_each = var.create ? var.resource_group_consumption : {}
+  name     = each.value.resource_group_id
+}
 
 resource "azurerm_consumption_budget_resource_group" "default" {
   for_each = var.create ? var.resource_group_consumption : {}
 
   name              = each.value.name
-  resource_group_id = each.value.resource_group_id
+  resource_group_id = each.value.resource_group_id != null ? each.value.resource_group_id : data.azurerm_resource_group.default[each.key].id
 
   amount     = each.value.amount
   time_grain = each.value.time_grain
@@ -106,3 +110,4 @@ resource "azurerm_consumption_budget_resource_group" "default" {
     }
   }
 }
+

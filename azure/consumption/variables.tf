@@ -4,7 +4,7 @@
 
 variable "name" {
   type        = string
-  default     = "alert"
+  default     = "conbudg"
   description = "The name of the module"
 }
 
@@ -182,10 +182,11 @@ variable "subscription_consumption_budget" {
 variable "resource_group_consumption" {
   description = "Map of Resource Group Consumption Budgets."
   type = map(object({
-    name              = string
-    resource_group_id = string
-    amount            = number
-    time_grain        = optional(string)
+    name                = string
+    resource_group_id   = optional(string)
+    resource_group_name = optional(string)
+    amount              = number
+    time_grain          = optional(string)
     time_period = object({
       start_date = string
       end_date   = optional(string)
@@ -213,4 +214,13 @@ variable "resource_group_consumption" {
     }))
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for k, v in var.resource_group_consumption :
+      v.resource_group_id != null || v.resource_group_name != null
+    ])
+    error_message = "Each entry in resource_group_consumption must have either resource_group_id or resource_group_name specified."
+  }
 }
+
