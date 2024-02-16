@@ -119,3 +119,105 @@ resource "azurerm_consumption_budget_resource_group" "default" {
   }
 }
 
+resource "azurerm_subscription_cost_management_view" "default" {
+  for_each = var.create ? var.subscription_cost_management_view : {}
+
+  name            = each.value.name
+  display_name    = each.value.display_name
+  chart_type      = each.value.chart_type
+  accumulated     = each.value.accumulated
+  subscription_id = each.value.subscription_id != null ? each.value.subscription_id : data.azurerm_subscription.current.id
+  report_type     = each.value.report_type
+  timeframe       = each.value.timeframe
+
+  dynamic "dataset" {
+    for_each = each.value.dataset != null ? [each.value.dataset] : []
+    content {
+      granularity = dataset.value.granularity
+
+      dynamic "aggregation" {
+        for_each = dataset.value.aggregation != null ? dataset.value.aggregation : []
+        content {
+          name        = aggregation.value.name
+          column_name = aggregation.value.column_name
+        }
+      }
+
+      dynamic "grouping" {
+        for_each = dataset.value.grouping != null ? dataset.value.grouping : []
+        content {
+          name = grouping.value.name
+          type = grouping.value.type
+        }
+      }
+
+      dynamic "sorting" {
+        for_each = dataset.value.sorting != null ? dataset.value.sorting : []
+        content {
+          direction = sorting.value.direction
+          name      = sorting.value.name
+        }
+      }
+    }
+  }
+
+  dynamic "kpi" {
+    for_each = each.value.kpi != null ? each.value.kpi : []
+    content {
+      type = kpi.value.type
+    }
+  }
+
+  dynamic "pivot" {
+    for_each = each.value.pivot != null ? each.value.pivot : []
+    content {
+      name = pivot.value.name
+      type = pivot.value.type
+    }
+  }
+}
+
+
+resource "azurerm_cost_management_scheduled_action" "default" {
+  for_each = var.create ? var.cost_management_scheduled_action : {}
+
+  name                 = each.value.name
+  display_name         = each.value.display_name
+  view_id              = azurerm_subscription_cost_management_view.default[each.value.view_identifier].id == null ? azurerm_resource_group_cost_management_view.default[each.value.view_identifier].id : azurerm_subscription_cost_management_view.default[each.value.view_identifier].id
+  email_address_sender = each.value.email_address_sender
+  email_subject        = each.value.email_subject
+  email_addresses      = each.value.email_addresses
+  message              = each.value.message
+  frequency            = each.value.frequency
+  start_date           = each.value.start_date
+  end_date             = each.value.end_date
+
+  dynamic "day_of_month" {
+    for_each = each.value.day_of_month != null ? [each.value.day_of_month] : []
+    content {
+      day_of_month = day_of_month.value
+    }
+  }
+
+  dynamic "days_of_week" {
+    for_each = each.value.days_of_week != null ? each.value.days_of_week : []
+    content {
+      days_of_week = days_of_week.value
+    }
+  }
+
+  dynamic "hour_of_day" {
+    for_each = each.value.hour_of_day != null ? [each.value.hour_of_day] : []
+    content {
+      hour_of_day = hour_of_day.value
+    }
+  }
+
+  dynamic "weeks_of_month" {
+    for_each = each.value.weeks_of_month != null ? each.value.weeks_of_month : []
+    content {
+      weeks_of_month = weeks_of_month.value
+    }
+  }
+}
+

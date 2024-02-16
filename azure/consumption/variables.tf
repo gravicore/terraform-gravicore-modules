@@ -226,3 +226,63 @@ variable "azurerm_cost_anomaly_alert" {
   })
 }
 
+variable "subscription_cost_management_view" {
+  description = "Map of Subscription Cost Management Views."
+  type = map(object({
+    name            = string
+    display_name    = string
+    chart_type      = string
+    accumulated     = bool
+    subscription_id = optional(string)
+    report_type     = string
+    timeframe       = string
+
+    dataset = optional(object({
+      granularity = string
+      aggregation = list(object({
+        name        = string
+        column_name = string
+      }))
+      grouping = optional(list(object({
+        name = string
+        type = string
+      })))
+      sorting = optional(list(object({
+        direction = string
+        name      = string
+      })))
+    }))
+
+    kpi = optional(list(object({
+      type = string
+    })))
+
+    pivot = optional(list(object({
+      name = string
+      type = string
+    })))
+  }))
+  default = {}
+}
+
+variable "cost_management_scheduled_action" {
+  description = "Map of Cost Management Scheduled Actions."
+  type = map(object({
+    name                 = string
+    display_name         = string
+    view_identifier      = string
+    email_address_sender = string
+    email_subject        = string
+    email_addresses      = list(string)
+    message              = optional(string)
+    frequency            = string
+    start_date           = string
+    end_date             = string
+    day_of_month         = optional(number)
+    days_of_week         = optional(list(string))
+    hour_of_day          = optional(number)
+    weeks_of_month       = optional(list(string))
+  }))
+  default = {}
+}
+
