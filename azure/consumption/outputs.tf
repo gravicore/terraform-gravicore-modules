@@ -23,3 +23,4 @@ output "cost_management_scheduled_action_id" {
   description = "The ID of the Cost Management Scheduled Action."
   value       = { for k, v in azurerm_cost_management_scheduled_action.default : k => v.id }
 }
+

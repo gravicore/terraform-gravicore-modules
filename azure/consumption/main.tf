@@ -183,7 +183,7 @@ resource "azurerm_cost_management_scheduled_action" "default" {
 
   name                 = each.value.name
   display_name         = each.value.display_name
-  view_id              = azurerm_subscription_cost_management_view.default[each.value.view_identifier].id == null ? azurerm_resource_group_cost_management_view.default[each.value.view_identifier].id : azurerm_subscription_cost_management_view.default[each.value.view_identifier].id
+  view_id              = azurerm_subscription_cost_management_view.default[each.value.view_identifier].id
   email_address_sender = each.value.email_address_sender
   email_subject        = each.value.email_subject
   email_addresses      = each.value.email_addresses
