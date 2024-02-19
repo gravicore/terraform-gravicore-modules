@@ -192,32 +192,9 @@ resource "azurerm_cost_management_scheduled_action" "default" {
   start_date           = each.value.start_date
   end_date             = each.value.end_date
 
-  dynamic "day_of_month" {
-    for_each = each.value.day_of_month != null ? [each.value.day_of_month] : []
-    content {
-      day_of_month = day_of_month.value
-    }
-  }
-
-  dynamic "days_of_week" {
-    for_each = each.value.days_of_week != null ? each.value.days_of_week : []
-    content {
-      days_of_week = days_of_week.value
-    }
-  }
-
-  dynamic "hour_of_day" {
-    for_each = each.value.hour_of_day != null ? [each.value.hour_of_day] : []
-    content {
-      hour_of_day = hour_of_day.value
-    }
-  }
-
-  dynamic "weeks_of_month" {
-    for_each = each.value.weeks_of_month != null ? each.value.weeks_of_month : []
-    content {
-      weeks_of_month = weeks_of_month.value
-    }
-  }
+  day_of_month   = each.value.day_of_month
+  days_of_week   = each.value.days_of_week
+  hour_of_day    = each.value.hour_of_day
+  weeks_of_month = each.value.weeks_of_month
 }
 
