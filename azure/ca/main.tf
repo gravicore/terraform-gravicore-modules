@@ -29,7 +29,7 @@ resource "azurerm_container_app" "default" {
     revision_suffix = each.value.template.revision_suffix
 
     dynamic "azure_queue_scale_rule" {
-      for_each = each.value.template.azure_queue_scale_rule == null ? [] : [each.value.template.azure_queue_scale_rule]
+      for_each = each.value.template.azure_queue_scale_rule == null ? [] : each.value.template.azure_queue_scale_rule
 
       content {
         name         = azure_queue_scale_rule.value.name
@@ -49,7 +49,7 @@ resource "azurerm_container_app" "default" {
 
 
     dynamic "custom_scale_rule" {
-      for_each = each.value.template.custom_scale_rule == null ? [] : [each.value.template.custom_scale_rule]
+      for_each = each.value.template.custom_scale_rule == null ? [] : each.value.template.custom_scale_rule
 
       content {
         name             = custom_scale_rule.value.name
@@ -69,7 +69,7 @@ resource "azurerm_container_app" "default" {
 
 
     dynamic "http_scale_rule" {
-      for_each = each.value.template.http_scale_rule == null ? [] : [each.value.template.http_scale_rule]
+      for_each = each.value.template.http_scale_rule == null ? [] : each.value.template.http_scale_rule
 
       content {
         name                = http_scale_rule.value.name
@@ -87,7 +87,7 @@ resource "azurerm_container_app" "default" {
     }
 
     dynamic "tcp_scale_rule" {
-      for_each = each.value.template.tcp_scale_rule == null ? [] : [each.value.template.tcp_scale_rule]
+      for_each = each.value.template.tcp_scale_rule == null ? [] : each.value.template.tcp_scale_rule
 
       content {
         name                = tcp_scale_rule.value.name

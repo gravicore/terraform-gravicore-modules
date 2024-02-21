@@ -66,18 +66,22 @@ resource "azurerm_mssql_database" "single_database" {
 
   dynamic "long_term_retention_policy" {
     for_each = coalesce(
-      try(each.value.backup_retention.weekly_retention, ""),
-      try(each.value.backup_retention.monthly_retention, ""),
-      try(each.value.backup_retention.yearly_retention, ""),
-      try(each.value.backup_retention.week_of_year, ""),
+      try(each.value.long_term_retention_policy.weekly_retention, ""),
+      try(each.value.long_term_retention_policy.monthly_retention, ""),
+      try(each.value.long_term_retention_policy.yearly_retention, ""),
+      try(each.value.long_term_retention_policy.week_of_year, ""),
       "empty"
     ) == "empty" ? [] : ["enabled"]
     content {
-      weekly_retention  = try(format("P%sW", each.value.backup_retention.weekly_retention), null)
-      monthly_retention = try(format("P%sM", each.value.backup_retention.monthly_retention), null)
-      yearly_retention  = try(format("P%sY", each.value.backup_retention.yearly_retention), null)
-      week_of_year      = each.value.backup_retention.week_of_year
+      weekly_retention  = try(format("P%sW", each.value.long_term_retention_policy.weekly_retention), null)
+      monthly_retention = try(format("P%sM", each.value.long_term_retention_policy.monthly_retention), null)
+      yearly_retention  = try(format("P%sY", each.value.long_term_retention_policy.yearly_retention), null)
+      week_of_year      = each.value.long_term_retention_policy.week_of_year
     }
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 
   tags = local.tags
@@ -131,18 +135,22 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
 
   dynamic "long_term_retention_policy" {
     for_each = coalesce(
-      try(each.value.backup_retention.weekly_retention, ""),
-      try(each.value.backup_retention.monthly_retention, ""),
-      try(each.value.backup_retention.yearly_retention, ""),
-      try(each.value.backup_retention.week_of_year, ""),
+      try(each.value.long_term_retention_policy.weekly_retention, ""),
+      try(each.value.long_term_retention_policy.monthly_retention, ""),
+      try(each.value.long_term_retention_policy.yearly_retention, ""),
+      try(each.value.long_term_retention_policy.week_of_year, ""),
       "empty"
     ) == "empty" ? [] : ["enabled"]
     content {
-      weekly_retention  = try(format("P%sW", each.value.backup_retention.weekly_retention), null)
-      monthly_retention = try(format("P%sM", each.value.backup_retention.monthly_retention), null)
-      yearly_retention  = try(format("P%sY", each.value.backup_retention.yearly_retention), null)
-      week_of_year      = each.value.backup_retention.week_of_year
+      weekly_retention  = try(format("P%sW", each.value.long_term_retention_policy.weekly_retention), null)
+      monthly_retention = try(format("P%sM", each.value.long_term_retention_policy.monthly_retention), null)
+      yearly_retention  = try(format("P%sY", each.value.long_term_retention_policy.yearly_retention), null)
+      week_of_year      = each.value.long_term_retention_policy.week_of_year
     }
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 
   tags = local.tags

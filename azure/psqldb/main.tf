@@ -9,6 +9,9 @@ resource "azurerm_postgresql_flexible_server_database" "default" {
   server_id = each.value.server_id
   collation = each.value.collation
   charset   = each.value.charset
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 
