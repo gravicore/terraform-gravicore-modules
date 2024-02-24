@@ -597,6 +597,7 @@ output "cognito_client_id" {
 output "cognito_client_secret" {
   value       = aws_cognito_user_pool_client.pool[0].client_secret
   description = "The app version"
+  sensitive   = true
 }
 
 output "cognito_client_callback_urls" {

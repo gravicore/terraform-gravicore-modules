@@ -232,7 +232,7 @@ resource "aws_wafv2_web_acl" "waf_acl" {
   count       = var.create ? 1 : 0
   name        = local.module_prefix
   scope       = var.scope
-  description = join(" ", list(var.desc_prefix, var.scope, "WAF"))
+  description = join(" ", tolist([var.desc_prefix, var.scope, "WAF"]))
   tags        = local.tags
 
   default_action {
