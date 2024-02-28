@@ -101,7 +101,7 @@ resource "azurerm_application_insights_standard_web_test" "default" {
 }
 
 resource "azurerm_application_insights_smart_detection_rule" "default" {
-  for_each                           = var.create ? var.application_insights_smart_detection_rules : {}
+  for_each                           = var.create ? { for idx, rule in var.application_insights_smart_detection_rules : idx => rule } : {}
   name                               = each.value.name
   application_insights_id            = azurerm_application_insights.default[each.value.application_insights_key].id
   enabled                            = each.value.enabled
