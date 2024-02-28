@@ -13,6 +13,12 @@ variable "datadog_cloudwatch_log_groups" {
   default     = []
 }
 
+variable "enable_termination_protection" {
+  description = "Whether to enable termination protection for the forwarder stack"
+  type        = bool
+  default     = true
+}
+
 locals {
   datadog_forwarder_version = coalesce(var.datadog_forwarder_version, "latest")
 }
@@ -238,7 +244,8 @@ resource "aws_cloudformation_stack" "datadog_forwarder" {
     DdApiKeySecretArn = concat(aws_secretsmanager_secret.datadog_api_key.*.arn, [""])[0]
     DdTags            = join(",", local.datadog_aws_host_tags)
     # DdTags            = join(",", [for k, v in local.tags : format("%s:%s", k, v)])
-    InstallAsLayer = false
+    InstallAsLayer              = false
+    EnableTerminationProtection = var.enable_termination_protection
   }
 
   depends_on = [aws_cloudformation_stack.datadog_integration]
