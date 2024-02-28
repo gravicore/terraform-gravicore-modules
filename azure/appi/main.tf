@@ -100,3 +100,12 @@ resource "azurerm_application_insights_standard_web_test" "default" {
   tags = local.tags
 }
 
+resource "azurerm_application_insights_smart_detection_rule" "default" {
+  for_each                           = var.create ? var.application_insights_smart_detection_rules : {}
+  name                               = each.value.name
+  application_insights_id            = azurerm_application_insights.default[each.value.application_insights_key].id
+  enabled                            = each.value.enabled
+  send_emails_to_subscription_owners = each.value.send_emails_to_subscription_owners
+  additional_email_recipients        = each.value.additional_email_recipients
+}
+
