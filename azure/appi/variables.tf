@@ -257,3 +257,14 @@ variable "standard_web_test" {
   }))
 }
 
+variable "application_insights_smart_detection_rules" {
+  description = "Configuration for Azure Application Insights Smart Detection Rules"
+  type = list(object({
+    name                               = string
+    application_insights_key           = string
+    enabled                            = optional(bool, true)
+    send_emails_to_subscription_owners = optional(bool, false)
+    additional_email_recipients        = optional(list(string))
+  }))
+}
+
