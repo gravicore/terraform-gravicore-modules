@@ -21,7 +21,7 @@ resource "azurerm_monitor_action_group" "default" {
   resource_group_name = var.resource_group_name
   short_name          = each.value.short_name
   enabled             = each.value.enabled
-  location            = each.value.location
+  location            = each.value.location // it should be the each.value.location since location should be "global" by default
 
   dynamic "sms_receiver" {
     for_each = each.value.sms_receivers
@@ -187,5 +187,14 @@ resource "azurerm_monitor_activity_log_alert" "default" {
   }
 
   tags = local.tags
+}
+
+resource "azurerm_dashboard" "default" {
+  for_each             = var.create ? var.portal_dashboards : {}
+  name                 = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "dshbrd"])
+  resource_group_name  = var.resource_group_name
+  location             = var.az_region
+  tags                 = local.tags
+  dashboard_properties = templatefile("${each.value.file_path}", tomap(each.value.file_vars))
 }
 

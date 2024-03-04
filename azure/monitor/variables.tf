@@ -252,3 +252,11 @@ variable "activity_log_alerts" {
   default = {}
 }
 
+variable "portal_dashboards" {
+  type = map(object({
+    file_path = string
+    file_vars = map(string)
+  }))
+  default = {}
+}
+
