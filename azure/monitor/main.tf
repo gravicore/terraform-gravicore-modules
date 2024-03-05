@@ -55,7 +55,7 @@ resource "azurerm_monitor_action_group" "default" {
 
 resource "azurerm_monitor_metric_alert" "default" {
   for_each = var.create ? var.metric_alerts : {}
-  name     = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "mma"])
+  name     = join(var.delimiter, [local.naming_prefix, "mma"])
 
   description = each.value.description
 
@@ -151,7 +151,7 @@ resource "azurerm_monitor_metric_alert" "default" {
 resource "azurerm_monitor_activity_log_alert" "default" {
   for_each = var.create ? var.activity_log_alerts : {}
 
-  name        = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "ala"])
+  name        = join(var.delimiter, [local.naming_prefix, "ala"])
   description = each.value.description
 
   resource_group_name = var.resource_group_name
