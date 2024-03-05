@@ -4,13 +4,13 @@
 
 variable "name" {
   type        = string
-  default     = "alert"
+  default     = "monitor"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/alert"
+  default     = "gravicore/terraform-gravicore-modules/azure/monitor"
   description = "The owner and name of the Terraform module"
 }
 
@@ -110,7 +110,6 @@ locals {
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
   module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.name])))
-  naming_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, each.key, module.azure_region.location_short])))
   
   business_tags = {
     namespace          = var.namespace
