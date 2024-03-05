@@ -17,7 +17,7 @@ module "azure_region" {
 resource "azurerm_monitor_action_group" "default" {
   for_each = var.create ? var.action_group : {}
 
-  name                = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "mag"])
+  name                = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "mag"])
   resource_group_name = var.resource_group_name
   short_name          = each.value.short_name
   enabled             = each.value.enabled
@@ -55,7 +55,7 @@ resource "azurerm_monitor_action_group" "default" {
 
 resource "azurerm_monitor_metric_alert" "default" {
   for_each = var.create ? var.metric_alerts : {}
-  name     = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "mma"])
+  name     = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "mma"])
 
   description = each.value.description
 
@@ -151,7 +151,7 @@ resource "azurerm_monitor_metric_alert" "default" {
 resource "azurerm_monitor_activity_log_alert" "default" {
   for_each = var.create ? var.activity_log_alerts : {}
 
-  name        = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "ala"])
+  name        = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "ala"])
   description = each.value.description
 
   resource_group_name = var.resource_group_name
@@ -191,7 +191,7 @@ resource "azurerm_monitor_activity_log_alert" "default" {
 
 resource "azurerm_dashboard" "default" {
   for_each             = var.create ? var.portal_dashboards : {}
-  name                 = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "dshbrd"])
+  name                 = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "dshbrd"])
   resource_group_name  = var.resource_group_name
   location             = var.az_region
   tags                 = local.tags
