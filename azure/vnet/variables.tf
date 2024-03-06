@@ -230,7 +230,6 @@ locals {
     vnet_prefix                                   = subnet.vnet_prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
-    address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
     service_endpoints                             = subnet.service_endpoints
     delegation                                    = subnet.delegation
     private_link_service_network_policies_enabled = subnet.private_link_service_network_policies_enabled
