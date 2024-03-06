@@ -177,13 +177,28 @@ variable "bgp_community" {
   description = "(Optional) The BGP community attribute in format <as-number>:<community-value>."
 }
 
-
+variable "virtual_networks" {
+  type        = map(object({
+    vnet_cidr_block = string
+    ddos_protection_plan = optional(object({
+      id     = string
+      enable = bool
+    }))
+    bgp_community   = optional(string)
+    dns_servers     = optional(list(string))
+    edge_zone       = optional(string)
+    flow_timeout_in_minutes = optional(number)
+  }))
+  default     = null
+  description = "The virtual network information to be created"
+  
+}
 # ----------------------------------------------------------------------------------------------------------------------
 # Subnet Variables
 # ----------------------------------------------------------------------------------------------------------------------
 variable "subnets" {
   type = map(object({
-    prefix            = string
+    vnet_prefix       = string
     address_newbits   = number
     address_netnum    = number
     service_endpoints = optional(list(string))
@@ -247,7 +262,7 @@ variable "subnets" {
 
 locals {
   subnets_map = { for key, subnet in var.subnets : key => {
-    prefix                                        = subnet.prefix
+    vnet_prefix                                   = subnet.vnet_prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
     address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
