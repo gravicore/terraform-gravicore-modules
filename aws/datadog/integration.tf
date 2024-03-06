@@ -169,6 +169,7 @@ resource "aws_cloudformation_stack" "datadog_integration" {
     CloudSecurityPostureManagementPermissions = var.datadog_cloud_security_posture_management_permissions
     # Advanced
     # DdAWSAccountId = var.datadog_aws_account_id
+    EnableTerminationProtection = var.enable_termination_protection
   }
 
   depends_on = [aws_cloudformation_stack.datadog_policy_macro]
