@@ -178,21 +178,21 @@ variable "bgp_community" {
 }
 
 variable "virtual_networks" {
-  type        = map(object({
+  type = map(object({
     vnet_cidr_block = string
     prefix          = optional(string)
     ddos_protection_plan = optional(object({
       id     = string
       enable = bool
     }))
-    bgp_community   = optional(string)
-    dns_servers     = optional(list(string))
-    edge_zone       = optional(string)
+    bgp_community           = optional(string)
+    dns_servers             = optional(list(string))
+    edge_zone               = optional(string)
     flow_timeout_in_minutes = optional(number)
   }))
   default     = null
   description = "The virtual network information to be created"
-  
+
 }
 # ----------------------------------------------------------------------------------------------------------------------
 # Subnet Variables

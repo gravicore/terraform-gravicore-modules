@@ -12,8 +12,8 @@ module "azure_region" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_virtual_network" "default" {
-  count               = var.create ? var.virtual_networks : {}
-  name                = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, "vnet"])
+  for_each            = var.create ? var.virtual_networks : {}
+  name                = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, "vnet"]))
   resource_group_name = var.resource_group_name
   address_space       = coalesce(compact([each.value.vnet_cidr_block]))
   location            = var.az_region
