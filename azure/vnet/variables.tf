@@ -141,42 +141,6 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "vnet_cidr_block" {
-  type        = string
-  default     = "10.0.0.0/16"
-  description = "(Required) The address space that is used the virtual network. You can supply more than one address space."
-}
-
-variable "dns_servers" {
-  type        = list(any)
-  default     = null
-  description = "(Optional) List of IP addresses of DNS servers"
-}
-
-variable "edge_zone" {
-  type        = string
-  default     = null
-  description = "(Optional) Specifies the Edge Zone within the Azure Region where this Virtual Network should exist. Changing this forces a new Virtual Network to be created."
-}
-
-variable "flow_timeout_in_minutes" {
-  type        = number
-  default     = null
-  description = "(Optional) The flow timeout in minutes for the Virtual Network, which is used to enable connection tracking for intra-VM flows. Possible values are between 4 and 30 minutes."
-}
-
-variable "ddos_protection_plan" {
-  description = "DDoS protection plan settings"
-  type        = any
-  default     = null
-}
-
-variable "bgp_community" {
-  type        = string
-  default     = null
-  description = "(Optional) The BGP community attribute in format <as-number>:<community-value>."
-}
-
 variable "virtual_networks" {
   type = map(object({
     vnet_cidr_block = string
