@@ -262,7 +262,8 @@ resource "aws_cloudformation_stack" "cloudtrail" {
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
-    cloudtrailTrail = var.cloudtrail_name == null ? concat(aws_cloudtrail.default.*.name, [""])[0] : var.cloudtrail_name
+    cloudtrailTrail             = var.cloudtrail_name == null ? concat(aws_cloudtrail.default.*.name, [""])[0] : var.cloudtrail_name
+    EnableTerminationProtection = true
   }
 
 
@@ -281,7 +282,8 @@ resource "aws_cloudformation_stack" "guardduty" {
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"]
 
   parameters = {
-    GuardDutyDetectorID = coalesce(var.guardduty_detector_id, concat(data.aws_guardduty_detector.default.*.id, [""])[0])
+    GuardDutyDetectorID         = coalesce(var.guardduty_detector_id, concat(data.aws_guardduty_detector.default.*.id, [""])[0])
+    EnableTerminationProtection = true
   }
 
 
