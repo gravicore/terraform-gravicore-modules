@@ -180,6 +180,7 @@ variable "bgp_community" {
 variable "virtual_networks" {
   type        = map(object({
     vnet_cidr_block = string
+    prefix          = optional(string)
     ddos_protection_plan = optional(object({
       id     = string
       enable = bool
