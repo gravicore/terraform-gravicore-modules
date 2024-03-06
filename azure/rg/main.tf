@@ -16,7 +16,7 @@ module "azure_region" {
 
 resource "azurerm_resource_group" "default" {
   for_each = var.create ? var.resource_groups : {}
-  name     = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, "vnet"]))
+  name     = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, var.name]))
   location = var.az_region
   tags     = local.tags
 }
@@ -31,4 +31,3 @@ resource "azurerm_management_lock" "default" {
   lock_level = each.value.lock_level
   notes      = "Resource Group '${azurerm_resource_group.default[each.key].name}' is locked with '${each.value.lock_level}' level."
 }
-
