@@ -62,18 +62,18 @@ variable "port" {
   default     = "8080"
 }
 
-# variable "health_check" {
-#   type        = map(any)
-#   description = "Map of Health Check Configuration"
-#   default = {
-#     healthy_threshold   = 2
-#     interval            = 5
-#     path                = "/"
-#     protocol            = "HTTP"
-#     timeout             = 2
-#     unhealthy_threshold = 2
-#   }
-# }
+variable "health_check" {
+  type        = map(any)
+  description = "Map of Health Check Configuration"
+  default = {
+    healthy_threshold   = 2
+    interval            = 5
+    path                = "/"
+    protocol            = "HTTP"
+    timeout             = 2
+    unhealthy_threshold = 2
+  }
+}
 
 variable "auto_scaling_configuration" {
   type        = map(number)
@@ -97,7 +97,8 @@ variable "auto_deployments_enabled" {
 
 resource "aws_apprunner_service" "app_runner_service" {
 
-  service_name = "java-poc-app-test"
+  count        = var.create ? 1 : 0
+  service_name = "${local.module_prefix}-app-runner-service"
 
   source_configuration {
     auto_deployments_enabled = var.auto_deployments_enabled
@@ -131,14 +132,14 @@ resource "aws_apprunner_service" "app_runner_service" {
     }
   }
 
-  # health_check_configuration {
-  #   healthy_threshold   = var.health_check.healthy_threshold
-  #   interval            = var.health_check.interval
-  #   path                = var.health_check.path
-  #   protocol            = var.health_check.protocol
-  #   timeout             = var.health_check.protocol
-  #   unhealthy_threshold = var.health_check.unhealthy_threshold
-  # }
+  health_check_configuration {
+    healthy_threshold   = var.health_check.healthy_threshold
+    interval            = var.health_check.interval
+    path                = var.health_check.path
+    protocol            = var.health_check.protocol
+    timeout             = var.health_check.protocol
+    unhealthy_threshold = var.health_check.unhealthy_threshold
+  }
 
   auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.auto_scaling_configuration.arn
 
@@ -154,7 +155,7 @@ resource "aws_apprunner_service" "app_runner_service" {
 
 resource "aws_apprunner_auto_scaling_configuration_version" "auto_scaling_configuration" {
 
-  auto_scaling_configuration_name = "java-poc-auto-scaling"
+  auto_scaling_configuration_name = "${local.module_prefix}-auto-scaling-configuration"
 
   max_concurrency = var.auto_scaling_configuration.max_concurrent
   max_size        = var.auto_scaling_configuration.max_size

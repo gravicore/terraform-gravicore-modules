@@ -28,7 +28,7 @@ variable "security_group_ids" {
 
 resource "aws_apprunner_vpc_connector" "vpc_connector" {
 
-  vpc_connector_name = "java-poc-vpc-connector"
+  vpc_connector_name = "${local.stage_prefix}-vpc-connector"
   subnets            = var.subnet_ids
   security_groups    = var.security_group_ids
 
