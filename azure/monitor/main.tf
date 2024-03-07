@@ -189,7 +189,7 @@ resource "azurerm_monitor_activity_log_alert" "default" {
   tags = local.tags
 }
 
-resource "azurerm_dashboard" "default" {
+resource "azurerm_portal_dashboard" "default" {
   for_each             = var.create ? var.portal_dashboards : {}
   name                 = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "dshbrd"])
   resource_group_name  = var.resource_group_name
