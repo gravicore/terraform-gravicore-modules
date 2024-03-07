@@ -15,7 +15,6 @@ variable "subnet_ids" {
 
 variable "security_group_ids" {
   type        = list(string)
-  default     = []
   description = "A list of additional security group IDs to allow access to the App Runner VPC Connector"
 }
 

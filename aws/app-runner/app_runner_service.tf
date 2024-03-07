@@ -5,7 +5,6 @@
 
 variable "access_role_arn" {
   type        = string
-  default     = null
   description = "ARN of the IAM role that allows App Runner to access ECR"
 }
 
@@ -22,11 +21,6 @@ variable "provisioned_memory_values" {
 variable "instance_configuration" {
   type        = map(any)
   description = "Configure the CPU, Memory and Role ARN for the App Runner Service"
-  default = {
-    cpu               = 1024
-    memory            = 2048
-    instance_role_arn = null
-  }
 }
 
 variable "runtime_environment_secrets" {
@@ -48,7 +42,6 @@ variable "runtime_environment_variables" {
 variable "service_name" {
   type        = string
   description = "Name of the App Runner service"
-  default     = "app-runner-service"
 }
 
 variable "image_identifier" {
@@ -59,30 +52,16 @@ variable "image_identifier" {
 variable "port" {
   type        = string
   description = "The port that the container on App Runner listens on"
-  default     = "8080"
 }
 
 variable "health_check" {
   type        = map(any)
   description = "Map of Health Check Configuration"
-  default = {
-    healthy_threshold   = 2
-    interval            = 5
-    path                = "/"
-    protocol            = "HTTP"
-    timeout             = 2
-    unhealthy_threshold = 2
-  }
 }
 
 variable "auto_scaling_configuration" {
   type        = map(number)
   description = "Map of Auto Scaling Configuration with min, max size and maximum concurrency capacity"
-  default = {
-    min_size       = 2
-    max_size       = 10
-    max_concurrent = 50
-  }
 }
 
 variable "auto_deployments_enabled" {
