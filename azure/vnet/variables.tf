@@ -164,6 +164,7 @@ variable "virtual_networks" {
 variable "subnets" {
   type = map(object({
     vnet_prefix       = string
+    prefix            = optional(string)
     address_newbits   = number
     address_netnum    = number
     service_endpoints = optional(list(string))
@@ -228,6 +229,7 @@ variable "subnets" {
 locals {
   subnets_map = { for key, subnet in var.subnets : key => {
     vnet_prefix                                   = subnet.vnet_prefix
+    prefix                                        = subnet.prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
     service_endpoints                             = subnet.service_endpoints

@@ -38,7 +38,7 @@ resource "azurerm_virtual_network" "default" {
 
 resource "azurerm_subnet" "default" {
   for_each                                      = var.create ? local.subnets_map : {}
-  name                                          = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, each.key, "snet"])
+  name                                          = join(var.delimiter, [local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, "snet"])
   resource_group_name                           = var.resource_group_name
   virtual_network_name                          = azurerm_virtual_network.default[each.value.vnet_prefix].name
   address_prefixes                              = [cidrsubnet(azurerm_virtual_network.default[each.value.vnet_prefix].address_space[0], each.value.address_newbits, each.value.address_netnum)]

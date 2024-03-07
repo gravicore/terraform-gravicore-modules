@@ -31,3 +31,4 @@ resource "azurerm_management_lock" "default" {
   lock_level = each.value.lock_level
   notes      = "Resource Group '${azurerm_resource_group.default[each.key].name}' is locked with '${each.value.lock_level}' level."
 }
+
