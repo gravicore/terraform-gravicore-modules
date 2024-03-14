@@ -8,3 +8,8 @@ output "postgresql_flexible_server_fqdn" {
   value       = concat(azurerm_postgresql_flexible_server.default.*.fqdn, [""])[0]
 }
 
+output "postgresql_flexible_server_name" {
+  description = "The Name of the PostgreSQL Flexible Server."
+  value       = concat(azurerm_postgresql_flexible_server.default.*.name, [""])[0]
+}
+
