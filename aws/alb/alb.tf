@@ -148,6 +148,12 @@ variable "deletion_protection_enabled" {
   description = "A bool flag to enable/disable deletion protection for ALB"
 }
 
+variable "drop_invalid_header_fields" {
+  type        = bool
+  default     = true
+  description = "A bool flag to enable/disable dropping invalid header fields"
+}
+
 variable "target_groups" {
   type = list(any)
   default = [{
@@ -239,6 +245,7 @@ resource "aws_lb" "alb" {
   idle_timeout                     = var.idle_timeout
   ip_address_type                  = var.ip_address_type
   enable_deletion_protection       = var.deletion_protection_enabled
+  drop_invalid_header_fields       = var.drop_invalid_header_fields
   access_logs {
     bucket  = join("", aws_s3_bucket.default.*.id)
     prefix  = var.access_logs_prefix
