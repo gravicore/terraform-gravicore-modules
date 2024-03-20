@@ -193,6 +193,12 @@ variable "alb_https_ingress_cidr_blocks" {
   description = "List of CIDR blocks to allow in HTTPS security group"
 }
 
+variable "drop_invalid_header_fields" {
+  type        = bool
+  default     = true
+  description = "A bool flag to enable/disable dropping invalid header fields"
+}
+
 variable "alb_target_groups" {
   type = list(object({
     target_type          = string
@@ -405,27 +411,28 @@ module "container" {
 }
 
 module "alb" {
-  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/alb?ref=DevOps-1118-Update-Terraform-To-v013"
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/alb?ref=0.49.2"
 
-  create                    = var.create
-  vpc_id                    = var.vpc_id
-  subnet_ids                = var.alb_subnet_ids
-  dns_zone_id               = var.alb_dns_zone_id
-  dns_zone_name             = var.alb_dns_zone_name
-  security_group_ids        = var.alb_security_group_ids
-  http_redirect_enabled     = var.alb_http_redirect_enabled
-  http_ingress_cidr_blocks  = var.alb_http_ingress_cidr_blocks
-  domain_name               = var.alb_domain_name
-  certificate_arn           = var.alb_certificate_arn
-  https_ports               = var.alb_https_ports
-  https_enabled             = var.alb_https_enabled
-  https_ingress_cidr_blocks = var.alb_https_ingress_cidr_blocks
-  target_groups             = var.alb_target_groups
-  namespace                 = var.namespace
-  environment               = var.environment
-  stage                     = var.stage
-  name                      = var.name
-  tags                      = local.tags
+  create                     = var.create
+  vpc_id                     = var.vpc_id
+  subnet_ids                 = var.alb_subnet_ids
+  dns_zone_id                = var.alb_dns_zone_id
+  dns_zone_name              = var.alb_dns_zone_name
+  security_group_ids         = var.alb_security_group_ids
+  http_redirect_enabled      = var.alb_http_redirect_enabled
+  http_ingress_cidr_blocks   = var.alb_http_ingress_cidr_blocks
+  domain_name                = var.alb_domain_name
+  certificate_arn            = var.alb_certificate_arn
+  https_ports                = var.alb_https_ports
+  https_enabled              = var.alb_https_enabled
+  https_ingress_cidr_blocks  = var.alb_https_ingress_cidr_blocks
+  target_groups              = var.alb_target_groups
+  drop_invalid_header_fields = var.drop_invalid_header_fields
+  namespace                  = var.namespace
+  environment                = var.environment
+  stage                      = var.stage
+  name                       = var.name
+  tags                       = local.tags
 }
 
 module "datadog" {
