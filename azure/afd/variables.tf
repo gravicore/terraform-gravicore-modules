@@ -473,7 +473,7 @@ variable "firewall_policies" {
         match_values     = list(string)
         operator         = string
         selector         = optional(string)
-        negate_condition = optional(bool)
+        negation_condition = optional(bool)
         transforms       = optional(list(string), [])
       }))
     })), [])
