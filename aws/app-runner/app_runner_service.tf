@@ -5,6 +5,7 @@
 
 variable "access_role_arn" {
   type        = string
+  default     = null
   description = "ARN of the IAM role that allows App Runner to access ECR"
 }
 
@@ -21,6 +22,11 @@ variable "provisioned_memory_values" {
 variable "instance_configuration" {
   type        = map(any)
   description = "Configure the CPU, Memory and Role ARN for the App Runner Service"
+  default = {
+    cpu               = 1024
+    memory            = 2048
+    instance_role_arn = null
+  }
 }
 
 variable "runtime_environment_secrets" {
@@ -42,6 +48,7 @@ variable "runtime_environment_variables" {
 variable "service_name" {
   type        = string
   description = "Name of the App Runner service"
+  default     = "app-runner-service"
 }
 
 variable "image_identifier" {
@@ -52,21 +59,41 @@ variable "image_identifier" {
 variable "port" {
   type        = string
   description = "The port that the container on App Runner listens on"
+  default     = "8080"
 }
 
-variable "health_check" {
-  type        = map(any)
-  description = "Map of Health Check Configuration"
-}
+# variable "health_check" {
+#   type        = map(any)
+#   description = "Map of Health Check Configuration"
+#   default = {
+#     healthy_threshold   = 2
+#     interval            = 5
+#     path                = "/"
+#     protocol            = "HTTP"
+#     timeout             = 2
+#     unhealthy_threshold = 2
+#   }
+# }
 
 variable "auto_scaling_configuration" {
   type        = map(number)
   description = "Map of Auto Scaling Configuration with min, max size and maximum concurrency capacity"
+  default = {
+    min_size       = 2
+    max_size       = 10
+    max_concurrent = 50
+  }
 }
 
 variable "auto_deployments_enabled" {
   type        = bool
   description = "Enable or disable auto deployments"
+}
+
+variable "created_connector_arn" {
+  type        = string
+  description = "ARN of the VPC Connector created by the App Runner"
+
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -76,8 +103,7 @@ variable "auto_deployments_enabled" {
 
 resource "aws_apprunner_service" "app_runner_service" {
 
-  count        = var.create ? 1 : 0
-  service_name = "${local.module_prefix}-app-runner-service"
+  service_name = var.service_name
 
   source_configuration {
     auto_deployments_enabled = var.auto_deployments_enabled
@@ -107,18 +133,18 @@ resource "aws_apprunner_service" "app_runner_service" {
   network_configuration {
     egress_configuration {
       egress_type       = "VPC"
-      vpc_connector_arn = aws_apprunner_vpc_connector.vpc_connector.arn
+      vpc_connector_arn = try(aws_apprunner_vpc_connector.vpc_connector[0].arn, var.created_connector_arn)
     }
   }
 
-  health_check_configuration {
-    healthy_threshold   = var.health_check.healthy_threshold
-    interval            = var.health_check.interval
-    path                = var.health_check.path
-    protocol            = var.health_check.protocol
-    timeout             = var.health_check.protocol
-    unhealthy_threshold = var.health_check.unhealthy_threshold
-  }
+  # health_check_configuration {
+  #   healthy_threshold   = var.health_check.healthy_threshold
+  #   interval            = var.health_check.interval
+  #   path                = var.health_check.path
+  #   protocol            = var.health_check.protocol
+  #   timeout             = var.health_check.protocol
+  #   unhealthy_threshold = var.health_check.unhealthy_threshold
+  # }
 
   auto_scaling_configuration_arn = aws_apprunner_auto_scaling_configuration_version.auto_scaling_configuration.arn
 
@@ -134,7 +160,7 @@ resource "aws_apprunner_service" "app_runner_service" {
 
 resource "aws_apprunner_auto_scaling_configuration_version" "auto_scaling_configuration" {
 
-  auto_scaling_configuration_name = "${local.module_prefix}-auto-scaling-configuration"
+  auto_scaling_configuration_name = "${var.service_name}-auto-scaling"
 
   max_concurrency = var.auto_scaling_configuration.max_concurrent
   max_size        = var.auto_scaling_configuration.max_size

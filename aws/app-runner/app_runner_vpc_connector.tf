@@ -15,10 +15,15 @@ variable "subnet_ids" {
 
 variable "security_group_ids" {
   type        = list(string)
+  default     = []
   description = "A list of additional security group IDs to allow access to the App Runner VPC Connector"
 }
 
-
+variable "create_vpc_connector" {
+  type        = bool
+  default     = true
+  description = "Flag to create the VPC Connector"
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -26,8 +31,8 @@ variable "security_group_ids" {
 
 
 resource "aws_apprunner_vpc_connector" "vpc_connector" {
-
-  vpc_connector_name = "${local.stage_prefix}-vpc-connector"
+  count              = var.create_vpc_connector ? 1 : 0
+  vpc_connector_name = "${var.service_name}-vpc-connector"
   subnets            = var.subnet_ids
   security_groups    = var.security_group_ids
 
@@ -37,8 +42,6 @@ resource "aws_apprunner_vpc_connector" "vpc_connector" {
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
-
 output "vpc_connector_arn" {
-  value = aws_apprunner_vpc_connector.vpc_connector.arn
+  value = var.create_vpc_connector ? aws_apprunner_vpc_connector.vpc_connector[0].arn : null
 }
-
