@@ -169,8 +169,3 @@ output "sqs_key_arn" {
   value       = module.sqs_kms_key.key_arn
   description = "Generic KMS Key ARN for SQS"
 }
-
-output "sqs_key_alias" {
-  value       = module.sqs_kms_key.key_alias
-  description = "KMS Key Alias for SQS"
-}
