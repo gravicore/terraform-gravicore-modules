@@ -198,3 +198,17 @@ resource "azurerm_portal_dashboard" "default" {
   dashboard_properties = templatefile("${each.value.file_path}", tomap(each.value.file_vars))
 }
 
+resource "azurerm_application_insights_workbook" "default" {
+  for_each             = var.create ? var.application_insights_workbooks : {}
+  name                 = each.value.uuid
+  display_name         = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "wrkbk"])
+  resource_group_name  = var.resource_group_name
+  location             = var.az_region
+  source_id            = each.value.source_id
+  category             = each.value.category
+  description          = each.value.description
+  storage_container_id = each.value.storage_container_id
+  data_json            = templatefile("${each.value.file_path}", tomap(each.value.file_vars))
+  tags                 = local.tags
+}
+

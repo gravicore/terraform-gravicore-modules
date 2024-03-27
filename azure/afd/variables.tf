@@ -469,12 +469,12 @@ variable "firewall_policies" {
       rate_limit_duration_in_minutes = optional(number, 1)
       rate_limit_threshold           = optional(number, 10)
       match_conditions = list(object({
-        match_variable   = string
-        match_values     = list(string)
-        operator         = string
-        selector         = optional(string)
+        match_variable     = string
+        match_values       = list(string)
+        operator           = string
+        selector           = optional(string)
         negation_condition = optional(bool)
-        transforms       = optional(list(string), [])
+        transforms         = optional(list(string), [])
       }))
     })), [])
     managed_rules = optional(list(object({
