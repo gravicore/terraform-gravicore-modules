@@ -262,12 +262,12 @@ variable "portal_dashboards" {
 
 variable "application_insights_workbooks" {
   type = map(object({
-    uuid                 = string
-    source_id            = optional(string, "azure monitor")
-    category             = optional(string, "workbook")
-    description          = optional(string)
-    file_path            = string
-    file_vars            = map(string)
+    uuid        = string
+    source_id   = optional(string, "azure monitor")
+    category    = optional(string, "workbook")
+    description = optional(string)
+    file_path   = string
+    file_vars   = map(string)
   }))
   default = {}
 }
