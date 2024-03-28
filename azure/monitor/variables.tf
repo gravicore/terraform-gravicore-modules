@@ -266,7 +266,6 @@ variable "application_insights_workbooks" {
     source_id            = optional(string, "azure monitor")
     category             = optional(string, "workbook")
     description          = optional(string)
-    storage_container_id = optional(string)
     file_path            = string
     file_vars            = map(string)
   }))
