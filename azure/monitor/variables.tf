@@ -271,3 +271,4 @@ variable "application_insights_workbooks" {
   }))
   default = {}
 }
+

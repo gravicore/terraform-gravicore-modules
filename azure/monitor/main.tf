@@ -189,14 +189,18 @@ resource "azurerm_monitor_activity_log_alert" "default" {
   tags = local.tags
 }
 
+
 resource "azurerm_portal_dashboard" "default" {
-  for_each             = var.create ? var.portal_dashboards : {}
-  name                 = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "dshbrd"])
-  resource_group_name  = var.resource_group_name
-  location             = var.az_region
-  tags                 = local.tags
-  dashboard_properties = templatefile("${each.value.file_path}", tomap(each.value.file_vars))
+  for_each            = var.create ? var.portal_dashboards : {}
+  name                = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "dshbrd"])
+  resource_group_name = var.resource_group_name
+  location            = var.az_region
+  tags                = local.tags
+  dashboard_properties = templatefile("${each.value.file_path}", tomap(merge(each.value.file_vars, {
+    "workbook_reference" = contains(keys(var.application_insights_workbooks), each.key) && contains(keys(each.value.file_vars), "workbook_uuid") ? var.application_insights_workbooks[each.key].uuid : null
+  })))
 }
+
 
 resource "azurerm_application_insights_workbook" "default" {
   for_each            = var.create ? var.application_insights_workbooks : {}
@@ -210,3 +214,4 @@ resource "azurerm_application_insights_workbook" "default" {
   data_json           = templatefile("${each.value.file_path}", tomap(each.value.file_vars))
   tags                = local.tags
 }
+
