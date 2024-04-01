@@ -36,7 +36,7 @@ variable "kms_key_id" {
 
 variable "replicate_source_db" {
   description = "Specifies that this resource is a Replicate database, and to use this value as the source database. This correlates to the identifier of another Amazon RDS Database to replicate."
-  default     = ""
+  default     = null
 }
 
 variable "snapshot_identifier" {
@@ -74,7 +74,7 @@ variable "instance_class" {
 
 variable "db_name" {
   description = "The DB name to create. If omitted, no database is created initially"
-  default     = ""
+  default     = null
 }
 
 variable "username" {
