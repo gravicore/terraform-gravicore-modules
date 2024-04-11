@@ -56,8 +56,9 @@ resource "azurerm_monitor_action_group" "default" {
 
 
 resource "azurerm_monitor_metric_alert" "default" {
-  for_each = var.create ? var.metric_alerts : {}
-  name     = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "mma"])
+  for_each = var.create && var.metric_alerts != null && length(var.metric_alerts) > 0 ? var.metric_alerts : {}
+
+  name = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "mma"])
 
   description = each.value.description
 
@@ -152,13 +153,13 @@ resource "azurerm_monitor_metric_alert" "default" {
 
 
 resource "azurerm_monitor_activity_log_alert" "default" {
-  for_each = var.create ? var.activity_log_alerts : {}
+  for_each = var.create && var.activity_log_alerts != null && length(var.activity_log_alerts) > 0 ? var.activity_log_alerts : {}
 
   name        = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "ala"])
   description = each.value.description
 
   resource_group_name = var.resource_group_name
-  scopes = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : null
+  scopes              = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : null
 
   criteria {
     operation_name = each.value.criteria.operation_name
