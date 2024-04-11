@@ -53,6 +53,8 @@ resource "azurerm_monitor_action_group" "default" {
   tags = local.tags
 }
 
+
+
 resource "azurerm_monitor_metric_alert" "default" {
   for_each = var.create ? var.metric_alerts : {}
   name     = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "mma"])
@@ -60,7 +62,8 @@ resource "azurerm_monitor_metric_alert" "default" {
   description = each.value.description
 
   resource_group_name = var.resource_group_name
-  scopes              = each.value.scopes
+
+  scopes = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : null
 
   enabled       = each.value.enabled
   auto_mitigate = each.value.auto_mitigate
@@ -155,7 +158,7 @@ resource "azurerm_monitor_activity_log_alert" "default" {
   description = each.value.description
 
   resource_group_name = var.resource_group_name
-  scopes              = each.value.scopes
+  scopes = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : nullscopes = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : null
 
   criteria {
     operation_name = each.value.criteria.operation_name

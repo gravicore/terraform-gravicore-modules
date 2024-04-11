@@ -142,6 +142,12 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "target_resource_ids" {
+  description = "The ID of the resource to monitor"
+  type        = list(string)
+  default     = ""
+}
+
 
 variable "action_group" {
   description = "Defines the action group for alerts"
@@ -167,8 +173,6 @@ variable "action_group" {
   }))
   default = {}
 }
-
-
 
 
 variable "metric_alerts" {
