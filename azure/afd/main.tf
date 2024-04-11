@@ -1,14 +1,4 @@
 # ----------------------------------------------------------------------------------------------------------------------
-# CAF resource
-# ----------------------------------------------------------------------------------------------------------------------
-
-
-module "azure_region" {
-  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=0.46.0"
-  azure_region = var.az_region
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
 # Azure Front Door 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -163,7 +153,7 @@ module "diagnostic" {
 
 module "alerts" {
   count                 = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
-  az_region             = var.az_region
+  az_region             = "Global"
   resource_group_name   = var.resource_group_name
   source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=GDEV-347-application-monitoring-with-workbooks-and-dashboards"
   namespace             = var.namespace
@@ -176,10 +166,6 @@ module "alerts" {
   target_resource_ids   = [one(azurerm_cdn_frontdoor_profile.default[*].id)]
 }
 
-variable "az_region" {
-  description = "Azure region"
-  type        = string
-}
 
 variable "metric_alerts" {
   description = "List of metric alerts to create"
