@@ -1,3 +1,12 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# CAF resource
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+module "azure_region" {
+  source       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/regions?ref=0.46.0"
+  azure_region = var.az_region
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Azure Front Door 
@@ -167,6 +176,10 @@ module "alerts" {
   target_resource_ids   = [one(azurerm_cdn_frontdoor_profile.default[*].id)]
 }
 
+variable "az_region" {
+  description = "Azure region"
+  type        = string
+}
 
 variable "metric_alerts" {
   description = "List of metric alerts to create"
