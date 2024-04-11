@@ -253,10 +253,10 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_spoke" {
   parameters = {
 
     # Testing Parameters
-    "Logging level" = var.log_level
+    LogLevel = var.log_level
 
     # Multi account deployment
-    "Hub account ID" = var.hub_account_id
+    HubAccountId = var.hub_account_id
   }
 
   template_url = "https://solutions-reference.s3.amazonaws.com/cost-optimizer-for-amazon-workspaces/latest/cost-optimizer-for-amazon-workspaces-spoke.template"
