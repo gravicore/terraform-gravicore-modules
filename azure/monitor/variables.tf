@@ -145,7 +145,7 @@ locals {
 variable "target_resource_ids" {
   description = "The ID of the resource to monitor"
   type        = list(string)
-  default     = ""
+  default     = []
 }
 
 
