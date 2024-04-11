@@ -169,7 +169,7 @@ variable "org_id_multi_account" {
   description = "AWS Organizations ID to support multi-account deployment. Leave blank for single account deployments."
 }
 
-variable "org_account_id" {
+variable "management_account_id" {
   type        = string
   default     = null
   description = "Account ID for the Organization's management account. Leave blank for single account deployments."
@@ -191,7 +191,7 @@ variable "hub_account_id" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-  # Hub Deployment of WCO
+# Hub Deployment of WCO
 resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
   count        = var.create && var.spoke_account == false ? 1 : 0
   name         = local.module_prefix
@@ -200,21 +200,21 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
 
   parameters = {
     # New VPC Settings
-    "Create New VPC" = var.create_new_vpc
-    "AWS Fargate VPC CIDR Block"    = var.vpc_cidr
-    "AWS Fargate Subnet1 CIDR Block" = var.subnet_1_cidr
-    "AWS Fargate Subnet2 CIDR Block"  = var.subnet_2_cidr
-    "AWS Fargate SecurityGroup CIDR Block" = var.sg_cidr
+    CreateNewVPC = var.create_new_vpc
+    VpcCIDR      = var.vpc_cidr
+    Subnet1CIDR  = var.subnet_1_cidr
+    Subnet2CIDR  = var.subnet_2_cidr
+    EgressCIDR   = var.sg_cidr
 
     # Existing VPC Settings
-    "Subnet ID for first subnet"     = var.existing_subnet_id_1
-    "Subnet ID for second subnet"      = var.existing_subnet_id_2
-    "Security group ID to launch ECS task" = var.existing_security_group_id
+    ExistingSubnet1Id       = var.existing_subnet_id_1
+    ExistingSubnet2Id       = var.existing_subnet_id_2
+    ExistingSecurityGroupId = var.existing_security_group_id
 
     # Testing Parameters
-    "Log Level"       = var.log_level
-    "Launch in Dry Run Mode"         = var.dry_run
-    "Simulate End of Month Cleanup" = var.test_end_of_month
+    LogLevel       = var.log_level
+    DryRun         = var.dry_run
+    TestEndOfMonth = var.test_end_of_month
     # Pricing Parameters
     ValueLimit       = var.value_limit
     StandardLimit    = var.standard_limit
@@ -224,13 +224,13 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
     GraphicsLimit    = var.graphics_limit
     GraphicsProLimit = var.graphics_pro_limit
     # List of AWS Regions
-    "List of AWS Regions" = join(",", var.regions)
+    Regions = join(",", var.regions)
     # Terminate unused workspaces
-    "Terminate workspaces not used for a month" = var.terminate_unused_workspaces
-    "Number of months for termination check" = var.terminate_check_in_months
+    TerminateUnusedWorkspaces         = var.terminate_unused_workspaces
+    NumberOfMonthsForTerminationCheck = var.terminate_check_in_months
     # Multi account deployment
-    "Organization ID for multi account deployment" = var.org_id_multi_account
-    "Account ID of the Management Account for the Organization" = var.org_account_id
+    OrganizationID      = var.org_id_multi_account
+    ManagementAccountId = var.management_account_id
   }
 
   template_url = "https://solutions-reference.s3.amazonaws.com/cost-optimizer-for-amazon-workspaces/latest/cost-optimizer-for-amazon-workspaces.template"
@@ -242,7 +242,7 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
   timeout_in_minutes = var.timeout_in_minutes
 }
 
-  # Spoke Deployment of WCO
+# Spoke Deployment of WCO
 
 resource "aws_cloudformation_stack" "workspace_cost_optimizer_spoke" {
   count        = var.create && var.spoke_account ? 1 : 0
@@ -253,7 +253,7 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_spoke" {
   parameters = {
 
     # Testing Parameters
-    "Logging level"       = var.log_level
+    "Logging level" = var.log_level
 
     # Multi account deployment
     "Hub account ID" = var.hub_account_id
