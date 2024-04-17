@@ -1,6 +1,6 @@
 
 resource "aws_iam_role" "default" {
-  name = "${locals.module_prefix}-lambda-role-policy"
+  name = "${local.module_prefix}-lambda-role-policy"
 
   assume_role_policy = <<EOF
 {
@@ -21,7 +21,7 @@ EOF
 
 
 resource "aws_iam_policy" "default" {
-  name   = "${locals.module_prefix}-lambda-role-policy"
+  name   = "${local.module_prefix}-lambda-role-policy"
   policy = <<EOF
 {
   "Version": "2012-10-17",

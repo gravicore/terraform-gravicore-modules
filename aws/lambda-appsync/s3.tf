@@ -22,7 +22,7 @@ variable "function_entrypoint" {
 
 
 resource "aws_s3_bucket" "default" {
-  bucket = "${locals.module-prefix}-lambda"
+  bucket = "${local.module_prefix}-lambda"
 }
 
 resource "aws_s3_bucket_public_access_block" "default" {
