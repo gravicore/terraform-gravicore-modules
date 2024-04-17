@@ -23,6 +23,18 @@ variable "function_runtime" {
   description = "(optional) describe your variable"
 }
 
+
+variable "function_memory_size" {
+  type        = number
+  description = "(optional) describe your variable"
+}
+
+variable "function_timeout" {
+  type        = number
+  description = "(optional) describe your variable"
+}
+
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -38,16 +50,11 @@ resource "aws_lambda_function" "default" {
   role          = aws_iam_role.default.arn
   handler       = var.function_handler
   runtime       = var.function_runtime
-  memory_size   = 128
-  timeout       = 300
+  memory_size   = var.function_memory_size
+  timeout       = var.function_timeout
 
   source_code_hash = data.archive_file.default.output_base64sha256
 
-  environment {
-    variables = {
-      SNS_ARN = "${var.sns.arn}"
-    }
-  }
 }
 
 

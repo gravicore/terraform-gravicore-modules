@@ -5,14 +5,21 @@
 
 variable "function_folder" {
   type        = string
-  description = "(optional) describe your variable"
+  description = "Folder path to the Lambda function source code"
 }
 
 
 variable "function_entrypoint" {
   type        = string
-  description = "(optional) describe your variable"
+  description = "File path to the Lambda function entrypoint (app.py, main.js, etc.)"
 }
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
+
 
 resource "aws_s3_bucket" "default" {
   bucket = "${locals.module-prefix}-lambda"

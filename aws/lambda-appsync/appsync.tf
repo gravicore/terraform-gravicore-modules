@@ -1,14 +1,31 @@
 
-resource "aws_appsync_graphql_api" "example" {
-  authentication_type = "AWS_IAM"
-  name                = "example"
+# ----------------------------------------------------------------------------------------------------------------------
+# VARIABLES / LOCALS / REMOTE STATE
+# ----------------------------------------------------------------------------------------------------------------------
 
-  schema = <<EOF
-schema {
-    query: Query
+
+
+variable "graphql_schema" {
+  type        = string
+  description = "Description of the Lambda function"
 }
-type Query {
-  test: Int
+
+
+variable "graphql_authentication_type" {
+  type        = string
+  description = "Description of the Lambda function"
 }
-EOF
+
+
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "var.graphql_authentication_type"
+  name                = "${var.module_prefix}-appsync-api"
+  schema              = var.graphql_schema
 }
