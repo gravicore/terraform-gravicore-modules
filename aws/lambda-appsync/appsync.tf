@@ -25,7 +25,7 @@ variable "graphql_authentication_type" {
 
 
 resource "aws_appsync_graphql_api" "example" {
-  authentication_type = "var.graphql_authentication_type"
+  authentication_type = var.graphql_authentication_type
   name                = "${var.module_prefix}-appsync-api"
   schema              = var.graphql_schema
 }
