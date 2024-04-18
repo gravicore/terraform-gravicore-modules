@@ -24,7 +24,7 @@ variable "graphql_authentication_type" {
 # ----------------------------------------------------------------------------------------------------------------------
 resource "aws_appsync_datasource" "default" {
   api_id           = aws_appsync_graphql_api.default.id
-  name             = "${var.module_prefix}_appsync_datasource"
+  name             = "${local.module_prefix}_appsync_datasource"
   service_role_arn = aws_iam_role.appsync_service_role.arn
   type             = "AWS_LAMBDA"
 
@@ -35,6 +35,6 @@ resource "aws_appsync_datasource" "default" {
 
 resource "aws_appsync_graphql_api" "default" {
   authentication_type = var.graphql_authentication_type
-  name                = "${var.module_prefix}-appsync-api"
+  name                = "${local.module_prefix}-appsync-api-lambda"
   schema              = var.graphql_schema
 }
