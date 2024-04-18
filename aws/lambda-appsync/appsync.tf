@@ -35,7 +35,6 @@ resource "aws_appsync_datasource" "default" {
 
 resource "aws_appsync_graphql_api" "default" {
   authentication_type = var.graphql_authentication_type
-  visibility          = "PRIVATE"
   name                = "${local.module_prefix}-appsync-api-lambda"
   schema              = var.graphql_schema
 }
