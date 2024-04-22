@@ -163,13 +163,13 @@ variable "terminate_check_in_months" {
   description = "Provide the number of months to check for inactive period before termination. Default value is 1 month."
 }
 
-variable "org_id_multi_account" {
+variable "org_id" {
   type        = string
   default     = null
   description = "AWS Organizations ID to support multi-account deployment. Leave blank for single account deployments."
 }
 
-variable "management_account_id" {
+variable "org_account_id" {
   type        = string
   default     = null
   description = "Account ID for the Organization's management account. Leave blank for single account deployments."
@@ -229,8 +229,8 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
     TerminateUnusedWorkspaces         = var.terminate_unused_workspaces
     NumberOfMonthsForTerminationCheck = var.terminate_check_in_months
     # Multi account deployment
-    OrganizationID      = var.org_id_multi_account
-    ManagementAccountId = var.management_account_id
+    OrganizationID      = var.org_id
+    ManagementAccountId = var.org_account_id
   }
 
   template_url = "https://solutions-reference.s3.amazonaws.com/cost-optimizer-for-amazon-workspaces/latest/cost-optimizer-for-amazon-workspaces.template"
