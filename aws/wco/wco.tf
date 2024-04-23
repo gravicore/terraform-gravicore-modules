@@ -163,6 +163,12 @@ variable "org_id" {
   description = "AWS Organizations ID to support multi-account deployment. Leave blank for single account deployments."
 }
 
+variable "org_id_parameter_key" {
+  type        = string
+  default     = null
+  description = "The SSM parameter key for the stored AWS Organization ID."
+}
+
 variable "org_account_id" {
   type        = string
   default     = null
@@ -193,6 +199,12 @@ variable "template_version" {
 
 
 # Hub Deployment of WCO
+
+data "aws_ssm_parameter" "org_id" {
+  count = var.create && var.org_id == null ? 1 : 0
+  name  = var.org_id_parameter_key
+}
+
 resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
   count        = var.create && var.spoke_account == false ? 1 : 0
   name         = local.module_prefix
@@ -230,7 +242,7 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
     TerminateUnusedWorkspaces         = var.terminate_unused_workspaces
     NumberOfMonthsForTerminationCheck = var.terminate_check_in_months
     # Multi account deployment
-    OrganizationID      = var.org_id
+    OrganizationID      = var.org_id == null ? concat(data.aws_ssm_parameter.org_id.*.value, [""])[0] : var.org_id
     ManagementAccountId = var.org_account_id
   }
 
