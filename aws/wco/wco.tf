@@ -186,6 +186,13 @@ variable "hub_account_id" {
   default     = null
   description = "The ID of the hub account for the solution. This stack should be deployed in the same Region as the hub stack in the hub account."
 }
+
+variable "template_version" {
+  type        = string
+  default     = "latest"
+  description = "The version of the template to deploy. Default is latest."
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -233,7 +240,7 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
     ManagementAccountId = var.org_account_id
   }
 
-  template_url = "https://solutions-reference.s3.amazonaws.com/cost-optimizer-for-amazon-workspaces/latest/cost-optimizer-for-amazon-workspaces.template"
+  template_url = "https://solutions-reference.s3.amazonaws.com/cost-optimizer-for-amazon-workspaces/${var.template_version}/cost-optimizer-for-amazon-workspaces.template"
 
   disable_rollback   = var.disable_rollback
   on_failure         = var.on_failure
