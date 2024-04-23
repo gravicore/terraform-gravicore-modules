@@ -64,7 +64,7 @@ variable "test_end_of_month" {
 
 variable "regions" {
   type        = list(string)
-  default     = [""]
+  default     = null
   description = "The list of AWS regions which the solution will scan. Leave blank to scan all regions"
 }
 
@@ -237,7 +237,7 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
     GraphicsLimit    = var.graphics_limit
     GraphicsProLimit = var.graphics_pro_limit
     # List of AWS Regions
-    Regions = join(",", var.regions)
+    Regions = var.regions == null ? null : join(",", var.regions)
     # Terminate unused workspaces
     TerminateUnusedWorkspaces         = var.terminate_unused_workspaces
     NumberOfMonthsForTerminationCheck = var.terminate_check_in_months
