@@ -201,7 +201,7 @@ variable "template_version" {
 # Hub Deployment of WCO
 
 data "aws_ssm_parameter" "org_id" {
-  count = var.create && var.org_id == null ? 1 : 0
+  count = var.create && var.org_id == null && var.spoke_account == false ? 1 : 0
   name  = var.org_id_parameter_key
 }
 
