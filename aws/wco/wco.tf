@@ -2,12 +2,6 @@
 # VARIABLES / LOCALS / REMOTE STATE
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "wco_version" {
-  type        = string
-  default     = "v2.4.1"
-  description = "Version of AWS WorkSpaces Cost Optimizer solution"
-}
-
 variable "create_new_vpc" {
   type        = string
   default     = "No"
@@ -30,12 +24,6 @@ variable "subnet_2_cidr" {
   type        = string
   default     = null
   description = "The second of two subnets in different AZs where the AWS Fargate container is deployed"
-}
-
-variable "egress_cidr" {
-  type        = string
-  default     = null
-  description = "The Cidir Block to restrict the ECS container outbound access"
 }
 
 variable "existing_subnet_id_1" {
@@ -76,8 +64,8 @@ variable "test_end_of_month" {
 
 variable "regions" {
   type        = list(string)
-  default     = [""]
-  description = "The list of AWS regions which the solution will scan. Example - us-east-1, us-west-2. Leave blank to scan all regions"
+  default     = null
+  description = "The list of AWS regions which the solution will scan. Leave blank to scan all regions"
 }
 
 variable "terminate_unused_workspaces" {
@@ -158,12 +146,67 @@ variable "timeout_in_minutes" {
   description = "(Optional) The amount of time that can pass before the stack status becomes CREATE_FAILED"
 }
 
+variable "sg_cidr" {
+  type        = string
+  default     = null
+  description = "The CIDR block to restrict the Amazon ECS container outbound access."
+}
+variable "terminate_check_in_months" {
+  type        = string
+  default     = "1"
+  description = "Provide the number of months to check for inactive period before termination. Default value is 1 month."
+}
+
+variable "org_id" {
+  type        = string
+  default     = null
+  description = "AWS Organizations ID to support multi-account deployment. Leave blank for single account deployments."
+}
+
+variable "org_id_parameter_key" {
+  type        = string
+  default     = null
+  description = "The SSM parameter key for the stored AWS Organization ID."
+}
+
+variable "org_account_id" {
+  type        = string
+  default     = null
+  description = "Account ID for the Organization's management account. Leave blank for single account deployments."
+}
+
+variable "spoke_account" {
+  type        = bool
+  default     = false
+  description = "Set to true if the account is a spoke account in a multi-account deployment. If false, this creates a hub account."
+}
+
+variable "hub_account_id" {
+  type        = string
+  default     = null
+  description = "The ID of the hub account for the solution. This stack should be deployed in the same Region as the hub stack in the hub account."
+}
+
+variable "template_version" {
+  type        = string
+  default     = "latest"
+  description = "The version of the template to deploy. Default is latest."
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
-  count        = var.create ? 1 : 0
+
+# Hub Deployment of WCO
+
+data "aws_ssm_parameter" "org_id" {
+  count = var.create && var.org_id == null && var.spoke_account == false ? 1 : 0
+  name  = var.org_id_parameter_key
+}
+
+resource "aws_cloudformation_stack" "workspace_cost_optimizer_hub" {
+  count        = var.create && var.spoke_account == false ? 1 : 0
   name         = local.module_prefix
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"]
   tags         = local.tags
@@ -174,11 +217,13 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
     VpcCIDR      = var.vpc_cidr
     Subnet1CIDR  = var.subnet_1_cidr
     Subnet2CIDR  = var.subnet_2_cidr
-    EgressCIDR   = var.egress_cidr
+    EgressCIDR   = var.sg_cidr
+
     # Existing VPC Settings
     ExistingSubnet1Id       = var.existing_subnet_id_1
     ExistingSubnet2Id       = var.existing_subnet_id_2
     ExistingSecurityGroupId = var.existing_security_group_id
+
     # Testing Parameters
     LogLevel       = var.log_level
     DryRun         = var.dry_run
@@ -192,12 +237,42 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
     GraphicsLimit    = var.graphics_limit
     GraphicsProLimit = var.graphics_pro_limit
     # List of AWS Regions
-    Regions = join(",", var.regions)
+    Regions = var.regions == null ? null : join(",", var.regions)
     # Terminate unused workspaces
-    TerminateUnusedWorkspaces = var.terminate_unused_workspaces
+    TerminateUnusedWorkspaces         = var.terminate_unused_workspaces
+    NumberOfMonthsForTerminationCheck = var.terminate_check_in_months
+    # Multi account deployment
+    OrganizationID      = var.org_id == null ? concat(data.aws_ssm_parameter.org_id.*.value, [""])[0] : var.org_id
+    ManagementAccountId = var.org_account_id
   }
 
-  template_url = "https://s3.amazonaws.com/solutions-reference/workspaces-cost-optimizer/${var.wco_version}/workspaces-cost-optimizer.template"
+  template_url = "https://solutions-reference.s3.amazonaws.com/cost-optimizer-for-amazon-workspaces/${var.template_version}/cost-optimizer-for-amazon-workspaces.template"
+
+  disable_rollback   = var.disable_rollback
+  on_failure         = var.on_failure
+  notification_arns  = var.notification_arns
+  iam_role_arn       = var.iam_role_arn
+  timeout_in_minutes = var.timeout_in_minutes
+}
+
+# Spoke Deployment of WCO
+
+resource "aws_cloudformation_stack" "workspace_cost_optimizer_spoke" {
+  count        = var.create && var.spoke_account ? 1 : 0
+  name         = local.module_prefix
+  capabilities = ["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"]
+  tags         = local.tags
+
+  parameters = {
+
+    # Testing Parameters
+    LogLevel = var.log_level
+
+    # Multi account deployment
+    HubAccountId = var.hub_account_id
+  }
+
+  template_url = "https://solutions-reference.s3.amazonaws.com/cost-optimizer-for-amazon-workspaces/${var.template_version}/cost-optimizer-for-amazon-workspaces-spoke.template"
 
   disable_rollback   = var.disable_rollback
   on_failure         = var.on_failure
@@ -211,6 +286,6 @@ resource "aws_cloudformation_stack" "workspace_cost_optimizer" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "wco_stack_outputs" {
-  value     = concat(aws_cloudformation_stack.workspace_cost_optimizer.*.outputs, [""])[0]
+  value     = concat(aws_cloudformation_stack.workspace_cost_optimizer_hub.*.outputs, aws_cloudformation_stack.workspace_cost_optimizer_spoke.*.outputs, [""])[0]
   sensitive = false
 }
