@@ -101,6 +101,12 @@ variable "enable_glacier_transition" {
   description = "Enables the transition to AWS Glacier which can cause unnecessary costs for huge amount of small files"
 }
 
+variable "sns_topic_name" {
+  type        = string
+  default     = null
+  description = ""
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -216,6 +222,7 @@ resource "aws_cloudtrail" "default" {
   name                  = join("-", [local.module_prefix, "events"])
   s3_bucket_name        = aws_s3_bucket.default[0].id
   is_multi_region_trail = true
+  sns_topic_name        = var.sns_topic_name
   tags                  = local.tags
 }
 
