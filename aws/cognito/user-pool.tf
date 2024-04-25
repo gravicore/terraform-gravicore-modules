@@ -252,6 +252,12 @@ variable "account_recovery_setting_recovery_mechanism" {
   description = "(Required) List of Account Recovery methods for a user. Priority is determined by list index. Accepted Values: verified_email, verified_phone_number, and admin_only"
 }
 
+variable "attributes_require_verification_before_update" {
+  type        = list(string)
+  default     = []
+  description = "A list of attributes requiring verification before update. If set, the provided value(s) must also be set in auto_verified_attributes. Valid values: email, phone_number"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -303,6 +309,13 @@ resource "aws_cognito_user_pool" "pool" {
   }
   email_verification_subject = var.email_verification_subject
   email_verification_message = var.email_verification_message
+
+  dynamic "user_attribute_update_settings" {
+    for_each = var.attributes_require_verification_before_update != [] ? ["Create"] : []
+    content {
+      attributes_require_verification_before_update = var.attributes_require_verification_before_update
+    }
+  }
 
   dynamic "lambda_config" {
     for_each = local.lambda_config
