@@ -132,6 +132,7 @@ resource "null_resource" "approve_private_endpoints" {
   count = length(local.private_link_ids) > 0 ? 1 : 0
   depends_on = [
     azurerm_cdn_frontdoor_route.default
+    azurerm_cdn_frontdoor_origin.default
   ]
   provisioner "local-exec" {
     working_dir = path.module
