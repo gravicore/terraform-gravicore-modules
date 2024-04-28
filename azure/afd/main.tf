@@ -131,7 +131,7 @@ resource "azurerm_cdn_frontdoor_origin" "default" {
 resource "null_resource" "approve_private_endpoints" {
   count = length(local.private_link_ids) > 0 ? 1 : 0
   depends_on = [
-    azurerm_cdn_frontdoor_route.default
+    azurerm_cdn_frontdoor_route.default,
     azurerm_cdn_frontdoor_origin.default
   ]
   provisioner "local-exec" {
@@ -165,24 +165,5 @@ module "alerts" {
   activity_log_alerts = var.activity_log_alerts
   action_group        = var.action_group
   target_resource_ids = [one(azurerm_cdn_frontdoor_profile.default[*].id)]
-}
-
-
-variable "metric_alerts" {
-  description = "List of metric alerts to create"
-  type        = any
-  default     = {}
-}
-
-variable "activity_log_alerts" {
-  description = "List of activity log alerts to create"
-  type        = any
-  default     = {}
-}
-
-variable "action_group" {
-  description = "Action group to use for alerts"
-  type        = any
-  default     = {}
 }
 
