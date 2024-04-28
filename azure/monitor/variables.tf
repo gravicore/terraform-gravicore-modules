@@ -178,7 +178,8 @@ variable "action_group" {
 variable "metric_alerts" {
   description = "Map of metric Alerts"
   type = map(object({
-    action_group_key         = string
+    action_group_key         = optional(string)
+    action_group_id          = optional(string)
     description              = optional(string, null)
     resource_group_name      = optional(string)
     scopes                   = optional(list(string), [])
@@ -218,7 +219,6 @@ variable "metric_alerts" {
         values   = list(string)
       })), [])
     })), [])
-
     application_insights_web_test_location_availability_criteria = optional(object({
       web_test_id           = string
       component_id          = string
@@ -227,14 +227,23 @@ variable "metric_alerts" {
   }))
 
   default = {}
+
+  validation {
+    condition = alltrue([
+      for key, value in var.metric_alerts : value.action_group_id != null || value.action_group_key != null
+    ])
+    error_message = "Each metric alert must have either an action_group_id or an action_group_key defined."
+  }
 }
+
 
 variable "activity_log_alerts" {
   description = "Map of Activity log Alerts."
   type = map(object({
     description         = optional(string)
     resource_group_name = optional(string)
-    action_group_key    = string
+    action_group_key    = optional(string)
+    action_group_id     = optional(string)
     scopes              = list(string)
     criteria = object({
       operation_name = optional(string)
@@ -254,7 +263,15 @@ variable "activity_log_alerts" {
     }))
   }))
   default = {}
+
+  validation {
+    condition = alltrue([
+      for key, value in var.activity_log_alerts : value.action_group_id != null || value.action_group_key != null
+    ])
+    error_message = "Each metric alert must have either an action_group_id or an action_group_key defined."
+  }
 }
+
 
 variable "portal_dashboards" {
   type = map(object({

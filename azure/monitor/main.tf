@@ -141,7 +141,7 @@ resource "azurerm_monitor_metric_alert" "default" {
   }
 
   action {
-    action_group_id = azurerm_monitor_action_group.default[each.value.action_group_key].id
+    action_group_id = each.value.action_group_id == null ? azurerm_monitor_action_group.default[each.value.action_group_key].id : each.value.action_group_id
 
     webhook_properties = {
       from = "terraform"
@@ -183,7 +183,7 @@ resource "azurerm_monitor_activity_log_alert" "default" {
   }
 
   action {
-    action_group_id = azurerm_monitor_action_group.default[each.value.action_group_key].id
+    action_group_id = each.value.action_group_id == null ? azurerm_monitor_action_group.default[each.value.action_group_key].id : each.value.action_group_id
 
     webhook_properties = {
       from = "terraform"
