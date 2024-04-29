@@ -48,8 +48,6 @@ resource "aws_s3_bucket_versioning" "default" {
 }
 
 
-##### ------ S3 Object for ECR Scan Trigger Lambda ------ #####
-
 resource "aws_s3_object" "default" {
   depends_on = [data.archive_file.default]
 
