@@ -8,13 +8,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "lambda-appsync"
+  default     = "appsync-lambda"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/lambda-appsync"
+  default     = "gravicore/terraform-gravicore-modules/aws/appsync-lambda"
   description = "The owner and name of the Terraform module"
 }
 
