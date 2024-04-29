@@ -16,6 +16,10 @@ variable "graphql_authentication_type" {
   description = "Description of the Lambda function"
 }
 
+variable "datasource_name" {
+  type        = string
+  description = "Datasource name for the AppSync API"
+}
 
 
 
@@ -24,7 +28,7 @@ variable "graphql_authentication_type" {
 # ----------------------------------------------------------------------------------------------------------------------
 resource "aws_appsync_datasource" "default" {
   api_id           = aws_appsync_graphql_api.default.id
-  name             = "lambda_appsync_datasource"
+  name             = var.datasource_name
   service_role_arn = aws_iam_role.appsync_service_role.arn
   type             = "AWS_LAMBDA"
 
