@@ -141,9 +141,12 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "lock_level" {
-  type        = string
-  default     = null
-  description = "The level of lock to apply to the resource group (e.g. `CanNotDelete`, `ReadOnly`)"
+variable "resource_groups" {
+  type = map(object({
+    prefix     = optional(string)
+    lock_level = optional(string, "CanNotDelete")
+  }))
+  default     = {}
+  description = "A map of resource group objects"
 }
 

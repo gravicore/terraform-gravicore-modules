@@ -469,12 +469,12 @@ variable "firewall_policies" {
       rate_limit_duration_in_minutes = optional(number, 1)
       rate_limit_threshold           = optional(number, 10)
       match_conditions = list(object({
-        match_variable   = string
-        match_values     = list(string)
-        operator         = string
-        selector         = optional(string)
-        negate_condition = optional(bool)
-        transforms       = optional(list(string), [])
+        match_variable     = string
+        match_values       = list(string)
+        operator           = string
+        selector           = optional(string)
+        negation_condition = optional(bool)
+        transforms         = optional(list(string), [])
       }))
     })), [])
     managed_rules = optional(list(object({
@@ -555,5 +555,24 @@ locals {
       for rule in rule_set.rules : merge({ rule_set_name = rule_set.name }, rule)
     ]
   ])
+}
+
+
+variable "metric_alerts" {
+  description = "List of metric alerts to create"
+  type        = any
+  default     = {}
+}
+
+variable "activity_log_alerts" {
+  description = "List of activity log alerts to create"
+  type        = any
+  default     = {}
+}
+
+variable "action_group" {
+  description = "Action group to use for alerts"
+  type        = any
+  default     = {}
 }
 

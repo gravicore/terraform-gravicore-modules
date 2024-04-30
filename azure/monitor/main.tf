@@ -17,11 +17,11 @@ module "azure_region" {
 resource "azurerm_monitor_action_group" "default" {
   for_each = var.create ? var.action_group : {}
 
-  name                = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "mag"])
+  name                = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "mag"])
   resource_group_name = var.resource_group_name
   short_name          = each.value.short_name
   enabled             = each.value.enabled
-  location            = each.value.location
+  location            = each.value.location // it should be the each.value.location since location should be "global" by default
 
   dynamic "sms_receiver" {
     for_each = each.value.sms_receivers
@@ -53,14 +53,18 @@ resource "azurerm_monitor_action_group" "default" {
   tags = local.tags
 }
 
+
+
 resource "azurerm_monitor_metric_alert" "default" {
-  for_each = var.create ? var.metric_alerts : {}
-  name     = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "mma"])
+  for_each = var.create && var.metric_alerts != null && length(var.metric_alerts) > 0 ? var.metric_alerts : {}
+
+  name = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "mma"])
 
   description = each.value.description
 
   resource_group_name = var.resource_group_name
-  scopes              = each.value.scopes
+
+  scopes = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : null
 
   enabled       = each.value.enabled
   auto_mitigate = each.value.auto_mitigate
@@ -137,7 +141,7 @@ resource "azurerm_monitor_metric_alert" "default" {
   }
 
   action {
-    action_group_id = azurerm_monitor_action_group.default[each.value.action_group_key].id
+    action_group_id = each.value.action_group_id == null ? azurerm_monitor_action_group.default[each.value.action_group_key].id : each.value.action_group_id
 
     webhook_properties = {
       from = "terraform"
@@ -149,13 +153,13 @@ resource "azurerm_monitor_metric_alert" "default" {
 
 
 resource "azurerm_monitor_activity_log_alert" "default" {
-  for_each = var.create ? var.activity_log_alerts : {}
+  for_each = var.create && var.activity_log_alerts != null && length(var.activity_log_alerts) > 0 ? var.activity_log_alerts : {}
 
-  name        = join(var.delimiter, [local.stage_prefix, each.key, module.azure_region.location_short, "ala"])
+  name        = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "ala"])
   description = each.value.description
 
   resource_group_name = var.resource_group_name
-  scopes              = each.value.scopes
+  scopes              = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : null
 
   criteria {
     operation_name = each.value.criteria.operation_name
@@ -179,7 +183,7 @@ resource "azurerm_monitor_activity_log_alert" "default" {
   }
 
   action {
-    action_group_id = azurerm_monitor_action_group.default[each.value.action_group_key].id
+    action_group_id = each.value.action_group_id == null ? azurerm_monitor_action_group.default[each.value.action_group_key].id : each.value.action_group_id
 
     webhook_properties = {
       from = "terraform"
@@ -187,5 +191,31 @@ resource "azurerm_monitor_activity_log_alert" "default" {
   }
 
   tags = local.tags
+}
+
+
+resource "azurerm_portal_dashboard" "default" {
+  for_each            = var.create ? var.portal_dashboards : {}
+  name                = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "dshbrd"])
+  resource_group_name = var.resource_group_name
+  location            = var.az_region
+  tags                = local.tags
+  dashboard_properties = templatefile("${each.value.file_path}", tomap(merge(each.value.file_vars, {
+    "workbook_reference" = contains(keys(var.application_insights_workbooks), each.key) && contains(keys(each.value.file_vars), "workbook_uuid") ? var.application_insights_workbooks[each.key].uuid : null
+  })))
+}
+
+
+resource "azurerm_application_insights_workbook" "default" {
+  for_each            = var.create ? var.application_insights_workbooks : {}
+  name                = each.value.uuid
+  display_name        = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "wrkbk"])
+  resource_group_name = var.resource_group_name
+  location            = var.az_region
+  source_id           = each.value.source_id
+  category            = each.value.category
+  description         = each.value.description
+  data_json           = templatefile("${each.value.file_path}", tomap(each.value.file_vars))
+  tags                = local.tags
 }
 

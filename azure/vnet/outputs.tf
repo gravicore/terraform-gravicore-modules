@@ -1,5 +1,5 @@
-output "vnet_id" {
-  value = concat(azurerm_virtual_network.default.*.id, [""])[0]
+output "vnet_ids" {
+  value = { for key, resource in azurerm_virtual_network.default : key => resource.id }
 }
 
 output "subnets_ids" {
