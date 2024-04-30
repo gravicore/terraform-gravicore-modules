@@ -174,3 +174,4 @@ module "alerts" {
   action_group        = var.action_group
   target_resource_ids = [one(azurerm_postgresql_flexible_server.default[*].id)]
 }
+
