@@ -1,6 +1,6 @@
 
 resource "aws_iam_role" "default" {
-  name = "${local.module_prefix}-lambda-role-policy"
+  name = "${local.module_prefix}-lambda-${var.datasource_name}-role"
 
   assume_role_policy = <<EOF
 {
@@ -21,7 +21,7 @@ EOF
 
 
 resource "aws_iam_policy" "default" {
-  name   = "${local.module_prefix}-lambda-role-policy"
+  name   = "${local.module_prefix}-lambda-${var.datasource_name}-logs-policy"
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -48,7 +48,7 @@ resource "aws_iam_role_policy_attachment" "lambda_appsync_attach" {
 }
 
 resource "aws_iam_role" "appsync_service_role" {
-  name = "${local.module_prefix}-appsync-lambda-invoke-policy"
+  name = "${local.module_prefix}-appsync-${var.datasource_name}-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -64,7 +64,7 @@ resource "aws_iam_role" "appsync_service_role" {
 }
 
 resource "aws_iam_role_policy" "appsync_lambda_invoke_policy" {
-  name = "${local.module_prefix}-appsync-micronaut-invoke-policy"
+  name = "${local.module_prefix}-appsync-${var.datasource_name}-invoke-policy"
   role = aws_iam_role.appsync_service_role.id
   policy = jsonencode({
     Version = "2012-10-17"
