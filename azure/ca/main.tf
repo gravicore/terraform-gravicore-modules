@@ -331,5 +331,5 @@ module "alerts" {
   metric_alerts       = var.metric_alerts
   activity_log_alerts = var.activity_log_alerts
   action_group        = var.action_group
-  target_resource_ids = [one(azurerm_postgresql_flexible_server.default[*].id)]
+  target_resource_ids = [one(azurerm_container_app.default[*].id)]
 }
