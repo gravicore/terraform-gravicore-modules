@@ -320,16 +320,17 @@ resource "azurerm_container_app_environment_certificate" "default" {
 }
 
 module "alerts" {
-  count               = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
+  for_each            = { for k, v in var.container_apps : k => v if v.metric_alerts != {} || v.activity_log_alerts != {} || v.action_group != {} }
+  source              = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=0.50.3"
   az_region           = var.az_region
   resource_group_name = var.resource_group_name
-  source              = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=0.50.3"
   namespace           = var.namespace
   environment         = var.environment
   stage               = var.stage
   application         = var.application
-  metric_alerts       = var.metric_alerts
-  activity_log_alerts = var.activity_log_alerts
-  action_group        = var.action_group
-  target_resource_ids = [one(azurerm_container_app.default[*].id)]
+  metric_alerts       = each.value.metric_alerts
+  activity_log_alerts = each.value.activity_log_alerts
+  action_group        = each.value.action_group
+  target_resource_ids = [azurerm_container_app.default[each.key].id]
 }
+

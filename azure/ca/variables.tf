@@ -165,8 +165,11 @@ variable "container_apps" {
   }
 
   type = map(object({
-    name          = string
-    revision_mode = string
+    name                = string
+    revision_mode       = string
+    metric_alerts       = optional(any, {})
+    activity_log_alerts = optional(any, {})
+    action_group        = optional(any, {})
     template = object({
       containers = list(object({
         name    = string
@@ -327,23 +330,5 @@ locals {
 
   certificate_names      = [for app in var.container_apps : can([for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""]) ? [for domain in app.ingress.custom_domain : domain.certificate_name != null ? domain.certificate_name : ""] : []]
   flattened_certificates = compact(flatten(local.certificate_names))
-}
-
-variable "metric_alerts" {
-  description = "List of metric alerts to create"
-  type        = any
-  default     = {}
-}
-
-variable "activity_log_alerts" {
-  description = "List of activity log alerts to create"
-  type        = any
-  default     = {}
-}
-
-variable "action_group" {
-  description = "Action group to use for alerts"
-  type        = any
-  default     = {}
 }
 
