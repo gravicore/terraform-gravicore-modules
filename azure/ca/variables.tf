@@ -165,8 +165,11 @@ variable "container_apps" {
   }
 
   type = map(object({
-    name          = string
-    revision_mode = string
+    name                = string
+    revision_mode       = string
+    metric_alerts       = optional(any, {})
+    activity_log_alerts = optional(any, {})
+    action_group        = optional(any, {})
     template = object({
       containers = list(object({
         name    = string
