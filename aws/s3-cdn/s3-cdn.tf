@@ -374,6 +374,48 @@ variable "lambda_function_runtime" {
   description = "The runtime environment for the origin request Lambda function"
 }
 
+# variable "response_headers_policy_id" {
+#   type        = string
+#   default     = ""
+#   description = "The unique identifier of the custom header policy to apply to the origin response"
+# }
+
+variable "enable_strict_transport_security" {
+  type        = bool
+  default     = true
+  description = "Enables the strict transport security header"
+}
+
+variable "strict_transport_security_max_age" {
+  type        = number
+  default     = 63072000
+  description = "A number that CloudFront uses as the value for the max-age directive in the Strict-Transport-Security HTTP response header."
+}
+
+variable "strict_transport_include_subdomains" {
+  type        = bool
+  default     = true
+  description = "Whether CloudFront includes the includeSubDomains directive in the Strict-Transport-Security HTTP response header."
+}
+
+variable "strict_transport_preload" {
+  type        = bool
+  default     = true
+  description = "Whether CloudFront includes the preload directive in the Strict-Transport-Security HTTP response header."
+}
+
+variable "strict_transport_override" {
+  type        = bool
+  default     = false
+  description = "Whether CloudFront overrides the Strict-Transport-Security HTTP response header received from the origin with the one specified in this response headers policy."
+}
+
+variable "removed_headers" {
+  type        = list(string)
+  default     = []
+  description = "List of headers to remove from the response"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -422,6 +464,32 @@ data "aws_iam_policy_document" "origin" {
         test     = "Bool"
         variable = "aws:SecureTransport"
         values   = ["false"]
+      }
+    }
+  }
+}
+
+resource "aws_cloudfront_response_headers_policy" "default" {
+  count = var.create && var.enable_strict_transport_security ? 1 : 0
+  name  = join(var.delimiter, [local.module_prefix, "response", "headers"])
+
+  security_headers_config {
+    strict_transport_security {
+      access_control_max_age_sec = var.strict_transport_security_max_age
+      include_subdomains         = var.strict_transport_include_subdomains
+      override                   = var.strict_transport_override
+      preload                    = var.strict_transport_preload
+    }
+  }
+
+  dynamic remove_headers_config {
+    for_each = length(var.removed_headers) > 0 ? [1] : []
+    content {
+      dynamic items {
+        for_each = var.removed_headers
+        content {
+          header = items.value
+        }
       }
     }
   }
@@ -556,11 +624,12 @@ resource "aws_cloudfront_distribution" "default" {
   }
 
   default_cache_behavior {
-    allowed_methods  = var.allowed_methods
-    cached_methods   = var.cached_methods
-    target_origin_id = local.module_prefix
-    compress         = var.compress
-    trusted_signers  = var.trusted_signers
+    allowed_methods            = var.allowed_methods
+    cached_methods             = var.cached_methods
+    target_origin_id           = local.module_prefix
+    compress                   = var.compress
+    trusted_signers            = var.trusted_signers
+    response_headers_policy_id = concat(aws_cloudfront_response_headers_policy.default.*.id, [""])[0]
 
     forwarded_values {
       query_string = var.forward_query_string
