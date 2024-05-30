@@ -177,3 +177,18 @@ resource "azurerm_mssql_database_extended_auditing_policy" "single_db" {
   retention_in_days                       = var.databases_extended_auditing_retention_days
 }
 
+
+module "alerts" {
+  count               = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
+  az_region           = var.az_region
+  resource_group_name = var.resource_group_name
+  source              = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=0.50.3"
+  namespace           = var.namespace
+  environment         = var.environment
+  stage               = var.stage
+  application         = var.application
+  metric_alerts       = var.metric_alerts
+  activity_log_alerts = var.activity_log_alerts
+  action_group        = var.action_group
+  target_resource_ids = var.elastic_pool_enabled ? [azurerm_mssql_database.single_database[*].id] : [azurerm_mssql_database.elastic_pool_database[*].id]
+}
