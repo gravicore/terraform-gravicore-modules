@@ -374,12 +374,6 @@ variable "lambda_function_runtime" {
   description = "The runtime environment for the origin request Lambda function"
 }
 
-# variable "response_headers_policy_id" {
-#   type        = string
-#   default     = ""
-#   description = "The unique identifier of the custom header policy to apply to the origin response"
-# }
-
 variable "enable_strict_transport_security" {
   type        = bool
   default     = true
