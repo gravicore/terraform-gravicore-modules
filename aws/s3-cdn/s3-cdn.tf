@@ -410,6 +410,12 @@ variable "removed_headers" {
   description = "List of headers to remove from the response"
 }
 
+variable "enable_response_headers_policy" {
+  type        = bool
+  default     = false
+  description = "Enables the creation of a response headers policy"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -464,15 +470,18 @@ data "aws_iam_policy_document" "origin" {
 }
 
 resource "aws_cloudfront_response_headers_policy" "default" {
-  count = var.create && var.enable_strict_transport_security ? 1 : 0
+  count = var.create && var.enable_response_headers_policy ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "response", "headers"])
 
-  security_headers_config {
-    strict_transport_security {
-      access_control_max_age_sec = var.strict_transport_security_max_age
-      include_subdomains         = var.strict_transport_include_subdomains
-      override                   = var.strict_transport_override
-      preload                    = var.strict_transport_preload
+  dynamic security_headers_config {
+    for_each = var.enable_strict_transport_security ? [1] : []
+    content {
+      strict_transport_security {
+        access_control_max_age_sec = var.strict_transport_security_max_age
+        include_subdomains         = var.strict_transport_include_subdomains
+        override                   = var.strict_transport_override
+        preload                    = var.strict_transport_preload
+      }
     }
   }
 
