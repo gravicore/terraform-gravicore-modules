@@ -177,6 +177,12 @@ resource "azurerm_mssql_database_extended_auditing_policy" "single_db" {
   retention_in_days                       = var.databases_extended_auditing_retention_days
 }
 
+locals {
+  single_database_ids = var.elastic_pool_enabled ? [] : [for db in azurerm_mssql_database.single_database : db.id]
+  elastic_pool_database_ids = var.elastic_pool_enabled ? [for db in azurerm_mssql_database.elastic_pool_database : db.id] : []
+
+  monitoring_target_resource_ids = var.elastic_pool_enabled ? local.elastic_pool_database_ids : local.single_database_ids
+}
 
 module "alerts" {
   count               = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
@@ -190,5 +196,5 @@ module "alerts" {
   metric_alerts       = var.metric_alerts
   activity_log_alerts = var.activity_log_alerts
   action_group        = var.action_group
-  target_resource_ids = var.elastic_pool_enabled ? [azurerm_mssql_database.single_database[*].id] : [azurerm_mssql_database.elastic_pool_database[*].id]
+  target_resource_ids = local.monitoring_target_resource_ids
 }
