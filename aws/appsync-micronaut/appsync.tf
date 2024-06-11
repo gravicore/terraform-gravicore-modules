@@ -26,6 +26,10 @@ variable "lambda_function_arn" {
   description = "ARN of the Lambda function to connect to the AppSync API"
 }
 
+variable "cognito_user_pool" {
+  type        = string
+  description = "User Pool ID for the AppSync API"
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -45,4 +49,10 @@ resource "aws_appsync_graphql_api" "default" {
   authentication_type = var.graphql_authentication_type
   name                = "${var.datasource_name}-appsync-api"
   schema              = var.graphql_schema
+
+  user_pool_config {
+    aws_region     = data.aws_region.current.name
+    default_action = "ALLOW"
+    user_pool_id   = var.cognito_user_pool
+  }
 }

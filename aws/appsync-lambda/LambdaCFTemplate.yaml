@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+ LambdaFunctionName:
+   Default: appsync-lambda-example
+   Description: Name of the AWS Lambda Function.
+   Type: String
+   MinLength: 1
+   MaxLength: 28
+   AllowedPattern: '^[a-z][a-z0-9-]*$'
+
+Resources:
+
+ ############################
+ # AWS IAM Roles & Policies #
+ ############################
+
+ LambdaExecutionRole:
+     Type: AWS::IAM::Role
+     Properties:
+       AssumeRolePolicyDocument:
+         Version: '2012-10-17'
+         Statement:
+         - Effect: Allow
+           Principal:
+             Service:
+             - lambda.amazonaws.com
+           Action:
+           - sts:AssumeRole
+       Path: "/"
+       Policies:
+       - PolicyName: LambdaExecutionRoleLogAccess
+         PolicyDocument:
+           Version: '2012-10-17'
+           Statement:
+           - Effect: Allow
+             Action:
+             - logs:*
+             Resource: arn:aws:logs:*:*:*
+ AppSyncServiceRole:
+     Type: AWS::IAM::Role
+     Properties:
+       AssumeRolePolicyDocument:
+         Version: '2012-10-17'
+         Statement:
+         - Effect: Allow
+           Principal:
+             Service:
+             - appsync.amazonaws.com
+           Action:
+           - sts:AssumeRole
+ AppSyncLambdaInvokePolicy:
+     Type: AWS::IAM::Policy
+     Properties:
+       PolicyName: AppSyncLambdaInvokePolicy
+       PolicyDocument:
+         Version: '2012-10-17'
+         Statement:
+         - Effect: Allow
+           Action:
+           - lambda:*
+           Resource: "*"
+       Roles:
+       - !Ref AppSyncServiceRole
+
+ #################
+ # AWS Resources #
+ #################
+
+ LambdaFunction:
+     Type: AWS::Lambda::Function
+     Properties:
+       FunctionName: !Ref LambdaFunctionName
+       Handler: index.handler
+       Runtime: nodejs14.x
+       Role: !GetAtt LambdaExecutionRole.Arn
+       Code:
+         ZipFile: !Sub |
+          exports.handler = (event, context, callback) => {
+          console.log("Received event {}", JSON.stringify(event, 3));
+          var posts = {
+              "1": {"id": "1", "title": "Au Bonheur des Dames", "author": "Emile Zola", "url": "https://amazon.com/Bonheur-Dames-French-Emile-Zola/dp/1482759314", "content": "Émile Zola (1840-1902), né à Paris, est un écrivain, journaliste et homme public français, considéré comme le chef de file du naturalisme. C'est l'un des romanciers français les plus universellement populaires, l'un des plus publiés et traduits au monde, le plus adapté au cinéma et à la télévision.", "ups": "100", "downs": "10"},
+              "2": {"id": "2", "title": "LOTR", "author": "JRRT", "url": "https://www.amazon.com/J.-R.-R.-Tolkien/e/B000ARC6KA", "content": "dummycontent", "ups": "100", "downs": "10"},
+              "3": {"id": "3", "title": "A story of Deep Dish", "author": "Sir Willingham III", "url": null, "content": null, "ups": null, "downs": null },
+              "4": {"id": "4", "title": "L'Insoutenable Légèreté de l'être", "author": "Milan Kundera", "url": "https://www.amazon.com/LInsoutenable-Legerete-lEtre-Milan-Kundera/dp/207038165X/", "content": "n this story of irreconcilable loves and infidelities, Milan Kundera addresses himself to the nature of 20th century Being. The novel encompasses the extremes of comedy and tragedy, and embraces, it seems, all aspects of human existence.", "ups": "1000", "downs": "0"},
+              "5": {"id": "5", "title": "Fahreineit 451", "author": "Ray Bradbury", "url": "https://www.amazon.com/Fahrenheit-451-Ray-Bradbury/dp/1451673310", "content": "Ray Bradbury’s internationally acclaimed novel Fahrenheit 451 is a masterwork of twentieth-century literature set in a bleak, dystopian future. Guy Montag is a fireman. In his world, where television rules and literature is on the brink of extinction, firemen start fires rather than put them out. ", "ups": "50", "downs": "0"} };
+
+          var relatedPosts = {
+              "1": [posts['4']],
+              "2": [posts['3'], posts['5']],
+              "3": [posts['2'], posts['1']],
+              "4": [posts['2'], posts['1']],
+              "5": []
+          };
+
+          console.log("Got an Invoke Request.");
+          switch(event.field) {
+              case "getPost":
+                  var id = event.arguments.id;
+                  callback(null, posts[id]);
+                  break;
+              case "allPosts":
+                  var values = [];
+                  for(var d in posts){
+                      values.push(posts[d]);
+                  }
+                  callback(null, values);
+                  break;
+              case "addPost":
+                  // return the arguments back
+                  callback(null, event.arguments);
+                  break;
+              case "addPostErrorWithData":
+                  var id = event.arguments.id;
+                  var result = posts[id];
+                  // attached additional error information to the post
+                  result.errorMessage = 'Error with the mutation, data has changed';
+                  result.errorType = 'MUTATION_ERROR';
+                  callback(null, result);
+                  break;
+              case "relatedPosts":
+                  var id = event.source.id;
+                  callback(null, relatedPosts[id]);
+                  break;
+              default:
+                  callback("Unknown field, unable to resolve" + event.field, null);
+                  break;
+          }
+          };
+Outputs:
+ LambdaFunctionArn:
+   Description: The AWS Lambda Function ARN.
+   Value: !GetAtt LambdaFunction.Arn
+ LambdaAppSyncServiceRole:
+   Description: The AppSync service role created with permissions to AWS Lambda operations.
+   Value: !GetAtt AppSyncServiceRole.Arn
