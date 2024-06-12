@@ -889,17 +889,17 @@ resource "aws_ssm_parameter" "pg_replica_security_group_name" {
 
 output "pg_replica_parameter_group_name" {
   description = "The name of the db parameter group"
-  value       = aws_db_parameter_group.replica[0].name
+  value       = var.create && var.parameters != null ? aws_db_parameter_group.replica[0].name : null
 }
 
 output "pg_replica_nlb_endpoint" {
   description = "DNS enpoint of the nlb"
-  value       = aws_lb.nlb[0].dns_name
+  value       = var.deploy_nlb ? aws_lb.nlb[0].dns_name : null
 }
 
 output "pg_replica_nlb_route53_record" {
   description = "Route53 DNS enpoint of the nlb"
-  value       = aws_route53_record.nlb[0].fqdn
+  value       = var.enable_dns ? aws_route53_record.nlb[0].fqdn : null
 }
 
 # output "pg_replica_nlb_access_log_bucket_id" {
