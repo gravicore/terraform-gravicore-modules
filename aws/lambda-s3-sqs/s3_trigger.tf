@@ -12,10 +12,7 @@ variable "bucket_id" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-
-# Adding S3 bucket as trigger to my lambda and giving the permissions
-resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
+resource "aws_s3_bucket_notification" "default" {
   bucket = var.bucket_id
   lambda_function {
     lambda_function_arn = aws_lambda_function.default.arn
@@ -23,7 +20,7 @@ resource "aws_s3_bucket_notification" "aws-lambda-trigger" {
 
   }
 }
-resource "aws_lambda_permission" "test" {
+resource "aws_lambda_permission" "default" {
   statement_id  = "AllowS3Invoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.default.function_name

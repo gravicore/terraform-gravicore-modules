@@ -86,3 +86,7 @@ resource "aws_lambda_function" "default" {
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 
+output "lambda_arn" {
+  description = "ARN of the Lambda function"
+  value       = aws_lambda_function.default.arn
+}
