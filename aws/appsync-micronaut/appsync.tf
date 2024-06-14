@@ -51,13 +51,8 @@ resource "aws_appsync_graphql_api" "default" {
   schema              = var.graphql_schema
 
   user_pool_config {
-    aws_region     = data.aws_region.current.name
+    aws_region     = var.aws_region
     default_action = "ALLOW"
     user_pool_id   = var.cognito_user_pool
   }
 }
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Outputs
-# ----------------------------------------------------------------------------------------------------------------------
