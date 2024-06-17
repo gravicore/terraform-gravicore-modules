@@ -56,3 +56,12 @@ resource "aws_appsync_graphql_api" "default" {
     user_pool_id   = var.cognito_user_pool
   }
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
+
+output "appsync_api_id" {
+  description = "The ID of the AppSync GraphQL API"
+  value       = aws_appsync_graphql_api.default.id
+}

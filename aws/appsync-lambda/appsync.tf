@@ -42,3 +42,12 @@ resource "aws_appsync_graphql_api" "default" {
   name                = "${local.module_prefix}-appsync-api-lambda"
   schema              = var.graphql_schema
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# OUTPUTS
+# ----------------------------------------------------------------------------------------------------------------------
+
+output "appsync_api_id" {
+  description = "The ID of the AppSync GraphQL API"
+  value       = aws_appsync_graphql_api.default.id
+}
