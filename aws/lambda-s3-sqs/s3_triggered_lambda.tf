@@ -35,10 +35,10 @@ variable "s3_lambda_function_timeout" {
 }
 
 
-variable "s3_lambda_environment_variables" {
-  type        = map(string)
-  description = "Map of environment variables for the Lambda function"
-}
+# variable "s3_lambda_environment_variables" {
+#   type        = map(string)
+#   description = "Map of environment variables for the Lambda function"
+# }
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -61,9 +61,9 @@ resource "aws_lambda_function" "s3_default" {
 
   source_code_hash = data.archive_file.default.output_base64sha256
 
-  environment {
-    variables = var.s3_lambda_environment_variables
-  }
+  # environment {
+  #   variables = var.s3_lambda_environment_variables
+  # }
   # vpc_config {
   #   subnet_ids         = var.vpc_subnet_ids
   #   security_group_ids = var.vpc_security_group_ids
