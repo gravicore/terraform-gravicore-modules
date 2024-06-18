@@ -41,16 +41,6 @@ variable "s3_lambda_environment_variables" {
 }
 
 
-variable "vpc_subnet_ids" {
-  type        = list(string)
-  description = "List of VPC subnet IDs to connect the Lambda function to"
-}
-
-variable "vpc_security_group_ids" {
-  type        = list(string)
-  description = "List of VPC security group IDs to connect the Lambda function to"
-}
-
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
