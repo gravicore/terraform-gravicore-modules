@@ -24,13 +24,14 @@ locals {
     APPSYNC_API_NAME     = local.module_prefix
     AWS_REGION           = var.aws_region
     COGNITO_USER_POOL_ID = var.cognito_user_pool
-    EXECUTION_ROLE_ARN   = aws_iam_role.this.arn
+    EXECUTION_ROLE_ARN   = var.create ? aws_iam_role.this[0].arn : ""
   }
   environment = join(" ", [for k, v in local.variables : "${k}='${v}'"])
 }
 
 resource "aws_iam_role" "this" {
-  name = local.module_prefix
+  count = var.create ? 1 : 0
+  name  = local.module_prefix
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -47,12 +48,14 @@ resource "aws_iam_role" "this" {
 }
 
 resource "aws_iam_role_policy" "this" {
+  count  = var.create ? 1 : 0
   name   = local.module_prefix
-  role   = aws_iam_role.this.id
-  policy = data.aws_iam_policy_document.this.json
+  role   = aws_iam_role.this[0].id
+  policy = data.aws_iam_policy_document.this[0].json
 }
 
 data "aws_iam_policy_document" "this" {
+  count = var.create ? 1 : 0
   statement {
     effect = "Allow"
     actions = [
@@ -64,9 +67,8 @@ data "aws_iam_policy_document" "this" {
   }
 }
 
-data "aws_caller_identity" "this" {}
-
 resource "null_resource" "create" {
+  count = var.create ? 1 : 0
   triggers = {
     always_create = "${timestamp()}"
   }
@@ -78,6 +80,7 @@ resource "null_resource" "create" {
 }
 
 resource "null_resource" "destroy" {
+  count = var.create ? 1 : 0
   triggers = {
     api_name = local.module_prefix
   }
@@ -89,8 +92,9 @@ resource "null_resource" "destroy" {
 }
 
 data "external" "this" {
+  count      = var.create ? 1 : 0
   program    = ["sh", "-c", "cat output.json"]
-  depends_on = [null_resource.create]
+  depends_on = [null_resource.create[0]]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -98,5 +102,5 @@ data "external" "this" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "appsync_api_id" {
-  value = data.external.this.result.api_id
+  value = concat(data.external.this.*.result.api_id, [""])[0]
 }
