@@ -64,10 +64,10 @@ resource "aws_lambda_function" "s3_default" {
   environment {
     variables = var.s3_lambda_environment_variables
   }
-  vpc_config {
-    subnet_ids         = var.vpc_subnet_ids
-    security_group_ids = var.vpc_security_group_ids
-  }
+  # vpc_config {
+  #   subnet_ids         = var.vpc_subnet_ids
+  #   security_group_ids = var.vpc_security_group_ids
+  # }
 }
 
 
