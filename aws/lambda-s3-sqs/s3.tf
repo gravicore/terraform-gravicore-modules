@@ -3,16 +3,17 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-variable "s3_lambda_function_folder" {
+variable "function_folder" {
   type        = string
   description = "Folder path to the Lambda function source code"
 }
 
 
-variable "s3_lambda_function_entrypoint" {
+variable "function_entrypoint" {
   type        = string
   description = "File path to the Lambda function entrypoint (app.py, main.js, etc.)"
 }
+
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -20,12 +21,12 @@ variable "s3_lambda_function_entrypoint" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-resource "aws_s3_bucket" "s3_default" {
-  bucket = "${local.module_prefix}-s3-lambda"
+resource "aws_s3_bucket" "default" {
+  bucket = "${local.module_prefix}-lambda"
 }
 
-resource "aws_s3_bucket_public_access_block" "s3_default" {
-  bucket = aws_s3_bucket.s3_default.id
+resource "aws_s3_bucket_public_access_block" "default" {
+  bucket = aws_s3_bucket.default.id
 
   block_public_acls       = true
   ignore_public_acls      = true
@@ -33,8 +34,13 @@ resource "aws_s3_bucket_public_access_block" "s3_default" {
   restrict_public_buckets = true
 }
 
-resource "aws_s3_bucket_versioning" "s3_default" {
-  bucket = aws_s3_bucket.s3_default.id
+
+# ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_s3_bucket_versioning" "default" {
+  bucket = aws_s3_bucket.default.id
 
   versioning_configuration {
     status = "Enabled"
@@ -42,17 +48,17 @@ resource "aws_s3_bucket_versioning" "s3_default" {
 }
 
 
-resource "aws_s3_object" "s3_default" {
-  depends_on = [data.archive_file.s3_default]
+resource "aws_s3_object" "default" {
+  depends_on = [data.archive_file.default]
 
-  bucket      = aws_s3_bucket.s3_default.bucket
-  key         = "${var.s3_lambda_function_name}.zip"
-  source      = "${path.module}/${var.s3_lambda_function_folder}/${var.function_name}.zip"
+  bucket      = aws_s3_bucket.default.bucket
+  key         = "${var.function_name}.zip"
+  source      = "${path.module}/${var.function_folder}/${var.function_name}.zip"
   source_hash = data.archive_file.default.output_md5
 }
 
-data "archive_file" "s3_default" {
+data "archive_file" "default" {
   type        = "zip"
-  output_path = "${path.module}/${var.s3_lambda_function_folder}/${var.s3_lambda_function_name}.zip"
-  source_file = "${path.module}/${var.s3_lambda_function_folder}/${var.s3_lambda_function_entrypoint}"
+  output_path = "${path.module}/${var.function_folder}/${var.function_name}.zip"
+  source_file = "${path.module}/${var.function_folder}/${var.function_entrypoint}"
 }
