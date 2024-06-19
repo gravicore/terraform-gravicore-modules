@@ -3,17 +3,13 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-variable "s3_lambda_function_folder" {
+
+
+variable "s3_function_path" {
   type        = string
-  description = "Folder path to the Lambda function source code"
+  description = "Path to the Lambda function source code"
+
 }
-
-
-variable "s3_lambda_function_entrypoint" {
-  type        = string
-  description = "File path to the Lambda function entrypoint (app.py, main.js, etc.)"
-}
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -47,12 +43,12 @@ resource "aws_s3_object" "s3_default" {
 
   bucket      = aws_s3_bucket.s3_default.bucket
   key         = "${var.s3_lambda_function_name}.zip"
-  source      = "${var.s3_lambda_function_folder}/${var.function_name}.zip"
+  source      = "${var.s3_function_path}.zip"
   source_hash = data.archive_file.default.output_md5
 }
 
 data "archive_file" "s3_default" {
   type        = "zip"
-  output_path = "${var.s3_lambda_function_folder}/${var.s3_lambda_function_name}.zip"
-  source_file = "${var.s3_lambda_function_folder}/${var.s3_lambda_function_entrypoint}"
+  output_path = "${var.s3_function_path}.zip"
+  source_file = "${var.s3_function_path}/lambda_function.py"
 }
