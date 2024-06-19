@@ -44,7 +44,8 @@ resource "aws_s3_object" "s3_default" {
   bucket      = aws_s3_bucket.s3_default.bucket
   key         = "${var.s3_lambda_function_name}.zip"
   source      = "${var.s3_lambda_function_name}.zip"
-  source_hash = data.archive_file.default.output_md5
+  source_hash = var.source_hash
+
 }
 
 # data "archive_file" "s3_default" {

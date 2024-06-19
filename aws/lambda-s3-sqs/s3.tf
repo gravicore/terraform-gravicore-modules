@@ -9,6 +9,11 @@
 
 # }
 
+variable "source_hash" {
+  type        = string
+  description = "Hash of the Lambda function source code"
+
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -43,12 +48,12 @@ resource "aws_s3_bucket_versioning" "default" {
 
 
 resource "aws_s3_object" "default" {
-  depends_on = [data.archive_file.default]
+  #depends_on = [data.archive_file.default]
 
   bucket      = aws_s3_bucket.default.bucket
   key         = "${var.function_name}.zip"
   source      = "${var.function_name}.zip"
-  source_hash = data.archive_file.default.output_md5
+  source_hash = var.source_hash
 }
 
 # data "archive_file" "default" {
