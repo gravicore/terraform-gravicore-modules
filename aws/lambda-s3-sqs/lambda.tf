@@ -69,7 +69,7 @@ resource "aws_lambda_function" "default" {
   memory_size   = var.function_memory_size
   timeout       = var.function_timeout
 
-  source_code_hash = var.source_hash
+  source_code_hash = data.archive_file.default.output_md5
 
   # environment {
   #   variables = var.environment_variables

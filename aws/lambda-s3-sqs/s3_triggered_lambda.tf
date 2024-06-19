@@ -59,7 +59,7 @@ resource "aws_lambda_function" "s3_default" {
   memory_size   = var.s3_lambda_function_memory_size
   timeout       = var.s3_lambda_function_timeout
 
-  source_code_hash = var.source_hash
+  source_code_hash = data.archive_file.s3_default.output_md5
 
   # environment {
   #   variables = var.s3_lambda_environment_variables

@@ -3,18 +3,11 @@
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-# variable "function_path" {
-#   type        = string
-#   description = "Path to the Lambda function source code"
-
-# }
-
-variable "source_hash" {
+variable "file_name" {
   type        = string
-  description = "Hash of the Lambda function source code"
+  description = "Path to the Lambda function source code"
 
 }
-
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -48,16 +41,16 @@ resource "aws_s3_bucket_versioning" "default" {
 
 
 resource "aws_s3_object" "default" {
-  #depends_on = [data.archive_file.default]
+  depends_on = [data.archive_file.default]
 
   bucket      = aws_s3_bucket.default.bucket
   key         = "${var.function_name}.zip"
   source      = "${var.function_name}.zip"
-  source_hash = var.source_hash
+  source_hash = data.archive_file.default.output_md5
 }
 
-# data "archive_file" "default" {
-#   type        = "zip"
-#   output_path = "../../../python/${var.function_name}.zip"
-#   source_file = "../../../python/${var.function_name}/lambda_function.py"
-# }
+data "archive_file" "default" {
+  type        = "zip"
+  output_path = "${var.function_name}.zip"
+  source_file = var.file_name
+}
