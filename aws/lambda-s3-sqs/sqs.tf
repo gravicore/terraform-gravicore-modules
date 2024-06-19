@@ -33,7 +33,7 @@ variable "is_fifo" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_sqs_queue" "default" {
-  name                      = "${local.module_prefix}-sqs-queue"
+  name                      = "${local.module_prefix}-sqs-queue.fifo"
   delay_seconds             = var.delay_seconds
   fifo_queue                = var.is_fifo
   max_message_size          = var.max_message_size
