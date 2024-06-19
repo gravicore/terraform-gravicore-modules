@@ -49,6 +49,6 @@ resource "aws_s3_object" "s3_default" {
 
 data "archive_file" "s3_default" {
   type        = "zip"
-  output_path = "${var.s3_function_path}.zip"
-  source_file = "${var.s3_function_path}/lambda_function.py"
+  output_path = "../../../python/${var.s3_lambda_function_name}.zip"
+  source_file = "../../../python/${var.s3_lambda_function_name}/lambda_function.py"
 }
