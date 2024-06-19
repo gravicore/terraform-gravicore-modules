@@ -51,7 +51,7 @@ resource "aws_s3_object" "default" {
   source_hash = data.archive_file.default.output_md5
 }
 
-data "archive_file" "s3_default" {
+data "archive_file" "default" {
   type        = "zip"
   output_path = "../../../python/${var.function_name}.zip"
   source_file = "../../../python/${var.function_name}/lambda_function.py"
