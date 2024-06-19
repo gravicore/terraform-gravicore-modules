@@ -5,11 +5,11 @@
 
 
 
-variable "s3_function_path" {
-  type        = string
-  description = "Path to the Lambda function source code"
+# variable "s3_function_path" {
+#   type        = string
+#   description = "Path to the Lambda function source code"
 
-}
+# }
 
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
@@ -43,7 +43,7 @@ resource "aws_s3_object" "s3_default" {
 
   bucket      = aws_s3_bucket.s3_default.bucket
   key         = "${var.s3_lambda_function_name}.zip"
-  source      = "${var.s3_function_path}.zip"
+  source      = "${var.s3_lambda_function_name}.zip"
   source_hash = data.archive_file.default.output_md5
 }
 
