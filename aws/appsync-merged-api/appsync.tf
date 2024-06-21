@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "this" {
 
 resource "null_resource" "create" {
   count    = var.create ? 1 : 0
-  triggers = local.triggers
+  triggers = merge({ always_run = timestamp() }, local.triggers)
 
   provisioner "local-exec" {
     when    = create
