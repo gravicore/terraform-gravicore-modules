@@ -59,6 +59,18 @@ data "aws_iam_policy_document" "this" {
     ]
     resources = ["arn:aws:logs:${var.aws_region}:${local.account_id}:*"]
   }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["appsync:SourceGraphQL"]
+    resources = ["arn:aws:appsync:${var.aws_region}:${local.account_id}:apis/*"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["appsync:StartSchemaMerge"]
+    resources = ["arn:aws:appsync:${var.aws_region}:${local.account_id}:apis/*/sourceApiAssociations/*"]
+  }
 }
 
 resource "null_resource" "create" {
