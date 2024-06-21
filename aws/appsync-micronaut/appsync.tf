@@ -81,7 +81,7 @@ resource "aws_appsync_graphql_api" "this" {
       APPSYNC_API_ID = self.id
     })
     command = <<EOF
-      pip install -qq boto3 && \
+      pip install --force-reinstall -qq boto3 && \
       python ${path.module}/bin/create.py
 EOF
   }
@@ -93,7 +93,7 @@ EOF
       APPSYNC_API_ID = self.id
     })
     command = <<EOF
-      pip install -qq boto3 && \
+      pip install --force-reinstall -qq boto3 && \
       python ${path.module}/bin/destroy.py
 EOF
   }
@@ -107,7 +107,7 @@ resource "aws_appsync_resolver" "this" {
   field       = var.resolver_field_name
   data_source = aws_appsync_datasource.this[0].name
 
-  request_template = file("${path.module}/templates/request.vtl")
+  request_template  = file("${path.module}/templates/request.vtl")
   response_template = file("${path.module}/templates/response.vtl")
 }
 
