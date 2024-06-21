@@ -68,7 +68,7 @@ resource "null_resource" "create" {
   provisioner "local-exec" {
     when    = create
     command = <<EOF
-      pip install -qq boto3 && \
+      pip install --force-reinstall -qq boto3 && \
       ${local.environment} \
       python ${path.module}/bin/create.py
 EOF
@@ -87,7 +87,7 @@ resource "null_resource" "destroy" {
   provisioner "local-exec" {
     when    = destroy
     command = <<EOF
-      pip install -qq boto3 && \
+      pip install --force-reinstall -qq boto3 && \
       APPSYNC_API_NAME=${self.triggers.APPSYNC_API_NAME} \
       python ${path.module}/bin/destroy.py
 EOF
