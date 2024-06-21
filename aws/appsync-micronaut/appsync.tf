@@ -27,6 +27,16 @@ variable "cognito_user_pool" {
   description = "User Pool ID for the AppSync API"
 }
 
+variable "resolver_field_name" {
+  type        = string
+  description = "The field name to attach the resolver to"
+}
+
+variable "resolver_type_name" {
+  type        = string
+  description = "The type name to attach the resolver to"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -87,6 +97,18 @@ EOF
       python ${path.module}/bin/destroy.py
 EOF
   }
+}
+
+resource "aws_appsync_resolver" "this" {
+  count = var.create ? 1 : 0
+
+  api_id      = aws_appsync_graphql_api.this[0].id
+  type        = var.resolver_type_name
+  field       = var.resolver_field_name
+  data_source = aws_appsync_datasource.this[0].name
+
+  request_template = file("${path.module}/templates/request.vtl")
+  response_template = file("${path.module}/templates/response.vtl")
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
