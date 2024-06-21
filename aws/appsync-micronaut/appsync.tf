@@ -81,7 +81,7 @@ resource "aws_appsync_graphql_api" "this" {
       APPSYNC_API_ID = self.id
     })
     command = <<EOF
-      pip install -qq boto3 && \
+      pip install --force-reinstall -qq boto3 && \
       python ${path.module}/bin/create.py
 EOF
   }
@@ -93,7 +93,7 @@ EOF
       APPSYNC_API_ID = self.id
     })
     command = <<EOF
-      pip install -qq boto3 && \
+      pip install --force-reinstall -qq boto3 && \
       python ${path.module}/bin/destroy.py
 EOF
   }
