@@ -100,8 +100,6 @@ EOF
 }
 
 resource "aws_appsync_resolver" "this" {
-  count = var.create ? length(var.resolver_field_name) : 0
-
   for_each = { for idx, field_name in var.resolver_field_name : idx => field_name }
 
   api_id      = aws_appsync_graphql_api.this[0].id
