@@ -107,8 +107,8 @@ resource "aws_appsync_resolver" "this" {
   field       = var.resolver_field_name
   data_source = aws_appsync_datasource.this[0].name
 
-  request_template = file("${path.module}/templates/request.vtl")
-  response_template = file("${path.module}/templates/response.vtl")
+  request_template = file("${path.module}/request.vtl")
+  response_template = file("${path.module}/response.vtl")
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
