@@ -28,12 +28,12 @@ variable "cognito_user_pool" {
 }
 
 variable "resolver_field_name" {
-  type        = string
+  type        = list(string)
   description = "The field name to attach the resolver to"
 }
 
 variable "resolver_type_name" {
-  type        = string
+  type        = list(string)
   description = "The type name to attach the resolver to"
 }
 
@@ -100,11 +100,13 @@ EOF
 }
 
 resource "aws_appsync_resolver" "this" {
-  count = var.create ? 1 : 0
+  count = var.create ? length(var.resolver_field_name) : 0
+
+  for_each = { for idx, field_name in var.resolver_field_name : idx => field_name }
 
   api_id      = aws_appsync_graphql_api.this[0].id
-  type        = var.resolver_type_name
-  field       = var.resolver_field_name
+  type        = var.resolver_type_name[each.key]
+  field       = each.value
   data_source = aws_appsync_datasource.this[0].name
 
   request_template = file("${path.module}/request.vtl")
