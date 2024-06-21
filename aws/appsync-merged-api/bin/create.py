@@ -43,6 +43,17 @@ def create_appsync_api(appsync_api_name, user_pool_id):
             "defaultAction": "ALLOW",
         },
         mergedApiExecutionRoleArn=execution_role_arn,
+        xrayEnabled=True,
+        enhancedMetricsConfig={
+            "resolverLevelMetricsBehavior": "PER_RESOLVER_METRICS",
+            "dataSourceLevelMetricsBehavior": "PER_DATA_SOURCE_METRICS",
+            "operationLevelMetricsConfig": "ENABLED",
+        },
+        logConfig={
+            "fieldLogLevel": "NONE",
+            "cloudWatchLogsRoleArn": execution_role_arn,
+            "excludeVerboseContent": True,
+        },
     )
     return response["graphqlApi"]["apiId"]
 

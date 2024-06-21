@@ -430,4 +430,4 @@ aws/camunda/java/*/*.iml
 aws/camunda/java/*/*.idea/
 
 # appsync/merged-api
-!aws/appsync/merged-api/bin
+!aws/appsync-merged-api/bin
