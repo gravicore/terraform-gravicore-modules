@@ -37,6 +37,17 @@ variable "resolver_type_name" {
   description = "The type name to attach the resolver to"
 }
 
+variable "request_template" {
+  type    = string
+  default = <<EOF
+{
+    "version" : "2017-02-28",
+    "operation": "Invoke",
+    "payload": $util.toJson($context.arguments)
+}
+EOF
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -107,7 +118,7 @@ resource "aws_appsync_resolver" "this" {
   field       = each.value
   data_source = aws_appsync_datasource.this[0].name
 
-  request_template  = file("${path.module}/request.vtl")
+  request_template  = var.request_template
   response_template = file("${path.module}/response.vtl")
 }
 
