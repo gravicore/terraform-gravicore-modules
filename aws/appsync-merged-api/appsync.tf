@@ -106,10 +106,9 @@ EOF
   }
 }
 
-data "external" "this" {
-  count      = var.create ? 1 : 0
-  program    = ["sh", "-c", "cat ${path.module}/output.json"]
-  depends_on = [null_resource.create[0]]
+data "local_file" "this" {
+  depends_on = [null_resource.create]
+  filename   = "${path.module}/output.json"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -117,5 +116,5 @@ data "external" "this" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "appsync_merged_api_id" {
-  value = concat(data.external.this.*.result.api_id, [""])[0]
+  value = var.create ? jsondecode(data.local_file.this.content).api_id : ""
 }
