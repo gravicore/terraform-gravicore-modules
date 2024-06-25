@@ -8,6 +8,21 @@ variable "cognito_user_pool_id" {
   default     = ""
 }
 
+variable "domain_name" {
+  description = "The domain name to associate with the AppAsync API."
+  type        = string
+}
+
+variable "subdomain_name" {
+  description = "The subdomain name to associate with the AppAsync API."
+  type        = string
+}
+
+variable "certificate_arn" {
+  type        = string
+  description = "The certificate to associate with the Custom Domain."
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -109,6 +124,23 @@ EOF
 data "local_file" "this" {
   depends_on = [null_resource.create]
   filename   = "${path.module}/output.json"
+}
+
+resource "aws_appsync_domain_name" "default" {
+  count      = var.create ? 1 : 0
+  depends_on = [null_resource.create]
+
+  domain_name     = var.stage == "prd" ? "${var.subdomain_name}.${var.environment}.${var.domain_name}" : "${var.subdomain_name}.${var.stage}-${var.environment}.${var.domain_name}"
+  description     = "create custom domain name for appsync"
+  certificate_arn = var.certificate_arn
+}
+
+resource "aws_appsync_domain_name_api_association" "this" {
+  count      = var.create ? 1 : 0
+  depends_on = [null_resource.create]
+
+  api_id      = jsondecode(data.local_file.this.content).api_id
+  domain_name = aws_appsync_domain_name.default[0].domain_name
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
