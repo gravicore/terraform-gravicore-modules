@@ -110,6 +110,24 @@ EOF
   }
 }
 
+resource "null_resource" "this" {
+  count = var.create ? 1 : 0
+  triggers = merge(local.environment, {
+    always_run     = timestamp()
+    APPSYNC_API_ID = aws_appsync_graphql_api.this[0].id
+  })
+
+  provisioner "local-exec" {
+    environment = self.triggers
+    command     = <<EOF
+      pip install --force-reinstall -qq boto3 && \
+      python ${path.module}/bin/merge.py
+EOF
+  }
+
+  depends_on = [aws_appsync_datasource.this[0]]
+}
+
 resource "aws_appsync_resolver" "this" {
   for_each = { for idx, field_name in var.resolver_field_name : idx => field_name }
 
