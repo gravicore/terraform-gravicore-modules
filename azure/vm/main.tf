@@ -240,3 +240,19 @@ resource "azurerm_backup_protected_vm" "backup" {
   backup_policy_id    = var.backup_policy_id
 }
 
+
+module "alerts" {
+  count               = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
+  az_region           = "Global"
+  resource_group_name = var.resource_group_name
+  source              = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=0.50.3"
+  namespace           = var.namespace
+  environment         = var.environment
+  stage               = var.stage
+  application         = var.application
+  metric_alerts       = var.metric_alerts
+  activity_log_alerts = var.activity_log_alerts
+  action_group        = var.action_group
+  target_resource_ids = [one(azurerm_cdn_frontdoor_profile.default[*].id)]
+}
+

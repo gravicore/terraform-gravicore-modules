@@ -178,7 +178,7 @@ resource "azurerm_mssql_database_extended_auditing_policy" "single_db" {
 }
 
 locals {
-  single_database_ids = var.elastic_pool_enabled ? [] : [for db in azurerm_mssql_database.single_database : db.id]
+  single_database_ids       = var.elastic_pool_enabled ? [] : [for db in azurerm_mssql_database.single_database : db.id]
   elastic_pool_database_ids = var.elastic_pool_enabled ? [for db in azurerm_mssql_database.elastic_pool_database : db.id] : []
 
   monitoring_target_resource_ids = var.elastic_pool_enabled ? local.elastic_pool_database_ids : local.single_database_ids
@@ -198,3 +198,4 @@ module "alerts" {
   action_group        = var.action_group
   target_resource_ids = local.monitoring_target_resource_ids
 }
+
