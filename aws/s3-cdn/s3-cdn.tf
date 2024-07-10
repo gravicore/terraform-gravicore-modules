@@ -440,7 +440,7 @@ variable "custom_headers" {
     override = bool
     value    = string
   }))
-  default    = []
+  default     = []
   description = "List of custom headers to add to the response"
 }
 
@@ -502,7 +502,7 @@ resource "aws_cloudfront_response_headers_policy" "default" {
   name  = join(var.delimiter, [local.module_prefix, "response", "headers"])
 
   dynamic security_headers_config {
-    for_each = var.enable_security_headers || var.enable_strict_transport_security ? [1] : []
+    for_each = var.enable_content_security_policy || var.enable_strict_transport_security ? [1] : []
     content {
       dynamic strict_transport_security {
         for_each = var.enable_strict_transport_security ? [1] : []
