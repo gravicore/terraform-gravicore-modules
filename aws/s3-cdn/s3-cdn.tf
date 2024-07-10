@@ -434,6 +434,16 @@ variable "enable_content_security_policy" {
   description = "Enables the content security policy header"
 }
 
+variable "custom_headers" {
+  type = list(object({
+    header   = string
+    override = bool
+    value    = string
+  }))
+  default    = []
+  description = "List of custom headers to add to the response"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -508,6 +518,20 @@ resource "aws_cloudfront_response_headers_policy" "default" {
         content {
           content_security_policy = var.content_security_policy
           override                = var.content_security_policy_override
+        }
+      }
+    }
+  }
+
+  dynamic custom_headers_config {
+    for_each = length(var.custom_headers) > 0 ? [1] : []
+    content {
+      dynamic items {
+        for_each = var.custom_headers
+        content {
+          header   = items.value.header
+          override = items.value.override
+          value    = items.value.value
         }
       }
     }
