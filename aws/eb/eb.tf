@@ -188,6 +188,12 @@ variable "environmental_variables" {
   description = "description"
 }
 
+variable "launchconfiguration_disable_imdsv1" {
+  type        = bool
+  default     = true
+  description = "description"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -493,6 +499,12 @@ resource "aws_elastic_beanstalk_environment" "default" {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "EC2KeyName"
     value     = var.launchconfiguration_ec2_key_name
+  }
+
+  setting {
+    namespace = "aws:autoscaling:launchconfiguration"
+    name      = "DisableIMDSv1"
+    value     = var.launchconfiguration_disable_imdsv1
   }
 
   setting {

@@ -416,6 +416,34 @@ variable "enable_response_headers_policy" {
   description = "Enables the creation of a response headers policy"
 }
 
+variable "content_security_policy" {
+  type        = string
+  default     = "default-src 'self'; script-src *; style-src *; font-src *;img-src *;"
+  description = "The content security policy to be set in the response headers"
+}
+
+variable "content_security_policy_override" {
+  type        = bool
+  default     = false
+  description = "Whether CloudFront overrides the Content-Security-Policy HTTP response header received from the origin with the one specified in this response headers policy"
+}
+
+variable "enable_content_security_policy" {
+  type        = bool
+  default     = true
+  description = "Enables the content security policy header"
+}
+
+variable "custom_headers" {
+  type = list(object({
+    header   = string
+    override = bool
+    value    = string
+  }))
+  default     = []
+  description = "List of custom headers to add to the response"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -474,13 +502,37 @@ resource "aws_cloudfront_response_headers_policy" "default" {
   name  = join(var.delimiter, [local.module_prefix, "response", "headers"])
 
   dynamic security_headers_config {
-    for_each = var.enable_strict_transport_security ? [1] : []
+    for_each = var.enable_content_security_policy || var.enable_strict_transport_security ? [1] : []
     content {
-      strict_transport_security {
-        access_control_max_age_sec = var.strict_transport_security_max_age
-        include_subdomains         = var.strict_transport_include_subdomains
-        override                   = var.strict_transport_override
-        preload                    = var.strict_transport_preload
+      dynamic strict_transport_security {
+        for_each = var.enable_strict_transport_security ? [1] : []
+        content {
+          access_control_max_age_sec = var.strict_transport_security_max_age
+          include_subdomains         = var.strict_transport_include_subdomains
+          override                   = var.strict_transport_override
+          preload                    = var.strict_transport_preload
+        }
+      }
+      dynamic content_security_policy {
+        for_each = var.enable_content_security_policy ? [1] : []
+        content {
+          content_security_policy = var.content_security_policy
+          override                = var.content_security_policy_override
+        }
+      }
+    }
+  }
+
+  dynamic custom_headers_config {
+    for_each = length(var.custom_headers) > 0 ? [1] : []
+    content {
+      dynamic items {
+        for_each = var.custom_headers
+        content {
+          header   = items.value.header
+          override = items.value.override
+          value    = items.value.value
+        }
       }
     }
   }
