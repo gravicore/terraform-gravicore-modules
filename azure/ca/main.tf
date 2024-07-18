@@ -319,3 +319,18 @@ resource "azurerm_container_app_environment_certificate" "default" {
   # certificate_password          = data.azurerm_key_vault_secret.passwords[each.key].value
 }
 
+module "alerts" {
+  for_each            = { for k, v in var.container_apps : k => v if v.metric_alerts != {} || v.activity_log_alerts != {} || v.action_group != {} }
+  source              = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=0.50.3"
+  az_region           = var.az_region
+  resource_group_name = var.resource_group_name
+  namespace           = var.namespace
+  environment         = var.environment
+  stage               = var.stage
+  application         = var.application
+  metric_alerts       = each.value.metric_alerts
+  activity_log_alerts = each.value.activity_log_alerts
+  action_group        = each.value.action_group
+  target_resource_ids = [azurerm_container_app.default[each.key].id]
+}
+

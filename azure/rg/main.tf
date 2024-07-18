@@ -15,17 +15,20 @@ module "azure_region" {
 
 
 resource "azurerm_resource_group" "default" {
-  count    = var.create ? 1 : 0
-  name     = local.module_prefix
+  for_each = var.create ? var.resource_groups : {}
+  name     = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, var.name]))
   location = var.az_region
   tags     = local.tags
 }
 
 resource "azurerm_management_lock" "default" {
-  count      = var.create && var.lock_level != null ? 1 : 0
-  name       = join(var.delimiter, [local.module_prefix, "lock"])
-  scope      = azurerm_resource_group.default[count.index].id
-  lock_level = var.lock_level
-  notes      = "Resource Group '${azurerm_resource_group.default[count.index].name}' is locked with '${var.lock_level}' level."
+  for_each = {
+    for key, rg in var.resource_groups : key => rg
+    if rg.lock_level != null && rg.lock_level != ""
+  }
+  name       = join(var.delimiter, [azurerm_resource_group.default[each.key].name, "lock"])
+  scope      = azurerm_resource_group.default[each.key].id
+  lock_level = each.value.lock_level
+  notes      = "Resource Group '${azurerm_resource_group.default[each.key].name}' is locked with '${each.value.lock_level}' level."
 }
 

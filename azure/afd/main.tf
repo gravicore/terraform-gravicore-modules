@@ -1,4 +1,3 @@
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Azure Front Door 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -132,7 +131,8 @@ resource "azurerm_cdn_frontdoor_origin" "default" {
 resource "null_resource" "approve_private_endpoints" {
   count = length(local.private_link_ids) > 0 ? 1 : 0
   depends_on = [
-    azurerm_cdn_frontdoor_route.default
+    azurerm_cdn_frontdoor_route.default,
+    azurerm_cdn_frontdoor_origin.default
   ]
   provisioner "local-exec" {
     working_dir = path.module
@@ -150,5 +150,20 @@ module "diagnostic" {
   az_region             = var.afd_region
   target_resource_id    = one(azurerm_cdn_frontdoor_profile.default[*].id)
   logs_destinations_ids = var.logs_destinations_ids
+}
+
+module "alerts" {
+  count               = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
+  az_region           = "Global"
+  resource_group_name = var.resource_group_name
+  source              = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=0.50.3"
+  namespace           = var.namespace
+  environment         = var.environment
+  stage               = var.stage
+  application         = var.application
+  metric_alerts       = var.metric_alerts
+  activity_log_alerts = var.activity_log_alerts
+  action_group        = var.action_group
+  target_resource_ids = [one(azurerm_cdn_frontdoor_profile.default[*].id)]
 }
 

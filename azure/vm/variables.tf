@@ -548,7 +548,7 @@ variable "new_network_interface" {
       private_ip_address_version                         = optional(string, "IPv4")
       private_ip_address_allocation                      = optional(string, "Dynamic")
       public_ip_address_id                               = optional(string)
-      primary                                            = optional(bool, false)
+      primary                                            = optional(bool, true)
       gateway_load_balancer_frontend_ip_configuration_id = optional(string)
     }))
     dns_servers                    = optional(list(string))

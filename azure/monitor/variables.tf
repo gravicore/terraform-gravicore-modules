@@ -4,13 +4,13 @@
 
 variable "name" {
   type        = string
-  default     = "alert"
+  default     = "monitor"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/azure/alert"
+  default     = "gravicore/terraform-gravicore-modules/azure/monitor"
   description = "The owner and name of the Terraform module"
 }
 
@@ -142,6 +142,12 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
+variable "target_resource_ids" {
+  description = "The ID of the resource to monitor"
+  type        = list(string)
+  default     = []
+}
+
 
 variable "action_group" {
   description = "Defines the action group for alerts"
@@ -169,12 +175,11 @@ variable "action_group" {
 }
 
 
-
-
 variable "metric_alerts" {
   description = "Map of metric Alerts"
   type = map(object({
-    action_group_key         = string
+    action_group_key         = optional(string)
+    action_group_id          = optional(string)
     description              = optional(string, null)
     resource_group_name      = optional(string)
     scopes                   = optional(list(string), [])
@@ -214,7 +219,6 @@ variable "metric_alerts" {
         values   = list(string)
       })), [])
     })), [])
-
     application_insights_web_test_location_availability_criteria = optional(object({
       web_test_id           = string
       component_id          = string
@@ -223,14 +227,23 @@ variable "metric_alerts" {
   }))
 
   default = {}
+
+  validation {
+    condition = alltrue([
+      for key, value in var.metric_alerts : value.action_group_id != null || value.action_group_key != null
+    ])
+    error_message = "Each metric alert must have either an action_group_id or an action_group_key defined."
+  }
 }
+
 
 variable "activity_log_alerts" {
   description = "Map of Activity log Alerts."
   type = map(object({
     description         = optional(string)
     resource_group_name = optional(string)
-    action_group_key    = string
+    action_group_key    = optional(string)
+    action_group_id     = optional(string)
     scopes              = list(string)
     criteria = object({
       operation_name = optional(string)
@@ -248,6 +261,34 @@ variable "activity_log_alerts" {
       locations = optional(string, "Global")
       services  = optional(string)
     }))
+  }))
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for key, value in var.activity_log_alerts : value.action_group_id != null || value.action_group_key != null
+    ])
+    error_message = "Each metric alert must have either an action_group_id or an action_group_key defined."
+  }
+}
+
+
+variable "portal_dashboards" {
+  type = map(object({
+    file_path = string
+    file_vars = map(string)
+  }))
+  default = {}
+}
+
+variable "application_insights_workbooks" {
+  type = map(object({
+    uuid        = string
+    source_id   = optional(string, "azure monitor")
+    category    = optional(string, "workbook")
+    description = optional(string)
+    file_path   = string
+    file_vars   = map(string)
   }))
   default = {}
 }

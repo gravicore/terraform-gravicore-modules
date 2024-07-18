@@ -141,49 +141,30 @@ locals {
 # Module Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
-variable "vnet_cidr_block" {
-  type        = string
-  default     = "10.0.0.0/16"
-  description = "(Required) The address space that is used the virtual network. You can supply more than one address space."
-}
-
-variable "dns_servers" {
-  type        = list(any)
+variable "virtual_networks" {
+  type = map(object({
+    vnet_cidr_block = string
+    prefix          = optional(string)
+    ddos_protection_plan = optional(object({
+      id     = string
+      enable = bool
+    }))
+    bgp_community           = optional(string)
+    dns_servers             = optional(list(string))
+    edge_zone               = optional(string)
+    flow_timeout_in_minutes = optional(number)
+  }))
   default     = null
-  description = "(Optional) List of IP addresses of DNS servers"
+  description = "The virtual network information to be created"
+
 }
-
-variable "edge_zone" {
-  type        = string
-  default     = null
-  description = "(Optional) Specifies the Edge Zone within the Azure Region where this Virtual Network should exist. Changing this forces a new Virtual Network to be created."
-}
-
-variable "flow_timeout_in_minutes" {
-  type        = number
-  default     = null
-  description = "(Optional) The flow timeout in minutes for the Virtual Network, which is used to enable connection tracking for intra-VM flows. Possible values are between 4 and 30 minutes."
-}
-
-variable "ddos_protection_plan" {
-  description = "DDoS protection plan settings"
-  type        = any
-  default     = null
-}
-
-variable "bgp_community" {
-  type        = string
-  default     = null
-  description = "(Optional) The BGP community attribute in format <as-number>:<community-value>."
-}
-
-
 # ----------------------------------------------------------------------------------------------------------------------
 # Subnet Variables
 # ----------------------------------------------------------------------------------------------------------------------
 variable "subnets" {
   type = map(object({
-    prefix            = string
+    vnet_prefix       = string
+    prefix            = optional(string)
     address_newbits   = number
     address_netnum    = number
     service_endpoints = optional(list(string))
@@ -247,10 +228,10 @@ variable "subnets" {
 
 locals {
   subnets_map = { for key, subnet in var.subnets : key => {
+    vnet_prefix                                   = subnet.vnet_prefix
     prefix                                        = subnet.prefix
     address_newbits                               = subnet.address_newbits
     address_netnum                                = subnet.address_netnum
-    address_prefixes                              = cidrsubnet(var.vnet_cidr_block, subnet.address_newbits, subnet.address_netnum)
     service_endpoints                             = subnet.service_endpoints
     delegation                                    = subnet.delegation
     private_link_service_network_policies_enabled = subnet.private_link_service_network_policies_enabled
