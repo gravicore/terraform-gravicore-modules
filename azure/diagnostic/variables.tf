@@ -148,7 +148,7 @@ locals {
       var.log_categories != null ?
       var.log_categories :
       try(data.azurerm_monitor_diagnostic_categories.default.log_category_types, [])
-    ) : log if !contains(var.excluded_log_categories, log)
+    ) : log if ! contains(var.excluded_log_categories, log)
   ]
 
   metric_categories = (
