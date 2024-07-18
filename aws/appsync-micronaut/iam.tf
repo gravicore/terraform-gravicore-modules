@@ -1,54 +1,49 @@
+resource "aws_iam_role" "trust" {
+  count = var.create ? 1 : 0
+  name  = "${local.module_prefix}-trust"
 
-resource "aws_iam_role" "default" {
-  name = "${local.module_prefix}-lambda-${var.datasource_name}-role"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
       }
-    }
-  ]
-}
-EOF
+    ]
+  })
 }
 
-
-
-resource "aws_iam_policy" "default" {
-  name   = "${local.module_prefix}-lambda-${var.datasource_name}-logs-policy"
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": [
-        "arn:aws:logs:*:*:*"
-      ]
-    }
-  ]
-}
-EOF
+resource "aws_iam_policy" "trust" {
+  count = var.create ? 1 : 0
+  name  = "${local.module_prefix}-trust"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = ["arn:aws:logs:*:*:*"]
+      }
+    ]
+  })
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_appsync_attach" {
-  role       = aws_iam_role.default.name
-  policy_arn = aws_iam_policy.default.arn
+resource "aws_iam_role_policy_attachment" "trust" {
+  count      = var.create ? 1 : 0
+  role       = aws_iam_role.trust[0].name
+  policy_arn = aws_iam_policy.trust[0].arn
 }
 
-resource "aws_iam_role" "appsync_service_role" {
-  name = "${local.module_prefix}-appsync-${var.datasource_name}-role"
+resource "aws_iam_role" "this" {
+  count = var.create ? 1 : 0
+  name  = "${local.module_prefix}-appsync"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -63,16 +58,17 @@ resource "aws_iam_role" "appsync_service_role" {
   })
 }
 
-resource "aws_iam_role_policy" "appsync_lambda_invoke_policy" {
-  name = "${local.module_prefix}-appsync-${var.datasource_name}-invoke-policy"
-  role = aws_iam_role.appsync_service_role.id
+resource "aws_iam_role_policy" "this" {
+  count = var.create ? 1 : 0
+  name  = "${local.module_prefix}-appsync"
+  role  = aws_iam_role.this[0].id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
         Effect   = "Allow"
         Action   = "lambda:*"
-        Resource = "${var.lambda_function_arn}"
+        Resource = var.lambda_function_arn
       }
     ]
   })
