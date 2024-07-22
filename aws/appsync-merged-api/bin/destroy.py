@@ -6,6 +6,7 @@ MAX_RESULTS = 5
 appsync_api_name = os.getenv("APPSYNC_API_NAME")
 aws_region = os.getenv("AWS_REGION")
 appsync_client = boto3.client("appsync", region_name=aws_region)
+disabled = os.getenv("DISABLED")
 
 
 def get_appsync_api_id_by_name(appsync_api_name):
@@ -29,8 +30,11 @@ def get_appsync_api_id_by_name(appsync_api_name):
 
 
 def main():
-    api_id = get_appsync_api_id_by_name(appsync_api_name)
+    if disabled == "true":
+        print("[terraform] destroy is disabled")
+        return
 
+    api_id = get_appsync_api_id_by_name(appsync_api_name)
     if api_id:
         try:
             appsync_client.delete_graphql_api(apiId=api_id)
