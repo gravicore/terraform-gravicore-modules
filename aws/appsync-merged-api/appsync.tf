@@ -110,16 +110,14 @@ EOF
 # summary: without a provider, handling destruction is tricky
 # disabling destroy by default, as it is too dangerous without a provider
 resource "null_resource" "destroy" {
-  triggers = merge(local.triggers, {
-    DISABLED = "true"
-  })
+  triggers = local.triggers
 
   provisioner "local-exec" {
     when    = destroy
     command = <<EOF
       pip install --force-reinstall -qq boto3 && \
       APPSYNC_API_NAME=${self.triggers.APPSYNC_API_NAME} \
-      DISABLED=${self.triggers.DISABLED} \
+      DISABLED="true" \
       python ${path.module}/bin/destroy.py
 EOF
   }
