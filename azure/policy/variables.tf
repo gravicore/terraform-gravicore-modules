@@ -149,31 +149,34 @@ variable "policy_definitions" {
     policy_rule_content       = string,
     policy_parameters_content = string,
     policy_mode               = string,
+    policy_mgmt_group_name    = optional(string),
   }))
+  default = {}
 }
 
 variable "policy_assignments" {
   description = "Map with maps to configure assignments. Map key is the name of the assignment."
   type = map(object({
-    display_name  = string,
-    description   = string,
-    scope_id      = string,
-    scope_type    = string,
-    parameters    = string,
-    identity_type = string,
-    location      = string,
-    enforce       = bool,
+    display_name          = string,
+    description           = string,
+    scope_id              = string,
+    scope_type            = string,
+    parameters            = optional(any),
+    identity_type         = optional(string, "SystemAssigned"),
+    identity_ids          = optional(list(string)),
+    enforce               = optional(bool, true),
+    policy_definition_id  = optional(string),
+    policy_definition_key = optional(string),
   }))
+  default = {}
 
   validation {
-    condition     = can([for p in var.policy_assignments : contains(["subscription", "management-group", "resource-group", "resource"], lower(p.scope_type))])
-    error_message = "The `policy_assignments[*].scope_type` value must be valid. Possible values are `subscription`, `management-group`, `resource-group` or `resource`."
+    condition = alltrue([
+      can([for p in var.policy_assignments : contains(["subscription", "management-group", "resource-group", "resource"], lower(p.scope_type))]),
+      alltrue([for p in var.policy_assignments : (!isnull(p.policy_definition_key) || !isnull(p.policy_definition_id))]),
+      alltrue([for p in var.policy_assignments : (p.identity_type == "SystemAssigned" || (!isnull(p.identity_ids) && length(p.identity_ids) > 0))])
+    ])
+    error_message = "The `policy_assignments[*].scope_type` value must be valid. Possible values are `subscription`, `management-group`, `resource-group` or `resource`. Additionally, if `policy_definition_key` is null, `policy_definition_id` must not be null, and if `identity_type` is not `SystemAssigned`, `identity_ids` must not be null or empty."
   }
-}
-
-variable "policy_mgmt_group_name" {
-  description = "Create the Policy Definition at the Management Group level"
-  type        = string
-  default     = null
 }
 

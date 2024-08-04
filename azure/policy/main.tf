@@ -22,7 +22,7 @@ resource "azurerm_policy_definition" "default" {
 
   policy_type         = "Custom"
   mode                = each.value.policy_mode
-  management_group_id = var.policy_mgmt_group_name
+  management_group_id = each.value.policy_mgmt_group_name
 
   policy_rule = each.value.policy_rule_content
   parameters  = each.value.policy_parameters_content
@@ -32,7 +32,7 @@ resource "azurerm_management_group_policy_assignment" "default" {
   for_each = var.create ? { for p_name, p_def in var.policy_assignments : p_name => p_def if lower(p_def.scope_type) == "management-group" } : {}
 
   name                 = each.key
-  policy_definition_id = azurerm_policy_definition.main_policy.id
+  policy_definition_id = azurerm_policy_definition.default[each.value.policy_definition_key].id
   management_group_id  = each.value.scope_id
 
   location     = var.az_region
@@ -42,7 +42,8 @@ resource "azurerm_management_group_policy_assignment" "default" {
   enforce      = each.value.enforce
 
   identity {
-    type = each.value.identity_type
+    type         = each.value.identity_type
+    identity_ids = each.value.identity_ids
   }
 }
 
@@ -50,7 +51,7 @@ resource "azurerm_subscription_policy_assignment" "default" {
   for_each = var.create ? { for p_name, p_def in var.policy_assignments : p_name => p_def if lower(p_def.scope_type) == "subscription" } : {}
 
   name                 = each.key
-  policy_definition_id = azurerm_policy_definition.main_policy.id
+  policy_definition_id = azurerm_policy_definition.default[each.value.policy_definition_key].id
   subscription_id      = each.value.scope_id
 
   location     = var.az_region
@@ -60,7 +61,8 @@ resource "azurerm_subscription_policy_assignment" "default" {
   enforce      = each.value.enforce
 
   identity {
-    type = each.value.identity_type
+    type         = each.value.identity_type
+    identity_ids = each.value.identity_ids
   }
 }
 
@@ -78,7 +80,8 @@ resource "azurerm_resource_group_policy_assignment" "default" {
   enforce      = each.value.enforce
 
   identity {
-    type = each.value.identity_type
+    type         = each.value.identity_type
+    identity_ids = each.value.identity_ids
   }
 }
 
@@ -86,7 +89,7 @@ resource "azurerm_resource_policy_assignment" "default" {
   for_each = var.create ? { for p_name, p_def in var.policy_assignments : p_name => p_def if lower(p_def.scope_type) == "resource" } : {}
 
   name                 = each.key
-  policy_definition_id = azurerm_policy_definition.main_policy.id
+  policy_definition_id = azurerm_policy_definition.default[each.value.policy_definition_key].id
   resource_id          = each.value.scope_id
 
   location     = var.az_region
@@ -96,7 +99,8 @@ resource "azurerm_resource_policy_assignment" "default" {
   enforce      = each.value.enforce
 
   identity {
-    type = each.value.identity_type
+    type         = each.value.identity_type
+    identity_ids = each.value.identity_ids
   }
 }
 
