@@ -210,3 +210,4 @@ module "diagnostic" {
   target_resource_id    = var.elastic_pool_enabled ? azurerm_mssql_database.elastic_pool_database[each.key].id : azurerm_mssql_database.single_database[each.key].id
   logs_destinations_ids = var.logs_destinations_ids
 }
+
