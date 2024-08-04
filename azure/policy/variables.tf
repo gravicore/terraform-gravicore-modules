@@ -187,6 +187,7 @@ variable "policy_assignment_remediation" {
     policy_assignment_id  = optional(string)
     policy_assignment_key = optional(string)
     location_filters      = optional(list(string))
+
   }))
   default = {}
 }

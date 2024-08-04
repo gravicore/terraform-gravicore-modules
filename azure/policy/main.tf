@@ -140,3 +140,4 @@ resource "azurerm_subscription_policy_remediation" "default" {
   policy_assignment_id = each.value.policy_assignment_id != null ? each.value.policy_assignment_id : azurerm_subscription_policy_assignment.default[each.value.policy_assignment_key].id
   location_filters     = each.value.location_filters
 }
+
