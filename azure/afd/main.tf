@@ -153,8 +153,9 @@ module "diagnostic" {
 }
 
 module "alerts" {
-  count                        = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
-  az_region                    = "Global"
+  count     = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
+  az_region = "Global"
+
   resource_group_name          = var.resource_group_name
   source                       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=GDEV-363-azure-sql-and-vm-monitoring"
   namespace                    = var.namespace

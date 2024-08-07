@@ -219,13 +219,12 @@ resource "azurerm_application_insights_workbook" "default" {
   tags                = local.tags
 }
 
-
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "default" {
   for_each = var.create && var.scheduled_query_rules_alerts != null && length(var.scheduled_query_rules_alerts) > 0 ? var.scheduled_query_rules_alerts : {}
 
   name                              = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "sqra"])
   resource_group_name               = var.resource_group_name
-  location                          = var.az_region
+  location                          = each.value.scheduled_query_rules_alerts_region
   description                       = each.value.description
   enabled                           = each.value.enabled
   severity                          = each.value.severity
@@ -240,37 +239,49 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "default" {
   mute_actions_after_alert_duration = each.value.mute_actions_after_alert_duration
   target_resource_types             = each.value.target_resource_types
 
-  criteria {
-    query                   = each.value.criteria.query
-    time_aggregation_method = each.value.criteria.time_aggregation_method
-    threshold               = each.value.criteria.threshold
-    operator                = each.value.criteria.operator
-    resource_id_column      = each.value.criteria.resource_id_column
-    metric_measure_column   = each.value.criteria.metric_measure_column
+  dynamic "criteria" {
+    for_each = each.value.criteria != null ? [each.value.criteria] : []
+    content {
+      query                   = criteria.value.query
+      time_aggregation_method = criteria.value.time_aggregation_method
+      threshold               = criteria.value.threshold
+      operator                = criteria.value.operator
+      resource_id_column      = criteria.value.resource_id_column
+      metric_measure_column   = criteria.value.metric_measure_column
 
-    dynamic "dimension" {
-      for_each = each.value.criteria.dimension
-      content {
-        name     = dimension.value.name
-        operator = dimension.value.operator
-        values   = dimension.value.values
+      dynamic "dimension" {
+        for_each = criteria.value.dimension
+        content {
+          name     = dimension.value.name
+          operator = dimension.value.operator
+          values   = dimension.value.values
+        }
+      }
+
+      dynamic "failing_periods" {
+        for_each = criteria.value.failing_periods != null ? [criteria.value.failing_periods] : []
+        content {
+          minimum_failing_periods_to_trigger_alert = failing_periods.value.minimum_failing_periods_to_trigger_alert
+          number_of_evaluation_periods             = failing_periods.value.number_of_evaluation_periods
+        }
       }
     }
+  }
 
-    failing_periods {
-      minimum_failing_periods_to_trigger_alert = each.value.criteria.failing_periods.minimum_failing_periods_to_trigger_alert
-      number_of_evaluation_periods             = each.value.criteria.failing_periods.number_of_evaluation_periods
+  dynamic "action" {
+    for_each = each.value.action != null ? [each.value.action] : []
+    content {
+      action_groups     = action.value.action_group_key != null ? ["${azurerm_monitor_action_group.default[action.value.action_group_key].id}"] : action.value.action_groups
+      custom_properties = action.value.custom_properties
     }
   }
 
-  action {
-    action_groups     = each.value.action_groups
-    custom_properties = each.value.custom_properties
-  }
-
-  identity {
-    type         = each.value.identity.type
-    identity_ids = each.value.identity.identity_ids
+  dynamic "identity" {
+    for_each = each.value.identity != null ? [each.value.identity] : []
+    content {
+      type         = identity.value.type
+      identity_ids = identity.value.identity_ids
+    }
   }
 
   tags = local.tags

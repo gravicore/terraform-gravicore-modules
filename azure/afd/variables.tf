@@ -20,6 +20,12 @@ variable "afd_region" {
   description = "The Azure region to deploy module into"
 }
 
+variable "az_region" {
+  type        = string
+  default     = "global"
+  description = "The Azure region to deploy module into"
+}
+
 variable "resource_group_name" {
   type        = string
   default     = ""
