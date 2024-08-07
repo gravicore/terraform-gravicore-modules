@@ -250,3 +250,28 @@ resource "azurerm_storage_account" "default" {
   }
 }
 
+
+module "diagnostic" {
+  for_each              = { for k, v in var.storage_accounts : k => v if var.create && length(var.logs_destinations_ids) > 0 }
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = azurerm_storage_account.default[each.key].id
+  logs_destinations_ids = var.logs_destinations_ids
+}
+
+module "diagnostic_blob" {
+  for_each              = { for k, v in var.storage_accounts : k => v if var.create && length(var.logs_destinations_ids) > 0 }
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = "${azurerm_storage_account.default[each.key].id}/blobServices/default"
+  logs_destinations_ids = var.logs_destinations_ids
+}
+

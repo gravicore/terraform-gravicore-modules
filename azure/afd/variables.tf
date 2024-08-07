@@ -20,6 +20,12 @@ variable "afd_region" {
   description = "The Azure region to deploy module into"
 }
 
+variable "az_region" {
+  type        = string
+  default     = "global"
+  description = "The Azure region to deploy module into"
+}
+
 variable "resource_group_name" {
   type        = string
   default     = ""
@@ -572,6 +578,12 @@ variable "activity_log_alerts" {
 
 variable "action_group" {
   description = "Action group to use for alerts"
+  type        = any
+  default     = {}
+}
+
+variable "scheduled_query_rules_alerts" {
+  description = "List of scheduled query rules alerts to create"
   type        = any
   default     = {}
 }
