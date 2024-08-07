@@ -219,3 +219,59 @@ resource "azurerm_application_insights_workbook" "default" {
   tags                = local.tags
 }
 
+
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "default" {
+  for_each = var.create && var.scheduled_query_rules_alerts != null && length(var.scheduled_query_rules_alerts) > 0 ? var.scheduled_query_rules_alerts : {}
+
+  name                              = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "sqra"])
+  resource_group_name               = var.resource_group_name
+  location                          = var.az_region
+  description                       = each.value.description
+  enabled                           = each.value.enabled
+  severity                          = each.value.severity
+  evaluation_frequency              = each.value.evaluation_frequency
+  window_duration                   = each.value.window_duration
+  scopes                            = each.value.scopes
+  auto_mitigation_enabled           = each.value.auto_mitigation_enabled
+  workspace_alerts_storage_enabled  = each.value.workspace_alerts_storage_enabled
+  display_name                      = each.value.display_name
+  query_time_range_override         = each.value.query_time_range_override
+  skip_query_validation             = each.value.skip_query_validation
+  mute_actions_after_alert_duration = each.value.mute_actions_after_alert_duration
+  target_resource_types             = each.value.target_resource_types
+
+  criteria {
+    query                   = each.value.criteria.query
+    time_aggregation_method = each.value.criteria.time_aggregation_method
+    threshold               = each.value.criteria.threshold
+    operator                = each.value.criteria.operator
+    resource_id_column      = each.value.criteria.resource_id_column
+    metric_measure_column   = each.value.criteria.metric_measure_column
+
+    dynamic "dimension" {
+      for_each = each.value.criteria.dimension
+      content {
+        name     = dimension.value.name
+        operator = dimension.value.operator
+        values   = dimension.value.values
+      }
+    }
+
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = each.value.criteria.failing_periods.minimum_failing_periods_to_trigger_alert
+      number_of_evaluation_periods             = each.value.criteria.failing_periods.number_of_evaluation_periods
+    }
+  }
+
+  action {
+    action_groups     = each.value.action_groups
+    custom_properties = each.value.custom_properties
+  }
+
+  identity {
+    type         = each.value.identity.type
+    identity_ids = each.value.identity.identity_ids
+  }
+
+  tags = local.tags
+}

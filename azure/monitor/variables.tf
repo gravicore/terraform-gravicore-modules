@@ -293,3 +293,56 @@ variable "application_insights_workbooks" {
   default = {}
 }
 
+variable "scheduled_query_rules_alerts" {
+  description = "Map of Scheduled Query Rules Alerts"
+  type = map(object({
+    action_group_key                  = optional(string)
+    action_group_id                   = optional(string)
+    description                       = optional(string, null)
+    resource_group_name               = optional(string)
+    enabled                           = optional(bool, true)
+    severity                          = optional(number, 2)
+    evaluation_frequency              = optional(string, "PT5M")
+    window_duration                   = optional(string, "PT5M")
+    scopes                            = list(string)
+    auto_mitigation_enabled           = optional(bool, false)
+    workspace_alerts_storage_enabled  = optional(bool, false)
+    display_name                      = optional(string, "")
+    query_time_range_override         = optional(string, "PT1H")
+    skip_query_validation             = optional(bool, false)
+    mute_actions_after_alert_duration = optional(string, "PT1H")
+    target_resource_types             = optional(list(string), [])
+    criteria = object({
+      query                   = string
+      time_aggregation_method = string
+      threshold               = number
+      operator                = string
+      resource_id_column      = optional(string)
+      metric_measure_column   = optional(string)
+      dimension = optional(list(object({
+        name     = string
+        operator = optional(string, "Include")
+        values   = list(string)
+      })), [])
+      failing_periods = object({
+        minimum_failing_periods_to_trigger_alert = number
+        number_of_evaluation_periods             = number
+      })
+    })
+    action_groups     = optional(list(string), [])
+    custom_properties = optional(map(string), {})
+
+    identity = object({
+      type         = string
+      identity_ids = optional(list(string), [])
+    })
+  }))
+  default = {}
+
+  validation {
+    condition = alltrue([
+      for key, value in var.scheduled_query_rules_alerts : value.action_group_id != null || value.action_group_key != null
+    ])
+    error_message = "Each scheduled query rules alert must have either an action_group_id or an action_group_key defined."
+  }
+}
