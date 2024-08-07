@@ -576,3 +576,8 @@ variable "action_group" {
   default     = {}
 }
 
+variable "scheduled_query_rules_alerts" {
+  description = "List of scheduled query rules alerts to create"
+  type        = any
+  default     = {}
+}
