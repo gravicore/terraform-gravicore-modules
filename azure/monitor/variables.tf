@@ -346,3 +346,4 @@ variable "scheduled_query_rules_alerts" {
     error_message = "Each scheduled query rules alert must have either an action_group_id or an action_group_key defined."
   }
 }
+

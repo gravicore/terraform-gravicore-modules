@@ -581,3 +581,4 @@ variable "scheduled_query_rules_alerts" {
   type        = any
   default     = {}
 }
+

@@ -7,3 +7,4 @@ output "private_endpoint_fqdn" {
   value       = { for k, v in module.private_endpoint : k => v.private_endpoint_fqdn }
   description = "The FQDN of the Private Endpoints"
 }
+
