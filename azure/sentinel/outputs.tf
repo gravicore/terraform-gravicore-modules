@@ -19,3 +19,4 @@ output "sentinel_alert_rule_scheduled_info" {
     }
   }
 }
+

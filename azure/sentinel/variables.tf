@@ -108,7 +108,7 @@ variable "delimiter" {
 locals {
   environment_prefix = coalesce(var.environment_prefix, join(var.delimiter, compact([var.namespace, var.environment])))
   stage_prefix       = coalesce(var.stage_prefix, join(var.delimiter, compact([local.environment_prefix, var.stage])))
-  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, var.name])))
+  module_prefix      = coalesce(var.module_prefix, join(var.delimiter, compact([local.stage_prefix, var.application, var.name])))
 
   business_tags = {
     namespace          = var.namespace
@@ -147,8 +147,7 @@ variable "sentinel_alert_rules" {
     use_template          = bool
     display_name          = string
     name                  = optional(string)
-    workspace_resource_id = string
-    workspace_key         = string
+    workspace_resource_id = optional(string)
     severity              = optional(string)
     query                 = optional(string)
     query_frequency       = optional(string)
@@ -200,4 +199,10 @@ variable "sentinel_alert_rules" {
     }))
   }))
   default = {}
+}
+
+variable "log_analytics_workspace_id" {
+  description = "The Log Analytics Workspace ID"
+  type        = string
+  default     = null
 }

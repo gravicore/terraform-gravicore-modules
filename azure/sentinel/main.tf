@@ -5,7 +5,7 @@
 
 data "azurerm_sentinel_alert_rule_template" "template" {
   for_each                   = { for k, v in var.sentinel_alert_rules : k => v if v.use_template }
-  log_analytics_workspace_id = each.value.workspace_resource_id
+  log_analytics_workspace_id = var.log_analytics_workspace_id == null ? each.value.workspace_resource_id : var.log_analytics_workspace_id
   display_name               = each.value.display_name
 }
 
@@ -13,7 +13,7 @@ resource "azurerm_sentinel_alert_rule_scheduled" "default" {
   for_each = var.sentinel_alert_rules
 
   name                       = each.value.use_template ? element(split("/", data.azurerm_sentinel_alert_rule_template.template[each.key].id), length(split("/", data.azurerm_sentinel_alert_rule_template.template[each.key].id)) - 1) : each.value.name
-  log_analytics_workspace_id = each.value.workspace_resource_id
+  log_analytics_workspace_id = var.log_analytics_workspace_id == null ? each.value.workspace_resource_id : var.log_analytics_workspace_id
   display_name               = each.value.display_name
   severity                   = each.value.use_template ? data.azurerm_sentinel_alert_rule_template.template[each.key].scheduled_template[0].severity : each.value.severity
   query                      = each.value.use_template ? data.azurerm_sentinel_alert_rule_template.template[each.key].scheduled_template[0].query : each.value.query
@@ -62,7 +62,7 @@ resource "azurerm_sentinel_alert_rule_scheduled" "default" {
   }
 
   dynamic "entity_mapping" {
-    for_each = each.value.entity_mapping
+    for_each = each.value.entity_mapping != null ? [each.value.entity_mapping] : []
     content {
       entity_type = entity_mapping.value.entity_type
       dynamic "field_mapping" {
@@ -82,3 +82,4 @@ resource "azurerm_sentinel_alert_rule_scheduled" "default" {
     }
   }
 }
+
