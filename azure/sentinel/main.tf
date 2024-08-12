@@ -6,6 +6,7 @@ data "azurerm_sentinel_alert_rule_template" "template" {
   for_each                   = var.create ? { for k, v in var.sentinel_alert_rules : k => v if v.use_template } : {}
   log_analytics_workspace_id = var.log_analytics_workspace_id == null ? each.value.workspace_resource_id : var.log_analytics_workspace_id
   display_name               = each.value.display_name
+  name                       = each.value.name
 }
 
 resource "azurerm_sentinel_alert_rule_scheduled" "default" {

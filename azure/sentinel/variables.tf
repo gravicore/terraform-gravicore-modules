@@ -145,7 +145,8 @@ variable "sentinel_alert_rules" {
   description = "Map of Sentinel Alert Rules with optional template data source usage"
   type = map(object({
     use_template          = bool
-    display_name          = string
+    display_name          = optional(string)
+    name                  = optional(string)
     name                  = optional(string)
     workspace_resource_id = optional(string)
     severity              = optional(string)
