@@ -206,3 +206,4 @@ variable "log_analytics_workspace_id" {
   type        = string
   default     = null
 }
+

@@ -298,6 +298,10 @@ variable "storage_accounts" {
       bypass                    = optional(list(string), ["AzureServices", "Metrics", "Logging"])
       ip_rules                  = optional(list(string))
       access_allowed_subnet_ids = optional(list(string))
+      private_link_access = optional(object({
+        endpoint_resource_id = optional(string)
+        endpoint_tenant_id   = optional(string)
+      }))
       private_endpoints = optional(list(object({
         private_endpoint_subnet_id = optional(string)
         private_dns_zone_ids       = optional(list(string))
