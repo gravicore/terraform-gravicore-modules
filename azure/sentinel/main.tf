@@ -2,15 +2,14 @@
 # Sentinel
 # ----------------------------------------------------------------------------------------------------------------------
 
-
 data "azurerm_sentinel_alert_rule_template" "template" {
-  for_each                   = { for k, v in var.sentinel_alert_rules : k => v if v.use_template }
+  for_each                   = var.create ? { for k, v in var.sentinel_alert_rules : k => v if v.use_template } : {}
   log_analytics_workspace_id = var.log_analytics_workspace_id == null ? each.value.workspace_resource_id : var.log_analytics_workspace_id
   display_name               = each.value.display_name
 }
 
 resource "azurerm_sentinel_alert_rule_scheduled" "default" {
-  for_each = var.sentinel_alert_rules
+  for_each = var.create ? var.sentinel_alert_rules : {}
 
   name                       = each.value.use_template ? element(split("/", data.azurerm_sentinel_alert_rule_template.template[each.key].id), length(split("/", data.azurerm_sentinel_alert_rule_template.template[each.key].id)) - 1) : each.value.name
   log_analytics_workspace_id = var.log_analytics_workspace_id == null ? each.value.workspace_resource_id : var.log_analytics_workspace_id
