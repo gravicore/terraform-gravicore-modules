@@ -5,8 +5,8 @@
 data "azurerm_sentinel_alert_rule_template" "template" {
   for_each                   = var.create ? { for k, v in var.sentinel_alert_rules : k => v if v.use_template } : {}
   log_analytics_workspace_id = var.log_analytics_workspace_id == null ? each.value.workspace_resource_id : var.log_analytics_workspace_id
-  display_name               = each.value.display_name
-  name                       = each.value.name
+  display_name               = each.value.rule_template_display_name
+  name                       = each.value.rule_template_name
 }
 
 resource "azurerm_sentinel_alert_rule_scheduled" "default" {
@@ -14,7 +14,7 @@ resource "azurerm_sentinel_alert_rule_scheduled" "default" {
 
   name                       = each.value.use_template ? element(split("/", data.azurerm_sentinel_alert_rule_template.template[each.key].id), length(split("/", data.azurerm_sentinel_alert_rule_template.template[each.key].id)) - 1) : each.value.name
   log_analytics_workspace_id = var.log_analytics_workspace_id == null ? each.value.workspace_resource_id : var.log_analytics_workspace_id
-  display_name               = each.value.display_name
+  display_name               = each.value.rule_template_display_name
   severity                   = each.value.use_template ? data.azurerm_sentinel_alert_rule_template.template[each.key].scheduled_template[0].severity : each.value.severity
   query                      = each.value.use_template ? data.azurerm_sentinel_alert_rule_template.template[each.key].scheduled_template[0].query : each.value.query
   query_frequency            = each.value.use_template ? data.azurerm_sentinel_alert_rule_template.template[each.key].scheduled_template[0].query_frequency : each.value.query_frequency
