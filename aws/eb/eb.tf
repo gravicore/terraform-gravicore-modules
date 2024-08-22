@@ -410,7 +410,7 @@ resource "aws_elastic_beanstalk_application" "default" {
   name        = local.module_prefix
   description = var.app_description
 
-  tags = merge(local.tags, map("Namespace", null))
+  tags = merge(local.tags, { "Namespace" = null })
 
   lifecycle {
     ignore_changes = [
@@ -452,7 +452,7 @@ resource "aws_security_group" "eb_alb_sg" {
     cidr_blocks = var.alb_security_group_egress_cider
   }
 
-  tags = merge(local.tags, map("Name", "${local.module_prefix}-alb"))
+  tags = merge(local.tags, { "Name" = "${local.module_prefix}-alb" })
 }
 
 resource "aws_elastic_beanstalk_environment" "default" {
@@ -466,7 +466,7 @@ resource "aws_elastic_beanstalk_environment" "default" {
     local.automation_tags,
     local.security_tags,
     var.tags,
-    map("Environment", "${var.environment}")
+    { "Environment" = "${var.environment}" }
   ))
 
   wait_for_ready_timeout = "10m"
