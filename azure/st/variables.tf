@@ -156,7 +156,7 @@ variable "storage_accounts" {
     cross_tenant_replication_enabled  = optional(bool)
     default_to_oauth_authentication   = optional(bool)
     edge_zone                         = optional(string)
-    enable_https_traffic_only         = optional(bool)
+    https_traffic_only_enabled        = optional(bool)
     infrastructure_encryption_enabled = optional(bool)
     is_hns_enabled                    = optional(bool)
     large_file_share_enabled          = optional(bool)
