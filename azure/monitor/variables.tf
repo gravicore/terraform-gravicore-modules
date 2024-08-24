@@ -312,7 +312,7 @@ variable "scheduled_query_rules_alerts" {
     evaluation_frequency                = optional(string, "PT5M")
     window_duration                     = optional(string, "PT5M")
     scopes                              = list(string)
-    auto_mitigation_enabled             = optional(bool, false)
+    auto_mitigation_enabled             = optional(bool, true)
     workspace_alerts_storage_enabled    = optional(bool, false)
     display_name                        = optional(string, "")
     query_time_range_override           = optional(string, "PT1H")
