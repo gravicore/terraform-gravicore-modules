@@ -157,6 +157,7 @@ resource "azurerm_monitor_activity_log_alert" "default" {
 
   name        = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "ala"])
   description = each.value.description
+  location    = module.azure_region.location_short
 
   resource_group_name = var.resource_group_name
   scopes              = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : null
