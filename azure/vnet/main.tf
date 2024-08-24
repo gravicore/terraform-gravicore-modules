@@ -43,7 +43,7 @@ resource "azurerm_subnet" "default" {
   virtual_network_name                          = azurerm_virtual_network.default[each.value.vnet_prefix].name
   address_prefixes                              = [cidrsubnet(azurerm_virtual_network.default[each.value.vnet_prefix].address_space[0], each.value.address_newbits, each.value.address_netnum)]
   service_endpoints                             = each.value.service_endpoints
-  private_endpoint_network_policies_enabled     = each.value.private_endpoint_network_policies_enabled
+  private_endpoint_network_policies             = each.value.private_endpoint_network_policies
   private_link_service_network_policies_enabled = each.value.private_link_service_network_policies_enabled
 
   dynamic "delegation" {

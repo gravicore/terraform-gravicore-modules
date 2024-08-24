@@ -176,7 +176,7 @@ variable "subnets" {
       }), null)
     }), null)
     private_link_service_network_policies_enabled = optional(bool, true)
-    private_endpoint_network_policies_enabled     = optional(bool, true)
+    private_endpoint_network_policies     = optional(string, "Disabled")
     nsg_rules = optional(object({
       deny_all_inbound                  = optional(bool, false)
       http_inbound_allowed              = optional(bool, false)
