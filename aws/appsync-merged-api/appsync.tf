@@ -28,14 +28,7 @@ variable "certificate_arn" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 locals {
-  triggers = {
-    APPSYNC_API_NAME     = local.module_prefix
-    AWS_REGION           = var.aws_region
-    COGNITO_USER_POOL_ID = var.cognito_user_pool_id
-    EXECUTION_ROLE_ARN   = var.create ? aws_iam_role.this[0].arn : ""
-    MODULE_PATH          = path.module
-  }
-  environment = join(" ", [for k, v in local.triggers : "${k}='${v}'"])
+  execution_role_arn = var.create ? aws_iam_role.this[0].arn : ""
 }
 
 resource "aws_iam_role" "this" {
@@ -88,60 +81,45 @@ data "aws_iam_policy_document" "this" {
   }
 }
 
-resource "null_resource" "create" {
-  count    = var.create ? 1 : 0
-  triggers = merge({ always_run = timestamp() }, local.triggers)
+resource "asm_appsync_graphql_api" "default" {
+  count               = var.create ? 1 : 0
+  name                = local.module_prefix
+  authentication_type = "AMAZON_COGNITO_USER_POOLS"
+  api_type            = "MERGED"
+  tags                = var.tags
+  xray_enabled        = true
 
-  provisioner "local-exec" {
-    when    = create
-    command = <<EOF
-      pip install --force-reinstall -qq boto3 && \
-      ${local.environment} \
-      python ${path.module}/bin/create.py
-EOF
+  merged_api_execution_role_arn = local.execution_role_arn
+
+  user_pool_config {
+    user_pool_id   = var.cognito_user_pool_id
+    aws_region     = var.aws_region
+    default_action = "ALLOW"
   }
 
-  depends_on = [null_resource.destroy]
-}
-
-# - adding counts may prevent destruction
-# - changing names may prevent destruction
-# - commands can't access local variables during destruction
-# summary: without a provider, handling destruction is tricky
-# disabling destroy by default, as it is too dangerous without a provider
-resource "null_resource" "destroy" {
-  triggers = local.triggers
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = <<EOF
-      pip install --force-reinstall -qq boto3 && \
-      APPSYNC_API_NAME=${self.triggers.APPSYNC_API_NAME} \
-      DISABLED="true" \
-      python ${path.module}/bin/destroy.py
-EOF
+  enhanced_metrics_config {
+    resolver_level_metrics_behavior    = "PER_RESOLVER_METRICS"
+    data_source_level_metrics_behavior = "PER_DATA_SOURCE_METRICS"
+    operation_level_metrics_config     = "ENABLED"
   }
-}
 
-data "local_file" "this" {
-  depends_on = [null_resource.create]
-  filename   = "${path.module}/output.json"
+  log_config {
+    field_log_level          = "NONE"
+    cloudwatch_logs_role_arn = local.execution_role_arn
+    exclude_verbose_content  = true
+  }
 }
 
 resource "aws_appsync_domain_name" "default" {
-  count      = var.create ? 1 : 0
-  depends_on = [null_resource.create]
-
+  count           = var.create ? 1 : 0
   domain_name     = "${var.subdomain_name}.${var.domain_name}"
   description     = "create custom domain name for appsync"
   certificate_arn = var.certificate_arn
 }
 
 resource "aws_appsync_domain_name_api_association" "this" {
-  count      = var.create ? 1 : 0
-  depends_on = [null_resource.create]
-
-  api_id      = jsondecode(data.local_file.this.content).api_id
+  count       = var.create ? 1 : 0
+  api_id      = concat(asm_appsync_graphql_api.default.*.id, [""])[0]
   domain_name = aws_appsync_domain_name.default[0].domain_name
 }
 
@@ -150,7 +128,7 @@ resource "aws_appsync_domain_name_api_association" "this" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "appsync_merged_api_id" {
-  value = var.create ? jsondecode(data.local_file.this.content).api_id : ""
+  value = var.create ? concat(asm_appsync_graphql_api.default.*.id, [""])[0] : ""
 }
 
 output "appsync_merged_api_domain_name" {
