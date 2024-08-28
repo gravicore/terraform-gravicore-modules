@@ -3,7 +3,7 @@ terraform {
 
   required_providers {
     asm = {
-      source  = "darlanmoraes/asm"
+      source  = "gravicore/gravicore"
       version = ">= 1.0.2"
     }
   }

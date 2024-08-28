@@ -77,7 +77,7 @@ resource "aws_appsync_resolver" "this" {
   response_template = file("${path.module}/response.vtl")
 }
 
-resource "asm_appsync_merged_api_association" "this" {
+resource "gravicore_aws_appsync_merged_api_association" "this" {
   count         = var.create ? 1 : 0
   description   = "${local.module_prefix} association"
   merged_api_id = var.appsync_merged_api_id
@@ -87,14 +87,14 @@ resource "asm_appsync_merged_api_association" "this" {
   }
 }
 
-resource "asm_appsync_start_schema_merge" "this" {
+resource "gravicore_aws_appsync_start_schema_merge" "this" {
   count          = var.create ? 1 : 0
-  association_id = asm_appsync_merged_api_association.this[0].id
+  association_id = gravicore_aws_appsync_merged_api_association.this[0].id
   merged_api_id  = var.appsync_merged_api_id
   lifecycle {
     replace_triggered_by = [
       aws_appsync_graphql_api.this,
-      asm_appsync_merged_api_association.this,
+      gravicore_aws_appsync_merged_api_association.this,
     ]
   }
 }

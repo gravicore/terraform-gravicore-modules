@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "this" {
   }
 }
 
-resource "asm_appsync_graphql_api" "default" {
+resource "gravicore_aws_appsync_graphql_api" "default" {
   count               = var.create ? 1 : 0
   name                = local.module_prefix
   authentication_type = "AMAZON_COGNITO_USER_POOLS"
@@ -119,7 +119,7 @@ resource "aws_appsync_domain_name" "default" {
 
 resource "aws_appsync_domain_name_api_association" "this" {
   count       = var.create ? 1 : 0
-  api_id      = concat(asm_appsync_graphql_api.default.*.id, [""])[0]
+  api_id      = concat(gravicore_aws_appsync_graphql_api.default.*.id, [""])[0]
   domain_name = aws_appsync_domain_name.default[0].domain_name
 }
 
@@ -128,7 +128,7 @@ resource "aws_appsync_domain_name_api_association" "this" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "appsync_merged_api_id" {
-  value = var.create ? concat(asm_appsync_graphql_api.default.*.id, [""])[0] : ""
+  value = var.create ? concat(gravicore_aws_appsync_graphql_api.default.*.id, [""])[0] : ""
 }
 
 output "appsync_merged_api_domain_name" {
