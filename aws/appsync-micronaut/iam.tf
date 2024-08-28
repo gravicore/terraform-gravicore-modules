@@ -37,8 +37,8 @@ resource "aws_iam_policy" "trust" {
 
 resource "aws_iam_role_policy_attachment" "trust" {
   count      = var.create ? 1 : 0
-  role       = aws_iam_role.trust[0].name
-  policy_arn = aws_iam_policy.trust[0].arn
+  role       = concat(aws_iam_role.trust.*.name, [""])[0]
+  policy_arn = concat(aws_iam_policy.trust.*.arn, [""])[0]
 }
 
 resource "aws_iam_role" "this" {
@@ -61,7 +61,7 @@ resource "aws_iam_role" "this" {
 resource "aws_iam_role_policy" "this" {
   count = var.create ? 1 : 0
   name  = "${local.module_prefix}-appsync"
-  role  = aws_iam_role.this[0].id
+  role  = concat(aws_iam_role.this.*.id, [""])[0]
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
