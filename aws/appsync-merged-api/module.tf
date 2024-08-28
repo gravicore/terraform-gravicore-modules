@@ -4,7 +4,7 @@ terraform {
   required_providers {
     gravicore = {
       source  = "gravicore/gravicore"
-      version = ">= 1.0.3"
+      version = ">= 1.0.4"
     }
   }
 }
