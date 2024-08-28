@@ -889,7 +889,7 @@ resource "aws_ssm_parameter" "pg_replica_security_group_name" {
 
 output "pg_replica_parameter_group_name" {
   description = "The name of the db parameter group"
-  value       = aws_db_parameter_group.replica[0].name
+  value       = concat(aws_db_parameter_group.replica.*.name, [""])[0]
 }
 
 output "pg_replica_nlb_endpoint" {
