@@ -836,7 +836,7 @@ resource "aws_ssm_parameter" "pg_replica_instance_hosted_zone_id" {
 
 output "pg_replica_instance_id" {
   description = "The RDS instance ID"
-  value       = aws_db_instance.default[*].id
+  value       = aws_db_instance.default[*].identifier
 }
 
 resource "aws_ssm_parameter" "pg_replica_instance_id" {

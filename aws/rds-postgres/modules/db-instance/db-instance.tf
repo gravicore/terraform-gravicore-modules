@@ -440,7 +440,7 @@ output "this_db_instance_hosted_zone_id" {
 
 output "this_db_instance_id" {
   description = "The RDS instance ID"
-  value       = [for i in aws_db_instance.this : i["id"]]
+  value       = [for i in aws_db_instance.this : i["identifier"]]
 }
 
 output "this_db_instance_resource_id" {
