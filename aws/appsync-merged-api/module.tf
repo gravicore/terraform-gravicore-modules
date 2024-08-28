@@ -2,7 +2,7 @@ terraform {
   required_version = ">= 0.13"
 
   required_providers {
-    asm = {
+    gravicore = {
       source  = "gravicore/gravicore"
       version = ">= 1.0.2"
     }
