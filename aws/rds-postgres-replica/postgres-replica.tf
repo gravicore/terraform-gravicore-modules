@@ -836,7 +836,7 @@ resource "aws_ssm_parameter" "pg_replica_instance_hosted_zone_id" {
 
 output "pg_replica_instance_id" {
   description = "The RDS instance ID"
-  value       = aws_db_instance.default[*].id
+  value       = aws_db_instance.default[*].identifier
 }
 
 resource "aws_ssm_parameter" "pg_replica_instance_id" {
@@ -889,17 +889,17 @@ resource "aws_ssm_parameter" "pg_replica_security_group_name" {
 
 output "pg_replica_parameter_group_name" {
   description = "The name of the db parameter group"
-  value       = aws_db_parameter_group.replica[0].name
+  value       = concat(aws_db_parameter_group.replica.*.name, [""])[0]
 }
 
 output "pg_replica_nlb_endpoint" {
   description = "DNS enpoint of the nlb"
-  value       = aws_lb.nlb[0].dns_name
+  value       = concat(aws_lb.nlb.*.dns_name, [""])[0]
 }
 
 output "pg_replica_nlb_route53_record" {
   description = "Route53 DNS enpoint of the nlb"
-  value       = aws_route53_record.nlb[0].fqdn
+  value       = concat(aws_route53_record.nlb.*.fqdn, [""])[0]
 }
 
 # output "pg_replica_nlb_access_log_bucket_id" {
