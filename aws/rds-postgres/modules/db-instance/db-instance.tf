@@ -293,7 +293,7 @@ resource "aws_db_instance" "this" {
   kms_key_id            = var.kms_key_id
   license_model         = var.license_model
 
-  name                                = var.db_name
+  db_name                             = var.db_name
   username                            = var.username
   password                            = var.password
   port                                = var.port
@@ -404,7 +404,7 @@ EOF
 
 resource "aws_db_instance_role_association" "this" {
   for_each               = var.create && var.enable_iam_s3_import ? aws_db_instance.this : {}
-  db_instance_identifier = each.value.id
+  db_instance_identifier = each.value.identifier
   feature_name           = "s3Import"
   role_arn               = aws_iam_role.s3_inegration[0].arn
 }
@@ -440,7 +440,7 @@ output "this_db_instance_hosted_zone_id" {
 
 output "this_db_instance_id" {
   description = "The RDS instance ID"
-  value       = [for i in aws_db_instance.this : i["id"]]
+  value       = [for i in aws_db_instance.this : i["identifier"]]
 }
 
 output "this_db_instance_resource_id" {
@@ -455,7 +455,7 @@ output "this_db_instance_status" {
 
 output "this_db_instance_name" {
   description = "The database name"
-  value       = [for i in aws_db_instance.this : i["name"]]
+  value       = [for i in aws_db_instance.this : i["db_name"]]
 }
 
 # output "this_db_instance_username" {

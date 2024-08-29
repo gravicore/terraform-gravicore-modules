@@ -432,6 +432,7 @@ output "database_name" {
 output "master_username" {
   value       = join("", aws_rds_cluster.default.*.master_username)
   description = "Username for the master DB user"
+  sensitive   = true
 }
 
 resource "aws_ssm_parameter" "aurora_sls_pg_username" {

@@ -428,3 +428,10 @@ aws/camunda/java/*/.project
 aws/camunda/java/*/.settings/
 aws/camunda/java/*/*.iml
 aws/camunda/java/*/*.idea/
+
+# appsync micronaut
+!/aws/appsync-micronaut/bin
+
+# appsync/merged-api
+!aws/appsync-merged-api/bin
+
