@@ -47,7 +47,7 @@ resource "aws_iam_role" "this" {
 resource "aws_iam_role_policy" "this" {
   count  = var.create ? 1 : 0
   name   = local.module_prefix
-  policy = data.aws_iam_policy_document.this[0].json
+  policy = concat(data.aws_iam_policy_document.this.*.json, [""])[0]
   role   = concat(aws_iam_role.this.*.id, [""])[0]
 }
 

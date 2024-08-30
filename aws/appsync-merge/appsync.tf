@@ -45,7 +45,7 @@ resource "aws_appsync_datasource" "this" {
   count            = var.create ? 1 : 0
   api_id           = concat(aws_appsync_graphql_api.this.*.id, [""])[0]
   name             = lower(join("", regexall("[a-zA-Z0-9]+", local.module_prefix)))
-  service_role_arn = aws_iam_role.this[0].arn
+  service_role_arn = concat(aws_iam_role.this.*.arn, [""])[0]
   type             = "AWS_LAMBDA"
 
   lambda_config {
