@@ -176,7 +176,7 @@ variable "subnets" {
       }), null)
     }), null)
     private_link_service_network_policies_enabled = optional(bool, true)
-    private_endpoint_network_policies_enabled     = optional(bool, true)
+    private_endpoint_network_policies             = optional(string, "Disabled")
     nsg_rules = optional(object({
       deny_all_inbound                  = optional(bool, false)
       http_inbound_allowed              = optional(bool, false)
@@ -235,7 +235,7 @@ locals {
     service_endpoints                             = subnet.service_endpoints
     delegation                                    = subnet.delegation
     private_link_service_network_policies_enabled = subnet.private_link_service_network_policies_enabled
-    private_endpoint_network_policies_enabled     = subnet.private_endpoint_network_policies_enabled
+    private_endpoint_network_policies             = subnet.private_endpoint_network_policies
     nsg_rules = try(subnet.nsg_rules, {
       deny_all_inbound                  = false
       http_inbound_allowed              = false

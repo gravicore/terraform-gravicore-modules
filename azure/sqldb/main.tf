@@ -14,7 +14,7 @@ module "azure_region" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "azurerm_mssql_database" "single_database" {
-  for_each = var.elastic_pool_enabled ? {} : var.databases
+  for_each = var.create && !var.elastic_pool_enabled ? var.databases : {}
 
   name      = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, var.name]))
   server_id = var.mssql_server_id
@@ -88,7 +88,7 @@ resource "azurerm_mssql_database" "single_database" {
 }
 
 resource "azurerm_mssql_database" "elastic_pool_database" {
-  for_each = var.elastic_pool_enabled ? var.databases : {}
+  for_each = var.create && var.elastic_pool_enabled ? var.databases : {}
 
   name      = join(var.delimiter, compact([local.stage_prefix, var.application, module.azure_region.location_short, each.value.prefix, var.name]))
   server_id = var.mssql_server_id
@@ -158,7 +158,7 @@ resource "azurerm_mssql_database" "elastic_pool_database" {
 
 
 resource "azurerm_mssql_database_extended_auditing_policy" "elastic_pool_db" {
-  for_each = var.databases_extended_auditing_enabled && var.elastic_pool_enabled ? var.databases : {}
+  for_each = var.create && var.databases_extended_auditing_enabled && var.elastic_pool_enabled ? var.databases : {}
 
   database_id                             = azurerm_mssql_database.elastic_pool_database[each.key].id
   storage_endpoint                        = var.security_storage_account_blob_endpoint
@@ -168,12 +168,46 @@ resource "azurerm_mssql_database_extended_auditing_policy" "elastic_pool_db" {
 }
 
 resource "azurerm_mssql_database_extended_auditing_policy" "single_db" {
-  for_each = var.databases_extended_auditing_enabled && var.elastic_pool_enabled == false ? var.databases : {}
+  for_each = var.create && var.databases_extended_auditing_enabled && var.elastic_pool_enabled == false ? var.databases : {}
 
   database_id                             = azurerm_mssql_database.single_database[each.key].id
   storage_endpoint                        = var.security_storage_account_blob_endpoint
   storage_account_access_key              = var.security_storage_account_access_key
   storage_account_access_key_is_secondary = false
   retention_in_days                       = var.databases_extended_auditing_retention_days
+}
+
+locals {
+  single_database_ids       = var.elastic_pool_enabled ? [] : [for db in azurerm_mssql_database.single_database : db.id]
+  elastic_pool_database_ids = var.elastic_pool_enabled ? [for db in azurerm_mssql_database.elastic_pool_database : db.id] : []
+
+  monitoring_target_resource_ids = var.elastic_pool_enabled ? local.elastic_pool_database_ids : local.single_database_ids
+}
+
+module "alerts" {
+  count               = var.create && (var.metric_alerts != null || var.activity_log_alerts != null) && var.action_group != null ? 1 : 0
+  az_region           = var.az_region
+  resource_group_name = var.resource_group_name
+  source              = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=0.50.3"
+  namespace           = var.namespace
+  environment         = var.environment
+  stage               = var.stage
+  application         = var.application
+  metric_alerts       = var.metric_alerts
+  activity_log_alerts = var.activity_log_alerts
+  action_group        = var.action_group
+  target_resource_ids = local.monitoring_target_resource_ids
+}
+
+module "diagnostic" {
+  for_each              = var.create && length(var.logs_destinations_ids) > 0 ? var.databases : {}
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = var.elastic_pool_enabled ? azurerm_mssql_database.elastic_pool_database[each.key].id : azurerm_mssql_database.single_database[each.key].id
+  logs_destinations_ids = var.logs_destinations_ids
 }
 

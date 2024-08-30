@@ -30,7 +30,7 @@ resource "azurerm_storage_account" "default" {
   cross_tenant_replication_enabled  = each.value.cross_tenant_replication_enabled
   default_to_oauth_authentication   = each.value.default_to_oauth_authentication
   edge_zone                         = each.value.edge_zone
-  enable_https_traffic_only         = each.value.enable_https_traffic_only
+  https_traffic_only_enabled        = each.value.https_traffic_only_enabled
   infrastructure_encryption_enabled = each.value.infrastructure_encryption_enabled
   is_hns_enabled                    = each.value.is_hns_enabled
   large_file_share_enabled          = each.value.large_file_share_enabled
@@ -248,5 +248,30 @@ resource "azurerm_storage_account" "default" {
       update = timeouts.value.update
     }
   }
+}
+
+
+module "diagnostic" {
+  for_each              = { for k, v in var.storage_accounts : k => v if var.create && length(var.logs_destinations_ids) > 0 }
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = azurerm_storage_account.default[each.key].id
+  logs_destinations_ids = var.logs_destinations_ids
+}
+
+module "diagnostic_blob" {
+  for_each              = { for k, v in var.storage_accounts : k => v if var.create && length(var.logs_destinations_ids) > 0 }
+  source                = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/diagnostic?ref=0.46.0"
+  namespace             = var.namespace
+  environment           = var.environment
+  stage                 = var.stage
+  application           = var.application
+  az_region             = var.az_region
+  target_resource_id    = "${azurerm_storage_account.default[each.key].id}/blobServices/default"
+  logs_destinations_ids = var.logs_destinations_ids
 }
 

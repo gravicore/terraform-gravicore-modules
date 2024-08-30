@@ -157,6 +157,7 @@ resource "azurerm_monitor_activity_log_alert" "default" {
 
   name        = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "ala"])
   description = each.value.description
+  location    = module.azure_region.location_short
 
   resource_group_name = var.resource_group_name
   scopes              = length(var.target_resource_ids) > 0 ? var.target_resource_ids : length(each.value.scopes) > 0 ? each.value.scopes : null
@@ -217,5 +218,73 @@ resource "azurerm_application_insights_workbook" "default" {
   description         = each.value.description
   data_json           = templatefile("${each.value.file_path}", tomap(each.value.file_vars))
   tags                = local.tags
+}
+
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "default" {
+  for_each = var.create && var.scheduled_query_rules_alerts != null && length(var.scheduled_query_rules_alerts) > 0 ? var.scheduled_query_rules_alerts : {}
+
+  name                              = join(var.delimiter, [local.stage_prefix, var.application, each.key, module.azure_region.location_short, "sqra"])
+  resource_group_name               = var.resource_group_name
+  location                          = each.value.scheduled_query_rules_alerts_region
+  description                       = each.value.description
+  enabled                           = each.value.enabled
+  severity                          = each.value.severity
+  evaluation_frequency              = each.value.evaluation_frequency
+  window_duration                   = each.value.window_duration
+  scopes                            = each.value.scopes
+  auto_mitigation_enabled           = each.value.auto_mitigation_enabled
+  workspace_alerts_storage_enabled  = each.value.workspace_alerts_storage_enabled
+  display_name                      = each.value.display_name
+  query_time_range_override         = each.value.query_time_range_override
+  skip_query_validation             = each.value.skip_query_validation
+  mute_actions_after_alert_duration = each.value.mute_actions_after_alert_duration
+  target_resource_types             = each.value.target_resource_types
+
+  dynamic "criteria" {
+    for_each = each.value.criteria != null ? [each.value.criteria] : []
+    content {
+      query                   = criteria.value.query
+      time_aggregation_method = criteria.value.time_aggregation_method
+      threshold               = criteria.value.threshold
+      operator                = criteria.value.operator
+      resource_id_column      = criteria.value.resource_id_column
+      metric_measure_column   = criteria.value.metric_measure_column
+
+      dynamic "dimension" {
+        for_each = criteria.value.dimension
+        content {
+          name     = dimension.value.name
+          operator = dimension.value.operator
+          values   = dimension.value.values
+        }
+      }
+
+      dynamic "failing_periods" {
+        for_each = criteria.value.failing_periods != null ? [criteria.value.failing_periods] : []
+        content {
+          minimum_failing_periods_to_trigger_alert = failing_periods.value.minimum_failing_periods_to_trigger_alert
+          number_of_evaluation_periods             = failing_periods.value.number_of_evaluation_periods
+        }
+      }
+    }
+  }
+
+  dynamic "action" {
+    for_each = each.value.action != null ? [each.value.action] : []
+    content {
+      action_groups     = action.value.action_group_key != null ? ["${azurerm_monitor_action_group.default[action.value.action_group_key].id}"] : action.value.action_groups
+      custom_properties = action.value.custom_properties
+    }
+  }
+
+  dynamic "identity" {
+    for_each = each.value.identity != null ? [each.value.identity] : []
+    content {
+      type         = identity.value.type
+      identity_ids = identity.value.identity_ids
+    }
+  }
+
+  tags = local.tags
 }
 

@@ -1050,3 +1050,21 @@ variable "custom_dcr_name" {
   default     = null
 }
 
+variable "metric_alerts" {
+  description = "List of metric alerts to create"
+  type        = any
+  default     = {}
+}
+
+variable "activity_log_alerts" {
+  description = "List of activity log alerts to create"
+  type        = any
+  default     = {}
+}
+
+variable "action_group" {
+  description = "Action group to use for alerts"
+  type        = any
+  default     = {}
+}
+
