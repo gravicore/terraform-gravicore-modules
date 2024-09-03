@@ -20,6 +20,12 @@ variable "az_region" {
   description = "The Azure region to deploy module into"
 }
 
+variable "scheduled_query_rules_alerts_region" {
+  type        = string
+  default     = ""
+  description = "The Azure region to deploy module into"
+}
+
 variable "resource_group_name" {
   type        = string
   default     = ""
@@ -289,6 +295,56 @@ variable "application_insights_workbooks" {
     description = optional(string)
     file_path   = string
     file_vars   = map(string)
+  }))
+  default = {}
+}
+
+variable "scheduled_query_rules_alerts" {
+  description = "Map of Scheduled Query Rules Alerts"
+  type = map(object({
+    scheduled_query_rules_alerts_region = string
+    action_group_key                    = optional(string)
+    action_group_id                     = optional(string)
+    description                         = optional(string, null)
+    resource_group_name                 = optional(string)
+    enabled                             = optional(bool, true)
+    severity                            = optional(number, 2)
+    evaluation_frequency                = optional(string, "PT5M")
+    window_duration                     = optional(string, "PT5M")
+    scopes                              = list(string)
+    auto_mitigation_enabled             = optional(bool, true)
+    workspace_alerts_storage_enabled    = optional(bool, false)
+    display_name                        = optional(string, "")
+    query_time_range_override           = optional(string, "PT1H")
+    skip_query_validation               = optional(bool, false)
+    mute_actions_after_alert_duration   = optional(string, "PT1H")
+    target_resource_types               = optional(list(string), [])
+    criteria = object({
+      query                   = string
+      time_aggregation_method = string
+      threshold               = number
+      operator                = string
+      resource_id_column      = optional(string)
+      metric_measure_column   = optional(string)
+      dimension = optional(list(object({
+        name     = string
+        operator = optional(string, "Include")
+        values   = list(string)
+      })), [])
+      failing_periods = optional(object({
+        minimum_failing_periods_to_trigger_alert = number
+        number_of_evaluation_periods             = number
+      }))
+    })
+    action = optional(object({
+      action_groups     = optional(list(string))
+      action_group_key  = optional(string)
+      custom_properties = optional(map(string))
+    }), {})
+    identity = optional(object({
+      type         = string
+      identity_ids = optional(list(string), [])
+    }))
   }))
   default = {}
 }

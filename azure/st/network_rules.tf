@@ -44,6 +44,14 @@ resource "azurerm_storage_account_network_rules" "default" {
   ip_rules                   = each.value.network_rules != null ? each.value.network_rules.ip_rules : null
   virtual_network_subnet_ids = each.value.network_rules != null ? each.value.network_rules.access_allowed_subnet_ids : null
 
+  dynamic "private_link_access" {
+    for_each = each.value.network_rules != null && each.value.network_rules.private_link_access != null ? [each.value.network_rules.private_link_access] : []
+    content {
+      endpoint_resource_id = private_link_access.value.endpoint_resource_id
+      endpoint_tenant_id   = private_link_access.value.endpoint_tenant_id
+    }
+  }
+
   dynamic "timeouts" {
     for_each = each.value.network_rules != null && each.value.network_rules.timeouts != null ? [each.value.network_rules.timeouts] : []
     content {

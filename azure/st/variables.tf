@@ -156,7 +156,7 @@ variable "storage_accounts" {
     cross_tenant_replication_enabled  = optional(bool)
     default_to_oauth_authentication   = optional(bool)
     edge_zone                         = optional(string)
-    enable_https_traffic_only         = optional(bool)
+    https_traffic_only_enabled        = optional(bool)
     infrastructure_encryption_enabled = optional(bool)
     is_hns_enabled                    = optional(bool)
     large_file_share_enabled          = optional(bool)
@@ -298,6 +298,10 @@ variable "storage_accounts" {
       bypass                    = optional(list(string), ["AzureServices", "Metrics", "Logging"])
       ip_rules                  = optional(list(string))
       access_allowed_subnet_ids = optional(list(string))
+      private_link_access = optional(object({
+        endpoint_resource_id = optional(string)
+        endpoint_tenant_id   = optional(string)
+      }))
       private_endpoints = optional(list(object({
         private_endpoint_subnet_id = optional(string)
         private_dns_zone_ids       = optional(list(string))
@@ -342,5 +346,11 @@ variable "storage_accounts" {
     condition     = alltrue([for st in var.storage_accounts : length(st.prefix) <= 5 || st.prefix == null])
     error_message = "The prefix must be 5 characters or fewer."
   }
+}
+
+variable "logs_destinations_ids" {
+  type        = list(string)
+  default     = []
+  description = "List of destination resources IDs for logs diagnostic destination."
 }
 
