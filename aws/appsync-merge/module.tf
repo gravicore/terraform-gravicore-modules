@@ -1,5 +1,12 @@
 terraform {
   required_version = ">= 0.13"
+
+  required_providers {
+    gravicore = {
+      source  = "gravicore/gravicore"
+      version = ">= 1.0.5"
+    }
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -8,13 +15,13 @@ terraform {
 
 variable "name" {
   type        = string
-  default     = "appsync-merged"
+  default     = "appsync-micronaut"
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/appsync-merged"
+  default     = "gravicore/terraform-gravicore-modules/aws/appsync-micronaut"
   description = "The owner and name of the Terraform module"
 }
 

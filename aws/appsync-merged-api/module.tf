@@ -1,5 +1,12 @@
 terraform {
   required_version = ">= 0.13"
+
+  required_providers {
+    gravicore = {
+      source  = "gravicore/gravicore"
+      version = ">= 1.0.5"
+    }
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
