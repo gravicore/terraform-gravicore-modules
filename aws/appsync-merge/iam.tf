@@ -68,7 +68,7 @@ resource "aws_iam_role_policy" "this" {
       {
         Effect   = "Allow"
         Action   = "lambda:*"
-        Resource = var.lambda_function_arn
+        Resource = var.graphql.target.lambda
       }
     ]
   })
