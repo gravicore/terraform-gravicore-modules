@@ -95,7 +95,7 @@ resource "gravicore_aws_appsync_merged_api_association" "this" {
 
 resource "gravicore_aws_appsync_start_schema_merge" "this" {
   count          = var.create ? 1 : 0
-  association_id = concat(gravicore_aws_appsync_merged_api_association.this.*.id, [""])[0]
+  association_id = try(split("_", concat(gravicore_aws_appsync_merged_api_association.this.*.id, [""])[0])[1], "")
   merged_api_id  = var.graphql.target.merge
   lifecycle {
     replace_triggered_by = [
