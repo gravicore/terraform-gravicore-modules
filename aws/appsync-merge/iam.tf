@@ -1,5 +1,5 @@
 resource "aws_iam_role" "trust" {
-  count = var.create ? 1 : 0
+  count = var.create && var.graphql.target.lambda != "" ? 1 : 0
   name  = "${local.module_prefix}-trust"
 
   assume_role_policy = jsonencode({
@@ -17,7 +17,7 @@ resource "aws_iam_role" "trust" {
 }
 
 resource "aws_iam_policy" "trust" {
-  count = var.create ? 1 : 0
+  count = var.create && var.graphql.target.lambda != "" ? 1 : 0
   name  = "${local.module_prefix}-trust"
   policy = jsonencode({
     Version = "2012-10-17",
@@ -36,7 +36,7 @@ resource "aws_iam_policy" "trust" {
 }
 
 resource "aws_iam_role_policy_attachment" "trust" {
-  count      = var.create ? 1 : 0
+  count      = var.create && var.graphql.target.lambda != "" ? 1 : 0
   role       = concat(aws_iam_role.trust.*.name, [""])[0]
   policy_arn = concat(aws_iam_policy.trust.*.arn, [""])[0]
 }
@@ -59,7 +59,7 @@ resource "aws_iam_role" "this" {
 }
 
 resource "aws_iam_role_policy" "this" {
-  count = var.create ? 1 : 0
+  count = var.create && var.graphql.target.lambda != "" ? 1 : 0
   name  = "${local.module_prefix}-appsync"
   role  = concat(aws_iam_role.this.*.id, [""])[0]
   policy = jsonencode({
