@@ -7,7 +7,7 @@ variable "graphql" {
   type = object({
     schema = string
     target = object({
-      lambda = optional(string, "")
+      lambda = string
       merge  = string
     })
     resolvers = optional(list(object({
@@ -91,7 +91,7 @@ locals {
 }
 
 resource "aws_appsync_datasource" "this" {
-  count            = var.create && var.graphql.target.lambda != "" ? 1 : 0
+  count            = var.create ? 1 : 0
   api_id           = concat(aws_appsync_graphql_api.this.*.id, [""])[0]
   name             = lower(join("", regexall("[a-zA-Z0-9]+", local.module_prefix)))
   service_role_arn = concat(aws_iam_role.this.*.arn, [""])[0]
