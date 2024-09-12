@@ -97,7 +97,6 @@ variable "restrict_public_buckets" {
 resource "aws_s3_bucket" "default" {
   count         = var.create ? 1 : 0
   bucket        = "${local.module_prefix}-access-logs"
-  object_ownership = "BucketOwnerEnforced"
   force_destroy = var.force_destroy
   policy        = <<policy
 {
