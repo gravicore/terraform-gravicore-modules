@@ -1,9 +1,3 @@
-variable "acl" {
-  type        = string
-  description = "Canned ACL to apply to the S3 bucket"
-  default     = "log-delivery-write"
-}
-
 variable "force_destroy" {
   type        = bool
   description = "A boolean that indicates the bucket can be destroyed even if it contains objects. These objects are not recoverable"
@@ -103,7 +97,7 @@ variable "restrict_public_buckets" {
 resource "aws_s3_bucket" "default" {
   count         = var.create ? 1 : 0
   bucket        = "${local.module_prefix}-access-logs"
-  acl           = var.acl
+  object_ownership = "BucketOwnerEnforced"
   force_destroy = var.force_destroy
   policy        = <<policy
 {
