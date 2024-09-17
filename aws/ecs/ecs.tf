@@ -166,9 +166,9 @@ resource "aws_ecs_service" "default" {
   }
 
   load_balancer {
-    target_group_arn = var.load_balancer.target_group_arn
-    container_name   = var.load_balancer.container_name
-    container_port   = var.load_balancer.container_port
+    target_group_arn = var.target_group_arn
+    container_name   = var.container_name
+    container_port   = var.container_port
   }
 }
 
