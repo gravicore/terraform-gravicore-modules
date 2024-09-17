@@ -116,6 +116,7 @@ variable "container_cluster_name" {
 
 variable "target_group_arn" {
   description = "The arn of the target group"
+  type        = list(string)  
 }
 
 variable "container_name" {
