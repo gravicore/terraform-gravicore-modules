@@ -114,6 +114,21 @@ variable "container_cluster_name" {
   default     = ""
 }
 
+variable "target_group_arn" {
+  description = "The arn of the target group"
+  type        = string
+}
+
+variable "container_name" {
+  description = "The name of the container for the load balancer"
+  type        = string
+}
+
+variable "container_port" {
+  description = "The port of the container for the load balancer"
+  type        = number
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -151,9 +166,9 @@ resource "aws_ecs_service" "default" {
   }
 
   load_balancer {
-    target_group_arn = load_balancer.value.arn
-    container_name   = local.module_prefix
-    container_port   = load_balancer.value.port
+    target_group_arn = var.load_balancer.target_group_arn
+    container_name   = var.load_balancer.container_name
+    container_port   = var.load_balancer.container_port
   }
 }
 
