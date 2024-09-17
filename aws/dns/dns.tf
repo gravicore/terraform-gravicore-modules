@@ -43,8 +43,8 @@ variable "zone_force_destroy" {
 }
 
 locals {
-  domain_name     = replace(join(".", compact(list(var.stage, var.parent_domain_name))), "prd.", "")
-  aws_domain_name = replace(join(".", compact(list(var.stage, var.aws_subdomain_name, var.parent_domain_name))), "prd.", "")
+  domain_name     = replace(join(".", compact(tolist(var.stage, var.parent_domain_name))), "prd.", "")
+  aws_domain_name = replace(join(".", compact(tolist(var.stage, var.aws_subdomain_name, var.parent_domain_name))), "prd.", "")
 }
 
 variable "records_a" {
