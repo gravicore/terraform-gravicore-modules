@@ -150,13 +150,10 @@ resource "aws_ecs_service" "default" {
     subnets         = var.container_subnet_ids
   }
 
-  dynamic "load_balancer" {
-    for_each = var.lb_target_groups
-    content {
-      target_group_arn = load_balancer.value.arn
-      container_name   = local.module_prefix
-      container_port   = load_balancer.value.port
-    }
+  load_balancer {
+    target_group_arn = load_balancer.value.arn
+    container_name   = local.module_prefix
+    container_port   = load_balancer.value.port
   }
 }
 
