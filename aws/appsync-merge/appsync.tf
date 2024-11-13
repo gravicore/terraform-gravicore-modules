@@ -180,6 +180,8 @@ resource "gravicore_aws_appsync_start_schema_merge" "this" {
   lifecycle {
     replace_triggered_by = [
       aws_appsync_graphql_api.this,
+      aws_appsync_resolver.this,
+      aws_appsync_datasource.this,
       gravicore_aws_appsync_merged_api_association.this,
     ]
   }
