@@ -173,16 +173,20 @@ resource "gravicore_aws_appsync_merged_api_association" "this" {
   }
 }
 
+resource "null_resource" "this" {
+  triggers = {
+    timestamp = timestamp()
+  }
+}
+
 resource "gravicore_aws_appsync_start_schema_merge" "this" {
-  count          = var.create ? 1 : 0
-  association_id = try(split("_", concat(gravicore_aws_appsync_merged_api_association.this.*.id, [""])[0])[1], "")
-  merged_api_id  = var.graphql.target.merge
+  count           = var.create ? 1 : 0
+  association_id  = try(split("_", concat(gravicore_aws_appsync_merged_api_association.this.*.id, [""])[0])[1], "")
+  merged_api_id   = var.graphql.target.merge
+  timeout_seconds = 60
   lifecycle {
     replace_triggered_by = [
-      aws_appsync_graphql_api.this,
-      aws_appsync_resolver.this,
-      aws_appsync_datasource.this,
-      gravicore_aws_appsync_merged_api_association.this,
+      null_resource.this,
     ]
   }
 }
