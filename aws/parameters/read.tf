@@ -39,7 +39,7 @@ locals {
       local.source_list_parameters,
       local.source_secret_parameters,
     )) : jsonencode({})) : replace(k, var.merge.source, var.merge.target) => v
-  if contains(var.merge.ignore, replace(k, var.merge.source, var.merge.target)) == false }
+  if var.merge != null && contains(var.merge.ignore, replace(k, var.merge.source, var.merge.target)) == false }
 
   target_parameters = try(nonsensitive([for k, v in local.targets : k]), [])
 
