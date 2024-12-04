@@ -62,7 +62,7 @@ resource "aws_ssm_parameter" "target" {
 }
 
 data "aws_ssm_parameter" "target_params" {
-  for_each   = var.create ? toset(local.target_parameters) : []
+  for_each   = var.create ? toset(var.parameters) : []
   name       = split(":::", each.value)[0]
   depends_on = [aws_ssm_parameter.target]
 }
