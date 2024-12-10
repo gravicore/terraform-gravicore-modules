@@ -21,7 +21,7 @@ data "aviatrix_account" "this" {
 
 locals {
   aviatrix_accounts = merge(var.aviatrix_accounts,
-    { for id, value in data.aviatrix_account.this : id => merge(value, map("cloud_type", tostring(value.cloud_type))) }
+    { for id, value in data.aviatrix_account.this : id => merge(value, { cloud_type = tostring(value.cloud_type) }) }
   )
 
   policy_deny_private = {
