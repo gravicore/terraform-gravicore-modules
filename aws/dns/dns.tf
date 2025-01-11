@@ -66,7 +66,7 @@ variable "records_caa" {
 }
 
 variable "records_cname" {
-  type        = map(any)
+  type        = any
   default     = {}
   description = "Provides a Route53 A record resource"
 }
@@ -113,6 +113,12 @@ variable "records_txt" {
   description = "Provides a Route53 A record resource"
 }
 
+locals {
+  public_domain_name_servers = coalesce(var.parent_domain_name_servers, aws_route53_zone.dns_public[0].name_servers)
+  cname_failover_records     = { for key, val in var.records_cname : key => val if contains([val], "failover_type") }
+  cname_records              = { for key, val in var.records_cname : key => val if ! contains([val], "failover_type") }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -129,10 +135,6 @@ resource "aws_route53_zone" "dns_public" {
   comment = join(" ", [var.desc_prefix, format("Public DNS zone for %s", local.domain_name)])
 
   force_destroy = var.zone_force_destroy
-}
-
-locals {
-  public_domain_name_servers = coalesce(var.parent_domain_name_servers, aws_route53_zone.dns_public[0].name_servers)
 }
 
 resource "aws_route53_record" "dns_public_ns" {
@@ -195,7 +197,7 @@ resource "aws_route53_record" "dns_public_caa" {
 }
 
 resource "aws_route53_record" "dns_public_cname" {
-  for_each = var.create ? var.records_cname : {}
+  for_each = var.create ? local.cname_records : {}
   name     = each.key
   zone_id  = aws_route53_zone.dns_public[0].zone_id
   type     = "CNAME"
@@ -203,6 +205,21 @@ resource "aws_route53_record" "dns_public_cname" {
   records  = each.value.records
 
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
+}
+
+resource "aws_route53_record" "dns_public_cname_failover" {
+  for_each = var.create ? local.cname_failover_records : {}
+  name     = each.key
+  zone_id  = aws_route53_zone.dns_public[0].zone_id
+  type     = "CNAME"
+  ttl      = lookup(each.value, "ttl", 300)
+  records  = each.value.records
+
+  allow_overwrite = lookup(each.value, "allow_overwrite", true)
+
+  failover_routing_policy {
+    type = each.value.failover_type
+  }
 }
 
 resource "aws_route53_record" "dns_public_ds" {
@@ -367,6 +384,14 @@ output "dns_public_zone_name" {
 
 output "dns_public_zone_name_servers" {
   value = flatten(aws_route53_zone.dns_public.*.name_servers)
+}
+
+output "test_failover_records" {
+  value = local.cname_failover_records
+}
+
+output "test_non_failover_records" {
+  value = local.cname_records
 }
 
 # Delegated Zones
