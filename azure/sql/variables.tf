@@ -275,8 +275,11 @@ variable "azuread_administrator" {
 
 variable "identity" {
   description = "Map of identity configuration."
-  type        = object()
-  default     = null
+  type = object({
+    type         = string
+    identity_ids = optional(list(string), null)
+  })
+  default = null
 }
 
 variable "primary_user_assigned_identity_id" {
