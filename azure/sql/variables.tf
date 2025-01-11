@@ -275,7 +275,7 @@ variable "azuread_administrator" {
 
 variable "identity" {
   description = "Map of identity configuration."
-  type        = map(string)
+  type        = object()
   default     = null
 }
 
@@ -397,4 +397,3 @@ locals {
     "g" = "OnlineSecondary"
   }
 }
-
