@@ -46,7 +46,6 @@ public class Application {
         return plugin;
     }
 
-
     @Bean
     public ServletContextInitializer csrfOverwrite() {
         return servletContext -> servletContext.addFilter(CSRF_PREVENTION_FILTER,
@@ -60,7 +59,7 @@ public class Application {
                 .prefix(statsdPrefix)
                 .hostname(statsdHost)
                 .port(statsdPort)
-            .build();
+                .build();
     }
 
     public static class HasDataDog implements Condition {
@@ -70,5 +69,4 @@ public class Application {
             return StringUtils.isNoneBlank(env.getProperty("dd.agent.host"));
         }
     }
-
 }
