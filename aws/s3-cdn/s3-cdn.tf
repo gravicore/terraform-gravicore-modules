@@ -123,7 +123,7 @@ variable "s3_bucket_versioning" {
 variable "s3_bucket_access_logging" {
   type        = bool
   description = "Access logging of S3 buckets enabled?"
-  default     = false
+  default     = true
 }
 
 variable "s3_bucket_ssl_requests_only" {
@@ -254,11 +254,6 @@ variable "parent_zone_name" {
   type        = string
   default     = ""
   description = "Name of the hosted zone to contain this record (or specify `parent_zone_id`)"
-}
-
-variable "null" {
-  description = "an empty string"
-  default     = ""
 }
 
 variable "static_s3_bucket" {
@@ -449,6 +444,7 @@ variable "custom_headers" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_cloudfront_origin_access_identity" "default" {
+  count   = var.create ? 0 : 1
   comment = local.module_prefix
 }
 
@@ -459,7 +455,7 @@ data "aws_iam_policy_document" "origin" {
 
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.default.iam_arn]
+      identifiers = [concat(aws_cloudfront_origin_access_identity.default.*.iam_arn, [""])[0]]
     }
   }
 
@@ -469,7 +465,7 @@ data "aws_iam_policy_document" "origin" {
 
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.default.iam_arn]
+      identifiers = [concat(aws_cloudfront_origin_access_identity.default.*.iam_arn, [""])[0]]
     }
   }
 
@@ -501,10 +497,10 @@ resource "aws_cloudfront_response_headers_policy" "default" {
   count = var.create && var.enable_response_headers_policy ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "response", "headers"])
 
-  dynamic security_headers_config {
+  dynamic "security_headers_config" {
     for_each = var.enable_content_security_policy || var.enable_strict_transport_security ? [1] : []
     content {
-      dynamic strict_transport_security {
+      dynamic "strict_transport_security" {
         for_each = var.enable_strict_transport_security ? [1] : []
         content {
           access_control_max_age_sec = var.strict_transport_security_max_age
@@ -513,7 +509,7 @@ resource "aws_cloudfront_response_headers_policy" "default" {
           preload                    = var.strict_transport_preload
         }
       }
-      dynamic content_security_policy {
+      dynamic "content_security_policy" {
         for_each = var.enable_content_security_policy ? [1] : []
         content {
           content_security_policy = var.content_security_policy
@@ -523,10 +519,10 @@ resource "aws_cloudfront_response_headers_policy" "default" {
     }
   }
 
-  dynamic custom_headers_config {
+  dynamic "custom_headers_config" {
     for_each = length(var.custom_headers) > 0 ? [1] : []
     content {
-      dynamic items {
+      dynamic "items" {
         for_each = var.custom_headers
         content {
           header   = items.value.header
@@ -537,10 +533,10 @@ resource "aws_cloudfront_response_headers_policy" "default" {
     }
   }
 
-  dynamic remove_headers_config {
+  dynamic "remove_headers_config" {
     for_each = length(var.removed_headers) > 0 ? [1] : []
     content {
-      dynamic items {
+      dynamic "items" {
         for_each = var.removed_headers
         content {
           header = items.value
@@ -550,22 +546,14 @@ resource "aws_cloudfront_response_headers_policy" "default" {
   }
 }
 
-data "template_file" "default" {
-  template = data.aws_iam_policy_document.origin.json
-
-  vars = {
-    origin_path = coalesce(var.origin_path, "/")
-    bucket_name = local.bucket
-  }
-}
-
 resource "aws_s3_bucket_policy" "default" {
+  count  = var.create ? 0 : 1
   bucket = local.bucket
-  policy = data.template_file.default.rendered
+  policy = templatefile(data.aws_iam_policy_document.origin.json, { origin_path = coalesce(var.origin_path, "/"), bucket_name = local.bucket })
 }
 
 resource "aws_s3_bucket" "origin" {
-  count         = signum(length(var.origin_bucket)) == 1 ? 0 : 1
+  count         = var.create && signum(length(var.origin_bucket)) == 1 ? 0 : 1
   bucket        = local.module_prefix
   acl           = "private"
   tags          = local.tags
@@ -603,8 +591,17 @@ resource "aws_s3_bucket" "origin" {
   }
 }
 
+resource "aws_s3_bucket_ownership_controls" "origin" {
+  count  = var.create && signum(length(var.origin_bucket)) == 1 ? 0 : 1
+  bucket = concat(aws_s3_bucket.origin.*.id, [""])[0]
+  rule {
+    object_ownership = "ObjectWriter"
+  }
+}
+
 module "logs" {
   source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.26.0"
+  enabled    = var.create
   namespace  = ""
   stage      = ""
   name       = local.module_prefix
@@ -612,7 +609,7 @@ module "logs" {
   attributes = compact(concat(var.attributes, ["logs"]))
 
   versioning_enabled     = var.s3_bucket_versioning ? true : false
-  access_log_bucket_name = var.s3_bucket_access_logging ? join(var.delimiter, [local.module_prefix, "logs"]) : ""
+  access_log_bucket_name = join(var.delimiter, [local.module_prefix, "logs"])
 
   tags                      = local.tags
   lifecycle_prefix          = var.log_prefix
@@ -624,6 +621,7 @@ module "logs" {
 }
 
 data "aws_s3_bucket" "selected" {
+  count  = var.create ? 0 : 1
   bucket = local.bucket == "" ? var.static_s3_bucket : local.bucket
 }
 
@@ -638,7 +636,7 @@ locals {
   bucket_domain_name = var.use_regional_s3_endpoint ? format(
     "%s.s3-%s.amazonaws.com",
     local.bucket,
-    data.aws_s3_bucket.selected.region,
+    concat(data.aws_s3_bucket.selected.*.region, [""])[0],
   ) : format(var.bucket_domain_format, local.bucket)
 }
 
@@ -667,7 +665,7 @@ resource "aws_cloudfront_distribution" "default" {
     origin_path = var.origin_path
 
     s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path
+      origin_access_identity = concat(aws_cloudfront_origin_access_identity.default.*.cloudfront_access_identity_path, [""])[0]
     }
   }
 
@@ -781,7 +779,7 @@ EOF
 resource "aws_iam_role_policy" "hsts" {
   count = var.create && var.enable_security_headers ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "hsts", "header"])
-  role  = aws_iam_role.hsts[0].id
+  role  = concat(aws_iam_role.hsts.*.id, [""])[0]
 
   policy = <<EOF
 {
@@ -814,7 +812,7 @@ resource "aws_lambda_function" "hsts" {
   count         = var.create && var.enable_security_headers ? 1 : 0
   filename      = data.archive_file.hsts.output_path
   function_name = join(var.delimiter, [local.module_prefix, "hsts"])
-  role          = aws_iam_role.hsts[0].arn
+  role          = concat(aws_iam_role.hsts.*.arn, [""])[0]
   handler       = "index.handler"
   description   = "Blueprint for modifying CloudFront response header implemented in NodeJS."
 
