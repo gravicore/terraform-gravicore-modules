@@ -5,13 +5,13 @@
   <version>0.0.1-SNAPSHOT</version>
 
   <properties>
-    <camunda.spring-boot.version>7.14.0</camunda.spring-boot.version>
-    <spring-boot.version>2.3.6.RELEASE</spring-boot.version>
-    <lombok.version>1.18.12</lombok.version>
-    <aws.version>2.15.34</aws.version>
+    <camunda.spring-boot.version>7.22.0</camunda.spring-boot.version>
+    <spring-boot.version>3.3.3</spring-boot.version>
+    <lombok.version>1.18.36</lombok.version>
+    <aws.version>2.29.44</aws.version>
     <jaxb.version>2.2.3</jaxb.version>
-    <servlet.version>4.0.1</servlet.version>
-    <ssm.version>1.5.0</ssm.version>
+    <servlet.version>5.0.0</servlet.version>
+    <ssm.version>2.0.0</ssm.version>
     <statsd.client.version>2.10.1</statsd.client.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
@@ -90,7 +90,12 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>cognitoidentityprovider</artifactId>
-      <version>2.15.34</version>
+      <version>${aws.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>retries</artifactId>
+      <version>${aws.version}</version>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
@@ -98,8 +103,8 @@
       <scope>runtime</scope>
     </dependency>
     <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
       <version>${servlet.version}</version>
     </dependency>
     <dependency>
@@ -128,5 +133,4 @@
       </plugin>
     </plugins>
   </build>
-
 </project>
