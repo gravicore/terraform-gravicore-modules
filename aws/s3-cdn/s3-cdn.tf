@@ -600,7 +600,7 @@ resource "aws_s3_bucket_ownership_controls" "origin" {
 }
 
 module "logs" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.26.0"
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/1.4.3"
   enabled    = var.create
   namespace  = ""
   stage      = ""
@@ -608,8 +608,7 @@ module "logs" {
   delimiter  = var.delimiter
   attributes = compact(concat(var.attributes, ["logs"]))
 
-  versioning_enabled     = var.s3_bucket_versioning ? true : false
-  access_log_bucket_name = join(var.delimiter, [local.module_prefix, "logs"])
+  versioning_enabled = var.s3_bucket_versioning ? true : false
 
   tags                      = local.tags
   lifecycle_prefix          = var.log_prefix
@@ -646,7 +645,7 @@ resource "aws_cloudfront_distribution" "default" {
   comment             = format("%s %s", var.desc_prefix, var.comment)
   default_root_object = var.default_root_object
   price_class         = var.price_class
-  depends_on          = [aws_s3_bucket.origin]
+  depends_on          = [aws_s3_bucket.origin, module.logs]
 
   logging_config {
     include_cookies = var.log_include_cookies
@@ -657,15 +656,17 @@ resource "aws_cloudfront_distribution" "default" {
   aliases = sort(
     distinct(compact(concat(var.aliases, var.external_aliases))),
   )
-  # aliases = var.aliases
 
   origin {
     domain_name = local.bucket_domain_name
     origin_id   = local.module_prefix
     origin_path = var.origin_path
 
-    s3_origin_config {
-      origin_access_identity = concat(aws_cloudfront_origin_access_identity.default.*.cloudfront_access_identity_path, [""])[0]
+    dynamic "s3_origin_config" {
+      for_each = aws_cloudfront_origin_access_identity.default.*.cloudfront_access_identity_path
+      content {
+        origin_access_identity = each.key
+      }
     }
   }
 
