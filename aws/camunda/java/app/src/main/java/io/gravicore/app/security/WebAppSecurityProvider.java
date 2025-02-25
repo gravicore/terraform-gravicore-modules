@@ -11,7 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.util.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,7 +27,8 @@ public class WebAppSecurityProvider extends ContainerBasedAuthenticationProvider
         }
 
         if (auth instanceof OAuth2AuthenticationToken) {
-            final OAuth2AuthenticationToken authentication = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+            final OAuth2AuthenticationToken authentication = (OAuth2AuthenticationToken) SecurityContextHolder
+                    .getContext().getAuthentication();
             return contextAuthentication(authentication);
         } else {
             return AuthenticationResult.unsuccessful();
@@ -38,7 +39,7 @@ public class WebAppSecurityProvider extends ContainerBasedAuthenticationProvider
     private AuthenticationResult contextAuthentication(OAuth2AuthenticationToken authentication) {
         final String userId = authentication.getName();
 
-        if (StringUtils.isEmpty(userId)) {
+        if (!StringUtils.hasLength(userId)) {
             return AuthenticationResult.unsuccessful();
         }
 
@@ -54,7 +55,6 @@ public class WebAppSecurityProvider extends ContainerBasedAuthenticationProvider
                 .list()
                 .stream()
                 .map(Group::getId)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
-
 }
