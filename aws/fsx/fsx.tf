@@ -38,6 +38,12 @@ variable "deployment_type" {
   description = "(Optional) Specifies the file system deployment type, valid values are MULTI_AZ_1, SINGLE_AZ_1 and SINGLE_AZ_2. Default value is SINGLE_AZ_1"
 }
 
+variable "weekly_maintenance_start_time" {
+  type        = string
+  default     = null
+  description = "(Optional) The preferred start time to perform weekly maintenance, formatted d:HH:MM in the UTC time zone. Where d is the weekday number, from 1 through 7, with 1 = Monday and 7 = Sunday"
+}
+
 variable "automatic_backup_retention_days" {
   type        = number
   default     = null
@@ -134,6 +140,7 @@ resource "aws_fsx_windows_file_system" "default" {
   storage_capacity                  = var.storage_capacity
   subnet_ids                        = var.subnet_ids
   throughput_capacity               = var.throughput_capacity
+  weekly_maintenance_start_time     = var.weekly_maintenance_start_time
   automatic_backup_retention_days   = var.automatic_backup_retention_days
   daily_automatic_backup_start_time = var.daily_automatic_backup_start_time
   copy_tags_to_backups              = var.copy_tags_to_backups
