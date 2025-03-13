@@ -18,13 +18,13 @@ public class UserService {
         this.cognitoIdentityServiceClient = cognitoIdentityServiceClient;
     }
 
-    private CustomUser fromOktaUser(final CognitoUser cognitoUser){
+    private CustomUser fromOktaUser(final CognitoUser cognitoUser) {
         return CustomUser.builder()
                 .id(cognitoUser.getId())
                 .email(cognitoUser.getUsername())
                 .firstName(cognitoUser.getFirstName())
                 .lastName(cognitoUser.getLastName())
-            .build();
+                .build();
     }
 
     public CustomUser findById(String id) {
@@ -35,14 +35,14 @@ public class UserService {
         final List<CognitoUser> cognitoUsers = this.cognitoIdentityServiceClient.getUsers();
         return cognitoUsers.stream()
                 .map(this::fromOktaUser)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
-    public Collection<CustomUser> findByGroupId(String groupId){
+    public Collection<CustomUser> findByGroupId(String groupId) {
         return this.cognitoIdentityServiceClient
-            .getUsersByGroupId(groupId).stream()
+                .getUsersByGroupId(groupId).stream()
                 .map(this::fromOktaUser)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
 }
