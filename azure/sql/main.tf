@@ -64,8 +64,8 @@ resource "azurerm_mssql_server" "default" {
   dynamic "identity" {
     for_each = var.identity != null ? ["enabled"] : []
     content {
-      type         = identity.value.type
-      identity_ids = identity.value.type == "SystemAssigned" ? null : identity.value.identity_ids
+      type         = var.identity.type
+      identity_ids = var.identity.type == "SystemAssigned" ? null : var.identity.identity_ids
     }
   }
 
@@ -176,4 +176,3 @@ resource "azurerm_mssql_server_extended_auditing_policy" "default" {
   storage_account_access_key_is_secondary = false
   retention_in_days                       = var.sql_server_extended_auditing_retention_days
 }
-
