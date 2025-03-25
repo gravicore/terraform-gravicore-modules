@@ -59,61 +59,33 @@ data "archive_file" "default" {
 # APPSYNC RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-resource "aws_appsync_graphql_api" "api" {
-  count = var.appsync_merged_api_id == "" ? 1 : 0
+module "appsync" {
+  count  = var.create ? 1 : 0
+  source = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/appsync-merge?ref=0.56.3"
 
-  name                = var.name
-  authentication_type = "AMAZON_COGNITO_USER_POOLS"
-  schema             = var.graphql_schema
-}
-
-resource "aws_appsync_resolver" "resolver" {
-  api_id      = var.appsync_merged_api_id != "" ? var.appsync_merged_api_id : aws_appsync_graphql_api.api[0].id
-  type        = var.resolver_type
-  field       = var.resolver_field
-  data_source = aws_appsync_datasource.lambda.name
-
-  request_template = var.request_template
-
-  response_template = <<-EOF
-    #if($ctx.error)
-      $utils.error($ctx.error.message, $ctx.error.type)
-    #end
-    #if($ctx.result)
-      $utils.toJson($ctx.result)
-    #else
-      null
-    #end
-  EOF
-}
-
-resource "aws_appsync_datasource" "lambda" {
-  api_id           = var.appsync_merged_api_id != "" ? var.appsync_merged_api_id : aws_appsync_graphql_api.api[0].id
-  name             = "${var.name}-datasource"
-  service_role_arn = aws_iam_role.appsync_role.arn
-  type             = "AWS_LAMBDA"
-
-  lambda_config {
-    function_arn = aws_lambda_function.default.arn
+  graphql = {
+    schema = var.graphql_schema
+    target = {
+      lambda = aws_lambda_function.default.arn
+      merge  = var.appsync_merged_api_id
+    }
+    resolvers = [{
+      type  = var.resolver_type
+      field = var.resolver_field
+    }]
   }
-}
 
-resource "aws_iam_role" "appsync_role" {
-  name = "${var.name}-appsync-role"
+  authentication = [{
+    priority = "principal"
+    lambda = {
+      arn   = var.lambda_authorizer_arn
+      regex = "(?i)^bearer\\s+(.+)"
+    }
+  }]
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "appsync.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
+  transform = {
+    request = { body = var.request_template }
+  }
 
 resource "aws_iam_role_policy" "appsync_policy" {
   name = "${var.name}-appsync-policy"
