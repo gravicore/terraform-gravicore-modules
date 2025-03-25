@@ -56,11 +56,6 @@ variable "lambda_authorizer_arn" {
   description = "The ARN of the Lambda Authorizer"
 }
 
-variable "lambda_function_arn" {
-  type        = string
-  description = "The ARN of the Lambda function to invoke"
-}
-
 variable "resolver_type" {
   type        = string
   description = "Type of resolver (Query or Mutation)"
