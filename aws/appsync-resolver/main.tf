@@ -219,17 +219,3 @@ resource "aws_lambda_permission" "appsync" {
   principal     = "appsync.amazonaws.com"
   source_arn    = aws_appsync_graphql_api.api[0].arn
 }
-
-# ----------------------------------------------------------------------------------------------------------------------
-# OUTPUTS
-# ----------------------------------------------------------------------------------------------------------------------
-
-output "api_id" {
-  description = "The ID of the AppSync API"
-  value       = var.appsync_merged_api_id != "" ? var.appsync_merged_api_id : aws_appsync_graphql_api.api[0].id
-}
-
-output "resolver_arn" {
-  description = "The ARN of the AppSync resolver"
-  value       = aws_appsync_resolver.resolver.arn
-} 
