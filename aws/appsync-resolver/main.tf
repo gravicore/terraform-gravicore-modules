@@ -123,8 +123,8 @@ resource "aws_lambda_provisioned_concurrency_config" "default" {
 
 data "archive_file" "default" {
   type        = "zip"
-  source_dir  = var.source_dir
-  output_path = var.output_path
+  source_dir  = "../../python/${var.name}"
+  output_path = "../../dist/${var.name}.zip"
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
