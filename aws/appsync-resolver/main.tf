@@ -121,5 +121,5 @@ resource "aws_lambda_permission" "appsync" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.default.function_name
   principal     = "appsync.amazonaws.com"
-  source_arn    = module.appsync.appsync_api_arn[0].arn
+  source_arn    = [module.appsync.appsync_api_arn.arn]
 } 
