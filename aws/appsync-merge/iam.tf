@@ -44,21 +44,6 @@ resource "aws_iam_role_policy_attachment" "trust" {
   policy_arn = concat(aws_iam_policy.trust.*.arn, [""])[0]
 }
 
-resource "aws_iam_role" "this" {
-  count = var.create ? 1 : 0
-  name  = local.names.default
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = {
-        Service = "appsync.amazonaws.com"
-      }
-      Action = "sts:AssumeRole"
-    }]
-  })
-}
-
 resource "aws_iam_role_policy" "this" {
   count = var.create ? 1 : 0
   name  = local.names.default
