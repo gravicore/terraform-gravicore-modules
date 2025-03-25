@@ -8,70 +8,6 @@ terraform {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# VARIABLES
-# ----------------------------------------------------------------------------------------------------------------------
-
-variable "name" {
-  type        = string
-  description = "Name of the AppSync resolver"
-}
-
-variable "account_id" {
-  type        = string
-  description = "AWS Account ID"
-}
-
-variable "namespace" {
-  type        = string
-  description = "Namespace for the resource"
-}
-
-variable "environment" {
-  type        = string
-  description = "Environment name"
-}
-
-variable "stage" {
-  type        = string
-  description = "Stage name"
-}
-
-variable "tags" {
-  type        = map(string)
-  description = "Tags to apply to all resources"
-}
-
-variable "appsync_merged_api_id" {
-  type        = string
-  description = "The AppSync Merged API ID to connect to the AppSync API"
-}
-
-variable "graphql_schema" {
-  type        = string
-  description = "GraphQL schema definition"
-}
-
-variable "lambda_authorizer_arn" {
-  type        = string
-  description = "The ARN of the Lambda Authorizer"
-}
-
-variable "resolver_type" {
-  type        = string
-  description = "Type of resolver (Query or Mutation)"
-}
-
-variable "resolver_field" {
-  type        = string
-  description = "Field name for the resolver"
-}
-
-variable "request_template" {
-  type        = string
-  description = "VTL template for request transformation"
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
 # LOCALS
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -123,8 +59,8 @@ resource "aws_lambda_provisioned_concurrency_config" "default" {
 
 data "archive_file" "default" {
   type        = "zip"
-  source_dir  = "../../python/${var.name}"
-  output_path = "../../dist/${var.name}.zip"
+  source_dir  = var.source_dir
+  output_path = var.output_path
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -213,4 +149,4 @@ resource "aws_lambda_permission" "appsync" {
   function_name = aws_lambda_function.default.function_name
   principal     = "appsync.amazonaws.com"
   source_arn    = aws_appsync_graphql_api.api[0].arn
-}
+} 
