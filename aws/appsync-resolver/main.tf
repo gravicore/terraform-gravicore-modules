@@ -86,6 +86,7 @@ module "appsync" {
   transform = {
     request = { body = var.request_template }
   }
+}
 
 resource "aws_iam_role_policy" "appsync_policy" {
   name = "${var.name}-appsync-policy"
