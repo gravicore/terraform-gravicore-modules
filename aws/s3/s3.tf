@@ -117,7 +117,6 @@ variable "ssm_key_id" {
 resource "aws_s3_bucket" "default" {
   for_each = var.buckets
   bucket   = join(var.delimiter, [local.module_prefix, each.key])
-  acl      = each.value.acl
 
   versioning {
     enabled = each.value.versioning
