@@ -1,3 +1,25 @@
+variable "buckets" {
+  type = map(object({
+    name = string
+    acl = optional(string, "private")
+    versioning = optional(bool, true)
+    access_logging = optional(bool, false)
+    logging_bucket = optional(string, "")
+    ssl_requests_only = optional(bool, false)
+    sse_algorithm = optional(string, "AES256")
+    kms_master_key_arn = optional(string, "")
+    cors_rules = optional(list(any), [])
+    lifecycle_rules = optional(list(any), [])
+    create_service_user = optional(bool, false)
+    block_public_acls = optional(bool, true)
+    block_public_policy = optional(bool, true)
+    ignore_public_acls = optional(bool, true)
+    restrict_public_buckets = optional(bool, true)
+  }))
+  description = "Map of S3 bucket configurations"
+  default = {}
+}
+
 variable "s3_bucket_versioning" {
   type        = bool
   description = "S3 bucket versioning enabled?"
@@ -93,23 +115,23 @@ variable "ssm_key_id" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "default" {
-  count  = var.create ? 1 : 0
-  bucket = local.module_prefix
-  acl    = var.s3_bucket_acl
+  for_each = var.buckets
+  bucket   = join(var.delimiter, [local.module_prefix, each.key])
+  acl      = each.value.acl
 
   versioning {
-    enabled = var.s3_bucket_versioning
+    enabled = each.value.versioning
   }
 
   dynamic "logging" {
-    for_each = var.s3_bucket_access_logging ? [1] : []
+    for_each = each.value.access_logging ? [1] : []
     content {
-      target_bucket = var.s3_bucket_access_logging && var.s3_logging_bucket != "" ? var.s3_logging_bucket : ""
-      target_prefix = join(var.delimiter, [var.s3_logging_bucket, "access-logs/"])
+      target_bucket = each.value.access_logging && each.value.logging_bucket != "" ? each.value.logging_bucket : ""
+      target_prefix = join(var.delimiter, [each.value.logging_bucket, "access-logs/"])
     }
   }
 
-  policy = var.s3_bucket_ssl_requests_only == false ? "" : jsonencode(
+  policy = each.value.ssl_requests_only == false ? "" : jsonencode(
     {
       "Version" : "2012-10-17",
       "Statement" : [
@@ -122,8 +144,8 @@ resource "aws_s3_bucket" "default" {
             "s3:*"
           ],
           "Resource" : [
-            "arn:aws:s3:::${local.module_prefix}/*",
-            "arn:aws:s3:::${local.module_prefix}"
+            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, each.key])}/*",
+            "arn:aws:s3:::${join(var.delimiter, [local.module_prefix, each.key])}"
           ],
           "Effect" : "Deny",
           "Condition" : {
@@ -138,14 +160,14 @@ resource "aws_s3_bucket" "default" {
   server_side_encryption_configuration {
     rule {
       apply_server_side_encryption_by_default {
-        sse_algorithm     = var.sse_algorithm
-        kms_master_key_id = var.kms_master_key_arn
+        sse_algorithm     = each.value.sse_algorithm
+        kms_master_key_id = each.value.kms_master_key_arn
       }
     }
   }
 
   dynamic "cors_rule" {
-    for_each = var.cors_rules
+    for_each = each.value.cors_rules
     content {
       allowed_headers = lookup(cors_rule.value, "allowed_headers", null)
       allowed_methods = lookup(cors_rule.value, "allowed_methods", [])
@@ -156,7 +178,7 @@ resource "aws_s3_bucket" "default" {
   }
 
   dynamic "lifecycle_rule" {
-    for_each = var.lifecycle_rules
+    for_each = each.value.lifecycle_rules
     content {
       id                                     = lifecycle_rule.value.id
       prefix                                 = lifecycle_rule.value.prefix
@@ -202,30 +224,30 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_s3_bucket_public_access_block" "default" {
-  count  = var.create ? 1 : 0
-  bucket = aws_s3_bucket.default[0].id
+  for_each = var.buckets
+  bucket   = aws_s3_bucket.default[each.key].id
 
-  block_public_acls       = var.block_public_acls
-  block_public_policy     = var.block_public_policy
-  ignore_public_acls      = var.ignore_public_acls
-  restrict_public_buckets = var.restrict_public_buckets
+  block_public_acls       = each.value.block_public_acls
+  block_public_policy     = each.value.block_public_policy
+  ignore_public_acls      = each.value.ignore_public_acls
+  restrict_public_buckets = each.value.restrict_public_buckets
 }
 
 resource "aws_iam_user" "default" {
-  count = var.create && var.create_s3_service_user ? 1 : 0
-  name  = join(var.delimiter, [local.module_prefix, "access"])
-  tags  = local.tags
+  for_each = { for k, v in var.buckets : k => v if v.create_service_user }
+  name     = join(var.delimiter, [local.module_prefix, each.key, "access"])
+  tags     = local.tags
 }
 
 resource "aws_iam_access_key" "default" {
-  count = var.create && var.create_s3_service_user ? 1 : 0
-  user  = aws_iam_user.default[0].name
+  for_each = { for k, v in var.buckets : k => v if v.create_service_user }
+  user     = aws_iam_user.default[each.key].name
 }
 
 resource "aws_iam_user_policy" "default" {
-  count = var.create && var.create_s3_service_user ? 1 : 0
-  name  = join(var.delimiter, [local.module_prefix, "read", "write"])
-  user  = aws_iam_user.default[0].name
+  for_each = { for k, v in var.buckets : k => v if v.create_service_user }
+  name     = join(var.delimiter, [local.module_prefix, each.key, "read", "write"])
+  user     = aws_iam_user.default[each.key].name
 
   policy = <<EOF
 {
@@ -244,7 +266,7 @@ resource "aws_iam_user_policy" "default" {
         "Action": [
           "s3:ListBucket*"
         ],
-        "Resource": ["${aws_s3_bucket.default[0].arn}"]
+        "Resource": ["${aws_s3_bucket.default[each.key].arn}"]
       },
       {
         "Effect": "Allow",
@@ -253,7 +275,7 @@ resource "aws_iam_user_policy" "default" {
           "s3:GetObject*",
           "s3:DeleteObject"
         ],
-        "Resource": ["${aws_s3_bucket.default[0].arn}/*"]
+        "Resource": ["${aws_s3_bucket.default[each.key].arn}/*"]
       }
     ]
 }
@@ -261,25 +283,25 @@ EOF
 }
 
 resource "aws_ssm_parameter" "service_access_key_id" {
-  count       = var.create && var.create_s3_service_user ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}-service-access-key-id"
-  description = format("%s %s", var.desc_prefix, "S3 service account Access Key ID")
+  for_each    = { for k, v in var.buckets : k => v if v.create_service_user }
+  name        = "/${local.stage_prefix}/${var.name}-${each.key}-service-access-key-id"
+  description = format("%s %s", var.desc_prefix, "S3 service account Access Key ID for bucket ${each.key}")
 
   key_id    = var.ssm_key_id
   type      = "SecureString"
-  value     = aws_iam_access_key.default[0].id
+  value     = aws_iam_access_key.default[each.key].id
   overwrite = true
   tags      = local.tags
 }
 
 resource "aws_ssm_parameter" "service_access_key_secret" {
-  count       = var.create && var.create_s3_service_user ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}-service-access-key-secret"
-  description = format("%s %s", var.desc_prefix, "S3 service account Secret Access Key")
+  for_each    = { for k, v in var.buckets : k => v if v.create_service_user }
+  name        = "/${local.stage_prefix}/${var.name}-${each.key}-service-access-key-secret"
+  description = format("%s %s", var.desc_prefix, "S3 service account Secret Access Key for bucket ${each.key}")
 
   key_id    = var.ssm_key_id
   type      = "SecureString"
-  value     = aws_iam_access_key.default[0].secret
+  value     = aws_iam_access_key.default[each.key].secret
   overwrite = true
   tags      = local.tags
 }
@@ -288,12 +310,12 @@ resource "aws_ssm_parameter" "service_access_key_secret" {
 # Outputs
 # ----------------------------------------------------------------------------------------------------------------------
 
-output "s3_bucket_id" {
-  value       = aws_s3_bucket.default[0].id
-  description = "Id of S3 bucket"
+output "s3_bucket_ids" {
+  value       = { for k, v in aws_s3_bucket.default : k => v.id }
+  description = "Map of bucket names to their IDs"
 }
 
-output "s3_bucket_arn" {
-  value       = aws_s3_bucket.default[0].arn
-  description = "Arn of S3 bucket"
+output "s3_bucket_arns" {
+  value       = { for k, v in aws_s3_bucket.default : k => v.arn }
+  description = "Map of bucket names to their ARNs"
 }
