@@ -107,7 +107,7 @@ resource "aws_api_gateway_rest_api" "this" {
   count = local.counts.default
   tags  = local.tags
   name  = local.module_prefix
-  body = jsonencode({
+  body = var.paths != {} ? jsonencode({
     openapi = "3.0.1"
     info = {
       title   = local.module_prefix
@@ -117,7 +117,7 @@ resource "aws_api_gateway_rest_api" "this" {
     components = {
       securitySchemes = merge({}, local.cognito)
     }
-  })
+  }) : null
 
   endpoint_configuration {
     types            = local.counts.private == 1 ? ["PRIVATE"] : ["REGIONAL"]
