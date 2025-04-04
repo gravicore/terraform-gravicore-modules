@@ -33,7 +33,8 @@ variable "is_fifo" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_sqs_queue" "default" {
-  name                      = "${local.module_prefix}-sqs-queue.fifo"
+  count                     = var.create ? 1 : 0
+  name                      = var.is_fifo ? "${local.module_prefix}-${var.name}-sqs.fifo" : "${local.module_prefix}-${var.name}-sqs"
   delay_seconds             = var.delay_seconds
   fifo_queue                = var.is_fifo
   max_message_size          = var.max_message_size
@@ -48,9 +49,9 @@ resource "aws_sqs_queue" "default" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "sqs_queue_arn" {
-  value = aws_sqs_queue.default.arn
+  value = coalesce(join("", aws_sqs_queue.default[*].arn), "")
 }
 
 output "sqs_queue_id" {
-  value = aws_sqs_queue.default.id
+  value = coalesce(join("", aws_sqs_queue.default[*].id), "")
 }

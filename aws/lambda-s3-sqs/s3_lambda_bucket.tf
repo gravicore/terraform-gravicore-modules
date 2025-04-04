@@ -1,43 +1,42 @@
-
-# # ----------------------------------------------------------------------------------------------------------------------
-# # MODULES / RESOURCES
-# # ----------------------------------------------------------------------------------------------------------------------
-
-
-# resource "aws_s3_bucket" "s3_default" {
-#   bucket = "${local.module_prefix}-s3-lambda-s3"
-# }
-
-# resource "aws_s3_bucket_public_access_block" "s3_default" {
-#   bucket = aws_s3_bucket.s3_default.id
-
-#   block_public_acls       = true
-#   ignore_public_acls      = true
-#   block_public_policy     = true
-#   restrict_public_buckets = true
-# }
-
-# resource "aws_s3_bucket_versioning" "s3_default" {
-#   bucket = aws_s3_bucket.s3_default.id
-
-#   versioning_configuration {
-#     status = "Enabled"
-#   }
-# }
+# ----------------------------------------------------------------------------------------------------------------------
+# VARIABLES / LOCALS / REMOTE STATE
+# ----------------------------------------------------------------------------------------------------------------------
 
 
-# resource "aws_s3_object" "s3_default" {
-#   depends_on = [data.archive_file.s3_default]
+variable "s3_lambda_function_folder" {
+  type        = string
+  description = "Folder path to the Lambda function source code"
+}
 
-#   bucket      = aws_s3_bucket.s3_default.bucket
-#   key         = "${var.s3_lambda_function_name}.zip"
-#   source      = "${var.s3_lambda_function_name}.zip"
-#   source_hash = data.archive_file.s3_default.output_md5
 
-# }
+variable "s3_lambda_function_entrypoint" {
+  type        = string
+  description = "File path to the Lambda function entrypoint (app.py, main.js, etc.)"
+}
 
-# data "archive_file" "s3_default" {
-#   type        = "zip"
-#   output_path = "${var.s3_lambda_function_name}.zip"
-#   source_file = var.s3_file_name
-# }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# MODULES / RESOURCES
+# ----------------------------------------------------------------------------------------------------------------------
+
+# Lookup the existing S3 bucket by name
+data "aws_s3_bucket" "s3_default" {
+  count  = var.create ? 1 : 0
+  bucket = local.module_prefix
+}
+
+resource "aws_s3_object" "s3_default" {
+  count       = var.create ? 1 : 0
+  depends_on  = [data.archive_file.s3_default]
+  bucket      = coalesce(join("", data.aws_s3_bucket.s3_default[*].bucket), "")
+  key         = "${var.name}.zip"
+  source      = "../../../python/${var.name}.zip"
+  source_hash = coalesce(join("", data.archive_file.s3_default[*].output_md5), "")
+}
+
+data "archive_file" "s3_default" {
+  count       = var.create ? 1 : 0
+  type        = "zip"
+  output_path = "../../../python/${var.name}.zip"
+  source_dir  = "../../../python/${var.name}"
+}
