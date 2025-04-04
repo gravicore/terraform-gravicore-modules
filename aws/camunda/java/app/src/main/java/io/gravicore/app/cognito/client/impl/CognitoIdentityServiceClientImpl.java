@@ -75,9 +75,10 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
 
     private ListUsersResponse getUsersResponse(final MutableObject<ListUsersResponse> mutable) {
         return client.listUsers(ListUsersRequest.builder()
-                .paginationToken(mutable != null && mutable.getValue() != null ? mutable.getValue().paginationToken() : null)
+                .paginationToken(
+                        mutable != null && mutable.getValue() != null ? mutable.getValue().paginationToken() : null)
                 .userPoolId(poolId)
-            .build());
+                .build());
     }
 
     private List<CognitoUser> getUsersConvert(final MutableObject<ListUsersResponse> mutable) {
@@ -85,7 +86,7 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
         return response.users()
                 .stream()
                 .map(userType -> this.toOktaUser(userType.username(), userType.attributes()))
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -105,7 +106,7 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
         return client.listGroups(ListGroupsRequest.builder()
                 .nextToken(mutable != null && mutable.getValue() != null ? mutable.getValue().nextToken() : null)
                 .userPoolId(poolId)
-            .build());
+                .build());
     }
 
     private List<CognitoGroup> getGroupsConvert(final MutableObject<ListGroupsResponse> mutable) {
@@ -113,7 +114,7 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
         return response.groups()
                 .stream()
                 .map(this::toOktaGroup)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -121,14 +122,15 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
         final AdminGetUserResponse response = client.adminGetUser(AdminGetUserRequest.builder()
                 .username(userId)
                 .userPoolId(poolId)
-            .build());
+                .build());
         return this.toOktaUser(response.username(), response.userAttributes());
     }
 
     @Override
     public List<CognitoUser> getUsersByGroupId(final String groupId) {
         return this.retry(() -> {
-            final MutableObject<ListUsersInGroupResponse> mutable = new MutableObject<>(this.getUsersByGroupIdResponse(null, groupId));
+            final MutableObject<ListUsersInGroupResponse> mutable = new MutableObject<>(
+                    this.getUsersByGroupIdResponse(null, groupId));
             final List<CognitoUser> result = new ArrayList<>(this.getUsersByGroupIdConvert(mutable));
             while (mutable.getValue().nextToken() != null) {
                 mutable.setValue(this.getUsersByGroupIdResponse(mutable, groupId));
@@ -138,12 +140,13 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
         });
     }
 
-    private ListUsersInGroupResponse getUsersByGroupIdResponse(final MutableObject<ListUsersInGroupResponse> mutable, final String groupId) {
+    private ListUsersInGroupResponse getUsersByGroupIdResponse(final MutableObject<ListUsersInGroupResponse> mutable,
+            final String groupId) {
         return client.listUsersInGroup(ListUsersInGroupRequest.builder()
                 .nextToken(mutable != null && mutable.getValue() != null ? mutable.getValue().nextToken() : null)
                 .groupName(groupId)
                 .userPoolId(poolId)
-            .build());
+                .build());
     }
 
     private List<CognitoUser> getUsersByGroupIdConvert(final MutableObject<ListUsersInGroupResponse> mutable) {
@@ -151,13 +154,14 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
         return response.users()
                 .stream()
                 .map(userType -> this.toOktaUser(userType.username(), userType.attributes()))
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<CognitoGroup> getUserGroups(final String userId) {
         return this.retry(() -> {
-            final MutableObject<AdminListGroupsForUserResponse> mutable = new MutableObject<>(this.getUserGroupsResponse(null, userId));
+            final MutableObject<AdminListGroupsForUserResponse> mutable = new MutableObject<>(
+                    this.getUserGroupsResponse(null, userId));
             final List<CognitoGroup> result = new ArrayList<>(this.getUserGroupsConvert(mutable));
             while (mutable.getValue().nextToken() != null) {
                 mutable.setValue(this.getUserGroupsResponse(mutable, userId));
@@ -167,12 +171,13 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
         });
     }
 
-    private AdminListGroupsForUserResponse getUserGroupsResponse(final MutableObject<AdminListGroupsForUserResponse> mutable, final String userId) {
+    private AdminListGroupsForUserResponse getUserGroupsResponse(
+            final MutableObject<AdminListGroupsForUserResponse> mutable, final String userId) {
         return client.adminListGroupsForUser(AdminListGroupsForUserRequest.builder()
                 .nextToken(mutable != null && mutable.getValue() != null ? mutable.getValue().nextToken() : null)
                 .username(userId)
                 .userPoolId(poolId)
-            .build());
+                .build());
     }
 
     private List<CognitoGroup> getUserGroupsConvert(final MutableObject<AdminListGroupsForUserResponse> mutable) {
@@ -180,30 +185,30 @@ public class CognitoIdentityServiceClientImpl implements CognitoIdentityServiceC
         return response.groups()
                 .stream()
                 .map(this::toOktaGroup)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     private CognitoGroup toOktaGroup(final GroupType group) {
         return CognitoGroup.builder()
-            .id(group.groupName())
-            .profile(CognitoGroup.Profile.builder()
-                .name(group.groupName())
-                .description(group.description())
-                .build())
-            .build();
+                .id(group.groupName())
+                .profile(CognitoGroup.Profile.builder()
+                        .name(group.groupName())
+                        .description(group.description())
+                        .build())
+                .build();
     }
 
     private CognitoUser toOktaUser(final String username, final List<AttributeType> attributeTypes) {
         final Map<String, String> attributes = this.toAttributes(attributeTypes);
         return CognitoUser.builder()
-            .id(username)
-            .profile(CognitoUser.Profile.builder()
-                .email(attributes.get(EMAIL))
-                .login(attributes.get(LOGIN))
-                .firstName(attributes.get(FIRST_NAME))
-                .lastName(attributes.get(LAST_NAME))
-                .build())
-            .build();
+                .id(username)
+                .profile(CognitoUser.Profile.builder()
+                        .email(attributes.get(EMAIL))
+                        .login(attributes.get(LOGIN))
+                        .firstName(attributes.get(FIRST_NAME))
+                        .lastName(attributes.get(LAST_NAME))
+                        .build())
+                .build();
     }
 
     private Map<String, String> toAttributes(final List<AttributeType> attributeTypes) {

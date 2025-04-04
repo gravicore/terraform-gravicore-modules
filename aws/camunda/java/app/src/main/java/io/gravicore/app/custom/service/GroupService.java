@@ -23,15 +23,15 @@ public class GroupService {
                 .id(id)
                 .name(id)
                 .type("")
-            .build();
+                .build();
     }
 
-    private CustomGroup fromOktaGroup(final CognitoGroup cognitoGroup){
+    private CustomGroup fromOktaGroup(final CognitoGroup cognitoGroup) {
         return CustomGroup.builder()
                 .id(cognitoGroup.getId())
                 .name(cognitoGroup.getRoleName())
                 .type("")
-            .build();
+                .build();
     }
 
     public Collection<CustomGroup> findAll() {
@@ -39,15 +39,13 @@ public class GroupService {
                 .getGroups()
                 .stream()
                 .map(this::fromOktaGroup)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
-
-
-    public List<CustomGroup> getGroupsForUser(final String userId){
+    public List<CustomGroup> getGroupsForUser(final String userId) {
         final List<CognitoGroup> cognitoGroups = this.cognitoIdentityServiceClient.getUserGroups(userId);
         return cognitoGroups.stream()
                 .map(this::fromOktaGroup)
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 }
