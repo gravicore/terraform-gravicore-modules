@@ -31,7 +31,7 @@ variable "domain" {
 variable "paths" {
   type = map(map(object({
     lambda      = optional(string, "")
-    authorizers = optional(list(string), [])
+    authorizers = optional(map(list(string)), {})
   })))
   default     = {}
   description = "The paths to use for the API Gateway. The key is the path and the value is the configuration. The configuration is a map with the following keys: 'lambda' (the ARN of the Lambda function to invoke) and 'authorizers' (a list of authorizers to use for the path)."
@@ -91,7 +91,7 @@ locals {
             content = { "application/json" = {} }
           }
         }
-        security = [for authorizer in try(mv.authorizers, []) : { "${local.module_prefix}-${authorizer}" : [] }]
+        security = [for key, scopes in try(mv.authorizers, []) : { "${local.module_prefix}-${key}" : scopes }]
         x-amazon-apigateway-integration = {
           uri                 = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${mv.lambda}/invocations"
           httpMethod          = "POST"
