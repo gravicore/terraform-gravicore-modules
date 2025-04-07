@@ -1,18 +1,18 @@
 variable "bucket_inventory" {
   type = map(map(object({
-    enabled = optional(bool, true)
-    frequency = optional(string, "Daily")
-    filter = optional(string, null)
-    included_object_versions = optional(string, "All")
-    optional_fields = optional(list(string), null)
-    destination_bucket_format = string
+    enabled                       = optional(bool, true)
+    frequency                     = optional(string, "Daily")
+    filter                        = optional(string, null)
+    included_object_versions      = optional(string, "All")
+    optional_fields               = optional(list(string), null)
+    destination_bucket_format     = string
     destination_bucket_bucket_arn = string
-    destination_bucket_prefix = optional(string, null)
-    destination_account_id = optional(string, null)
-    destination_bucket_sse_s3 = optional(bool, null)
-    destination_bucket_sse_kms = optional(string, null)
+    destination_bucket_prefix     = optional(string, null)
+    destination_account_id        = optional(string, null)
+    destination_bucket_sse_s3     = optional(bool, null)
+    destination_bucket_sse_kms    = optional(string, null)
   })))
-  default = {}
+  default     = {}
   description = <<EOF
 bucket_inventory = {
   <bucket_key> = {
@@ -75,9 +75,9 @@ resource "aws_s3_bucket_inventory" "default" {
     }
   ]...)
 
-  bucket   = aws_s3_bucket.default[each.value.bucket_key].id
-  name     = each.value.inventory.frequency
-  enabled  = lookup(each.value.inventory, "enabled", true)
+  bucket  = aws_s3_bucket.default[each.value.bucket_key].id
+  name    = each.value.inventory.frequency
+  enabled = lookup(each.value.inventory, "enabled", true)
 
   included_object_versions = lookup(each.value.inventory, "included_object_versions", "All")
 

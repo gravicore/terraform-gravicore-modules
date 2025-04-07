@@ -1,23 +1,23 @@
 variable "buckets" {
   type = map(object({
-    name = string
-    acl = optional(string, "private")
-    versioning = optional(bool, true)
-    access_logging = optional(bool, false)
-    logging_bucket = optional(string, "")
-    ssl_requests_only = optional(bool, false)
-    sse_algorithm = optional(string, "AES256")
-    kms_master_key_arn = optional(string, "")
-    cors_rules = optional(list(any), [])
-    lifecycle_rules = optional(list(any), [])
-    create_service_user = optional(bool, false)
-    block_public_acls = optional(bool, true)
-    block_public_policy = optional(bool, true)
-    ignore_public_acls = optional(bool, true)
+    name                    = string
+    acl                     = optional(string, "private")
+    versioning              = optional(bool, true)
+    access_logging          = optional(bool, false)
+    logging_bucket          = optional(string, "")
+    ssl_requests_only       = optional(bool, false)
+    sse_algorithm           = optional(string, "AES256")
+    kms_master_key_arn      = optional(string, "")
+    cors_rules              = optional(list(any), [])
+    lifecycle_rules         = optional(list(any), [])
+    create_service_user     = optional(bool, false)
+    block_public_acls       = optional(bool, true)
+    block_public_policy     = optional(bool, true)
+    ignore_public_acls      = optional(bool, true)
     restrict_public_buckets = optional(bool, true)
   }))
   description = "Map of S3 bucket configurations"
-  default = {}
+  default     = {}
 }
 
 variable "s3_bucket_versioning" {
