@@ -150,8 +150,9 @@ variable "server_version" {
 variable "allowed_ip_addresses" {
   description = "List of allowed IP addresses for the PostgreSQL Flexible Server."
   type = list(object({
-    rule_name = string
-    ip_prefix = string
+    rule_name        = string
+    start_ip_address = string
+    end_ip_address   = string
   }))
   default = null
 }

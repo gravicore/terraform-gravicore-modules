@@ -85,8 +85,8 @@ resource "azurerm_mssql_firewall_rule" "default" {
   name      = var.allowed_ip_addresses[count.index]["rule_name"]
   server_id = one(azurerm_mssql_server.default[*].id)
 
-  start_ip_address = cidrhost(var.allowed_ip_addresses[count.index]["ip_prefix"], 0)
-  end_ip_address   = cidrhost(var.allowed_ip_addresses[count.index]["ip_prefix"], -1)
+  start_ip_address = var.allowed_ip_addresses[count.index]["start_ip_address"]
+  end_ip_address   = var.allowed_ip_addresses[count.index]["end_ip_address"]
 }
 
 resource "azurerm_mssql_elasticpool" "default" {
