@@ -1,28 +1,27 @@
-
 terraform {
   required_version = ">= 0.13"
 
   required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = ">= 2.26"
+    gravicore = {
+      source  = "gravicore/gravicore"
+      version = ">= 1.0.8"
     }
   }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Module Standard Variables 
+# Module Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
 
 variable "name" {
   type        = string
-  default     = "s3-cdn"
+  default     = ""
   description = "The name of the module"
 }
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/s3-cdn"
+  default     = "gravicore/terraform-gravicore-modules/aws/appsync/api"
   description = "The owner and name of the Terraform module"
 }
 

@@ -382,9 +382,9 @@ resource "aws_instance" "default" {
 
   tags = merge(
     local.tags,
-    map(
-      "Name", var.instance_count == 1 ? local.module_prefix : join("-", [local.module_prefix, count.index + 1]),
-    )
+    {
+      Name = var.instance_count == 1 ? local.module_prefix : join("-", [local.module_prefix, count.index + 1]),
+    }
   )
   lifecycle {
     ignore_changes = [

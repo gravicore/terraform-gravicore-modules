@@ -672,11 +672,11 @@ resource "aws_lambda_function" "nlb_tg_register" {
   memory_size = 128
 
   environment {
-    variables = (merge(local.tags, map(
-      "aws_region", "${var.aws_region}",
-      "rds_master_instance_id", "${var.replicate_source_db[0]}",
-      "nlb_target_group", "${aws_lb_target_group.nlb[0].name}",
-    )))
+    variables = (merge(local.tags, {
+      "aws_region"             = "${var.aws_region}"
+      "rds_master_instance_id" = "${var.replicate_source_db[0]}"
+      "nlb_target_group"       = "${aws_lb_target_group.nlb[0].name}"
+    }))
   }
 
   tags = local.tags

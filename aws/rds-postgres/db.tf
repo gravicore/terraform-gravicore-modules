@@ -314,14 +314,14 @@ data "aws_kms_key" "parameter_store_key" {
 
 module "rds_ssm_param_secret" {
   enabled        = var.password == "" ? "true" : "false"
-  source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
+  source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.4.2"
   kms_arn        = "alias/parameter_store_key"
   parameter_read = ["/${local.stage_prefix}/${var.name}-password"]
 }
 
 module "rds_ssm_param_username" {
   enabled        = var.username == "" ? "true" : "false"
-  source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.1.5"
+  source         = "git::https://github.com/cloudposse/terraform-aws-ssm-parameter-store?ref=0.4.2"
   parameter_read = ["/${local.stage_prefix}/${var.name}-username"]
 }
 

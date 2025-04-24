@@ -64,7 +64,7 @@ resource "aws_s3_bucket_inventory" "default" {
   }
 
   dynamic "filter" {
-    for_each = lookup(each.value, "filter", null) != null ? list(lookup(each.value, "filter", "")) : []
+    for_each = lookup(each.value, "filter", null) != null ? [lookup(each.value, "filter", "")] : []
     content {
       prefix = filter.value
     }
@@ -77,7 +77,7 @@ resource "aws_s3_bucket_inventory" "default" {
       prefix     = lookup(each.value, "destination_bucket_prefix", null)
       account_id = lookup(each.value, "destination_account_id", null)
       dynamic "encryption" {
-        for_each = lookup(each.value, "destination_bucket_sse_kms", null) != null ? list(lookup(each.value, "destination_bucket_sse_kms", "")) : []
+        for_each = lookup(each.value, "destination_bucket_sse_kms", null) != null ? [lookup(each.value, "destination_bucket_sse_kms", "")] : []
         content {
           sse_kms {
             key_id = encryption.value
@@ -85,7 +85,7 @@ resource "aws_s3_bucket_inventory" "default" {
         }
       }
       dynamic "encryption" {
-        for_each = lookup(each.value, "destination_bucket_sse_s3", null) ? list(lookup(each.value, "destination_bucket_sse_s3", "")) : []
+        for_each = lookup(each.value, "destination_bucket_sse_s3", null) ? [lookup(each.value, "destination_bucket_sse_s3", "")] : []
         content {
           sse_s3 {}
         }

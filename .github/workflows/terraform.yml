@@ -6,7 +6,7 @@ jobs:
     name: "Terraform"
     runs-on: ubuntu-latest
     container:
-      image: alpine/terragrunt:0.13.6
+      image: alpine/terragrunt:1.5.7
     steps:
       - name: Checkout
         uses: actions/checkout@v2

@@ -8,32 +8,64 @@ variable "parameters" {
   default     = []
 }
 
+variable "merge" {
+  type = object({
+    source = string
+    target = string
+    ignore = optional(list(string), [])
+  })
+  default = null
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "params" {
-  for_each = var.create ? toset(var.parameters) : []
+data "aws_ssm_parameter" "source_params" {
+  for_each = var.create ? toset(local.source_parameters) : []
   name     = split(":::", each.value)[0]
 }
 
 locals {
-  string_parameters = { for k, v in data.aws_ssm_parameter.params : k => v if v.type == "String" }
-  secret_parameters = { for k, v in data.aws_ssm_parameter.params : k => v if v.type == "SecureString" }
-  list_parameters   = { for k, v in data.aws_ssm_parameter.params : k => merge(v, { value = split(",", v.value) }) if v.type == "StringList" }
+  source_parameters = var.merge != null ? [for v in var.parameters : replace(v, var.merge.target, var.merge.source)] : var.parameters
+
+  source_string_parameters = { for k, v in data.aws_ssm_parameter.source_params : k => v if v.type == "String" }
+  source_secret_parameters = { for k, v in data.aws_ssm_parameter.source_params : k => v if v.type == "SecureString" }
+  source_list_parameters   = { for k, v in data.aws_ssm_parameter.source_params : k => merge(v, { value = split(",", v.value) }) if v.type == "StringList" }
+
+  targets = { for k, v in jsondecode(
+    var.merge != null ? jsonencode(merge(
+      local.source_string_parameters,
+      local.source_list_parameters,
+      local.source_secret_parameters,
+    )) : jsonencode({})) : replace(k, var.merge.source, var.merge.target) => v
+  if try(contains(var.merge.ignore, replace(k, var.merge.source, var.merge.target)) == false, false) }
+
+  target_parameters = try(nonsensitive([for k, v in local.targets : k]), [])
+
+  target_string_parameters = { for k, v in data.aws_ssm_parameter.target_params : k => v if v.type == "String" }
+  target_secret_parameters = { for k, v in data.aws_ssm_parameter.target_params : k => v if v.type == "SecureString" }
+  target_list_parameters   = { for k, v in data.aws_ssm_parameter.target_params : k => merge(v, { value = split(",", v.value) }) if v.type == "StringList" }
+
+  string_parameters = var.merge != null ? local.target_string_parameters : local.source_string_parameters
+  secret_parameters = var.merge != null ? local.target_secret_parameters : local.source_secret_parameters
+  list_parameters   = var.merge != null ? local.target_list_parameters : local.source_list_parameters
 }
 
-# resource "aws_ssm_parameter" "default" {
-#   count           = "${var.enabled == "true" ? length(var.parameter_write) : 0}"
-#   name            = "${lookup(var.parameter_write[count.index], "name")}"
-#   description     = "${lookup(var.parameter_write[count.index], "description", lookup(var.parameter_write[count.index], "name"))}"
-#   type            = "${lookup(var.parameter_write[count.index], "type", "SecureString")}"
-#   key_id          = "${lookup(var.parameter_write[count.index], "type", "SecureString") == "SecureString" && length(var.kms_arn) > 0 ? var.kms_arn : ""}"
-#   value           = "${lookup(var.parameter_write[count.index], "value")}"
-#   overwrite       = "${lookup(var.parameter_write[count.index], "overwrite", "false")}"
-#   allowed_pattern = "${lookup(var.parameter_write[count.index], "allowed_pattern", "")}"
-#   tags            = "${var.tags}"
-# }
+resource "aws_ssm_parameter" "target" {
+  for_each  = try(nonsensitive(local.targets), {})
+  name      = each.key
+  type      = each.value.type
+  value     = each.value.type == "StringList" ? join(",", tolist(each.value.value)) : tostring(each.value.value)
+  overwrite = true
+  tags      = local.tags
+}
+
+data "aws_ssm_parameter" "target_params" {
+  for_each   = var.create ? toset(var.parameters) : []
+  name       = split(":::", each.value)[0]
+  depends_on = [aws_ssm_parameter.target]
+}
 
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS

@@ -198,7 +198,7 @@ EOF
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "ds" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/ds?ref=0.38.0"
+  source      = "../ds"
   create      = var.create && var.directory_id == "" ? true : false
   name        = var.name
   tags        = local.tags

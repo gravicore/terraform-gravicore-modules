@@ -7,9 +7,9 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 4.67.0"
     }
-    template = "~> 2.0"
-    local    = "~> 1.2"
-    null     = "~> 2.0"
+    template = ">= 2.2"
+    local    = ">= 2.5"
+    null     = ">= 3.2"
   }
 }
 

@@ -43,8 +43,8 @@ variable "zone_force_destroy" {
 }
 
 locals {
-  domain_name     = replace(join(".", compact(tolist(var.stage, var.parent_domain_name))), "prd.", "")
-  aws_domain_name = replace(join(".", compact(tolist(var.stage, var.aws_subdomain_name, var.parent_domain_name))), "prd.", "")
+  domain_name     = replace(join(".", compact([var.stage, var.parent_domain_name])), "prd.", "")
+  aws_domain_name = replace(join(".", compact([var.stage, var.aws_subdomain_name, var.parent_domain_name])), "prd.", "")
 }
 
 variable "records_a" {
@@ -126,7 +126,7 @@ resource "aws_route53_zone" "dns_public" {
   count   = var.create ? 1 : 0
   name    = local.domain_name
   tags    = local.tags
-  comment = join(" ", list(var.desc_prefix, format("Public DNS zone for %s", local.domain_name)))
+  comment = join(" ", [var.desc_prefix, format("Public DNS zone for %s", local.domain_name)])
 
   force_destroy = var.zone_force_destroy
 }
@@ -288,7 +288,7 @@ resource "aws_route53_zone" "dns_aws" {
   count   = var.create && var.aws_subdomain_name != "" ? 1 : 0
   name    = local.aws_domain_name
   tags    = local.tags
-  comment = join(" ", list(var.desc_prefix, format("AWS Public DNS zone for %s", local.aws_domain_name)))
+  comment = join(" ", [var.desc_prefix, format("AWS Public DNS zone for %s", local.aws_domain_name)])
 
   force_destroy = var.zone_force_destroy
 }
