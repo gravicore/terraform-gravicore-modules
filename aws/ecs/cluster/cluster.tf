@@ -6,12 +6,15 @@ variable "task" {
   type = object({
     certificate_arn    = optional(string, "")
     execution_role_arn = optional(string, "")
-    role_arn           = optional(string, "")
+    task_role_arn      = optional(string, "")
     security_group_ids = optional(list(string), [])
-    subnet_ids         = optional(list(string), [])
-    vpc_id             = optional(string, "")
-    zone_id            = optional(string, "")
-    zone_name          = optional(string, "")
+    subnet_ids = optional(object({
+      private = optional(list(string), [])
+      public  = optional(list(string), [])
+    }), {})
+    vpc_id    = optional(string, "")
+    zone_id   = optional(string, "")
+    zone_name = optional(string, "")
   })
   default = {}
 }
