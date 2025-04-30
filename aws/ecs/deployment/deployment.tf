@@ -8,12 +8,15 @@ variable "cluster" {
     task = optional(object({
       certificate_arn    = optional(string, "")
       execution_role_arn = optional(string, "")
-      role_arn           = optional(string, "")
+      task_role_arn      = optional(string, "")
       security_group_ids = optional(list(string), [])
-      subnet_ids         = optional(list(string), [])
-      vpc_id             = optional(string, "")
-      zone_id            = optional(string, "")
-      zone_name          = optional(string, "")
+      subnet_ids = optional(object({
+        private = optional(list(string), [])
+        public  = optional(list(string), [])
+      }), {})
+      vpc_id    = optional(string, "")
+      zone_id   = optional(string, "")
+      zone_name = optional(string, "")
     }), {})
   })
   default = {}
@@ -23,9 +26,11 @@ variable "services" {
   description = "the services to deploy, they can be background tasks or load balanced"
   type = map(object({
     lb = optional(object({
-      name     = optional(string, null)
-      port     = optional(number, 80)
-      protocol = optional(string, "HTTP")
+      type      = optional(string, "private")
+      name      = optional(string, null)
+      port      = optional(number, 80)
+      protocol  = optional(string, "HTTP")
+      hostnames = optional(list(string), [])
       healthcheck = optional(object({
         path                = optional(string, "/")
         interval            = optional(number, 30)
@@ -55,7 +60,7 @@ variable "services" {
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
 locals {
-  lb = { for k, v in var.services : k => v if v.lb != null }
+  lb = { for k, v in var.services : k => v if v.lb != null && var.create }
 }
 
 #----------------------------
@@ -72,7 +77,7 @@ resource "aws_ecs_task_definition" "this" {
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   execution_role_arn       = var.cluster.task.execution_role_arn
-  task_role_arn            = var.cluster.task.role_arn
+  task_role_arn            = var.cluster.task.task_role_arn
   cpu                      = each.value.task.cpu
   memory                   = each.value.task.memory
   tags                     = local.tags
@@ -127,7 +132,7 @@ resource "aws_ecs_service" "this" {
 
   network_configuration {
     security_groups  = var.cluster.task.security_group_ids
-    subnets          = var.cluster.task.subnet_ids
+    subnets          = var.cluster.task.subnet_ids["private"]
     assign_public_ip = false
   }
 
@@ -153,10 +158,10 @@ resource "aws_ecs_service" "this" {
 resource "aws_lb" "this" {
   for_each           = var.create ? local.lb : {}
   name               = "${local.stage_prefix}-${coalesce(each.value.lb.name, each.key)}"
-  internal           = true
+  internal           = each.value.lb.type == "public" ? false : true
   load_balancer_type = "application"
   security_groups    = var.cluster.task.security_group_ids
-  subnets            = var.cluster.task.subnet_ids
+  subnets            = var.cluster.task.subnet_ids["${each.value.lb.type}"]
   tags               = local.tags
 
   enable_deletion_protection = false
@@ -228,6 +233,20 @@ resource "aws_route53_record" "this" {
   allow_overwrite = true
 }
 
+resource "aws_route53_record" "hostnames" {
+  for_each = var.create ? merge([for k, v in local.lb : {
+    for hostname in v.lb.hostnames : "${k}-${hostname}" => {
+      lb       = k
+      hostname = hostname
+  } }]...) : {}
+  zone_id         = var.cluster.task.zone_id
+  name            = join(".", [each.value.hostname, var.cluster.task.zone_name])
+  type            = "CNAME"
+  ttl             = 30
+  records         = [aws_lb.this[each.value.lb].dns_name]
+  allow_overwrite = true
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
@@ -236,6 +255,12 @@ output "services" {
     task    = aws_ecs_task_definition.this[k].family
     service = aws_ecs_service.this[k].name
     lb      = v.lb != null ? aws_lb.this[k].arn : null
-    domain  = v.lb != null ? aws_route53_record.this[k].name : null
+    hostnames = v.lb != null ? concat(
+      [aws_route53_record.this[k].name],
+      flatten([
+        for k, v in local.lb : [
+          for hostname in v.lb.hostnames : aws_route53_record.hostnames["${k}-${hostname}"].name
+        ]
+    ])) : []
   } if var.create }
 }
