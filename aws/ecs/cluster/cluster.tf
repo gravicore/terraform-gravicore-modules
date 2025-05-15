@@ -4,7 +4,13 @@
 variable "task" {
   description = "the configuration shared by all tasks in the cluster"
   type = object({
-    certificate_arn    = optional(string, "")
+    certificate_arn = optional(string, "")
+    datadog = optional(object({
+      ssm_key     = string
+      enable_log  = optional(bool, true)
+      enable_apm  = optional(bool, false)
+      environment = optional(map(string), {})
+    }), null)
     execution_role_arn = optional(string, "")
     task_role_arn      = optional(string, "")
     security_group_ids = optional(list(string), [])

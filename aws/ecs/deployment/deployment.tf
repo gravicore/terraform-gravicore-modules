@@ -6,7 +6,13 @@ variable "cluster" {
   type = object({
     name = optional(string, "")
     task = optional(object({
-      certificate_arn    = optional(string, "")
+      certificate_arn = optional(string, "")
+      datadog = optional(object({
+        ssm_key     = string
+        enable_log  = optional(bool, true)
+        enable_apm  = optional(bool, false)
+        environment = optional(map(string), {})
+      }), null)
       execution_role_arn = optional(string, "")
       task_role_arn      = optional(string, "")
       security_group_ids = optional(list(string), [])
@@ -59,21 +65,16 @@ variable "services" {
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
-locals {
-  lb = { for k, v in var.services : k => v if v.lb != null && var.create }
-}
-
-#----------------------------
 resource "aws_cloudwatch_log_group" "this" {
-  for_each          = var.create ? var.services : {}
-  name              = "/aws/ecs/${local.module_prefix}-${each.key}"
+  for_each          = local.services
+  name              = "/aws/ecs/${each.value.family}"
   retention_in_days = each.value.task.retention
   tags              = local.tags
 }
 
 resource "aws_ecs_task_definition" "this" {
-  for_each                 = var.create ? var.services : {}
-  family                   = "${local.module_prefix}-${each.key}"
+  for_each                 = local.services
+  family                   = each.value.family
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   execution_role_arn       = var.cluster.task.execution_role_arn
@@ -82,33 +83,75 @@ resource "aws_ecs_task_definition" "this" {
   memory                   = each.value.task.memory
   tags                     = local.tags
 
-  container_definitions = jsonencode([{
-    name  = "${local.module_prefix}-${each.key}"
-    image = each.value.task.image
+  container_definitions = jsonencode(concat([{
+    name           = each.value.family
+    image          = each.value.task.image
+    entryPoint     = each.value.task.entrypoint
+    command        = each.value.task.command
+    essential      = true
+    cpu            = 0
+    systemControls = []
+    volumesFrom    = []
+    mountPoints    = []
+    dockerLabels = local.dd_enable ? {
+      "com.datadoghq.service_name" = each.value.family
+      "com.datadoghq.ad.tags" = jsonencode(concat(local.dd_tags, [
+        "application:${each.value.family}",
+        "service:${each.value.family}",
+      ]))
+    } : {}
     portMappings = [for p in each.value.task.ports : {
       hostPort      = tonumber(split("/", p)[0])
       containerPort = tonumber(split("/", p)[0])
       protocol      = try(split("/", p)[1], "tcp")
     }]
-    environment = [for var, val in each.value.task.environment : {
-      name  = var
-      value = val
-    } if val != "" && val != null]
-    entryPoint = each.value.task.entrypoint
-    command    = each.value.task.command
-    logConfiguration = {
-      logDriver = "awslogs"
+    secrets = [for var, val in each.value.task.secrets : {
+      name      = var
+      valueFrom = val
+    }]
+    environment = [
+      for name, value in merge(each.value.task.environment, local.dd_enable ? merge({
+        DD_ENV     = var.stage
+        DD_SERVICE = each.value.family
+        DD_TAGS = join(",", concat(local.dd_tags, [
+          "application:${each.value.family}",
+          "service:${each.value.family}",
+        ]))
+        DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL = tostring(local.dd_enable_log)
+        DD_LOGS_ENABLED                      = tostring(local.dd_enable_log)
+        DD_APM_ENABLED                       = tostring(local.dd_enable_apm)
+      }, var.cluster.task.datadog.environment) : {}) : { name = name, value = value }
+      if value != "" && value != null
+    ]
+    logConfiguration = local.dd_enable_log ? {
+      logDriver = "awsfirelens",
+      secretOptions = [{
+        name      = "apikey"
+        valueFrom = var.cluster.task.datadog.ssm_key
+      }]
+      options = {
+        Name           = "datadog",
+        Host           = "http-intake.logs.datadoghq.com",
+        dd_service     = each.value.family,
+        dd_source      = "fargate",
+        dd_message_key = "log",
+        TLS            = "on",
+        provider       = "ecs"
+        dd_tags = join(",", concat(local.dd_tags, [
+          "application:${each.value.family}",
+          "service:${each.value.family}",
+        ])),
+      }
+      } : {
+      logDriver     = "awslogs"
+      secretOptions = []
       options = {
         "awslogs-group"         = aws_cloudwatch_log_group.this[each.key].name
         "awslogs-region"        = var.aws_region
         "awslogs-stream-prefix" = "ecs"
       }
     }
-    secrets = [for var, val in each.value.task.secrets : {
-      name      = var
-      valueFrom = val
-    }]
-  }])
+  }], local.datadog))
 
   runtime_platform {
     operating_system_family = "LINUX"
@@ -117,8 +160,8 @@ resource "aws_ecs_task_definition" "this" {
 }
 
 resource "aws_ecs_service" "this" {
-  for_each            = var.create ? var.services : {}
-  name                = "${local.module_prefix}-${each.key}"
+  for_each            = local.services
+  name                = each.value.family
   cluster             = var.cluster.name
   task_definition     = aws_ecs_task_definition.this[each.key].arn
   desired_count       = 1
@@ -156,7 +199,7 @@ resource "aws_ecs_service" "this" {
 }
 
 resource "aws_lb" "this" {
-  for_each           = var.create ? local.lb : {}
+  for_each           = local.lb_services
   name               = "${local.stage_prefix}-${coalesce(each.value.lb.name, each.key)}"
   internal           = each.value.lb.type == "public" ? false : true
   load_balancer_type = "application"
@@ -168,7 +211,7 @@ resource "aws_lb" "this" {
 }
 
 resource "aws_lb_target_group" "this" {
-  for_each    = var.create ? local.lb : {}
+  for_each    = local.lb_services
   name        = "${local.stage_prefix}-${coalesce(each.value.lb.name, each.key)}"
   port        = each.value.lb.port
   protocol    = each.value.lb.protocol
@@ -190,7 +233,7 @@ resource "aws_lb_target_group" "this" {
 }
 
 resource "aws_lb_listener" "http" {
-  for_each          = { for k, v in local.lb : k => v if v.lb.protocol == "HTTP" }
+  for_each          = local.lb_http_services
   load_balancer_arn = aws_lb.this[each.key].arn
   port              = each.value.lb.port
   protocol          = "HTTP"
@@ -207,7 +250,7 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_lb_listener" "https" {
-  for_each          = { for k, v in local.lb : k => v if v.lb.protocol == "HTTP" }
+  for_each          = local.lb_http_services
   load_balancer_arn = aws_lb.this[each.key].arn
   port              = 443
   protocol          = "HTTPS"
@@ -224,7 +267,7 @@ resource "aws_lb_listener" "https" {
 }
 
 resource "aws_route53_record" "this" {
-  for_each        = var.create ? local.lb : {}
+  for_each        = local.lb_services
   zone_id         = var.cluster.task.zone_id
   name            = join(".", [coalesce(each.value.lb.name, each.key), var.cluster.task.zone_name])
   type            = "CNAME"
@@ -234,9 +277,9 @@ resource "aws_route53_record" "this" {
 }
 
 resource "aws_route53_record" "hostnames" {
-  for_each = var.create ? merge([for k, v in local.lb : {
-    for hostname in v.lb.hostnames : "${k}-${hostname}" => {
-      lb       = k
+  for_each = var.create ? merge([for key, value in local.lb_services : {
+    for hostname in value.lb.hostnames : "${key}-${hostname}" => {
+      lb       = key
       hostname = hostname
   } }]...) : {}
   zone_id         = var.cluster.task.zone_id
@@ -247,19 +290,37 @@ resource "aws_route53_record" "hostnames" {
   allow_overwrite = true
 }
 
+resource "aws_iam_role_policy" "datadog" {
+  count = var.create && var.cluster.task.datadog != null ? 1 : 0
+  name  = "${local.module_prefix}-datadog"
+  role  = split("/", var.cluster.task.task_role_arn)[1]
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "ecs:ListClusters",
+        "ecs:ListContainerInstances",
+        "ecs:DescribeContainerInstances",
+      ],
+      Resource = "*"
+    }]
+  })
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
 output "services" {
-  value = { for k, v in var.services : k => {
-    task    = aws_ecs_task_definition.this[k].family
-    service = aws_ecs_service.this[k].name
-    lb      = v.lb != null ? aws_lb.this[k].arn : null
-    hostnames = v.lb != null ? concat(
-      [aws_route53_record.this[k].name],
+  value = { for key, value in var.services : key => {
+    task    = aws_ecs_task_definition.this[key].family
+    service = aws_ecs_service.this[key].name
+    lb      = value.lb != null ? aws_lb.this[key].arn : null
+    hostnames = value.lb != null ? concat(
+      [aws_route53_record.this[key].name],
       flatten([
-        for k, v in local.lb : [
-          for hostname in v.lb.hostnames : aws_route53_record.hostnames["${k}-${hostname}"].name
+        for lb_key, lb_value in local.lb_services : [
+          for hostname in lb_value.lb.hostnames : aws_route53_record.hostnames["${lb_key}-${hostname}"].name
         ]
     ])) : []
   } if var.create }
