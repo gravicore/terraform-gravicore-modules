@@ -28,10 +28,9 @@ public class JwtValidator {
             final DecodedJWT jwt = JWT.decode(token);
             final JwkProvider provider = new UrlJwkProvider(jwkUri);
             final Jwk jwk = provider.get(jwt.getKeyId());
-            final Algorithm algorithm = Algorithm.RSA256((RSAPublicKey)
-                    jwk.getPublicKey(), null);
+            final Algorithm algorithm = Algorithm.RSA256((RSAPublicKey) jwk.getPublicKey(), null);
             this.verify(algorithm, jwt);
-        } catch (final Exception e){
+        } catch (final Exception e) {
             LOGGER.error("Token unauthorized = {}", token, e);
             return false;
         }
@@ -45,5 +44,4 @@ public class JwtValidator {
             throw new IllegalArgumentException("Expired token");
         }
     }
-
 }
