@@ -31,6 +31,7 @@ variable "domain" {
 variable "paths" {
   type = map(map(object({
     lambda      = optional(string, "")
+    http        = optional(string, "")
     authorizers = optional(map(list(string)), {})
   })))
   default     = {}
@@ -64,7 +65,7 @@ locals {
 
   permissions = toset(local.counts.default == 1 ? flatten(flatten(
     [for pk, pv in var.paths :
-      [for mk, mv in pv : mv.lambda]
+      [for mk, mv in pv : mv.lambda if mv.lambda != ""]
     ]
   )) : [])
 
@@ -82,10 +83,20 @@ locals {
     }
   }
 
+  operations = {
+    lambda = "invokeLambda"
+    http   = "invokeHttp"
+  }
+
+  types = {
+    lambda = "aws_proxy"
+    http   = "http_proxy"
+  }
+
   paths = {
     for pk, pv in var.paths : pk => {
       for mk, mv in pv : lower(mk) => {
-        operationId = "invokeLambda"
+        operationId = "${try(compact([for tk, tv in mv : try(local.operations[tk], null) if tv != ""])[0], "")}-${pk}-${mk}"
         responses = {
           200 = {
             content = { "application/json" = {} }
@@ -93,9 +104,12 @@ locals {
         }
         security = [for key, scopes in try(mv.authorizers, []) : { "${local.module_prefix}-${key}" : scopes }]
         x-amazon-apigateway-integration = {
-          uri                 = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${mv.lambda}/invocations"
+          uri = try(compact([for tk, tv in mv : try({
+            lambda = "arn:aws:apigateway:${var.aws_region}:lambda:path/2015-03-31/functions/${mv.lambda}/invocations"
+            http   = mv.http
+          }[tk], null) if tv != ""])[0], "")
           httpMethod          = "POST"
-          type                = "aws_proxy"
+          type                = try(compact([for tk, tv in mv : try(local.types[tk], null) if tv != ""])[0], "")
           passthroughBehavior = "when_no_match"
           timeoutInMillis     = var.timeout * 1000
         }
