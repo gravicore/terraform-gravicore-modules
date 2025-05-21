@@ -1,12 +1,18 @@
 locals {
+  unique = length(keys(var.services)) == 1
   services = var.create ? {
     for key, value in var.services : key => merge({
-      family = "${local.module_prefix}-${key}"
+      family = local.unique ? local.module_prefix : "${local.module_prefix}-${key}"
     }, value)
   } : {}
 
   lb_services = var.create ? {
-    for key, value in var.services : key => value
+    for key, value in var.services : key => merge(value, {
+      lb = merge(value.lb, {
+        name   = local.unique ? local.module_prefix : "${local.module_prefix}-${coalesce(value.lb.name, key)}"
+        domain = local.unique ? var.name : "${local.module_prefix}-${coalesce(value.lb.name, key)}"
+      })
+    })
     if value.lb != null && var.create
   } : {}
 
@@ -16,6 +22,7 @@ locals {
   } : {}
 
   dd_enable     = var.cluster.task.datadog != null
+  dd_ssm_key    = local.dd_enable ? "arn:aws:ssm:${var.aws_region}:${local.account_id}:parameter/${local.stage_prefix}/${var.cluster.task.datadog.ssm_key}" : ""
   dd_enable_log = local.dd_enable ? var.cluster.task.datadog.enable_log : false
   dd_enable_apm = local.dd_enable ? var.cluster.task.datadog.enable_apm : false
   dd_tags = concat(
@@ -66,7 +73,7 @@ locals {
       ]
       secrets = [{
         name      = "DD_API_KEY"
-        valueFrom = var.cluster.task.datadog.ssm_key
+        valueFrom = local.dd_ssm_key
       }]
     }],
     local.dd_enable_log ?

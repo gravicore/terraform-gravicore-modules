@@ -10,7 +10,7 @@ variable "name" {
 
 variable "terraform_module" {
   type        = string
-  default     = "gravicore/terraform-gravicore-modules/aws/ecr"
+  default     = "gravicore/terraform-gravicore-modules/aws/ecs/cluster"
   description = "The owner and name of the Terraform module"
 }
 

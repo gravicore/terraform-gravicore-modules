@@ -110,7 +110,7 @@ resource "aws_ecs_task_definition" "this" {
       valueFrom = val
     }]
     environment = [
-      for name, value in merge(each.value.task.environment, local.dd_enable ? merge({
+      for name, value in merge(local.tags, each.value.task.environment, local.dd_enable ? merge({
         DD_ENV     = var.stage
         DD_SERVICE = each.value.family
         DD_TAGS = join(",", concat(local.dd_tags, [
@@ -127,7 +127,7 @@ resource "aws_ecs_task_definition" "this" {
       logDriver = "awsfirelens",
       secretOptions = [{
         name      = "apikey"
-        valueFrom = var.cluster.task.datadog.ssm_key
+        valueFrom = local.dd_ssm_key
       }]
       options = {
         Name           = "datadog",
@@ -162,7 +162,7 @@ resource "aws_ecs_task_definition" "this" {
 resource "aws_ecs_service" "this" {
   for_each            = local.services
   name                = each.value.family
-  cluster             = var.cluster.name
+  cluster             = "arn:aws:ecs:${var.aws_region}:${local.account_id}:cluster/${var.cluster.name}"
   task_definition     = aws_ecs_task_definition.this[each.key].arn
   desired_count       = 1
   scheduling_strategy = "REPLICA"
@@ -192,7 +192,7 @@ resource "aws_ecs_service" "this" {
     for_each = toset(each.value.lb != null ? [1] : [])
     content {
       target_group_arn = aws_lb_target_group.this[each.key].arn
-      container_name   = "${local.module_prefix}-${each.key}"
+      container_name   = each.value.family
       container_port   = each.value.lb.port
     }
   }
@@ -200,7 +200,7 @@ resource "aws_ecs_service" "this" {
 
 resource "aws_lb" "this" {
   for_each           = local.lb_services
-  name               = "${local.stage_prefix}-${coalesce(each.value.lb.name, each.key)}"
+  name               = each.value.lb.name
   internal           = each.value.lb.type == "public" ? false : true
   load_balancer_type = "application"
   security_groups    = var.cluster.task.security_group_ids
@@ -212,7 +212,7 @@ resource "aws_lb" "this" {
 
 resource "aws_lb_target_group" "this" {
   for_each    = local.lb_services
-  name        = "${local.stage_prefix}-${coalesce(each.value.lb.name, each.key)}"
+  name        = each.value.lb.name
   port        = each.value.lb.port
   protocol    = each.value.lb.protocol
   vpc_id      = var.cluster.task.vpc_id
@@ -269,7 +269,7 @@ resource "aws_lb_listener" "https" {
 resource "aws_route53_record" "this" {
   for_each        = local.lb_services
   zone_id         = var.cluster.task.zone_id
-  name            = join(".", [coalesce(each.value.lb.name, each.key), var.cluster.task.zone_name])
+  name            = join(".", [each.value.lb.domain, var.cluster.task.zone_name])
   type            = "CNAME"
   ttl             = 30
   records         = [aws_lb.this[each.key].dns_name]
@@ -290,7 +290,7 @@ resource "aws_route53_record" "hostnames" {
   allow_overwrite = true
 }
 
-resource "aws_iam_role_policy" "datadog" {
+resource "aws_iam_role_policy" "datadog_task_role" {
   count = var.create && var.cluster.task.datadog != null ? 1 : 0
   name  = "${local.module_prefix}-datadog"
   role  = split("/", var.cluster.task.task_role_arn)[1]
@@ -302,9 +302,30 @@ resource "aws_iam_role_policy" "datadog" {
         "ecs:ListClusters",
         "ecs:ListContainerInstances",
         "ecs:DescribeContainerInstances",
-      ],
+      ]
       Resource = "*"
     }]
+  })
+}
+
+resource "aws_iam_role_policy" "datadog_task_execution" {
+  count = var.create && var.cluster.task.datadog != null ? 1 : 0
+  name  = "${local.module_prefix}-datadog"
+  role  = split("/", var.cluster.task.execution_role_arn)[1]
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = "ssm:GetParameters"
+        Resource = local.dd_ssm_key
+      },
+      {
+        Effect   = "Allow"
+        Action   = "kms:Decrypt"
+        Resource = "*"
+      }
+    ]
   })
 }
 
