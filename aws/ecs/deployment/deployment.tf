@@ -133,7 +133,7 @@ resource "aws_ecs_task_definition" "this" {
         Name           = "datadog",
         Host           = "http-intake.logs.datadoghq.com",
         dd_service     = each.value.family,
-        dd_source      = "fargate",
+        dd_source      = "ecs",
         dd_message_key = "log",
         TLS            = "on",
         provider       = "ecs"
