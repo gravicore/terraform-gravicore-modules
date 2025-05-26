@@ -28,7 +28,6 @@ public class Application {
                 .prefix(statsdPrefix)
                 .hostname(statsdHost)
                 .port(statsdPort)
-            .build();
-    } 
-
+                .build();
+    }
 }
