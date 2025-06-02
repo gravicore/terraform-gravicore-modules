@@ -4,6 +4,7 @@ import com.timgroup.statsd.NonBlockingStatsDClientBuilder;
 import com.timgroup.statsd.StatsDClient;
 
 import org.apache.commons.lang3.StringUtils;
+import org.camunda.bpm.engine.impl.cfg.ProcessEnginePlugin;
 import org.camunda.bpm.engine.impl.plugin.AdministratorAuthorizationPlugin;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -14,6 +15,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
+import org.camunda.spin.plugin.impl.SpinProcessEnginePlugin;
 
 @EnableWebSecurity
 @SpringBootApplication
@@ -68,5 +71,10 @@ public class Application {
             final Environment env = context.getEnvironment();
             return StringUtils.isNoneBlank(env.getProperty("dd.agent.host"));
         }
+    }
+
+    @Bean
+    public ProcessEnginePlugin spinProcessEnginePlugin() {
+        return new SpinProcessEnginePlugin();
     }
 }
