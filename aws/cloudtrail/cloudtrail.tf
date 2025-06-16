@@ -345,7 +345,7 @@ module "logs" {
 }
 
 resource "aws_s3_bucket_logging" "default" {
-  count  = var.s3_bucket_access_logging || var.access_log_bucket_name != null ? 1 : 0
+  count  = local.create_storage_bucket && var.s3_bucket_access_logging || var.access_log_bucket_name != null ? 1 : 0
   bucket = concat(aws_s3_bucket.default.*.id, [""])[0]
 
   target_bucket = var.access_log_bucket_name == null ? concat(module.logs.*.bucket_id, [""])[0] : var.access_log_bucket_name
@@ -366,7 +366,7 @@ data "aws_iam_policy_document" "sns" {
   statement {
     sid = "AWSCloudTrailAclCheck"
     principals {
-      type        = "AWS"
+      type        = "Service"
       identifiers = ["cloudtrail.amazonaws.com"]
     }
     actions = [
