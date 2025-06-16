@@ -116,12 +116,6 @@ variable "enforce_secure_transport" {
   description = "When enabled enforces secure transport connections to bucket"
 }
 
-variable "lifecycle_rules" {
-  type        = list(any)
-  default     = null
-  description = "The configuration of the object for lifecycle management"
-}
-
 variable "enable_org_writes" {
   type        = bool
   default     = false
