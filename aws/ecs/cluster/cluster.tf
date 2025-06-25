@@ -25,6 +25,14 @@ variable "task" {
   default = {}
 }
 
+variable "capacity" {
+  description = "the configuration used to create capacity providers on ec2"
+  type = map(object({
+    instance = string
+  }))
+  default = {}
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -42,8 +50,17 @@ resource "aws_ecs_cluster" "this" {
 resource "aws_ecs_cluster_capacity_providers" "this" {
   count              = var.create ? 1 : 0
   cluster_name       = local.module_prefix
-  capacity_providers = ["FARGATE"]
+  capacity_providers = concat(["FARGATE"], [for key, value in module.capacity_providers : value.name])
   depends_on         = [aws_ecs_cluster.this]
+}
+
+module "capacity_providers" {
+  for_each     = var.create ? var.capacity : {}
+  source       = "./modules/capacity_provider"
+  cluster_name = concat(aws_ecs_cluster.this.*.name, [""])[0]
+  instance     = each.value.instance
+  name         = each.key
+  task         = var.task
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
