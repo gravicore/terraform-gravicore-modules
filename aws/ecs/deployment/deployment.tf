@@ -47,6 +47,7 @@ variable "services" {
       }), null)
     }), null)
     task = object({
+      capacity     = optional(string, null)
       image        = string
       ports        = optional(list(string), [])
       retention    = optional(number, 7)
@@ -75,7 +76,7 @@ resource "aws_cloudwatch_log_group" "this" {
 resource "aws_ecs_task_definition" "this" {
   for_each                 = local.services
   family                   = each.value.family
-  requires_compatibilities = ["FARGATE"]
+  requires_compatibilities = ["FARGATE", "EC2"]
   network_mode             = "awsvpc"
   execution_role_arn       = var.cluster.task.execution_role_arn
   task_role_arn            = var.cluster.task.task_role_arn
@@ -133,7 +134,7 @@ resource "aws_ecs_task_definition" "this" {
         Name           = "datadog",
         Host           = "http-intake.logs.datadoghq.com",
         dd_service     = each.value.family,
-        dd_source      = "fargate",
+        dd_source      = each.value.task.capacity != null ? "ec2" : "fargate",
         dd_message_key = "log",
         TLS            = "on",
         provider       = "ecs"
@@ -166,7 +167,7 @@ resource "aws_ecs_service" "this" {
   task_definition     = aws_ecs_task_definition.this[each.key].arn
   desired_count       = 1
   scheduling_strategy = "REPLICA"
-  launch_type         = "FARGATE"
+  launch_type         = each.value.task.capacity != null ? null : "FARGATE"
   tags                = local.tags
 
   wait_for_steady_state              = each.value.task.wait_running
@@ -181,7 +182,7 @@ resource "aws_ecs_service" "this" {
 
   enable_ecs_managed_tags           = true
   health_check_grace_period_seconds = 0
-  platform_version                  = "LATEST"
+  platform_version                  = each.value.task.capacity != null ? null : "LATEST"
   propagate_tags                    = "SERVICE"
 
   deployment_controller {
@@ -194,6 +195,23 @@ resource "aws_ecs_service" "this" {
       target_group_arn = aws_lb_target_group.this[each.key].arn
       container_name   = each.value.family
       container_port   = each.value.lb.port
+    }
+  }
+
+  dynamic "capacity_provider_strategy" {
+    for_each = each.value.task.capacity != null ? [1] : []
+    content {
+      base              = 0
+      capacity_provider = "${var.cluster.name}-${each.value.task.capacity}"
+      weight            = 1
+    }
+  }
+
+  dynamic "ordered_placement_strategy" {
+    for_each = each.value.task.capacity != null ? [1] : []
+    content {
+      type  = "binpack"
+      field = "memory"
     }
   }
 }
