@@ -41,7 +41,7 @@ locals {
       volumesFrom       = []
       mountPoints       = []
       dockerLabels = {
-        "com.datadoghq.service_name" = "${local.module_prefix}-router"
+        "com.datadoghq.service_name" = "${local.module_prefix}-datadog"
       }
       portMappings = [
         {
