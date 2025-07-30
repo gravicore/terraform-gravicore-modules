@@ -57,6 +57,7 @@ variable "services" {
       command      = optional(list(string), [])
       environment  = map(string)
       secrets      = optional(map(string), {})
+      count        = optional(number, 1)
       wait_running = optional(bool, false) # false, or else the pipelines can get locked... for stable services, true would be better
     })
   }))
@@ -165,7 +166,7 @@ resource "aws_ecs_service" "this" {
   name                = each.value.family
   cluster             = "arn:aws:ecs:${var.aws_region}:${local.account_id}:cluster/${var.cluster.name}"
   task_definition     = aws_ecs_task_definition.this[each.key].arn
-  desired_count       = 1
+  desired_count       = each.value.task.count
   scheduling_strategy = "REPLICA"
   launch_type         = each.value.task.capacity != null ? null : "FARGATE"
   tags                = local.tags
