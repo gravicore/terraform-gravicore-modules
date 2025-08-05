@@ -1,4 +1,4 @@
-FROM openjdk:14-jdk-alpine
+FROM openjdk:17-jdk-alpine
 RUN apk --no-cache add curl
 RUN apk --no-cache add jq
 COPY ./target/*jar /usr/app/app.jar
@@ -11,5 +11,5 @@ ENTRYPOINT [ "/bin/sh", "-c" , "\
   export DD_AGENT_HOST=$(curl $IP_QUERY_HOST | jq -r $IP_QUERY) && \
   export DD_TRACE_AGENT_PORT=8126 && \
   java \
-    -javaagent:/usr/app/dd-java-agent.jar \
-    -jar /usr/app/app.jar" ]
+  -javaagent:/usr/app/dd-java-agent.jar \
+  -jar /usr/app/app.jar" ]

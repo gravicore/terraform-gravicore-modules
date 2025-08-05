@@ -4,6 +4,7 @@ import com.timgroup.statsd.NonBlockingStatsDClientBuilder;
 import com.timgroup.statsd.StatsDClient;
 
 import org.apache.commons.lang3.StringUtils;
+import org.camunda.bpm.engine.impl.cfg.ProcessEnginePlugin;
 import org.camunda.bpm.engine.impl.plugin.AdministratorAuthorizationPlugin;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
@@ -14,6 +15,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+
+import org.camunda.spin.plugin.impl.SpinProcessEnginePlugin;
 
 @EnableWebSecurity
 @SpringBootApplication
@@ -46,7 +49,6 @@ public class Application {
         return plugin;
     }
 
-
     @Bean
     public ServletContextInitializer csrfOverwrite() {
         return servletContext -> servletContext.addFilter(CSRF_PREVENTION_FILTER,
@@ -60,7 +62,7 @@ public class Application {
                 .prefix(statsdPrefix)
                 .hostname(statsdHost)
                 .port(statsdPort)
-            .build();
+                .build();
     }
 
     public static class HasDataDog implements Condition {
@@ -71,4 +73,8 @@ public class Application {
         }
     }
 
+    @Bean
+    public ProcessEnginePlugin spinProcessEnginePlugin() {
+        return new SpinProcessEnginePlugin();
+    }
 }

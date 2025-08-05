@@ -1,5 +1,7 @@
 package io.gravicore.api;
 
+import org.camunda.bpm.engine.impl.cfg.ProcessEnginePlugin;
+import org.camunda.spin.plugin.impl.SpinProcessEnginePlugin;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,7 +30,11 @@ public class Application {
                 .prefix(statsdPrefix)
                 .hostname(statsdHost)
                 .port(statsdPort)
-            .build();
-    } 
+                .build();
+    }
 
+    @Bean
+    public ProcessEnginePlugin spinProcessEnginePlugin() {
+        return new SpinProcessEnginePlugin();
+    }
 }
