@@ -94,7 +94,7 @@ resource "azurerm_container_registry" "default" {
 
   lifecycle {
     precondition {
-      condition     = ! var.data_endpoint_enabled || var.sku == "Premium"
+      condition     = !var.data_endpoint_enabled || var.sku == "Premium"
       error_message = "Premium SKU is mandatory to enable the data endpoints."
     }
     precondition {
@@ -102,16 +102,16 @@ resource "azurerm_container_registry" "default" {
       error_message = "anonymous_pull_enabled is only supported on resources with the Standard or Premium SKU."
     }
     precondition {
-      condition     = var.export_policy_enabled || (! var.export_policy_enabled && ! var.public_network_access_enabled)
+      condition     = var.export_policy_enabled || (!var.export_policy_enabled && !var.public_network_access_enabled)
       error_message = "In order to set export_policy_enabled to false, make sure the public_network_access_enabled is also set to false."
     }
     precondition {
       condition = var.sku == "Premium" || (
-        ! var.quarantine_policy_enabled &&
-        ! var.export_policy_enabled &&
-        ! var.zone_redundancy_enabled &&
-        ! var.images_retention_enabled &&
-      ! var.trust_policy_enabled)
+        !var.quarantine_policy_enabled &&
+        !var.export_policy_enabled &&
+        !var.zone_redundancy_enabled &&
+        !var.images_retention_enabled &&
+      !var.trust_policy_enabled)
       error_message = "quarantine_policy_enabled, retention_policy, trust_policy, export_policy_enabled, and zone_redundancy_enabled are only supported on resources with the Premium SKU."
     }
   }

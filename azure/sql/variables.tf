@@ -150,8 +150,9 @@ variable "server_version" {
 variable "allowed_ip_addresses" {
   description = "List of allowed IP addresses for the PostgreSQL Flexible Server."
   type = list(object({
-    rule_name = string
-    ip_prefix = string
+    rule_name        = string
+    start_ip_address = string
+    end_ip_address   = string
   }))
   default = null
 }
@@ -275,8 +276,11 @@ variable "azuread_administrator" {
 
 variable "identity" {
   description = "Map of identity configuration."
-  type        = map(string)
-  default     = null
+  type = object({
+    type         = string
+    identity_ids = optional(list(string), null)
+  })
+  default = null
 }
 
 variable "primary_user_assigned_identity_id" {
@@ -397,4 +401,3 @@ locals {
     "g" = "OnlineSecondary"
   }
 }
-

@@ -157,7 +157,7 @@ module "alerts" {
   az_region = "Global"
 
   resource_group_name          = var.resource_group_name
-  source                       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=0.53.0"
+  source                       = "git::https://github.com/gravicore/terraform-gravicore-modules.git//azure/monitor?ref=GDEV-381-fix-monitoring-defaults"
   namespace                    = var.namespace
   environment                  = var.environment
   stage                        = var.stage
