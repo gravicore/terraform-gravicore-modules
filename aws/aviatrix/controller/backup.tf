@@ -49,7 +49,7 @@ module "s3_backup" {
 # SSM Parameters
 
 module "parameters_backup" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.52.0"
   providers   = { aws = "aws" }
   create      = var.create && var.create_parameters
   namespace   = var.namespace
