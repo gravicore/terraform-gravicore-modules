@@ -29,7 +29,7 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "s3_backup" {
-  source    = "git::https://github.com/cloudposse/terraform-aws-s3-bucket.git?ref=0.5.0"
+  source    = "git::https://github.com/cloudposse/terraform-aws-s3-bucket.git?ref=0.20.0"
   enabled   = var.create
   namespace = ""
   stage     = ""
