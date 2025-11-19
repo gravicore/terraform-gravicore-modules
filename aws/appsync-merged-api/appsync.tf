@@ -40,6 +40,12 @@ variable "authentication" {
   }
 }
 
+variable "introspection_config" {
+  description = "optional. Sets the value of the GraphQL API to enable (ENABLED) or disable (DISABLED) introspection"
+  default     = "DISABLED"
+  type        = string
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -119,6 +125,7 @@ resource "gravicore_aws_appsync_graphql_api" "default" {
   name                          = local.module_prefix
   tags                          = var.tags
   xray_enabled                  = true
+  introspection_config          = var.introspection_config
 
   dynamic "user_pool_config" {
     for_each = local.principal.is_cognito ? [1] : []
