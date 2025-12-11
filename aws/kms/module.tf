@@ -37,6 +37,12 @@ variable "create" {
   description = "Set to false to prevent the module from creating any resources"
 }
 
+variable "dnssec_key_create" {
+  type        = bool
+  default     = false
+  description = "Set to false to prevent the module from creating DNSSEC resources"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------

@@ -113,6 +113,12 @@ variable "records_txt" {
   description = "Provides a Route53 A record resource"
 }
 
+variable "dnssec_kms_key_arn" {
+  type        = string
+  default     = ""
+  description = "KMS Key for Route 53 DNSSEC KSK"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -282,6 +288,22 @@ resource "aws_route53_record" "dns_public_txt" {
   allow_overwrite = lookup(each.value, "allow_overwrite", true)
 }
 
+resource "aws_route53_key_signing_key" "ksk" {
+  count                      = (var.create && var.dnssec_create) ? 1 : 0
+  hosted_zone_id             = aws_route53_zone.dns_public[0].zone_id
+  name                       = local.domain_name
+  key_management_service_arn = var.dnssec_kms_key_arn
+  status                     = "ACTIVE"
+}
+
+resource "aws_route53_hosted_zone_dnssec" "dnssec" {
+  count = (var.create && var.dnssec_create) ? 1 : 0
+  depends_on = [
+    aws_route53_key_signing_key.ksk
+  ]
+  hosted_zone_id = aws_route53_zone.dns_public[0].zone_id
+}
+
 # AWS DNS
 
 resource "aws_route53_zone" "dns_aws" {
@@ -368,6 +390,17 @@ output "dns_public_zone_name" {
 output "dns_public_zone_name_servers" {
   value = flatten(aws_route53_zone.dns_public.*.name_servers)
 }
+
+output "ds_records" {
+  description = "DS records for registrar"
+  value       = concat(aws_route53_key_signing_key.ksk.*.ds_record, [""])[0]
+}
+
+output "public_ds_key" {
+  description = "Public DS records for registrar"
+  value       = concat(aws_route53_key_signing_key.ksk.*.public_key, [""])[0]
+}
+
 
 # Delegated Zones
 
