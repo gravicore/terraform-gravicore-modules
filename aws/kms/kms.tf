@@ -126,6 +126,19 @@ module "sqs_kms_key" {
   alias                   = "alias/${replace(local.stage_prefix, var.delimiter, "/")}/sqs"
 }
 
+module "sns_kms_key" {
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
+  namespace   = ""
+  stage       = ""
+  name        = "${local.stage_prefix}-sns"
+  description = join(" ", [var.desc_prefix, "KMS Key for SNS"])
+  tags        = local.tags
+
+  deletion_window_in_days = var.default_deletion_window_in_days
+  enable_key_rotation     = true
+  alias                   = "alias/${replace(local.stage_prefix, var.delimiter, "/")}/sns"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
@@ -168,4 +181,9 @@ output "s3_key_arn" {
 output "sqs_key_arn" {
   value       = module.sqs_kms_key.key_arn
   description = "Generic KMS Key ARN for SQS"
+}
+
+output "sns_key_arn" {
+  value       = module.sns_kms_key.key_arn
+  description = "Generic KMS Key ARN for SSN"
 }
