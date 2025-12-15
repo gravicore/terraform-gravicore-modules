@@ -1,6 +1,6 @@
 
 resource "aws_iam_role" "s3_default" {
-  name = "${local.module_prefix}"
+  name = local.module_prefix
 
   assume_role_policy = <<EOF
 {
@@ -21,7 +21,7 @@ EOF
 
 
 resource "aws_iam_policy" "s3_default" {
-  name   = "${local.module_prefix}"
+  name   = local.module_prefix
   policy = <<EOF
 {
   "Version": "2012-10-17",
