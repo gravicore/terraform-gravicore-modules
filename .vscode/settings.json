@@ -1,0 +1,7 @@
+{
+  "java.project.sourcePaths": [
+    "aws/camunda/java/app/src/main/java",
+    "aws/camunda/java/api/src/main/java"
+  ],
+  "java.configuration.updateBuildConfiguration": "automatic"
+}
