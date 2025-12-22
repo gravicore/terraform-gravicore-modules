@@ -158,6 +158,18 @@ variable "allowed_sns_subscription_accounts" {
   description = "description"
 }
 
+variable "enable_sns_encryption" {
+  type        = bool
+  default     = false
+  description = "Enable encryption for SNS topic"
+}
+
+variable "kms_sns_key_arn" {
+  type        = string
+  default     = null
+  description = "KMS key ARN for SNS encryption"
+}
+
 locals {
   create_storage_bucket = var.create && var.create_s3_bucket && var.s3_bucket_name == ""
   create_sns_topic      = var.create && var.sns_topic_name == "" && var.create_sns_topic
@@ -415,10 +427,11 @@ data "aws_iam_policy_document" "sns" {
 }
 
 resource "aws_sns_topic" "default" {
-  count  = local.create_sns_topic ? 1 : 0
-  name   = join("-", [local.module_prefix, "events"])
-  tags   = local.tags
-  policy = concat(data.aws_iam_policy_document.sns.*.json, [""])[0]
+  count             = local.create_sns_topic ? 1 : 0
+  name              = join("-", [local.module_prefix, "events"])
+  kms_master_key_id = var.enable_sns_encryption ? var.kms_sns_key_arn : null
+  tags              = local.tags
+  policy            = concat(data.aws_iam_policy_document.sns.*.json, [""])[0]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
