@@ -257,6 +257,6 @@ output "sns_key_arn" {
 }
 
 output "dnssec_key_arn" {
-  value       = concat(module.dnssec_kms_key.*.key_arn, [""])[0]
+  value       = var.dnssec_key_create ? concat(module.dnssec_kms_key.*.key_arn, [""])[0] : null
   description = "Generic KMS Key ARN for DNSSEC"
 }
