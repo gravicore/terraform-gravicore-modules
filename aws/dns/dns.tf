@@ -403,7 +403,7 @@ output "public_ds_key" {
 
 resource "aws_ssm_parameter" "ds_records" {
   count       = (var.create && var.dnssec_create) ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}/${local.domain_name}/ds-records"
+  name        = "/${local.stage_prefix}/${var.name}/${replace(local.domain_name, ".", "-")}/ds-records"
   description = format("%s %s", "Public DNSSEC key for", local.domain_name)
 
   type      = "String"
@@ -414,7 +414,7 @@ resource "aws_ssm_parameter" "ds_records" {
 
 resource "aws_ssm_parameter" "public_ds_key" {
   count       = (var.create && var.dnssec_create) ? 1 : 0
-  name        = "/${local.stage_prefix}/${var.name}/${local.domain_name}/public-ds-key"
+  name        = "/${local.stage_prefix}/${var.name}/${replace(local.domain_name, ".", "-")}/public-ds-key"
   description = format("%s %s", "Public DNSSEC key for", local.domain_name)
 
   type      = "String"
