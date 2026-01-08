@@ -137,7 +137,7 @@ module "dnssec_kms_key" {
   tags        = local.tags
 
   deletion_window_in_days  = var.default_deletion_window_in_days
-  enable_key_rotation      = false
+  enable_key_rotation      = false ## Rotation MUST be disabled
   customer_master_key_spec = "ECC_NIST_P256"
   multi_region             = false
   key_usage                = "SIGN_VERIFY"

@@ -393,14 +393,35 @@ output "dns_public_zone_name_servers" {
 
 output "ds_records" {
   description = "DS records for registrar"
-  value       = concat(aws_route53_key_signing_key.ksk.*.ds_record, [""])[0]
+  value       = var.dnssec_create ? concat(aws_route53_key_signing_key.ksk.*.ds_record, [""])[0] : null
 }
 
 output "public_ds_key" {
   description = "Public DS records for registrar"
-  value       = concat(aws_route53_key_signing_key.ksk.*.public_key, [""])[0]
+  value       = var.dnssec_create ? concat(aws_route53_key_signing_key.ksk.*.public_key, [""])[0] : null
 }
 
+resource "aws_ssm_parameter" "ds_records" {
+  count       = (var.create && var.dnssec_create) ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}/${local.domain_name}/ds-records"
+  description = format("%s %s", "Public DNSSEC key for", local.domain_name)
+
+  type      = "String"
+  value     = concat(aws_route53_key_signing_key.ksk.*.ds_record, [""])[0]
+  overwrite = true
+  tags      = local.tags
+}
+
+resource "aws_ssm_parameter" "public_ds_key" {
+  count       = (var.create && var.dnssec_create) ? 1 : 0
+  name        = "/${local.stage_prefix}/${var.name}/${local.domain_name}/public-ds-key"
+  description = format("%s %s", "Public DNSSEC key for", local.domain_name)
+
+  type      = "String"
+  value     = concat(aws_route53_key_signing_key.ksk.*.public_key, [""])[0]
+  overwrite = true
+  tags      = local.tags
+}
 
 # Delegated Zones
 
