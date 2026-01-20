@@ -235,6 +235,10 @@ resource "aws_wafv2_web_acl" "waf_acl" {
   description = join(" ", [var.desc_prefix, var.scope, "WAF"])
   tags        = local.tags
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   default_action {
     dynamic "block" {
       for_each = var.default_action == "block" ? ["block"] : []
