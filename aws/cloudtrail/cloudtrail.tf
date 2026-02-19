@@ -143,7 +143,7 @@ variable "include_global_service_events" {
 variable "enable_logging" {
   type        = bool
   default     = true
-  description = "Optional) Enables logging for the trail"
+  description = "(Optional) Enables logging for the trail"
 }
 
 variable "cloud_watch_logs_role_arn" {
@@ -221,7 +221,7 @@ variable "kms_cloudtrail_key_arn" {
 variable "allowed_sns_subscription_accounts" {
   type        = list(string)
   default     = null
-  description = "description"
+  description = "List of account IDs local or cross account to allow log delivery"
 }
 
 variable "enable_sns_encryption" {
