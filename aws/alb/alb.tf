@@ -103,7 +103,7 @@ variable "access_logs_prefix" {
 
 variable "access_logs_enabled" {
   type        = bool
-  default     = true
+  default     = false
   description = "A bool flag to enable/disable access_logs"
 }
 
