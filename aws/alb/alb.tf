@@ -246,11 +246,11 @@ resource "aws_lb" "alb" {
   ip_address_type                  = var.ip_address_type
   enable_deletion_protection       = var.deletion_protection_enabled
   drop_invalid_header_fields       = var.drop_invalid_header_fields
-  access_logs {
-    bucket  = join("", aws_s3_bucket.default.*.id)
-    prefix  = var.access_logs_prefix
-    enabled = var.access_logs_enabled
-  }
+  # access_logs {
+  #   bucket  = join("", aws_s3_bucket.default.*.id)
+  #   prefix  = var.access_logs_prefix
+  #   enabled = var.access_logs_enabled
+  # }
 }
 
 resource "aws_lb_target_group" "alb" {
