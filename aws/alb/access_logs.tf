@@ -115,7 +115,7 @@ resource "aws_s3_bucket" "default" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
-  count  = var.create ? 1 : 0
+  count  = var.create && var.sse_algorithm != null ? 1 : 0
   bucket = join("", aws_s3_bucket.default.*.id)
 
   rule {
@@ -127,8 +127,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "default" {
-  count  = var.create ? 1 : 0
-  bucket = join("", aws_s3_bucket.default.*.id)
+  depends_on = [aws_s3_bucket.default]
+  count      = var.create ? 1 : 0
+  bucket     = join("", aws_s3_bucket.default.*.id)
   rule {
     object_ownership = var.bucket_object_ownership
   }
@@ -137,12 +138,6 @@ resource "aws_s3_bucket_ownership_controls" "default" {
 resource "aws_s3_bucket_acl" "default" {
   count = var.create && var.bucket_object_ownership != "BucketOwnerEnforced" ? 1 : 0
 
-  bucket = concat(aws_s3_bucket.default.*.id, [""])[0]
-  acl    = var.acl
-}
-
-resource "aws_s3_bucket_acl" "default" {
-  count  = var.create ? 1 : 0
   bucket = join("", aws_s3_bucket.default.*.id)
   acl    = var.acl
 }
