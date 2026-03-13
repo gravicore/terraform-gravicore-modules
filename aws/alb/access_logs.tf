@@ -1,7 +1,7 @@
 variable "acl" {
   type        = string
   description = "Canned ACL to apply to the S3 bucket"
-  default     = "log-delivery-write"
+  default     = "private"
 }
 
 variable "force_destroy" {
@@ -100,12 +100,53 @@ variable "restrict_public_buckets" {
   description = "Set to `false` to disable the restricting of making the bucket public"
 }
 
+variable "bucket_object_ownership" {
+  type        = string
+  default     = "BucketOwnerPreferred"
+  description = "The ownership of the objects in the bucket. Valid values: 'BucketOwnerPreferred', 'ObjectWriter', 'BucketOwnerEnforced'."
+}
+
 resource "aws_s3_bucket" "default" {
   count         = var.create ? 1 : 0
   bucket        = "${local.module_prefix}-access-logs"
-  acl           = var.acl
   force_destroy = var.force_destroy
-  policy        = <<policy
+
+  tags = local.tags
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
+  count  = var.create && var.sse_algorithm != null ? 1 : 0
+  bucket = join("", aws_s3_bucket.default.*.id)
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm     = var.sse_algorithm
+      kms_master_key_id = var.kms_master_key_arn
+    }
+  }
+}
+
+resource "aws_s3_bucket_ownership_controls" "default" {
+  depends_on = [aws_s3_bucket.default]
+  count      = var.create ? 1 : 0
+  bucket     = join("", aws_s3_bucket.default.*.id)
+  rule {
+    object_ownership = var.bucket_object_ownership
+  }
+}
+
+resource "aws_s3_bucket_acl" "default" {
+  count = var.create && var.bucket_object_ownership != "BucketOwnerEnforced" ? 1 : 0
+
+  bucket = join("", aws_s3_bucket.default.*.id)
+  acl    = var.acl
+}
+
+resource "aws_s3_bucket_policy" "default" {
+  count  = var.create ? 1 : 0
+  bucket = join("", aws_s3_bucket.default.*.id)
+
+  policy = <<policy
 {
   "Id": "Policy",
   "Version": "2012-10-17",
@@ -121,25 +162,64 @@ resource "aws_s3_bucket" "default" {
           "arn:aws:iam::127311923021:root"
         ]
       }
+    },
+    {
+      "Action" : [
+        "s3:*"
+      ],
+      "Effect" : "Deny",
+      "Resource" : [
+        "arn:aws:s3:::${local.module_prefix}-access-logs",
+        "arn:aws:s3:::${local.module_prefix}-access-logs/*"
+      ],
+      "Condition" : {
+        "Bool" : {
+          "aws:SecureTransport" : "false"
+        }
+      },
+      "Principal" : "*"
     }
   ]
 }
 policy
-  versioning {
-    enabled = var.versioning_enabled
+}
+
+# Refer to the terraform documentation on s3_bucket_public_access_block at
+# https://www.terraform.io/docs/providers/aws/r/s3_bucket_public_access_block.html
+# for the nuances of the blocking options
+
+resource "aws_s3_bucket_versioning" "default" {
+  count  = var.create ? 1 : 0
+  bucket = join("", aws_s3_bucket.default.*.id)
+
+  versioning_configuration {
+    status = var.versioning_enabled ? "Enabled" : "Suspended"
   }
+}
 
-  lifecycle_rule {
-    id                                     = local.module_prefix
-    enabled                                = var.lifecycle_rule_enabled
-    prefix                                 = var.lifecycle_prefix
-    tags                                   = var.lifecycle_tags
-    abort_incomplete_multipart_upload_days = var.abort_incomplete_multipart_upload_days
+resource "aws_s3_bucket_lifecycle_configuration" "default" {
+  count  = var.create ? 1 : 0
+  bucket = join("", aws_s3_bucket.default.*.id)
 
-    noncurrent_version_expiration {
-      days = var.noncurrent_version_expiration_days
+  rule {
+    id     = local.module_prefix
+    status = var.lifecycle_rule_enabled ? "Enabled" : "Disabled"
+
+    filter {
+      and {
+        prefix = var.lifecycle_prefix
+        tags   = var.lifecycle_tags
+      }
+
     }
 
+    abort_incomplete_multipart_upload {
+      days_after_initiation = var.abort_incomplete_multipart_upload_days
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = var.noncurrent_version_expiration_days
+    }
 
     transition {
       days          = var.standard_transition_days
@@ -149,26 +229,9 @@ policy
     expiration {
       days = var.expiration_days
     }
-
   }
-
-  # https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-encryption.html
-  # https://www.terraform.io/docs/providers/aws/r/s3_bucket.html#enable-default-server-side-encryption
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm     = var.sse_algorithm
-        kms_master_key_id = var.kms_master_key_arn
-      }
-    }
-  }
-
-  tags = local.tags
 }
 
-# Refer to the terraform documentation on s3_bucket_public_access_block at
-# https://www.terraform.io/docs/providers/aws/r/s3_bucket_public_access_block.html
-# for the nuances of the blocking options
 resource "aws_s3_bucket_public_access_block" "default" {
   count  = var.create ? 1 : 0
   bucket = join("", aws_s3_bucket.default.*.id)
