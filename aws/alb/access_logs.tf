@@ -147,36 +147,36 @@ resource "aws_s3_bucket_policy" "default" {
   bucket = join("", aws_s3_bucket.default.*.id)
 
   policy = jsondecode({
-    "Id" : "Policy",
-    "Version" : "2012-10-17",
-    "Statement" : [
+    Id      = "Policy",
+    Version = "2012-10-17",
+    Statement = [
       {
-        "Action" : [
+        Action = [
           "s3:PutObject"
         ],
-        "Effect" : "Allow",
-        "Resource" : "arn:aws:s3:::${local.module_prefix}-access-logs/AWSLogs/*",
-        "Principal" : {
-          "AWS" : [
+        Effect   = "Allow",
+        Resource = "arn:aws:s3:::${local.module_prefix}-access-logs/AWSLogs/*",
+        Principal = {
+          AWS = [
             "arn:aws:iam::127311923021:root"
           ]
         }
       },
       {
-        "Action" : [
+        Action = [
           "s3:*"
         ],
-        "Effect" : "Deny",
-        "Resource" : [
+        Effect = "Deny",
+        Resource = [
           "arn:aws:s3:::${local.module_prefix}-access-logs",
           "arn:aws:s3:::${local.module_prefix}-access-logs/*"
         ],
-        "Condition" : {
-          "Bool" : {
-            "aws:SecureTransport" : "false"
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
           }
         },
-        "Principal" : "*"
+        Principal = "*"
       }
     ]
   })
