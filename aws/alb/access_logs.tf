@@ -146,42 +146,40 @@ resource "aws_s3_bucket_policy" "default" {
   count  = var.create ? 1 : 0
   bucket = join("", aws_s3_bucket.default.*.id)
 
-  policy = <<policy
-{
-  "Id": "Policy",
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:PutObject"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:s3:::${local.module_prefix}-access-logs/AWSLogs/*",
-      "Principal": {
-        "AWS": [
-          "arn:aws:iam::127311923021:root"
-        ]
-      }
-    },
-    {
-      "Action" : [
-        "s3:*"
-      ],
-      "Effect" : "Deny",
-      "Resource" : [
-        "arn:aws:s3:::${local.module_prefix}-access-logs",
-        "arn:aws:s3:::${local.module_prefix}-access-logs/*"
-      ],
-      "Condition" : {
-        "Bool" : {
-          "aws:SecureTransport" : "false"
+  policy = jsondecode({
+    "Id" : "Policy",
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Action" : [
+          "s3:PutObject"
+        ],
+        "Effect" : "Allow",
+        "Resource" : "arn:aws:s3:::${local.module_prefix}-access-logs/AWSLogs/*",
+        "Principal" : {
+          "AWS" : [
+            "arn:aws:iam::127311923021:root"
+          ]
         }
       },
-      "Principal" : "*"
-    }
-  ]
-}
-policy
+      {
+        "Action" : [
+          "s3:*"
+        ],
+        "Effect" : "Deny",
+        "Resource" : [
+          "arn:aws:s3:::${local.module_prefix}-access-logs",
+          "arn:aws:s3:::${local.module_prefix}-access-logs/*"
+        ],
+        "Condition" : {
+          "Bool" : {
+            "aws:SecureTransport" : "false"
+          }
+        },
+        "Principal" : "*"
+      }
+    ]
+  })
 }
 
 # Refer to the terraform documentation on s3_bucket_public_access_block at
