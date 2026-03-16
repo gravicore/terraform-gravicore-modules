@@ -31,6 +31,7 @@ variable "cluster" {
 variable "services" {
   description = "the services to deploy, they can be background tasks or load balanced"
   type = map(object({
+    launch_type = optional(string, null) # "FARGATE" (default when null), "EC2", or null when using capacity_provider_strategy
     lb = optional(object({
       type      = optional(string, "private")
       name      = optional(string, null)
@@ -83,7 +84,7 @@ resource "aws_cloudwatch_log_group" "this" {
 resource "aws_ecs_task_definition" "this" {
   for_each                 = local.services
   family                   = each.value.family
-  requires_compatibilities = ["FARGATE", "EC2"]
+  requires_compatibilities = (each.value.launch_type == "EC2" || each.value.task.capacity != null) ? ["EC2"] : ["FARGATE"]
   network_mode             = "awsvpc"
   execution_role_arn       = var.cluster.task.execution_role_arn
   task_role_arn            = var.cluster.task.task_role_arn
@@ -174,7 +175,7 @@ resource "aws_ecs_service" "this" {
   task_definition     = aws_ecs_task_definition.this[each.key].arn
   desired_count       = each.value.task.count
   scheduling_strategy = "REPLICA"
-  launch_type         = each.value.task.capacity != null ? null : "FARGATE"
+  launch_type         = each.value.task.capacity != null ? null : coalesce(each.value.launch_type, "FARGATE")
   tags                = local.tags
 
   wait_for_steady_state              = each.value.task.wait_running
