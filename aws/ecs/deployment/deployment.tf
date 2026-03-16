@@ -190,7 +190,7 @@ resource "aws_ecs_service" "this" {
 
   enable_ecs_managed_tags           = true
   health_check_grace_period_seconds = 0
-  platform_version                  = each.value.task.capacity != null ? null : "LATEST"
+  platform_version                  = (each.value.launch_type == "EC2" || each.value.task.capacity != null) ? null : "LATEST"
   propagate_tags                    = "SERVICE"
 
   deployment_controller {
