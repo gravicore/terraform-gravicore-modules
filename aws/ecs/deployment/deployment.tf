@@ -54,6 +54,7 @@ variable "services" {
       retention    = optional(number, 7)
       cpu          = optional(number, 256)
       memory       = optional(number, 512)
+      cpu_architecture = optional(string, "X86_64")
       entrypoint   = optional(list(string), [])
       command      = optional(list(string), [])
       environment  = map(string)
@@ -164,7 +165,7 @@ resource "aws_ecs_task_definition" "this" {
 
   runtime_platform {
     operating_system_family = "LINUX"
-    cpu_architecture        = "X86_64"
+    cpu_architecture        = upper(coalesce(each.value.task.cpu_architecture, "X86_64"))
   }
 }
 
