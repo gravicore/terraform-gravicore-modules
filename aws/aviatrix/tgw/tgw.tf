@@ -100,9 +100,9 @@ resource "aviatrix_aws_tgw" "tgw" {
       aviatrix_firewall    = security_domains.key == "Aviatrix_Firewall_Domain" ? true : false
     }
   }
-  
+
   lifecycle {
-    ignore_changes = [ cidrs ]
+    ignore_changes = [cidrs]
   }
 }
 

@@ -6,7 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = ">= 2.26"
     }
-    aviatrix = ">= 2.14"
+    aviatrix = {
+      version = ">= 2.21.2"
+      source  = "aviatrixsystems/aviatrix"
+    }
   }
 }
 
