@@ -146,7 +146,7 @@ resource "aws_s3_bucket_policy" "default" {
   count  = var.create ? 1 : 0
   bucket = join("", aws_s3_bucket.default.*.id)
 
-  policy = jsondecode({
+  policy = jsonencode({
     Id      = "Policy",
     Version = "2012-10-17",
     Statement = [
