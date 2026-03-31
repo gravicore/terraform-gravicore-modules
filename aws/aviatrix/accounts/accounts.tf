@@ -31,7 +31,7 @@ resource "aviatrix_account" "accounts" {
 # SSM Parameters
 
 module "parameters_accounts" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.56.4"
   providers   = { aws = "aws" }
   create      = var.create && var.create_parameters
   namespace   = var.namespace
@@ -54,6 +54,7 @@ module "parameters_accounts" {
 output "aviatrix_accounts" {
   value       = aviatrix_account.accounts
   description = "Map of Aviatrix Accounts and attributes"
+  sensitive   = true
 }
 
 output "aviatrix_accounts_names" {
