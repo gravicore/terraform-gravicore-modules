@@ -130,34 +130,34 @@ resource "aws_route53_record" "avx_vpn_gw" {
 
 # SSM Parameters
 
-module "parameters_vpn" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
-  providers   = { aws = "aws" }
-  create      = var.create && var.create_parameters
-  namespace   = var.namespace
-  environment = var.environment
-  stage       = var.stage
-  tags        = local.tags
+# module "parameters_vpn" {
+#   source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
+#   providers   = { aws = "aws" }
+#   create      = var.create && var.create_parameters
+#   namespace   = var.namespace
+#   environment = var.environment
+#   stage       = var.stage
+#   tags        = local.tags
 
-  write_parameters = {
-    "/${local.stage_prefix}/${var.name}-public-ip" = { value = aviatrix_gateway.avx_vpn_gw[0].eip,
-    description = "Public IP address of the Gateway created" }
-    "/${local.stage_prefix}/${var.name}-backup-public-ip" = { value = aviatrix_gateway.avx_vpn_gw[0].peering_ha_eip,
-    description = "Private IP address of the Gateway created" }
-    "/${local.stage_prefix}/${var.name}-public-dns-server" = { value = aviatrix_gateway.avx_vpn_gw[0].public_dns_server,
-    description = "DNS server used by the gateway. Default is `8.8.8.8`, can be overridden with the VPC's setting." }
-    "/${local.stage_prefix}/${var.name}-security-group-id" = { value = aviatrix_gateway.avx_vpn_gw[0].security_group_id,
-    description = "Security group used for the gateway" }
-    "/${local.stage_prefix}/${var.name}-instance-id" = { value = aviatrix_gateway.avx_vpn_gw[0].cloud_instance_id
-    description = "Instance ID of the gateway" }
-    "/${local.stage_prefix}/${var.name}-backup-instance-id" = { value = aviatrix_gateway.avx_vpn_gw[0].peering_ha_cloud_instance_id
-    description = "Instance ID of the backup gateway" }
-    "/${local.stage_prefix}/${var.name}-dns-name" = { value = aws_route53_record.avx_vpn_gw[0].name,
-    description = "DNS name of the Aviatrix VPN Gateway" }
-    "/${local.stage_prefix}/${var.name}-dns-fqdn" = { value = aws_route53_record.avx_vpn_gw[0].fqdn
-    description = "FQDN built using the zone domain and name" }
-  }
-}
+#   write_parameters = {
+#     "/${local.stage_prefix}/${var.name}-public-ip" = { value = aviatrix_gateway.avx_vpn_gw[0].eip,
+#     description = "Public IP address of the Gateway created" }
+#     "/${local.stage_prefix}/${var.name}-backup-public-ip" = { value = aviatrix_gateway.avx_vpn_gw[0].peering_ha_eip,
+#     description = "Private IP address of the Gateway created" }
+#     "/${local.stage_prefix}/${var.name}-public-dns-server" = { value = aviatrix_gateway.avx_vpn_gw[0].public_dns_server,
+#     description = "DNS server used by the gateway. Default is `8.8.8.8`, can be overridden with the VPC's setting." }
+#     "/${local.stage_prefix}/${var.name}-security-group-id" = { value = aviatrix_gateway.avx_vpn_gw[0].security_group_id,
+#     description = "Security group used for the gateway" }
+#     "/${local.stage_prefix}/${var.name}-instance-id" = { value = aviatrix_gateway.avx_vpn_gw[0].cloud_instance_id
+#     description = "Instance ID of the gateway" }
+#     "/${local.stage_prefix}/${var.name}-backup-instance-id" = { value = aviatrix_gateway.avx_vpn_gw[0].peering_ha_cloud_instance_id
+#     description = "Instance ID of the backup gateway" }
+#     "/${local.stage_prefix}/${var.name}-dns-name" = { value = aws_route53_record.avx_vpn_gw[0].name,
+#     description = "DNS name of the Aviatrix VPN Gateway" }
+#     "/${local.stage_prefix}/${var.name}-dns-fqdn" = { value = aws_route53_record.avx_vpn_gw[0].fqdn
+#     description = "FQDN built using the zone domain and name" }
+#   }
+# }
 
 # Outputs
 
