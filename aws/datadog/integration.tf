@@ -62,6 +62,12 @@ variable "datadog_cloud_security_posture_management_permissions" {
   description = "Set this value to 'true' to add permissions for Datadog to monitor your AWS cloud resource configurations. You need this set to 'true' to use Cloud Security Posture Management. You will also need 'BasePermissions' set to 'Full'."
 }
 
+variable "enable_protection" {
+  description = "Enable protection for Cloudformation stack"
+  type        = bool
+  default     = false
+}
+
 locals {
   datadog_integration_role_name = join("-", [local.module_prefix, "integration"])
   datadog_aws_filter_tags       = [for key, value in var.datadog_aws_filter_tags : format("%s:%s", key, value)]
@@ -101,6 +107,20 @@ resource "aws_cloudformation_stack" "datadog_policy_macro" {
 
   template_url = "https://datadog-cloudformation-template.s3.amazonaws.com/aws/datadog_policy_macro.yaml"
   capabilities = ["CAPABILITY_IAM", "CAPABILITY_AUTO_EXPAND"]
+}
+
+resource "null_resource" "policy_macro_enable_protection" {
+  count = var.create && var.enable_protection ? 1 : 0
+  provisioner "local-exec" {
+    command = "aws cloudformation update-termination-protection --stack-name ${concat(aws_cloudformation_stack.datadog_policy_macro.*.name, [""])[0]} --enable-termination-protection"
+  }
+}
+
+resource "null_resource" "policy_macro_disable_protection" {
+  count = var.create && !var.enable_protection ? 1 : 0
+  provisioner "local-exec" {
+    command = "aws cloudformation update-termination-protection --stack-name ${concat(aws_cloudformation_stack.datadog_policy_macro.*.name, [""])[0]} --no-enable-termination-protection"
+  }
 }
 
 # The IAM role for Datadog integration
@@ -172,6 +192,20 @@ resource "aws_cloudformation_stack" "datadog_integration" {
   }
 
   depends_on = [aws_cloudformation_stack.datadog_policy_macro]
+}
+
+resource "null_resource" "integration_enable_protection" {
+  count = var.create && var.enable_protection ? 1 : 0
+  provisioner "local-exec" {
+    command = "aws cloudformation update-termination-protection --stack-name ${concat(aws_cloudformation_stack.datadog_integration.*.name, [""])[0]} --enable-termination-protection"
+  }
+}
+
+resource "null_resource" "integration_disable_protection" {
+  count = var.create && !var.enable_protection ? 1 : 0
+  provisioner "local-exec" {
+    command = "aws cloudformation update-termination-protection --stack-name ${concat(aws_cloudformation_stack.datadog_integration.*.name, [""])[0]} --no-enable-termination-protection"
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
