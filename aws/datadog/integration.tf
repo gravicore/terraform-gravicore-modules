@@ -116,6 +116,13 @@ resource "null_resource" "policy_macro_enable_protection" {
   }
 }
 
+resource "null_resource" "policy_macro_disable_protection" {
+  count = var.create && !var.enable_protection ? 1 : 0
+  provisioner "local-exec" {
+    command = "aws cloudformation update-termination-protection --stack-name ${concat(aws_cloudformation_stack.datadog_policy_macro.*.name, [""])[0]} --no-enable-termination-protection"
+  }
+}
+
 # The IAM role for Datadog integration
 # Parameters:
 #   ExternalId:
@@ -191,6 +198,13 @@ resource "null_resource" "integration_enable_protection" {
   count = var.create && var.enable_protection ? 1 : 0
   provisioner "local-exec" {
     command = "aws cloudformation update-termination-protection --stack-name ${concat(aws_cloudformation_stack.datadog_integration.*.name, [""])[0]} --enable-termination-protection"
+  }
+}
+
+resource "null_resource" "integration_disable_protection" {
+  count = var.create && !var.enable_protection ? 1 : 0
+  provisioner "local-exec" {
+    command = "aws cloudformation update-termination-protection --stack-name ${concat(aws_cloudformation_stack.datadog_integration.*.name, [""])[0]} --no-enable-termination-protection"
   }
 }
 

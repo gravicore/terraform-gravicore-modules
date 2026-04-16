@@ -256,6 +256,13 @@ resource "null_resource" "forwarder_enable_protection" {
   }
 }
 
+resource "null_resource" "forwarder_disable_protection" {
+  count = var.create && !var.enable_protection ? 1 : 0
+  provisioner "local-exec" {
+    command = "aws cloudformation update-termination-protection --stack-name ${concat(aws_cloudformation_stack.datadog_forwarder.*.name, [""])[0]} --no-enable-termination-protection"
+  }
+}
+
 resource "aws_lambda_permission" "allow_cloudwatch" {
   count = var.create ? length(var.datadog_cloudwatch_log_groups) : 0
 
