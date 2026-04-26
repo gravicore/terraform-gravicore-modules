@@ -222,10 +222,11 @@ resource "aws_iam_access_key" "default" {
   user  = aws_iam_user.default[0].name
 }
 
-resource "aws_iam_user_policy" "default" {
+resource "aws_iam_policy" "default" {
   count = var.create && var.create_s3_service_user ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "read", "write"])
-  user  = aws_iam_user.default[0].name
+  path  = "/"
+  tags  = local.tags
 
   policy = <<EOF
 {
@@ -258,6 +259,12 @@ resource "aws_iam_user_policy" "default" {
     ]
 }
 EOF
+}
+
+resource "aws_iam_user_policy_attachment" "default" {
+  count      = var.create ? 1 : 0
+  user       = concat(aws_iam_user.default.*.name, [""])[0]
+  policy_arn = concat(aws_iam_policy.default.*.arn, [""])[0]
 }
 
 resource "aws_ssm_parameter" "service_access_key_id" {
