@@ -82,12 +82,18 @@ data "aws_iam_policy_document" "datasync_s3" {
   }
 }
 
-resource "aws_iam_role_policy" "datasync_s3" {
+resource "aws_iam_policy" "datasync_s3" {
   for_each = var.create && length(local.datasync_locations_s3) > 0 ? local.datasync_locations_s3 : {}
   name     = join("-", [local.module_prefix, "s3", each.key])
+  path     = "/"
 
-  role   = aws_iam_role.datasync_s3[each.key].id
   policy = data.aws_iam_policy_document.datasync_s3[each.key].json
+}
+
+resource "aws_iam_role_policy_attachment" "datasync_s3" {
+  for_each   = var.create && length(local.datasync_locations_s3) > 0 ? local.datasync_locations_s3 : {}
+  role       = aws_iam_role.datasync_s3[each.key].id
+  policy_arn = aws_iam_policy.datasync_s3[each.key].arn
 }
 
 resource "aws_datasync_location_s3" "datasync" {
@@ -136,6 +142,7 @@ output "datasync_locations_s3" {
 output "datasync_locations_smb" {
   description = "SMB Locations for DataSync"
   value       = var.create && var.datasync_agent_id != null && length(local.datasync_locations_smb) > 0 ? aws_datasync_location_smb.datasync : null
+  sensitive   = true
 }
 
 # module "parameters_vpc" {
