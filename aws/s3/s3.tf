@@ -226,7 +226,6 @@ resource "aws_iam_policy" "default" {
   count = var.create && var.create_s3_service_user ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "read", "write"])
   path  = "/"
-  tags  = local.tags
 
   policy = <<EOF
 {
