@@ -6,31 +6,38 @@ variable "vpc_id" {
   type = string
 }
 
-variable "vpc_subnet_ids" {
-  type = list(string)
+variable "instances" {
+  description = "Map of DFS instance definitions. Each instance may define subnet_id, private_ip, and an optional name."
+  type = map(object({
+    name                                 = optional(string)
+    subnet_id                            = string
+    private_ip                           = optional(string)
+    ami_name                             = optional(string, "Windows_Server-2025-English-Full-Base-*") ##"Windows_Server-2025-English-Full-Base-*"
+    instance_type                        = optional(string, "t3.medium")                               ##"t3.medium"
+    monitoring                           = optional(bool, false)
+    associate_public_ip_address          = optional(bool, false)           ##"If true, the launched EC2 instance will have associated public IP address"
+    ipv6_address_count                   = optional(number, null)          ## A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
+    ipv6_addresses                       = optional(list(string), null)    ## Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
+    ebs_optimized                        = optional(bool, false)           ## If true, the launched EC2 instance will be EBS-optimized
+    ebs_block_device                     = optional(list(map(string)), []) ## Additional EBS block devices to attach to the instance
+    root_block_device                    = optional(list(map(string)), []) ## Customize details about the root block device of the instance. See Block Devices below for details
+    ephemeral_block_device               = optional(list(map(string)), []) ## Customize details about the ephemeral (also known as instance store) block devices of the instance. See Block Devices below for details
+    network_interface                    = optional(list(map(string)), []) ## Customize network interfaces to be attached at instance boot time
+    disable_api_termination              = optional(bool, false)           ## If true, enables EC2 Instance Termination Protection
+    instance_initiated_shutdown_behavior = optional(string, null)          ## Shutdown behavior for the instance. Valid values are stop and terminate. Default is null, which means that the instance will use the default behavior of the AMI. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior for more details.
+  }))
+  default = {}
 }
 
-locals {
-  vpc_subnet_ids = flatten(var.vpc_subnet_ids)
-}
+
+
 
 # DFS Namespace machine
-variable "vm_dfs_instance_type" {
-  description = "EC2 instance type"
-  default     = "t3.medium"
-  type        = string
-}
 
 variable "vm_dfs_disk_size" {
   description = "EC2 root disk size"
   default     = "60"
   type        = string
-}
-
-variable "instance_count" {
-  description = "Number of instances to launch"
-  type        = number
-  default     = 2
 }
 
 variable "placement_group" {
@@ -51,61 +58,14 @@ variable "tenancy" {
   default     = "default"
 }
 
-variable "ebs_optimized" {
-  description = "If true, the launched EC2 instance will be EBS-optimized"
-  type        = bool
-  default     = false
-}
-
-variable "disable_api_termination" {
-  description = "If true, enables EC2 Instance Termination Protection"
-  type        = bool
-  default     = false
-}
-
-variable "instance_initiated_shutdown_behavior" {
-  description = "Shutdown behavior for the instance" # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior
-  type        = string
-  default     = ""
-}
 
 variable "key_name" {
   description = "The key name to use for the instance"
   type        = string
 }
 
-variable "monitoring" {
-  description = "If true, the launched EC2 instance will have detailed monitoring enabled"
-  type        = bool
-  default     = false
-}
-
 variable "vpc_security_group_ids" {
   description = "A list of security group IDs to associate with"
-  type        = list(string)
-  default     = null
-}
-
-variable "subnet_id" {
-  description = "The VPC Subnet ID to launch in"
-  type        = string
-  default     = ""
-}
-
-variable "associate_public_ip_address" {
-  description = "If true, the EC2 instance will have associated public IP address"
-  type        = bool
-  default     = false
-}
-
-variable "private_ip" {
-  description = "Private IP address to associate with the instance in a VPC"
-  type        = string
-  default     = null
-}
-
-variable "private_ips" {
-  description = "A list of private IP address to associate with the instance in a VPC. Should match the number of instances."
   type        = list(string)
   default     = null
 }
@@ -128,42 +88,6 @@ variable "iam_instance_profile" {
   default     = ""
 }
 
-variable "ipv6_address_count" {
-  description = "A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet."
-  type        = number
-  default     = null
-}
-
-variable "ipv6_addresses" {
-  description = "Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface"
-  type        = list(string)
-  default     = null
-}
-
-variable "root_block_device" {
-  description = "Customize details about the root block device of the instance. See Block Devices below for details"
-  type        = list(map(string))
-  default     = []
-}
-
-variable "ebs_block_device" {
-  description = "Additional EBS block devices to attach to the instance"
-  type        = list(map(string))
-  default     = []
-}
-
-variable "ephemeral_block_device" {
-  description = "Customize Ephemeral (also known as Instance Store) volumes on the instance"
-  type        = list(map(string))
-  default     = []
-}
-
-variable "network_interface" {
-  description = "Customize network interfaces to be attached at instance boot time"
-  type        = list(map(string))
-  default     = []
-}
-
 variable "metadata_options" {
   description = "Customize the metadata options of the instance"
   type        = map(string)
@@ -171,10 +95,11 @@ variable "metadata_options" {
 }
 
 data "aws_ami" "windows" {
+  for_each    = var.create ? var.instances : {}
   most_recent = true
   filter {
     name   = "name"
-    values = ["Windows_Server-2016-English-Full-Base-*"]
+    values = [lookup(each.value, "ami_name", "Windows_Server-2016-English-Full-Base-*")]
   }
   filter {
     name   = "virtualization-type"
@@ -232,7 +157,7 @@ resource "aws_security_group" "default" {
 
 resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
   for_each          = { for port in var.tcp_allowed_ports : port.from_port => port }
-  security_group_id = aws_security_group.default[0].id
+  security_group_id = concat(aws_security_group.default.*.id, [""])[0]
   type              = "ingress"
   from_port         = each.value.from_port
   to_port           = each.value.to_port
@@ -242,7 +167,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_tcp" {
 
 resource "aws_security_group_rule" "allow_ingress_cidr_icmp" {
   count             = var.create ? 1 : 0
-  security_group_id = aws_security_group.default[0].id
+  security_group_id = concat(aws_security_group.default.*.id, [""])[0]
   type              = "ingress"
   from_port         = "-1"
   to_port           = "-1"
@@ -252,7 +177,7 @@ resource "aws_security_group_rule" "allow_ingress_cidr_icmp" {
 
 resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
   for_each          = { for port in var.udp_allowed_ports : port.from_port => port }
-  security_group_id = aws_security_group.default[0].id
+  security_group_id = concat(aws_security_group.default.*.id, [""])[0]
   type              = "ingress"
   from_port         = each.value.from_port
   to_port           = each.value.to_port
@@ -264,7 +189,8 @@ resource "aws_security_group_rule" "allow_ingress_cidr_udp" {
 # IAM policies for SSM
 #########################################################
 resource "aws_iam_role" "ec2_role" {
-  name = join("-", [local.module_prefix, "ec2-ssm-attach"])
+  count = var.create ? 1 : 0
+  name  = join("-", [local.module_prefix, "ec2-ssm-attach"])
 
   assume_role_policy = <<EOF
 {
@@ -284,12 +210,14 @@ EOF
 }
 
 resource "aws_iam_instance_profile" "ec2_ad_instance_profile" {
-  name = join("-", [local.module_prefix, "ec2-instance-profile"])
-  role = aws_iam_role.ec2_role.name
+  count = var.create ? 1 : 0
+  name  = join("-", [local.module_prefix, "ec2-instance-profile"])
+  role  = concat(aws_iam_role.ec2_role.*.name, [""])[0]
 }
 
 resource "aws_iam_role_policy_attachment" "ec2-ad-role-policy-attach" {
-  role       = aws_iam_role.ec2_role.name
+  count      = var.create ? 1 : 0
+  role       = concat(aws_iam_role.ec2_role.*.name, [""])[0]
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 }
 
@@ -298,12 +226,12 @@ resource "aws_iam_role_policy_attachment" "ec2-ad-role-policy-attach" {
 #########################################################
 
 resource "aws_instance" "default" {
-  count             = var.create ? var.instance_count : 0
-  ami               = data.aws_ami.windows.id
-  instance_type     = var.vm_dfs_instance_type
-  subnet_id         = element(var.vpc_subnet_ids, count.index)
+  for_each          = var.create ? var.instances : {}
+  ami               = data.aws_ami.windows[each.key].id
+  instance_type     = each.value.instance_type
+  subnet_id         = each.value.subnet_id
   key_name          = var.key_name
-  monitoring        = var.monitoring
+  monitoring        = each.value.monitoring
   user_data         = <<EOF
   <powershell>
   Install-WindowsFeature "FS-DFS-Namespace", "FS-DFS-Replication", "RSAT-DFS-Mgmt-Con"
@@ -311,18 +239,18 @@ resource "aws_instance" "default" {
   EOF
   get_password_data = var.get_password_data
   vpc_security_group_ids = [
-    aws_security_group.default[0].id,
+    concat(aws_security_group.default.*.id, [""])[0],
 
   ]
-  iam_instance_profile        = aws_iam_instance_profile.ec2_ad_instance_profile.name
-  associate_public_ip_address = var.associate_public_ip_address
-  private_ip                  = var.private_ips == null ? null : element(var.private_ips, count.index)
-  ipv6_address_count          = var.ipv6_address_count
-  ipv6_addresses              = var.ipv6_addresses
-  ebs_optimized               = var.ebs_optimized
+  iam_instance_profile        = concat(aws_iam_instance_profile.ec2_ad_instance_profile.*.name, [""])[0]
+  associate_public_ip_address = each.value.associate_public_ip_address
+  private_ip                  = lookup(each.value, "private_ip", null)
+  ipv6_address_count          = each.value.ipv6_address_count
+  ipv6_addresses              = each.value.ipv6_addresses
+  ebs_optimized               = each.value.ebs_optimized
 
   dynamic "root_block_device" {
-    for_each = var.root_block_device
+    for_each = each.value.root_block_device
     content {
       delete_on_termination = lookup(root_block_device.value, "delete_on_termination", null)
       encrypted             = lookup(root_block_device.value, "encrypted", null)
@@ -334,7 +262,7 @@ resource "aws_instance" "default" {
   }
 
   dynamic "ebs_block_device" {
-    for_each = var.ebs_block_device
+    for_each = each.value.ebs_block_device
     content {
       delete_on_termination = lookup(ebs_block_device.value, "delete_on_termination", null)
       device_name           = ebs_block_device.value.device_name
@@ -348,7 +276,7 @@ resource "aws_instance" "default" {
   }
 
   dynamic "ephemeral_block_device" {
-    for_each = var.ephemeral_block_device
+    for_each = each.value.ephemeral_block_device
     content {
       device_name  = ephemeral_block_device.value.device_name
       no_device    = lookup(ephemeral_block_device.value, "no_device", null)
@@ -366,7 +294,7 @@ resource "aws_instance" "default" {
   }
 
   dynamic "network_interface" {
-    for_each = var.network_interface
+    for_each = each.value.network_interface
     content {
       device_index          = network_interface.value.device_index
       network_interface_id  = lookup(network_interface.value, "network_interface_id", null)
@@ -374,16 +302,16 @@ resource "aws_instance" "default" {
     }
   }
 
-  source_dest_check                    = length(var.network_interface) > 0 ? null : var.source_dest_check
-  disable_api_termination              = var.disable_api_termination
-  instance_initiated_shutdown_behavior = var.instance_initiated_shutdown_behavior
+  source_dest_check                    = length(each.value.network_interface) > 0 ? null : var.source_dest_check
+  disable_api_termination              = each.value.disable_api_termination
+  instance_initiated_shutdown_behavior = each.value.instance_initiated_shutdown_behavior
   # placement_group                      = var.placement_group
   tenancy = var.tenancy
 
   tags = merge(
     local.tags,
     {
-      Name = var.instance_count == 1 ? local.module_prefix : join("-", [local.module_prefix, count.index + 1]),
+      Name = "${local.module_prefix}-${lookup(each.value, "name", each.key)}",
     }
   )
   lifecycle {
@@ -398,8 +326,8 @@ resource "aws_instance" "default" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 output "dfs_instances" {
-  description = "List the info for dfs namespace instances"
-  value       = aws_instance.default.*
+  description = "Map of DFS namespace instances"
+  value       = { for k, instance in aws_instance.default : k => instance }
 }
 
 output "dfs_security_group" {
