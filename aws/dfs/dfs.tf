@@ -9,22 +9,28 @@ variable "vpc_id" {
 variable "instances" {
   description = "Map of DFS instance definitions. Each instance may define subnet_id, private_ip, and an optional name."
   type = map(object({
-    name                        = optional(string)
-    subnet_id                   = string
-    private_ip                  = optional(string)
-    ami_name                    = optional(string, "Windows_Server-2025-English-Full-Base-*") ##"Windows_Server-2025-English-Full-Base-*"
-    instance_type               = optional(string, "t3.medium")                               ##"t3.medium"
-    monitoring                  = optional(bool, false)
-    associate_public_ip_address = optional(bool, false)           ##"If true, the launched EC2 instance will have associated public IP address"
-    ipv6_address_count          = optional(number, null)          ## A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
-    ipv6_addresses              = optional(list(string), null)    ## Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
-    ebs_optimized               = optional(bool, false)           ## If true, the launched EC2 instance will be EBS-optimized
-    ebs_block_device            = optional(list(map(string)), []) ## Additional EBS block devices to attach to the instance
-    root_block_device           = optional(list(map(string)), []) ## Customize details about the root block device of the instance. See Block Devices below for details
-    ephemeral_block_device      = optional(list(map(string)), []) ## Customize details about the ephemeral (also known as instance store) block devices of the instance. See Block Devices below for details
+    name                                 = optional(string)
+    subnet_id                            = string
+    private_ip                           = optional(string)
+    ami_name                             = optional(string, "Windows_Server-2025-English-Full-Base-*") ##"Windows_Server-2025-English-Full-Base-*"
+    instance_type                        = optional(string, "t3.medium")                               ##"t3.medium"
+    monitoring                           = optional(bool, false)
+    associate_public_ip_address          = optional(bool, false)           ##"If true, the launched EC2 instance will have associated public IP address"
+    ipv6_address_count                   = optional(number, null)          ## A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
+    ipv6_addresses                       = optional(list(string), null)    ## Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
+    ebs_optimized                        = optional(bool, false)           ## If true, the launched EC2 instance will be EBS-optimized
+    ebs_block_device                     = optional(list(map(string)), []) ## Additional EBS block devices to attach to the instance
+    root_block_device                    = optional(list(map(string)), []) ## Customize details about the root block device of the instance. See Block Devices below for details
+    ephemeral_block_device               = optional(list(map(string)), []) ## Customize details about the ephemeral (also known as instance store) block devices of the instance. See Block Devices below for details
+    network_interface                    = optional(list(map(string)), []) ## Customize network interfaces to be attached at instance boot time
+    disable_api_termination              = optional(bool, false)           ## If true, enables EC2 Instance Termination Protection
+    instance_initiated_shutdown_behavior = optional(string, null)          ## Shutdown behavior for the instance. Valid values are stop and terminate. Default is null, which means that the instance will use the default behavior of the AMI. See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior for more details.
   }))
   default = {}
 }
+
+
+
 
 # DFS Namespace machine
 
@@ -52,17 +58,6 @@ variable "tenancy" {
   default     = "default"
 }
 
-variable "disable_api_termination" {
-  description = "If true, enables EC2 Instance Termination Protection"
-  type        = bool
-  default     = false
-}
-
-variable "instance_initiated_shutdown_behavior" {
-  description = "Shutdown behavior for the instance" # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#Using_ChangingInstanceInitiatedShutdownBehavior
-  type        = string
-  default     = ""
-}
 
 variable "key_name" {
   description = "The key name to use for the instance"
@@ -91,12 +86,6 @@ variable "iam_instance_profile" {
   description = "The IAM Instance Profile to launch the instance with. Specified as the name of the Instance Profile."
   type        = string
   default     = ""
-}
-
-variable "network_interface" {
-  description = "Customize network interfaces to be attached at instance boot time"
-  type        = list(map(string))
-  default     = []
 }
 
 variable "metadata_options" {
@@ -305,7 +294,7 @@ resource "aws_instance" "default" {
   }
 
   dynamic "network_interface" {
-    for_each = var.network_interface
+    for_each = each.value.network_interface
     content {
       device_index          = network_interface.value.device_index
       network_interface_id  = lookup(network_interface.value, "network_interface_id", null)
@@ -313,9 +302,9 @@ resource "aws_instance" "default" {
     }
   }
 
-  source_dest_check                    = length(var.network_interface) > 0 ? null : var.source_dest_check
-  disable_api_termination              = var.disable_api_termination
-  instance_initiated_shutdown_behavior = var.instance_initiated_shutdown_behavior
+  source_dest_check                    = length(each.value.network_interface) > 0 ? null : var.source_dest_check
+  disable_api_termination              = each.value.disable_api_termination
+  instance_initiated_shutdown_behavior = each.value.instance_initiated_shutdown_behavior
   # placement_group                      = var.placement_group
   tenancy = var.tenancy
 
