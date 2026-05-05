@@ -165,19 +165,23 @@ data "aws_iam_policy_document" "cognito_unauthorized" {
   }
 }
 
-resource "aws_iam_role_policy" "cognito_unauthorized" {
+resource "aws_iam_policy" "cognito_unauthorized" {
   count = var.create ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "unauth", "access"])
+  tags  = local.tags
 
-  role   = aws_iam_role.cognito_unauthorized[0].name
-  policy = data.aws_iam_policy_document.cognito_unauthorized[0].json
+  policy = concat(data.aws_iam_policy_document.cognito_unauthorized.*.json, [""])[0]
 }
 
-resource "aws_iam_policy_attachment" "cognito_unauthorized_custom" {
-  count = var.create && var.cognito_unauthorized_custom_policy_arn != "" ? 1 : 0
-  name  = join(var.delimiter, [local.module_prefix, "custom", "unauth", "access"])
+resource "aws_iam_role_policy_attachment" "cognito_unauthorized" {
+  count      = var.create ? 1 : 0
+  role       = concat(aws_iam_role.cognito_unauthorized.*.name, [""])[0]
+  policy_arn = concat(aws_iam_policy.cognito_unauthorized.*.arn, [""])[0]
+}
 
-  roles      = [aws_iam_role.cognito_unauthorized[0].name]
+resource "aws_iam_role_policy_attachment" "cognito_unauthorized_custom" {
+  count      = var.create && var.cognito_unauthorized_custom_policy_arn != "" ? 1 : 0
+  role       = concat(aws_iam_role.cognito_unauthorized.*.name, [""])[0]
   policy_arn = var.cognito_unauthorized_custom_policy_arn
 }
 
@@ -235,19 +239,23 @@ data "aws_iam_policy_document" "cognito_authorized" {
   }
 }
 
-resource "aws_iam_role_policy" "cognito_authorized" {
+resource "aws_iam_policy" "cognito_authorized" {
   count = var.create ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "auth", "access"])
+  tags  = local.tags
 
-  role   = aws_iam_role.cognito_authorized[0].name
-  policy = data.aws_iam_policy_document.cognito_authorized[0].json
+  policy = concat(data.aws_iam_policy_document.cognito_authorized.*.json, [""])[0]
 }
 
-resource "aws_iam_policy_attachment" "cognito_authorized_custom" {
-  count = var.create && var.cognito_authorized_custom_policy_arn != "" ? 1 : 0
-  name  = join(var.delimiter, [local.module_prefix, "customer", "auth", "access"])
+resource "aws_iam_role_policy_attachment" "cognito_authorized" {
+  count      = var.create ? 1 : 0
+  role       = concat(aws_iam_role.cognito_authorized.*.name, [""])[0]
+  policy_arn = concat(aws_iam_policy.cognito_authorized.*.arn, [""])[0]
+}
 
-  roles      = [aws_iam_role.cognito_authorized[0].name]
+resource "aws_iam_role_policy_attachment" "cognito_authorized_custom" {
+  count      = var.create && var.cognito_authorized_custom_policy_arn != "" ? 1 : 0
+  role       = concat(aws_iam_role.cognito_authorized.*.name, [""])[0]
   policy_arn = var.cognito_authorized_custom_policy_arn
 }
 

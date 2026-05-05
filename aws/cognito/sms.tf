@@ -82,10 +82,16 @@ data "aws_iam_policy_document" "cognito_sms" {
   }
 }
 
-resource "aws_iam_role_policy" "cognito_sms" {
+resource "aws_iam_policy" "cognito_sms" {
   count = var.create && var.mfa_configuration != "OFF" ? 1 : 0
   name  = "${local.module_prefix}-sms-access"
+  tags  = local.tags
 
-  role   = aws_iam_role.cognito_sms[0].name
-  policy = data.aws_iam_policy_document.cognito_sms[0].json
+  policy = concat(data.aws_iam_policy_document.cognito_sms.*.json, [""])[0]
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_sms" {
+  count      = var.create && var.mfa_configuration != "OFF" ? 1 : 0
+  role       = concat(aws_iam_role.cognito_sms.*.name, [""])[0]
+  policy_arn = concat(aws_iam_policy.cognito_sms.*.arn, [""])[0]
 }
