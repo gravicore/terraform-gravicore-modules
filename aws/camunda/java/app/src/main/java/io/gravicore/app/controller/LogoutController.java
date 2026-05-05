@@ -6,8 +6,8 @@ import org.springframework.security.web.RedirectStrategy;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Controller
 public class LogoutController {
@@ -20,13 +20,13 @@ public class LogoutController {
 
     @GetMapping("/logout/oauth2/code/custom")
     public void sendRedirect(final HttpServletRequest request,
-                             final HttpServletResponse response) throws Exception {
+            final HttpServletResponse response) throws Exception {
         redirectStrategy.sendRedirect(request, response, signoutUri);
     }
 
     @GetMapping("/logout/oauth2/code/cognito")
     public void logout(final HttpServletRequest request,
-                             final HttpServletResponse response) throws Exception {
+            final HttpServletResponse response) throws Exception {
         request.getSession().invalidate();
         redirectStrategy.sendRedirect(request, response, ssoSignoutUri);
     }
