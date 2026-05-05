@@ -130,12 +130,18 @@ data "aws_iam_policy_document" "cognito_lambda" {
   }
 }
 
-resource "aws_iam_role_policy" "cognito_lambda" {
+resource "aws_iam_policy" "cognito_lambda" {
   count = var.create ? 1 : 0
   name  = "${local.module_prefix}-lambda-access"
+  tags  = local.tags
 
-  role   = aws_iam_role.cognito_lambda[0].name
   policy = data.aws_iam_policy_document.cognito_lambda[0].json
+}
+
+resource "aws_iam_role_policy_attachment" "cognito_lambda" {
+  count      = var.create ? 1 : 0
+  role       = concat(aws_iam_role.cognito_lambda.*.name, [""])[0]
+  policy_arn = concat(aws_iam_policy.cognito_lambda.*.arn, [""])[0]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
