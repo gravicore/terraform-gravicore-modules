@@ -207,6 +207,20 @@ module "sns_kms_key" {
   alias                   = "alias/${replace(local.stage_prefix, var.delimiter, "/")}/sns"
 }
 
+module "cloudtrail_kms_key" {
+  count       = (var.create && var.cloudtrail_key_create) ? 1 : 0
+  source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
+  namespace   = ""
+  stage       = ""
+  name        = "${local.stage_prefix}-cloudtrail"
+  description = join(" ", [var.desc_prefix, "KMS Key for CloudTrail"])
+  tags        = local.tags
+
+  deletion_window_in_days = var.default_deletion_window_in_days
+  enable_key_rotation     = true
+  alias                   = "alias/${replace(local.stage_prefix, var.delimiter, "/")}/cloudtrail"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # OUTPUTS
 # ----------------------------------------------------------------------------------------------------------------------
@@ -253,10 +267,15 @@ output "sqs_key_arn" {
 
 output "sns_key_arn" {
   value       = module.sns_kms_key.key_arn
-  description = "Generic KMS Key ARN for SSN"
+  description = "Generic KMS Key ARN for SNS"
 }
 
 output "dnssec_key_arn" {
   value       = var.dnssec_key_create ? concat(module.dnssec_kms_key.*.key_arn, [""])[0] : null
   description = "Generic KMS Key ARN for DNSSEC"
+}
+
+output "cloudtrail_key_arn" {
+  value       = var.cloudtrail_key_create ? concat(module.cloudtrail_kms_key.*.key_arn, [""])[0] : null
+  description = "Generic KMS Key ARN for CloudTrail"
 }
