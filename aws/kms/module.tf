@@ -43,6 +43,12 @@ variable "dnssec_key_create" {
   description = "Set to false to prevent the module from creating DNSSEC resources"
 }
 
+variable "cloudtrail_key_create" {
+  type        = bool
+  default     = false
+  description = "Set to false to prevent the module from creating CloudTrail resources"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
