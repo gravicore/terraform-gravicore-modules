@@ -317,7 +317,7 @@ variable "scheduled_query_rules_alerts" {
     display_name                        = optional(string, "")
     query_time_range_override           = optional(string, "PT1H")
     skip_query_validation               = optional(bool, false)
-    mute_actions_after_alert_duration   = optional(string, "PT1H")
+    mute_actions_after_alert_duration   = optional(string)
     target_resource_types               = optional(list(string), [])
     criteria = object({
       query                   = string
