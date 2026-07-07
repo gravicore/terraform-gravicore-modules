@@ -608,7 +608,10 @@ module "logs" {
   delimiter  = var.delimiter
   attributes = compact(concat(var.attributes, ["logs"]))
 
-  versioning_enabled = var.s3_bucket_versioning ? true : false
+  versioning_enabled      = var.s3_bucket_versioning ? true : false
+  allow_ssl_requests_only = var.enforce_ssl_requests_only ? true : false
+  sse_algorithm           = var.sse_algorithm
+  kms_master_key_arn      = var.kms_master_key_arn
 
   tags                      = local.tags
   lifecycle_prefix          = var.log_prefix

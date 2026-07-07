@@ -81,8 +81,7 @@ resource "aws_iam_policy" "elevated" {
 resource "aws_iam_user" "elevated" {
   count = var.create ? 1 : 0
   name  = join(var.delimiter, [local.module_prefix, "elevated", "access"])
-
-  tags = local.tags
+  tags  = local.tags
 }
 
 resource "aws_iam_group" "elevated" {
