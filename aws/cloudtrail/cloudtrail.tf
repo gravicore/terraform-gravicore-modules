@@ -80,6 +80,12 @@ variable "kms_master_key_arn" {
   description = "The AWS KMS master key ARN used for the `SSE-KMS` encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default aws/s3 AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`"
 }
 
+variable "enforce_ssl_requests_only" {
+  type        = bool
+  default     = false
+  description = "Enforce SSL requests only for S3 bucket"
+}
+
 variable "log_enable_glacier_transition" {
   type        = bool
   default     = false
@@ -402,6 +408,38 @@ resource "aws_s3_bucket_versioning" "default" {
   }
 }
 
+data "aws_iam_policy_document" "enforce_ssl" {
+  count = local.create_storage_bucket && var.enforce_ssl_requests_only ? 1 : 0
+  statement {
+    sid    = "AllowSSLRequestsOnly"
+    effect = "Deny"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = ["s3:*"]
+
+    resources = [
+      concat(aws_s3_bucket.default.*.arn, [""])[0],
+      "${concat(aws_s3_bucket.default.*.arn, [""])[0]}/*"
+    ]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "prod" {
+  count  = local.create_storage_bucket && var.enforce_ssl_requests_only ? 1 : 0
+  bucket = concat(aws_s3_bucket.default.*.id, [""])[0]
+  policy = concat(data.aws_iam_policy_document.enforce_ssl.*.json, [""])[0]
+}
+
 module "logs" {
   source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/1.4.3"
   enabled    = local.create_storage_bucket && var.s3_bucket_access_logging && var.access_log_bucket_name == null
@@ -411,7 +449,10 @@ module "logs" {
   delimiter  = var.delimiter
   attributes = compact(concat(var.attributes, ["logs"]))
 
-  versioning_enabled = var.s3_bucket_versioning ? true : false
+  versioning_enabled      = var.s3_bucket_versioning ? true : false
+  allow_ssl_requests_only = var.enforce_ssl_requests_only ? true : false
+  sse_algorithm           = var.sse_algorithm
+  kms_master_key_arn      = var.kms_master_key_arn
 
   tags                      = local.tags
   lifecycle_prefix          = var.log_lifecycle_prefix
@@ -508,6 +549,7 @@ data "aws_iam_policy_document" "sns" {
     ]
   }
 
+
   dynamic "statement" {
     for_each = var.allowed_sns_subscription_accounts == null ? [1] : []
     content {
@@ -543,6 +585,7 @@ data "aws_iam_policy_document" "sns" {
       ]
     }
   }
+
 }
 
 resource "aws_sns_topic" "default" {
