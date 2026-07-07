@@ -120,6 +120,12 @@ variable "s3_bucket_versioning" {
   default     = false
 }
 
+variable "enforce_ssl_requests_only" {
+  type        = bool
+  default     = false
+  description = "Enforce SSL requests only for S3 bucket"
+}
+
 variable "s3_bucket_access_logging" {
   type        = bool
   description = "Access logging of S3 buckets enabled?"
