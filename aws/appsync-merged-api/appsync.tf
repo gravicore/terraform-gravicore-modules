@@ -46,6 +46,12 @@ variable "introspection_config" {
   type        = string
 }
 
+variable "exclude_verbose_content" {
+  description = "optional. Set to true to exclude sections that contain information such as headers, context, and evaluated mapping templates, regardless of logging level"
+  default     = true
+  type        = bool
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -154,7 +160,7 @@ resource "gravicore_aws_appsync_graphql_api" "default" {
 
   log_config {
     cloudwatch_logs_role_arn = concat(aws_iam_role.this.*.arn, [""])[0]
-    exclude_verbose_content  = true
+    exclude_verbose_content  = var.exclude_verbose_content
     field_log_level          = "NONE"
   }
 
