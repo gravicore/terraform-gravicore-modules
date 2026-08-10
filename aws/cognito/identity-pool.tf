@@ -158,8 +158,7 @@ data "aws_iam_policy_document" "cognito_unauthorized" {
   statement {
     effect = "Deny"
     actions = [
-      "iam:*",
-      "kms:*",
+      "iam:*"
     ]
     resources = ["*"]
   }
@@ -233,7 +232,6 @@ data "aws_iam_policy_document" "cognito_authorized" {
     effect = "Deny"
     actions = [
       "iam:*",
-      "kms:*",
     ]
     resources = ["*"]
   }
