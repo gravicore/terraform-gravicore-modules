@@ -385,6 +385,18 @@ variable "performance_insights_retention_period" {
   type        = number
 }
 
+variable "enable_sns_encryption" {
+  type        = bool
+  default     = false
+  description = "Enable encryption for SNS topic"
+}
+
+variable "kms_sns_key_arn" {
+  type        = string
+  default     = null
+  description = "KMS key ARN for SNS encryption"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -696,10 +708,10 @@ resource "aws_lambda_permission" "nlb_tg_register" {
 }
 
 resource "aws_sns_topic" "nlb_tg_register" {
-  count = var.create && var.deploy_nlb ? 1 : 0
-  name  = local.module_prefix
-
-  tags = local.tags
+  count             = var.create && var.deploy_nlb ? 1 : 0
+  name              = local.module_prefix
+  kms_master_key_id = var.enable_sns_encryption ? var.kms_sns_key_arn : null
+  tags              = local.tags
 }
 
 resource "aws_sns_topic_subscription" "nlb_tg_register" {

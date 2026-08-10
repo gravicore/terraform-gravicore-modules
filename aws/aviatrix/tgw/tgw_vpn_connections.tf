@@ -72,4 +72,5 @@ resource "aws_ssm_parameter" "tgw_vpn_connections" {
 output "tgw_vpn_connections" {
   value       = aviatrix_aws_tgw_vpn_conn.tgw_vpn_connections
   description = "Map of provisioned Aviatrix AWS TGW VPN Connections"
+  sensitive   = true
 }

@@ -80,28 +80,10 @@ variable "kms_master_key_arn" {
   description = "The AWS KMS master key ARN used for the `SSE-KMS` encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default aws/s3 AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`"
 }
 
-variable "vpc_id" {
-  type        = string
-  default     = null
-  description = ""
-}
-
-variable "guardduty_detector_id" {
-  type        = string
-  default     = null
-  description = ""
-}
-
-variable "flow_log_filter_pattern" {
-  type        = string
-  default     = null
-  description = ""
-}
-
-variable "vpc_flow_log_group_name" {
-  type        = string
-  default     = null
-  description = ""
+variable "enforce_ssl_requests_only" {
+  type        = bool
+  default     = false
+  description = "Enforce SSL requests only for S3 bucket"
 }
 
 variable "log_enable_glacier_transition" {
@@ -137,25 +119,127 @@ variable "create_sns_topic" {
 variable "create_s3_bucket" {
   type        = bool
   default     = true
-  description = "description"
+  description = "(Optional) Setting to true creates an s3 bucket for the logs along side the cloudtrail trail"
 }
 
 variable "s3_bucket_name" {
   type        = string
   default     = ""
-  description = "description"
+  description = "(Optional) Name of the S3 bucket designated for publishing log files"
 }
 
 variable "is_multi_region_trail" {
   type        = bool
   default     = true
-  description = "description"
+  description = "(Optional) Whether the trail is created in the current region or in all regions"
+}
+
+variable "enable_log_file_validation" {
+  type        = bool
+  default     = true
+  description = "(Optional) Whether log file integrity validation is enabled"
+}
+
+variable "include_global_service_events" {
+  type        = bool
+  default     = true
+  description = "(Optional) Whether the trail is publishing events from global services such as IAM to the log files"
+}
+
+variable "enable_logging" {
+  type        = bool
+  default     = true
+  description = "(Optional) Enables logging for the trail"
+}
+
+variable "cloud_watch_logs_role_arn" {
+  type        = string
+  description = "(Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group"
+  default     = ""
+}
+
+variable "cloud_watch_logs_group_arn" {
+  type        = string
+  description = "(Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard"
+  default     = ""
+}
+
+variable "insight_selector" {
+  type = list(object({
+    insight_type = string
+  }))
+
+  description = "(Optional) Configuration block for identifying unusual operational activity"
+  default     = []
+}
+
+variable "event_selector" {
+  type = list(object({
+    include_management_events        = bool
+    read_write_type                  = string
+    exclude_management_event_sources = optional(set(string))
+
+    data_resource = list(object({
+      type   = string
+      values = list(string)
+    }))
+  }))
+
+  description = "(Optional) Specifies an event selector for enabling data event logging. Fields documented below. Please note the CloudTrail limits(https://docs.aws.amazon.com/awscloudtrail/latest/userguide/WhatIsCloudTrail-Limits.html) when configuring these. Conflicts with advanced_event_selector"
+  default     = []
+}
+
+variable "advanced_event_selector" {
+  type = list(object({
+    name = optional(string)
+    field_selector = list(object({
+      field           = string
+      ends_with       = optional(list(string))
+      not_ends_with   = optional(list(string))
+      equals          = optional(list(string))
+      not_equals      = optional(list(string))
+      starts_with     = optional(list(string))
+      not_starts_with = optional(list(string))
+    }))
+  }))
+  description = "(Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with event_selector"
+  default     = []
+}
+
+variable "is_organization_trail" {
+  type        = bool
+  default     = false
+  description = "(Optional) Whether the trail is an AWS Organizations trail. Organization trails log events for the master account and all member accounts. Can only be created in the organization master account"
+}
+
+variable "s3_key_prefix" {
+  type        = string
+  description = "(Optional) S3 key prefix that follows the name of the bucket you have designated for log file delivery"
+  default     = null
+}
+
+variable "kms_cloudtrail_key_arn" {
+  type        = string
+  default     = null
+  description = "(Optional) KMS key ARN to use to encrypt the logs delivered by CloudTrail"
 }
 
 variable "allowed_sns_subscription_accounts" {
   type        = list(string)
   default     = null
-  description = "description"
+  description = "List of account IDs local or cross account to allow log delivery"
+}
+
+variable "enable_sns_encryption" {
+  type        = bool
+  default     = false
+  description = "Enable encryption for SNS topic"
+}
+
+variable "kms_sns_key_arn" {
+  type        = string
+  default     = null
+  description = "KMS key ARN for SNS encryption"
 }
 
 locals {
@@ -324,8 +408,40 @@ resource "aws_s3_bucket_versioning" "default" {
   }
 }
 
+data "aws_iam_policy_document" "enforce_ssl" {
+  count = local.create_storage_bucket && var.enforce_ssl_requests_only ? 1 : 0
+  statement {
+    sid    = "AllowSSLRequestsOnly"
+    effect = "Deny"
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    actions = ["s3:*"]
+
+    resources = [
+      concat(aws_s3_bucket.default.*.arn, [""])[0],
+      "${concat(aws_s3_bucket.default.*.arn, [""])[0]}/*"
+    ]
+
+    condition {
+      test     = "Bool"
+      variable = "aws:SecureTransport"
+      values   = ["false"]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "prod" {
+  count  = local.create_storage_bucket && var.enforce_ssl_requests_only ? 1 : 0
+  bucket = concat(aws_s3_bucket.default.*.id, [""])[0]
+  policy = concat(data.aws_iam_policy_document.enforce_ssl.*.json, [""])[0]
+}
+
 module "logs" {
-  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/0.26.0"
+  source     = "git::https://github.com/cloudposse/terraform-aws-s3-log-storage.git?ref=tags/1.4.3"
   enabled    = local.create_storage_bucket && var.s3_bucket_access_logging && var.access_log_bucket_name == null
   namespace  = ""
   stage      = ""
@@ -333,7 +449,10 @@ module "logs" {
   delimiter  = var.delimiter
   attributes = compact(concat(var.attributes, ["logs"]))
 
-  versioning_enabled = var.s3_bucket_versioning ? true : false
+  versioning_enabled      = var.s3_bucket_versioning ? true : false
+  allow_ssl_requests_only = var.enforce_ssl_requests_only ? true : false
+  sse_algorithm           = var.sse_algorithm
+  kms_master_key_arn      = var.kms_master_key_arn
 
   tags                      = local.tags
   lifecycle_prefix          = var.log_lifecycle_prefix
@@ -353,12 +472,65 @@ resource "aws_s3_bucket_logging" "default" {
 }
 
 resource "aws_cloudtrail" "default" {
-  count                 = var.create ? 1 : 0
-  name                  = join("-", [local.module_prefix, "events"])
-  s3_bucket_name        = concat(aws_s3_bucket.default.*.id, [var.s3_bucket_name])[0]
-  is_multi_region_trail = var.is_multi_region_trail
-  sns_topic_name        = concat(aws_sns_topic.default.*.arn, [var.sns_topic_name])[0]
-  tags                  = local.tags
+  count = var.create ? 1 : 0
+  name  = join("-", [local.module_prefix, "events"])
+  tags  = local.tags
+
+  s3_bucket_name                = concat(aws_s3_bucket.default.*.id, [var.s3_bucket_name])[0]
+  s3_key_prefix                 = var.s3_key_prefix
+  is_multi_region_trail         = var.is_multi_region_trail
+  is_organization_trail         = var.is_organization_trail
+  include_global_service_events = var.include_global_service_events
+  enable_logging                = var.enable_logging
+  enable_log_file_validation    = var.enable_log_file_validation
+  sns_topic_name                = concat(aws_sns_topic.default.*.arn, [var.sns_topic_name])[0]
+  cloud_watch_logs_role_arn     = var.cloud_watch_logs_role_arn
+  cloud_watch_logs_group_arn    = var.cloud_watch_logs_group_arn
+  kms_key_id                    = var.kms_cloudtrail_key_arn
+
+  dynamic "insight_selector" {
+    for_each = var.insight_selector
+    content {
+      insight_type = insight_selector.value.insight_type
+    }
+  }
+
+  dynamic "event_selector" {
+    for_each = var.event_selector
+    content {
+      include_management_events        = lookup(event_selector.value, "include_management_events", null)
+      read_write_type                  = lookup(event_selector.value, "read_write_type", null)
+      exclude_management_event_sources = event_selector.value.exclude_management_event_sources
+
+      dynamic "data_resource" {
+        for_each = lookup(event_selector.value, "data_resource", [])
+        content {
+          type   = data_resource.value.type
+          values = data_resource.value.values
+        }
+      }
+    }
+  }
+
+  dynamic "advanced_event_selector" {
+    for_each = var.advanced_event_selector
+    content {
+      name = lookup(advanced_event_selector.value, "name", null)
+
+      dynamic "field_selector" {
+        for_each = advanced_event_selector.value.field_selector
+        content {
+          field           = field_selector.value.field
+          equals          = lookup(field_selector.value, "equals", null)
+          not_equals      = lookup(field_selector.value, "not_equals", null)
+          starts_with     = lookup(field_selector.value, "starts_with", null)
+          not_starts_with = lookup(field_selector.value, "not_starts_with", null)
+          ends_with       = lookup(field_selector.value, "ends_with", null)
+          not_ends_with   = lookup(field_selector.value, "not_ends_with", null)
+        }
+      }
+    }
+  }
 }
 
 data "aws_iam_policy_document" "sns" {
@@ -376,6 +548,7 @@ data "aws_iam_policy_document" "sns" {
       "arn:aws:sns:${var.aws_region}:${var.account_id}:${join("-", [local.module_prefix, "*"])}",
     ]
   }
+
 
   dynamic "statement" {
     for_each = var.allowed_sns_subscription_accounts == null ? [1] : []
@@ -412,13 +585,15 @@ data "aws_iam_policy_document" "sns" {
       ]
     }
   }
+
 }
 
 resource "aws_sns_topic" "default" {
-  count  = local.create_sns_topic ? 1 : 0
-  name   = join("-", [local.module_prefix, "events"])
-  tags   = local.tags
-  policy = concat(data.aws_iam_policy_document.sns.*.json, [""])[0]
+  count             = local.create_sns_topic ? 1 : 0
+  name              = join("-", [local.module_prefix, "events"])
+  kms_master_key_id = var.enable_sns_encryption ? var.kms_sns_key_arn : null
+  tags              = local.tags
+  policy            = concat(data.aws_iam_policy_document.sns.*.json, [""])[0]
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

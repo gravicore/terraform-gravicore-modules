@@ -64,6 +64,12 @@ variable "services" {
   default = {}
 }
 
+variable "deletion_protection_enabled" {
+  type        = bool
+  default     = false
+  description = "A bool flag to enable/disable deletion protection for ALB"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -226,7 +232,7 @@ resource "aws_lb" "this" {
   subnets            = var.cluster.task.subnet_ids["${each.value.lb.type}"]
   tags               = local.tags
 
-  enable_deletion_protection = false
+  enable_deletion_protection = var.deletion_protection_enabled
 }
 
 resource "aws_lb_target_group" "this" {

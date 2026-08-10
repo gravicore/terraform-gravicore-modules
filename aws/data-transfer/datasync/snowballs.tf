@@ -181,12 +181,17 @@ data "aws_iam_policy_document" "snowballs_import" {
   }
 }
 
-resource "aws_iam_role_policy" "snowballs_import" {
+resource "aws_iam_policy" "snowballs_import" {
   for_each = var.create && length(local.snowballs_locations) > 0 ? local.snowballs_locations : {}
   name     = join("-", [local.module_prefix, "snowball-import", each.key])
+  path     = "/"
+  policy   = data.aws_iam_policy_document.snowballs_import[each.key].json
+}
 
-  role   = aws_iam_role.snowballs[each.key].id
-  policy = data.aws_iam_policy_document.snowballs_import[each.key].json
+resource "aws_iam_role_policy_attachment" "snowballs_import" {
+  for_each   = var.create && length(local.snowballs_locations) > 0 ? local.snowballs_locations : {}
+  role       = aws_iam_role.snowballs[each.key].id
+  policy_arn = aws_iam_policy.snowballs_import[each.key].arn
 }
 
 # Allow export policy
@@ -213,12 +218,17 @@ data "aws_iam_policy_document" "snowballs_export" {
   }
 }
 
-resource "aws_iam_role_policy" "snowballs_export" {
+resource "aws_iam_policy" "snowballs_export" {
   for_each = var.create && length(local.snowballs_locations) > 0 ? local.snowballs_locations : {}
   name     = join("-", [local.module_prefix, "snowball-export", each.key])
+  path     = "/"
+  policy   = data.aws_iam_policy_document.snowballs_export[each.key].json
+}
 
-  role   = aws_iam_role.snowballs[each.key].id
-  policy = data.aws_iam_policy_document.snowballs_export[each.key].json
+resource "aws_iam_role_policy_attachment" "snowballs_export" {
+  for_each   = var.create && length(local.snowballs_locations) > 0 ? local.snowballs_locations : {}
+  role       = aws_iam_role.snowballs[each.key].id
+  policy_arn = aws_iam_policy.snowballs_export[each.key].arn
 }
 
 # SNS notifications
@@ -232,7 +242,7 @@ output "snowballs_locations" {
   value = var.create && length(local.snowballs_locations) > 0 ? { for k, v in local.snowballs_locations : k =>
     merge(v,
       { snowball_iam_role_arn = aws_iam_role.snowballs[k].arn },
-      { snowball_iam_policy_import_arn = aws_iam_role_policy.snowballs_import[k].id },
-      { snowball_iam_policy_export_arn = aws_iam_role_policy.snowballs_export[k].id },
+      { snowball_iam_policy_import_arn = aws_iam_policy.snowballs_import[k].id },
+      { snowball_iam_policy_export_arn = aws_iam_policy.snowballs_export[k].id },
   ) } : null
 }
