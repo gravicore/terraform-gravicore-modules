@@ -88,6 +88,7 @@ module "ebs_kms_key" {
 }
 
 module "chamber_kms_key" {
+  count       = var.chamber_key_create ? 1 : 0
   source      = "git::https://github.com/cloudposse/terraform-aws-kms-key.git?ref=0.12.1"
   namespace   = ""
   stage       = ""
@@ -98,6 +99,13 @@ module "chamber_kms_key" {
   deletion_window_in_days = var.default_deletion_window_in_days
   enable_key_rotation     = true
   alias                   = "alias/parameter_store_key"
+}
+
+# When chamber_key_create = false (e.g. an account shared with another stack that already owns
+# the fixed alias/parameter_store_key), reuse the existing key instead of creating a duplicate.
+data "aws_kms_alias" "chamber" {
+  count = var.chamber_key_create ? 0 : 1
+  name  = "alias/parameter_store_key"
 }
 
 module "s3_kms_key" {
@@ -251,7 +259,7 @@ output "ebs_key_arn" {
 }
 
 output "chamber_key_arn" {
-  value       = module.chamber_kms_key.key_arn
+  value       = concat(module.chamber_kms_key.*.key_arn, data.aws_kms_alias.chamber.*.target_key_arn, [""])[0]
   description = "Generic KMS Key ARN for Chamber"
 }
 
