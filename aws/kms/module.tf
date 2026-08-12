@@ -49,6 +49,12 @@ variable "cloudtrail_key_create" {
   description = "Set to false to prevent the module from creating CloudTrail resources"
 }
 
+variable "chamber_key_create" {
+  type        = bool
+  default     = true
+  description = "Set to false to reuse the existing alias/parameter_store_key Chamber key instead of creating one (e.g. an account shared with another stack that already owns it)"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # Platform Standard Variables
 # ----------------------------------------------------------------------------------------------------------------------
