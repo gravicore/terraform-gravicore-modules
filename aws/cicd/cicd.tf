@@ -48,6 +48,18 @@ variable "restrict_public_buckets" {
   description = ""
 }
 
+variable "sse_algorithm" {
+  type        = string
+  default     = "AES256"
+  description = "The server-side encryption algorithm to use. Valid values are `AES256` and `aws:kms`"
+}
+
+variable "kms_master_key_arn" {
+  type        = string
+  default     = ""
+  description = "The AWS KMS master key ARN used for the `SSE-KMS` encryption. This can only be used when you set the value of `sse_algorithm` as `aws:kms`. The default aws/s3 AWS KMS master key is used if this element is absent while the `sse_algorithm` is `aws:kms`"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 # MODULES / RESOURCES
 # ----------------------------------------------------------------------------------------------------------------------
@@ -122,14 +134,6 @@ resource "aws_s3_bucket" "default" {
     enabled = true
   }
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
-
   tags = local.tags
 }
 
@@ -141,6 +145,18 @@ resource "aws_s3_bucket_public_access_block" "default" {
   block_public_policy     = var.block_public_policy
   ignore_public_acls      = var.ignore_public_acls
   restrict_public_buckets = var.restrict_public_buckets
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
+  count  = var.create && var.deploy_artifacts_bucket ? 1 : 0
+  bucket = concat(aws_s3_bucket.default.*.id, [""])[0]
+
+  rule {
+    apply_server_side_encryption_by_default {
+      kms_master_key_id = var.kms_master_key_arn
+      sse_algorithm     = var.sse_algorithm
+    }
+  }
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
