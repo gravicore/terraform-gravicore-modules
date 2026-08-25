@@ -148,7 +148,7 @@ resource "aws_s3_bucket_public_access_block" "default" {
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
-  count  = var.create ? 1 : 0
+  count  = var.create && var.deploy_artifacts_bucket ? 1 : 0
   bucket = concat(aws_s3_bucket.default.*.id, [""])[0]
 
   rule {
