@@ -29,7 +29,7 @@ locals {
 # ----------------------------------------------------------------------------------------------------------------------
 
 module "s3_backup" {
-  source    = "git::https://github.com/cloudposse/terraform-aws-s3-bucket.git?ref=0.5.0"
+  source    = "git::https://github.com/cloudposse/terraform-aws-s3-bucket.git?ref=0.49.0"
   enabled   = var.create
   namespace = ""
   stage     = ""
@@ -49,7 +49,7 @@ module "s3_backup" {
 # SSM Parameters
 
 module "parameters_backup" {
-  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.32.0"
+  source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.56.4"
   providers   = { aws = "aws" }
   create      = var.create && var.create_parameters
   namespace   = var.namespace
