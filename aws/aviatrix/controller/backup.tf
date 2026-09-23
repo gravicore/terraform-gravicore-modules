@@ -4,7 +4,7 @@
 
 variable "s3_backup_versioning_enabled" {
   type        = bool
-  default     = false
+  default     = true
   description = "A state of versioning. Versioning is a means of keeping multiple variants of an object in the same bucket"
 }
 
@@ -40,6 +40,7 @@ module "s3_backup" {
 
   versioning_enabled     = var.s3_backup_versioning_enabled
   allowed_bucket_actions = var.s3_backup_allowed_bucket_actions
+  tags                   = local.tags
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -50,7 +51,7 @@ module "s3_backup" {
 
 module "parameters_backup" {
   source      = "git::https://github.com/gravicore/terraform-gravicore-modules.git//aws/parameters?ref=0.56.4"
-  providers   = { aws = "aws" }
+  providers   = { aws = aws }
   create      = var.create && var.create_parameters
   namespace   = var.namespace
   environment = var.environment
