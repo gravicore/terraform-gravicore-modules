@@ -16,7 +16,6 @@ public class CognitoConfig {
     public CognitoIdentityProviderClient cognitoIdentityProviderClient() {
         return CognitoIdentityProviderClient.builder()
                 .region(Region.of(region))
-            .build();
+                .build();
     }
-
 }

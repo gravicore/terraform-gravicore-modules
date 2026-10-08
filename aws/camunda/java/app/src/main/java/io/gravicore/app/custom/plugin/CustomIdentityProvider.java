@@ -58,20 +58,16 @@ public class CustomIdentityProvider implements ReadOnlyIdentityProvider {
             return new ArrayList<>(userService.findByGroupId(query.getGroupId()));
         }
         if (query.getId() != null) {
-            customUsers.removeIf(customUser ->
-                    !customUser.getId().equals(query.getId()));
+            customUsers.removeIf(customUser -> !customUser.getId().equals(query.getId()));
         }
         if (query.getFirstName() != null) {
-            customUsers.removeIf(customUser ->
-                    !customUser.getFirstName().equalsIgnoreCase(query.getFirstName()));
+            customUsers.removeIf(customUser -> !customUser.getFirstName().equalsIgnoreCase(query.getFirstName()));
         }
         if (query.getLastName() != null) {
-            customUsers.removeIf(customUser ->
-                    !customUser.getLastName().equals(query.getLastName()));
+            customUsers.removeIf(customUser -> !customUser.getLastName().equals(query.getLastName()));
         }
         if (query.getEmail() != null) {
-            customUsers.removeIf(customUser ->
-                    !customUser.getEmail().equals(query.getEmail()));
+            customUsers.removeIf(customUser -> !customUser.getEmail().equals(query.getEmail()));
         }
         return new ArrayList<>(customUsers);
 
@@ -119,16 +115,13 @@ public class CustomIdentityProvider implements ReadOnlyIdentityProvider {
             return new ArrayList<>(userCustomGroups);
         } else {
             if (query.getId() != null) {
-                customGroups.removeIf(customGroup ->
-                        !customGroup.getId().equals(query.getId()));
+                customGroups.removeIf(customGroup -> !customGroup.getId().equals(query.getId()));
             }
             if (query.getName() != null) {
-                customGroups.removeIf(customGroup ->
-                        !customGroup.getName().equals(query.getName()));
+                customGroups.removeIf(customGroup -> !customGroup.getName().equals(query.getName()));
             }
             if (query.getType() != null) {
-                customGroups.removeIf(customGroup ->
-                        !customGroup.getType().equals(query.getType()));
+                customGroups.removeIf(customGroup -> !customGroup.getType().equals(query.getType()));
             }
         }
         return new ArrayList<>(customGroups);
@@ -150,8 +143,10 @@ public class CustomIdentityProvider implements ReadOnlyIdentityProvider {
     }
 
     @Override
-    public void flush() { }
+    public void flush() {
+    }
 
     @Override
-    public void close() { }
+    public void close() {
+    }
 }

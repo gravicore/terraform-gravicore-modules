@@ -22,7 +22,7 @@ awsParameterStoreSource:
 
 ## Spring
 spring:
-## DataSource
+  ## DataSource
   datasource:
     driver-class-name: org.postgresql.Driver
     url: ${SPRING_DATASOURCE_URL}
@@ -34,7 +34,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-## Cognito
+  ## Cognito
   security:
     oauth2:
       client:
@@ -53,7 +53,7 @@ spring:
             token-uri: https://${COGNITO_DOMAIN}.auth.${AWS_DEFAULT_REGION}.amazoncognito.com/oauth2/token
             user-info-uri: https://${COGNITO_DOMAIN}.auth.${AWS_DEFAULT_REGION}.amazoncognito.com/oauth2/userInfo
             jwk-set-uri: https://cognito-idp.${AWS_DEFAULT_REGION}.amazonaws.com/${COGNITO_USER_POOL_ID}/.well-known/jwks.json
-            user-name-attribute: cognito:username
+            user-name-attribute: username
             signout-uri: https://${COGNITO_DOMAIN}.auth.${AWS_DEFAULT_REGION}.amazoncognito.com/logout?client_id=${COGNITO_CLIENT_ID}&logout_uri=${COGNITO_SIGNOUT_URI}
             sso:
               signout-uri: ${COGNITO_SSO_SIGNOUT_URI}

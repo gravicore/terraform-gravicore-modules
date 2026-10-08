@@ -1,0 +1,56 @@
+name: Camunda
+
+on:
+  push:
+  workflow_call:
+  release:
+    types: [published]
+
+permissions:
+  packages: write
+
+jobs:
+  filter:
+    runs-on: ubuntu-latest
+    outputs:
+      camunda: ${{ steps.changes.outputs.camunda }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            camunda:
+              - "aws/camunda/**"
+
+  build:
+    needs: filter
+    if: ${{ needs.filter.outputs.camunda == 'true' || github.event_name == 'workflow_call' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [app, api]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "corretto"
+          java-version: "17"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - run: |
+          mvn clean install \
+            --quiet \
+            --file aws/camunda/java/${{ matrix.service }}/pom.xml
+      - uses: docker/build-push-action@v6
+        with:
+          context: aws/camunda/java/${{ matrix.service }}
+          push: true
+          platforms: linux/amd64
+          tags: |
+            ghcr.io/${{ github.event.repository.owner.name }}/camunda-${{ matrix.service }}:${{ github.sha }}
+            ghcr.io/${{ github.event.repository.owner.name }}/camunda-${{ matrix.service }}:latest

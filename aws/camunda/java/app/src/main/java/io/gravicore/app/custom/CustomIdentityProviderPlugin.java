@@ -21,14 +21,16 @@ public class CustomIdentityProviderPlugin implements ProcessEnginePlugin {
 
     @Override
     public void preInit(final ProcessEngineConfigurationImpl configuration) {
-        final CustomIdentityProviderFactory identityProviderFactory =
-                new CustomIdentityProviderFactory(userService, groupService);
+        final CustomIdentityProviderFactory identityProviderFactory = new CustomIdentityProviderFactory(userService,
+                groupService);
         configuration.setIdentityProviderSessionFactory(identityProviderFactory);
     }
 
     @Override
-    public void postInit(final ProcessEngineConfigurationImpl configuration) { }
+    public void postInit(final ProcessEngineConfigurationImpl configuration) {
+    }
 
     @Override
-    public void postProcessEngineBuild(final ProcessEngine engine) { }
+    public void postProcessEngineBuild(final ProcessEngine engine) {
+    }
 }
