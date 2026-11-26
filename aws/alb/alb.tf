@@ -18,6 +18,13 @@ variable "security_group_ids" {
   description = "A list of additional security group IDs to allow access to ALB"
 }
 
+variable "create_security_group" {
+  type        = bool
+  default     = true
+  nullable    = false
+  description = "A bool flag to create the ALB security group and its ingress/egress rules. When false, security_group_ids must contain at least one pre-created security group."
+}
+
 variable "internal" {
   type        = bool
   default     = false
@@ -186,7 +193,7 @@ variable "target_groups" {
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_security_group" "alb" {
-  count       = var.create ? 1 : 0
+  count       = var.create && var.create_security_group ? 1 : 0
   name        = local.module_prefix
   tags        = local.tags
   description = "Controls access to the ALB (HTTP/HTTPS)"
@@ -195,7 +202,7 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_security_group_rule" "egress" {
-  count = var.create ? 1 : 0
+  count = var.create && var.create_security_group ? 1 : 0
 
   type              = "egress"
   from_port         = "0"
@@ -206,7 +213,7 @@ resource "aws_security_group_rule" "egress" {
 }
 
 resource "aws_security_group_rule" "alb_http_ingress" {
-  count = var.create ? var.http_redirect_enabled ? 1 : length(var.target_groups) : 0
+  count = var.create && var.create_security_group ? var.http_redirect_enabled ? 1 : length(var.target_groups) : 0
 
   type              = "ingress"
   from_port         = var.http_redirect_enabled ? 80 : var.target_groups[count.index].port
@@ -218,7 +225,7 @@ resource "aws_security_group_rule" "alb_http_ingress" {
 }
 
 resource "aws_security_group_rule" "alb_https_ingress" {
-  count = var.create ? length(var.https_ports) : 0
+  count = var.create && var.create_security_group ? length(var.https_ports) : 0
 
   type              = "ingress"
   from_port         = var.https_ports[count.index]
@@ -250,6 +257,13 @@ resource "aws_lb" "alb" {
     bucket  = join("", aws_s3_bucket.default.*.id)
     prefix  = var.access_logs_prefix
     enabled = var.access_logs_enabled
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.create_security_group || length(compact(var.security_group_ids)) > 0
+      error_message = "security_group_ids must contain at least one security group ID when create_security_group is false."
+    }
   }
 }
 
@@ -364,8 +378,13 @@ output "alb_zone_id" {
 }
 
 output "security_group_ids" {
-  description = "The security group IDs of the ALB"
+  description = "The security group IDs created by this module (empty when create_security_group is false)"
   value       = aws_security_group.alb.*.id
+}
+
+output "attached_security_group_ids" {
+  description = "All security group IDs attached to the ALB: the module-created group (if any) plus security_group_ids"
+  value       = var.create ? compact(concat(var.security_group_ids, aws_security_group.alb.*.id)) : []
 }
 
 output "target_group_arns" {
